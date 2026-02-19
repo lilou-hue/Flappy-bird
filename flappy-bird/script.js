@@ -246,6 +246,11 @@ const resetGame = () => {
     gunState.victoryTriggered = false;
     gunState.demotionTimer = 0;
     applyGunDifficulty();
+  } else {
+    // Restore classic defaults (may have been modified by gun game)
+    gameState.speed = 190;
+    gameState.gap = 150;
+    gameState.pipeInterval = 1400;
   }
   initClouds();
   initHills();
@@ -474,13 +479,15 @@ function destroyPipeSection(pipe, section, projX, projY) {
     });
   }
 
-  gunState.destroys++;
   gunState.totalDestroyed++;
   Audio.gunPipeDestroy();
 
-  // Check tier advancement
-  if (gunState.destroys >= 3) {
-    advanceTier();
+  // Don't count towards tier advancement during victory explosion
+  if (!gunState.victoryTriggered) {
+    gunState.destroys++;
+    if (gunState.destroys >= 3) {
+      advanceTier();
+    }
   }
 }
 
@@ -626,8 +633,9 @@ function updateProjectiles(dt) {
           }
           if (!proj.piercing) {
             proj.lifetime = 0;
+            break;
           }
-          break;
+          // Piercing: continue checking other pipes
         }
       }
     }
@@ -1322,10 +1330,15 @@ const update = (deltaSeconds) => {
   bird.trail.push({ x: bird.x, y: bird.y });
   if (bird.trail.length > 8) bird.trail.shift();
 
+  /* Gun game: skip collision detection during invincibility */
+  const isInvincible = gameMode === 'gunGame' && gunState.invincibleTimer > 0;
+
   if (bird.y + bird.radius >= canvas.height - 90 || bird.y - bird.radius <= 0) {
-    gameState.isGameOver = true;
-    gameState.shakeTimer = 12;
-    gameState.shakeIntensity = 6;
+    if (!isInvincible) {
+      gameState.isGameOver = true;
+      gameState.shakeTimer = 12;
+      gameState.shakeIntensity = 6;
+    }
   }
 
   pipes.forEach((pipe) => {
@@ -1334,7 +1347,7 @@ const update = (deltaSeconds) => {
 
   pipes = pipes.filter((pipe) => pipe.x + gameState.pipeWidth > -10);
 
-  if (pipes.some(detectCollision)) {
+  if (!isInvincible && pipes.some(detectCollision)) {
     gameState.isGameOver = true;
     gameState.shakeTimer = 12;
     gameState.shakeIntensity = 6;
@@ -1356,11 +1369,11 @@ const update = (deltaSeconds) => {
       if (!feathersSpawned) {
         spawnFeatherParticles();
         feathersSpawned = true;
-      }
-      Audio.crash();
-      Audio.stopDrone();
-      if (wasNewBest && gameState.score > 0) {
-        Audio.newHighScore();
+        Audio.crash();
+        Audio.stopDrone();
+        if (wasNewBest && gameState.score > 0) {
+          Audio.newHighScore();
+        }
       }
     }
   }
@@ -1376,11 +1389,6 @@ const update = (deltaSeconds) => {
     gunState.demotionTimer = Math.max(0, gunState.demotionTimer - deltaSeconds);
     updateProjectiles(deltaSeconds);
     updateFragments(deltaSeconds);
-
-    // Invincibility: ignore collisions
-    if (gunState.invincibleTimer > 0) {
-      gameState.isGameOver = false;
-    }
   }
   if (gameMode === 'gunGame' && gameState.isGameOver) {
     updateFragments(deltaSeconds);
