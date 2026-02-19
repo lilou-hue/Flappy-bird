@@ -337,21 +337,53 @@ function exitFullscreen() {
   } catch (e) { /* */ }
 }
 
+function resizeCanvasToScreen() {
+  const dpr = window.devicePixelRatio || 1;
+  const sw = screen.width * dpr;
+  const sh = screen.height * dpr;
+  /* Match canvas buffer to screen, preserving game aspect ratio */
+  const gameAspect = CONFIG.width / CONFIG.height;
+  const screenAspect = sw / sh;
+  let cw, ch;
+  if (screenAspect > gameAspect) {
+    ch = sh;
+    cw = Math.round(ch * gameAspect);
+  } else {
+    cw = sw;
+    ch = Math.round(cw / gameAspect);
+  }
+  canvas.width = cw;
+  canvas.height = ch;
+  /* Scale context so game logic still uses CONFIG dimensions */
+  ctx.setTransform(cw / CONFIG.width, 0, 0, ch / CONFIG.height, 0, 0);
+}
+
+function restoreCanvasSize() {
+  canvas.width = CONFIG.width;
+  canvas.height = CONFIG.height;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+}
+
 document.addEventListener('fullscreenchange', onFullscreenChange);
 document.addEventListener('webkitfullscreenchange', onFullscreenChange);
 
 function onFullscreenChange() {
   const wasFullscreen = isFullscreen;
   isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
-  if (wasFullscreen && !isFullscreen && world.state === STATE.PLAYING) {
-    world.state = STATE.PAUSED;
-    lastTime = 0;
-    Audio.stopDrone();
+  if (isFullscreen) {
+    resizeCanvasToScreen();
+  } else {
+    restoreCanvasSize();
+    if (wasFullscreen && world.state === STATE.PLAYING) {
+      world.state = STATE.PAUSED;
+      lastTime = 0;
+      Audio.stopDrone();
+    }
   }
   /* Update button label */
   const fsBtn = document.getElementById('fullscreenBtn');
   if (fsBtn) fsBtn.textContent = isFullscreen ? 'Exit Fullscreen' : 'Fullscreen';
-  /* Invalidate cached gradient since canvas size may change */
+  /* Invalidate cached gradient since canvas size changed */
   cachedBgZone = -1;
 }
 
