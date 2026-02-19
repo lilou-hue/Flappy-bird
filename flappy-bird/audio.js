@@ -339,6 +339,118 @@ const Audio = (() => {
   }
 
   /* ------------------------------------------------------------------ */
+  /*  Gun Game sound effects                                              */
+  /* ------------------------------------------------------------------ */
+
+  /** Short percussive pop, pitch varies by tier */
+  function gunShoot(tier) {
+    if (!ctx) return;
+    const baseFreq = 200 + tier * 80;
+    playTone(baseFreq, 0.08, "square", 0.06);
+    playNoise(0.06, 0.04, 2000 + tier * 300);
+    if (tier >= 5) playTone(baseFreq * 1.5, 0.06, "sawtooth", 0.03);
+    if (tier >= 7) playTone(baseFreq * 2, 0.04, "sine", 0.04);
+  }
+
+  /** Metallic clang on pipe hit */
+  function gunPipeHit() {
+    if (!ctx) return;
+    playTone(800, 0.12, "triangle", 0.08);
+    playNoise(0.08, 0.05, 1500);
+    playFilteredTone(400, 0.15, "square", 0.04, 800, 4);
+  }
+
+  /** Noise burst + descending tone on pipe destroy */
+  function gunPipeDestroy() {
+    if (!ctx) return;
+    playNoise(0.3, 0.12, 800);
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(600, now);
+    osc.frequency.exponentialRampToValueAtTime(100, now + 0.3);
+    gain.gain.setValueAtTime(0.1, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+    osc.connect(gain);
+    gain.connect(masterGain);
+    osc.start(now);
+    osc.stop(now + 0.35);
+    if (navigator.vibrate) navigator.vibrate([20, 10, 30]);
+  }
+
+  /** Ascending 4-note fanfare for tier up */
+  function gunTierUp() {
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const notes = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.1, now + i * 0.1);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.4);
+      osc.connect(gain);
+      gain.connect(masterGain);
+      osc.start(now + i * 0.1);
+      osc.stop(now + i * 0.1 + 0.4);
+    });
+    if (navigator.vibrate) navigator.vibrate([15, 20, 15, 20, 30]);
+  }
+
+  /** Descending 2-note minor interval for tier down */
+  function gunTierDown() {
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const notes = [440, 311.13]; // A4, Eb4 (diminished feel)
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "triangle";
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.1, now + i * 0.15);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.15 + 0.4);
+      osc.connect(gain);
+      gain.connect(masterGain);
+      osc.start(now + i * 0.15);
+      osc.stop(now + i * 0.15 + 0.4);
+    });
+    if (navigator.vibrate) navigator.vibrate([30, 10, 50]);
+  }
+
+  /** Extended 8-note ascending fanfare for victory */
+  function gunVictory() {
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const notes = [523.25, 587.33, 659.25, 698.46, 783.99, 880, 987.77, 1046.5];
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.1, now + i * 0.12);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.6);
+      osc.connect(gain);
+      gain.connect(masterGain);
+      osc.start(now + i * 0.12);
+      osc.stop(now + i * 0.12 + 0.6);
+      // Shimmer octave
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = "sine";
+      osc2.frequency.value = freq * 2;
+      gain2.gain.setValueAtTime(0.03, now + i * 0.12);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.5);
+      osc2.connect(gain2);
+      gain2.connect(masterGain);
+      osc2.start(now + i * 0.12);
+      osc2.stop(now + i * 0.12 + 0.5);
+    });
+    if (navigator.vibrate) navigator.vibrate([15, 20, 15, 20, 15, 20, 15, 20, 40]);
+  }
+
+  /* ------------------------------------------------------------------ */
   /*  Public API                                                         */
   /* ------------------------------------------------------------------ */
   return {
@@ -352,5 +464,11 @@ const Audio = (() => {
     newHighScore,
     startDrone,
     stopDrone,
+    gunShoot,
+    gunPipeHit,
+    gunPipeDestroy,
+    gunTierUp,
+    gunTierDown,
+    gunVictory,
   };
 })();
