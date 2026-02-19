@@ -1086,7 +1086,6 @@ function tick(now) {
   // Ghost mode: wrap around walls
   const isGhost = now < state.ghostModeEnd;
   if (isGhost) {
-    const aSize = state.arenaMax - state.arenaMin + 1;
     if (newHead.x < state.arenaMin) newHead.x = state.arenaMax;
     else if (newHead.x > state.arenaMax) newHead.x = state.arenaMin;
     if (newHead.y < state.arenaMin) newHead.y = state.arenaMax;

@@ -26,6 +26,11 @@ const I18N = (() => {
       unicornClickerTitle: 'Unicorn Fart Clicker',
       unicornClickerDesc: 'Tap a majestic unicorn to unleash rainbow farts. Earn Sparkle Points and evolve!',
       idle: 'Idle',
+      tetrisTitle: 'Tetris',
+      tetrisDesc: 'Stack tetrominoes, clear lines, and chase the high score. Classic puzzle action with a neon twist!',
+      tetrisInstructions: 'Arrow keys to move & rotate. Space to hard drop. Shift to hold.',
+      tetrisTip: 'Tip: hold a piece with Shift or C. Clear 4 lines at once for a Tetris!',
+      puzzle: 'Puzzle',
 
       // Shared
       backToGames: '\u2190 Back to Games',
@@ -400,6 +405,11 @@ const I18N = (() => {
       unicornClickerTitle: '유니콘 방귀 클리커',
       unicornClickerDesc: '멋진 유니콘을 탭하여 무지개 방귀를 터뜨리세요. 반짝 포인트를 모아 진화하세요!',
       idle: '방치형',
+      tetrisTitle: '테트리스',
+      tetrisDesc: '테트로미노를 쌓고 줄을 지우며 최고 점수에 도전하세요. 네온 감성의 클래식 퍼즐!',
+      tetrisInstructions: '방향키로 이동 및 회전. 스페이스로 하드 드롭. Shift로 홀드.',
+      tetrisTip: '팁: Shift 또는 C로 블록을 홀드하세요. 4줄을 한 번에 지우면 테트리스!',
+      puzzle: '퍼즐',
 
       backToGames: '\u2190 게임 목록으로',
 
@@ -749,6 +759,11 @@ const I18N = (() => {
       unicornClickerTitle: 'ユニコーンおならクリッカー',
       unicornClickerDesc: 'ユニコーンをタップして虹のおならを放とう。キラキラポイントを稼いで進化しよう！',
       idle: '放置系',
+      tetrisTitle: 'テトリス',
+      tetrisDesc: 'テトリミノを積み、ラインを消し、ハイスコアを目指そう。ネオンが光るクラシックパズル！',
+      tetrisInstructions: '矢印キーで移動・回転。スペースでハードドロップ。Shiftでホールド。',
+      tetrisTip: 'ヒント：ShiftまたはCでブロックをホールド。4ライン同時消しでテトリス！',
+      puzzle: 'パズル',
 
       backToGames: '\u2190 ゲーム一覧へ',
 
@@ -1098,6 +1113,11 @@ const I18N = (() => {
       unicornClickerTitle: 'Unicorn Osuruk Tıklayıcı',
       unicornClickerDesc: 'Görkemli bir unicorna dokun ve gökkuşağı osurukları serbest bırak. Parıltı Puanları kazan ve evrilmek!',
       idle: 'Boşta',
+      tetrisTitle: 'Tetris',
+      tetrisDesc: 'Tetrominoları istifle, satırları temizle ve yüksek skoru kovala. Neon dokunuşlu klasik bulmaca!',
+      tetrisInstructions: 'Ok tuşlarıyla hareket ve döndürme. Space ile sert düşüş. Shift ile tut.',
+      tetrisTip: 'İpucu: Shift veya C ile blok tutun. 4 satırı aynı anda temizleyin ve Tetris yapın!',
+      puzzle: 'Bulmaca',
 
       backToGames: '\u2190 Oyunlara Dön',
 
@@ -1447,6 +1467,11 @@ const I18N = (() => {
       unicornClickerTitle: 'Licorne Prout Clicker',
       unicornClickerDesc: 'Tape sur une licorne majestueuse pour libérer des prouts arc-en-ciel. Gagne des Points Étincelle et évolue !',
       idle: 'Incrémental',
+      tetrisTitle: 'Tetris',
+      tetrisDesc: 'Empile les tétrominos, efface des lignes et vise le meilleur score. Un puzzle classique aux néons !',
+      tetrisInstructions: 'Flèches pour déplacer et tourner. Espace pour poser. Shift pour garder.',
+      tetrisTip: 'Astuce : gardez une pièce avec Shift ou C. Effacez 4 lignes d\'un coup pour un Tetris !',
+      puzzle: 'Puzzle',
 
       backToGames: '\u2190 Retour aux jeux',
 
@@ -1796,6 +1821,11 @@ const I18N = (() => {
       unicornClickerTitle: 'Enhörningsfis-klickare',
       unicornClickerDesc: 'Tryck på en majestätisk enhörning för att släppa lös regnbågsfisar. Samla Glitterpoäng och utvecklas!',
       idle: 'Idle',
+      tetrisTitle: 'Tetris',
+      tetrisDesc: 'Stapla tetrominon, rensa rader och jaga highscore. Klassiskt pussel med neonkänsla!',
+      tetrisInstructions: 'Piltangenter för att flytta och rotera. Mellanslag för att släppa. Shift för att hålla.',
+      tetrisTip: 'Tips: håll en bit med Shift eller C. Rensa 4 rader samtidigt för Tetris!',
+      puzzle: 'Pussel',
 
       backToGames: '\u2190 Tillbaka till spel',
 
@@ -2145,6 +2175,11 @@ const I18N = (() => {
       unicornClickerTitle: '独角兽放屁点击器',
       unicornClickerDesc: '点击一只壮丽的独角兽释放彩虹屁。赚取闪光点数并进化！',
       idle: '放置',
+      tetrisTitle: '俄罗斯方块',
+      tetrisDesc: '堆叠方块，消除行数，追求最高分。经典霓虹风格益智游戏！',
+      tetrisInstructions: '方向键移动和旋转。空格键硬降。Shift键暂存。',
+      tetrisTip: '提示：按 Shift 或 C 暂存方块。一次消除4行即为 Tetris！',
+      puzzle: '益智',
 
       backToGames: '\u2190 返回游戏',
 

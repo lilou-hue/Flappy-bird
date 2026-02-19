@@ -5,6 +5,11 @@
 (function () {
   "use strict";
 
+  /* ── i18n setup ── */
+  I18N.createSelector(document.querySelector('.game__header'));
+  I18N.applyDOM();
+  window.addEventListener('langchange', () => { I18N.applyDOM(); });
+
   /* ================================================================== */
   /*  Constants                                                          */
   /* ================================================================== */

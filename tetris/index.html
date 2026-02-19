@@ -5,27 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tetris</title>
     <link rel="stylesheet" href="styles.css" />
+    <script src="../i18n.js"></script>
   </head>
   <body>
     <main class="game">
       <header class="game__header">
-        <a href="/" class="back-link">&larr; Back to Games</a>
-        <h1>Tetris</h1>
-        <p>Arrow keys to move &amp; rotate. Space to hard drop. Shift to hold.</p>
+        <a href="/" class="back-link" data-i18n="backToGames">&larr; Back to Games</a>
+        <h1 data-i18n="tetrisTitle">Tetris</h1>
+        <p data-i18n="tetrisInstructions">Arrow keys to move &amp; rotate. Space to hard drop. Shift to hold.</p>
       </header>
       <section class="game__panel">
         <canvas id="gameCanvas" width="480" height="640" aria-label="Tetris game"></canvas>
         <div class="game__hud">
           <div class="hud__score">
-            <span>Score</span>
+            <span data-i18n="score">Score</span>
             <strong id="score">0</strong>
           </div>
           <div class="hud__score">
-            <span>Best</span>
+            <span data-i18n="best">Best</span>
             <strong id="bestScore">0</strong>
           </div>
           <button id="muteButton" class="hud__mute" type="button" aria-label="Toggle sound">&#x1F50A;</button>
-          <button id="restartButton" class="hud__button" type="button">Restart</button>
+          <button id="restartButton" class="hud__button" type="button" data-i18n="restart">Restart</button>
         </div>
       </section>
       <div class="touch-controls" id="touchControls">
@@ -38,7 +39,7 @@
         <button class="touch-btn touch-btn--wide" data-action="hold" aria-label="Hold piece">Hold</button>
       </div>
       <footer class="game__footer">
-        <p>Tip: hold a piece with Shift or C. Clear 4 lines at once for a Tetris!</p>
+        <p data-i18n="tetrisTip">Tip: hold a piece with Shift or C. Clear 4 lines at once for a Tetris!</p>
       </footer>
     </main>
     <script src="audio.js"></script>
