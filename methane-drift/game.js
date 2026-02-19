@@ -321,26 +321,72 @@ function showTip(key) {
 }
 
 /* --- Fullscreen --- */
+const MAX_CANVAS_DIM = 2560; /* cap buffer size for performance on high-DPI mobile */
+
 function enterFullscreen() {
   if (isFullscreen) return;
-  const el = canvas;
-  try {
-    if (el.requestFullscreen) el.requestFullscreen();
-    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-  } catch (e) { /* fullscreen not supported */ }
+  /* Try fullscreen on the canvas, fall back to document element (iOS compat) */
+  const targets = [canvas, document.documentElement];
+  for (const el of targets) {
+    try {
+      const p = el.requestFullscreen ? el.requestFullscreen()
+        : el.webkitRequestFullscreen ? el.webkitRequestFullscreen()
+        : null;
+      if (p) {
+        /* Request landscape orientation when available */
+        if (screen.orientation && screen.orientation.lock) {
+          p.then(() => screen.orientation.lock('landscape').catch(() => {}));
+        }
+        return;
+      }
+    } catch (e) { /* try next target */ }
+  }
+  /* No fullscreen API — fall back to pseudo-fullscreen for iOS Safari */
+  enablePseudoFullscreen();
 }
 
 function exitFullscreen() {
+  if (pseudoFullscreen) {
+    disablePseudoFullscreen();
+    return;
+  }
   try {
     if (document.exitFullscreen) document.exitFullscreen();
     else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
   } catch (e) { /* */ }
 }
 
+/* Pseudo-fullscreen for iOS Safari which lacks Fullscreen API on non-video elements */
+let pseudoFullscreen = false;
+let savedCanvasStyle = '';
+
+function enablePseudoFullscreen() {
+  pseudoFullscreen = true;
+  isFullscreen = true;
+  savedCanvasStyle = canvas.style.cssText;
+  canvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999;border:none;border-radius:0;background:#000;';
+  document.body.style.overflow = 'hidden';
+  window.scrollTo(0, 0);
+  resizeCanvasToScreen();
+  updateFullscreenUI();
+  cachedBgZone = -1;
+}
+
+function disablePseudoFullscreen() {
+  pseudoFullscreen = false;
+  isFullscreen = false;
+  canvas.style.cssText = savedCanvasStyle;
+  document.body.style.overflow = '';
+  restoreCanvasSize();
+  updateFullscreenUI();
+  cachedBgZone = -1;
+}
+
 function resizeCanvasToScreen() {
-  const dpr = window.devicePixelRatio || 1;
-  const sw = screen.width * dpr;
-  const sh = screen.height * dpr;
+  const dpr = Math.min(window.devicePixelRatio || 1, 3);
+  /* Use innerWidth/Height for correct size on mobile (handles orientation) */
+  const sw = window.innerWidth * dpr;
+  const sh = window.innerHeight * dpr;
   /* Match canvas buffer to screen, preserving game aspect ratio */
   const gameAspect = CONFIG.width / CONFIG.height;
   const screenAspect = sw / sh;
@@ -352,6 +398,9 @@ function resizeCanvasToScreen() {
     cw = sw;
     ch = Math.round(cw / gameAspect);
   }
+  /* Cap for performance on high-DPI mobile */
+  if (cw > MAX_CANVAS_DIM) { const s = MAX_CANVAS_DIM / cw; cw = MAX_CANVAS_DIM; ch = Math.round(ch * s); }
+  if (ch > MAX_CANVAS_DIM) { const s = MAX_CANVAS_DIM / ch; ch = MAX_CANVAS_DIM; cw = Math.round(cw * s); }
   canvas.width = cw;
   canvas.height = ch;
   /* Scale context so game logic still uses CONFIG dimensions */
@@ -364,8 +413,21 @@ function restoreCanvasSize() {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
 }
 
+function updateFullscreenUI() {
+  const fsBtn = document.getElementById('fullscreenBtn');
+  if (fsBtn) fsBtn.textContent = isFullscreen ? 'Exit Fullscreen' : 'Fullscreen';
+}
+
 document.addEventListener('fullscreenchange', onFullscreenChange);
 document.addEventListener('webkitfullscreenchange', onFullscreenChange);
+
+/* Re-fit canvas when device rotates or window resizes during fullscreen */
+window.addEventListener('resize', () => {
+  if (isFullscreen) {
+    resizeCanvasToScreen();
+    cachedBgZone = -1;
+  }
+});
 
 function onFullscreenChange() {
   const wasFullscreen = isFullscreen;
@@ -380,9 +442,7 @@ function onFullscreenChange() {
       Audio.stopDrone();
     }
   }
-  /* Update button label */
-  const fsBtn = document.getElementById('fullscreenBtn');
-  if (fsBtn) fsBtn.textContent = isFullscreen ? 'Exit Fullscreen' : 'Fullscreen';
+  updateFullscreenUI();
   /* Invalidate cached gradient since canvas size changed */
   cachedBgZone = -1;
 }
@@ -3516,7 +3576,12 @@ window.addEventListener('keydown', (event) => {
     activateSymbiosis();
   }
   if (event.code === 'Escape') {
-    if (world.state === STATE.PLAYING) {
+    if (pseudoFullscreen) {
+      disablePseudoFullscreen();
+      world.state = STATE.PAUSED;
+      lastTime = 0;
+      Audio.stopDrone();
+    } else if (world.state === STATE.PLAYING) {
       world.state = STATE.PAUSED;
       lastTime = 0;
       Audio.stopDrone();
