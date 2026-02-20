@@ -19,10 +19,10 @@
   /* ────────────────── Skins ────────────────── */
   const SKINS = [
     { key: 'unicorn',      name: 'Unicorn',       cost: 0,      fartDx: -40, fartDy: 10, wingDx: 0,   wingDy: 0   },
-    { key: 'tuna',          name: 'Tuna',           cost: 1000,   fartDx: -50, fartDy: 5,  wingDx: 0,   wingDy: 10  },
-    { key: 'volleyball',    name: 'Volleyball',     cost: 5000,   fartDx: 0,   fartDy: 35, wingDx: 0,   wingDy: 15  },
-    { key: 'spidermonkey',  name: 'Spidermonkey',   cost: 25000,  fartDx: -35, fartDy: 20, wingDx: -5,  wingDy: 5   },
-    { key: 'chewbacca',     name: 'Chewbacca',      cost: 100000, fartDx: -35, fartDy: 15, wingDx: -5,  wingDy: 0   },
+    { key: 'tuna',          name: 'Tuna',           cost: 1000,   fartDx: -50, fartDy: 5,  wingDx: -11, wingDy: 20  },
+    { key: 'volleyball',    name: 'Volleyball',     cost: 5000,   fartDx: 0,   fartDy: 35, wingDx: -16, wingDy: 17  },
+    { key: 'spidermonkey',  name: 'Spidermonkey',   cost: 25000,  fartDx: -35, fartDy: 20, wingDx: -12, wingDy: 18  },
+    { key: 'chewbacca',     name: 'Chewbacca',      cost: 100000, fartDx: -35, fartDy: 15, wingDx: -14, wingDy: 17  },
   ];
 
   /* ────────────────── State ────────────────── */
@@ -544,17 +544,44 @@
     // Wings (evo 2+) — unicorn draws its own wings in drawSkinUnicorn
     if (evo >= 2 && skinKey !== 'unicorn') {
       const sk = SKINS.find(s => s.key === skinKey) || SKINS[0];
-      const wf = Math.sin(gameTime * 4) * 15;
-      const wc = evo >= 5 ? 'rgba(255,240,180,' : evo >= 3 ? 'rgba(180,150,255,' : 'rgba(255,220,240,';
-      ctx.save(); ctx.translate(-10 * bs + sk.wingDx, -20 * bs + sk.wingDy);
-      ctx.rotate((-30 + wf) * Math.PI / 180);
-      ctx.fillStyle = wc + '0.5)';
-      ctx.beginPath(); ctx.ellipse(0, -15, 14 * bs, 32 * bs, -0.2, 0, Math.PI * 2); ctx.fill();
+      const wf = Math.sin(gameTime * 3.5) * 20;
+      const wc = evo >= 5 ? [255, 240, 180] : evo >= 3 ? [190, 170, 255] : [255, 220, 240];
+      const lx = (-10 + sk.wingDx) * bs;
+      const rx = (10 - sk.wingDx) * bs;
+      const wy = (-20 + sk.wingDy) * bs;
+
+      // Left wing — 3 layered feathers
+      ctx.save();
+      ctx.translate(lx, wy);
+      ctx.rotate((-35 + wf) * Math.PI / 180);
+      for (let f = 0; f < 3; f++) {
+        ctx.fillStyle = `rgba(${wc[0]},${wc[1]},${wc[2]},${0.65 - f * 0.13})`;
+        ctx.beginPath();
+        ctx.ellipse(-5 * bs - f * 4, -10 * bs + f * 3, 7 * bs, 16 * bs - f * 2, -0.4 + f * 0.15, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = `rgba(${Math.max(0, wc[0] - 40)},${Math.max(0, wc[1] - 40)},${Math.max(0, wc[2] - 20)},0.25)`;
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+      }
+      ctx.fillStyle = 'rgba(255,255,255,0.18)';
+      ctx.beginPath(); ctx.ellipse(-6 * bs, -14 * bs, 4 * bs, 7 * bs, -0.3, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
-      ctx.save(); ctx.translate(10 * bs - sk.wingDx, -20 * bs + sk.wingDy);
-      ctx.rotate((30 - wf) * Math.PI / 180);
-      ctx.fillStyle = wc + '0.4)';
-      ctx.beginPath(); ctx.ellipse(0, -15, 11 * bs, 28 * bs, 0.2, 0, Math.PI * 2); ctx.fill();
+
+      // Right wing — 3 layered feathers
+      ctx.save();
+      ctx.translate(rx, wy);
+      ctx.rotate((35 - wf) * Math.PI / 180);
+      for (let f = 0; f < 3; f++) {
+        ctx.fillStyle = `rgba(${wc[0]},${wc[1]},${wc[2]},${0.55 - f * 0.1})`;
+        ctx.beginPath();
+        ctx.ellipse(5 * bs + f * 4, -10 * bs + f * 3, 7 * bs, 16 * bs - f * 2, 0.4 - f * 0.15, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = `rgba(${Math.max(0, wc[0] - 40)},${Math.max(0, wc[1] - 40)},${Math.max(0, wc[2] - 20)},0.25)`;
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+      }
+      ctx.fillStyle = 'rgba(255,255,255,0.13)';
+      ctx.beginPath(); ctx.ellipse(6 * bs, -14 * bs, 4 * bs, 7 * bs, 0.3, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
     }
     // Orbiting sparkles (evo 1+)
