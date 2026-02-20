@@ -23,6 +23,67 @@ function tzn(name) { return PR_ZONE_I18N[name] ? _t(PR_ZONE_I18N[name]) : name; 
 
 window.addEventListener('langchange', () => { I18N.applyDOM(); });
 
+/* ── Achievements ────────────────────────────────────────── */
+const PR_ACHIEVEMENTS = [
+  { id: 'first_drive',   icon: '🚗', title: 'First Drive',     desc: 'Score your first point',       check: s => s.bestScore >= 1 },
+  { id: 'score_50',      icon: '🏎️', title: 'Speed Racer',      desc: 'Score 50 in one game',         check: s => s.bestScore >= 50 },
+  { id: 'score_100',     icon: '🏆', title: 'Road Warrior',     desc: 'Score 100 in one game',        check: s => s.bestScore >= 100 },
+  { id: 'score_200',     icon: '👑', title: 'Phantom King',     desc: 'Score 200 in one game',        check: s => s.bestScore >= 200 },
+  { id: 'coins_100',     icon: '💰', title: 'Coin Collector',   desc: 'Collect 100 coins total',      check: s => s.totalCoins >= 100 },
+  { id: 'games_10',      icon: '🎮', title: 'Dedicated Driver', desc: 'Play 10 games',                check: s => s.gamesPlayed >= 10 },
+];
+
+let prAchStats = { bestScore: 0, totalCoins: 0, gamesPlayed: 0 };
+let prUnlocked = new Set();
+let prAchQueue = [];
+let prAchTimer = 0;
+
+function loadPrAch() {
+  try {
+    const s = JSON.parse(localStorage.getItem('phantomRoadAch') || '{}');
+    if (s.unlocked) prUnlocked = new Set(s.unlocked);
+    if (s.stats) Object.assign(prAchStats, s.stats);
+  } catch (_) {}
+}
+function savePrAch() {
+  localStorage.setItem('phantomRoadAch', JSON.stringify({ unlocked: [...prUnlocked], stats: prAchStats }));
+}
+function checkPrAch() {
+  for (const a of PR_ACHIEVEMENTS) {
+    if (!prUnlocked.has(a.id) && a.check(prAchStats)) {
+      prUnlocked.add(a.id);
+      prAchQueue.push(a);
+      savePrAch();
+    }
+  }
+}
+function showPrAchPopup() {
+  if (prAchTimer > 0 || prAchQueue.length === 0) return;
+  const a = prAchQueue.shift();
+  const popup = document.getElementById('achievementPopup');
+  document.getElementById('achievementPopupIcon').textContent = a.icon;
+  document.getElementById('achievementPopupTitle').textContent = a.title;
+  document.getElementById('achievementPopupDesc').textContent = a.desc;
+  popup.classList.add('show');
+  prAchTimer = 3;
+  setTimeout(() => { popup.classList.remove('show'); setTimeout(() => { prAchTimer = 0; showPrAchPopup(); }, 500); }, 3000);
+}
+function renderPrAchList() {
+  const list = document.getElementById('achievementsList');
+  list.innerHTML = '';
+  for (const a of PR_ACHIEVEMENTS) {
+    const el = document.createElement('div');
+    el.className = 'achievement-item' + (prUnlocked.has(a.id) ? ' unlocked' : '');
+    el.innerHTML = '<span class="achievement-item__icon">' + a.icon + '</span><span>' + a.title + '</span>';
+    list.appendChild(el);
+  }
+}
+document.getElementById('achievementsToggle').addEventListener('click', () => {
+  document.getElementById('achievementsList').classList.toggle('open');
+  renderPrAchList();
+});
+loadPrAch();
+
 // ── Detect mobile ────────────────────────────────────────
 const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || ("ontouchstart" in window);
 
@@ -554,6 +615,10 @@ function gameOver() {
   if (typeof Leaderboard !== 'undefined' && state.score > 0) {
     Leaderboard.submitScore('phantom-road', state.score).then(() => Leaderboard.refresh('phantom-road'));
   }
+
+  prAchStats.gamesPlayed++;
+  prAchStats.bestScore = Math.max(prAchStats.bestScore, state.score);
+  checkPrAch(); showPrAchPopup(); savePrAch();
 }
 
 // ── Zone helpers ─────────────────────────────────────────
@@ -1143,6 +1208,7 @@ function update(dt) {
       if (dx * dx + dy * dy < collectRadius) {
         c.collected = true;
         state.totalCoins++;
+        prAchStats.totalCoins++;
         state.combo += 1;
         state.comboTimer = 3.5;
         const prevMult = state.multiplier;

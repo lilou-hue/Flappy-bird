@@ -32,7 +32,20 @@
       <footer class="game__footer">
         <p data-i18n="prTip">Chain near-misses &amp; coins for combos &mdash; collect power-ups &amp; evade the police!</p>
       </footer>
+      <!-- Achievements panel -->
+      <div class="achievements-panel" id="achievementsPanel">
+        <button class="achievements-toggle" id="achievementsToggle" type="button" data-i18n="achievements">Achievements</button>
+        <div class="achievements-list" id="achievementsList"></div>
+      </div>
     </main>
+    <!-- Achievement popup -->
+    <div class="achievement-popup" id="achievementPopup">
+      <div class="achievement-popup__icon" id="achievementPopupIcon"></div>
+      <div class="achievement-popup__text">
+        <strong id="achievementPopupTitle"></strong>
+        <span id="achievementPopupDesc"></span>
+      </div>
+    </div>
     <div id="leaderboardPanel"></div>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
