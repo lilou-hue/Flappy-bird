@@ -159,3 +159,34 @@
   from { opacity: 0; }
   to   { opacity: 1; }
 }
+
+/* --- Mobile: compact leaderboard --- */
+@media (max-width: 600px) {
+  .lb-panel {
+    max-width: 100%;
+    margin: 0.5rem auto;
+    padding: 0.75rem;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  .lb-panel h3 {
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .lb-table {
+    font-size: 0.8rem;
+  }
+
+  .lb-table th {
+    padding: 0.3rem 0.4rem;
+    font-size: 0.68rem;
+  }
+
+  .lb-table td {
+    padding: 0.35rem 0.4rem;
+  }
+}

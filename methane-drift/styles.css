@@ -322,6 +322,127 @@ body {
   }
 }
 
+/* --- Mobile portrait: fill viewport --- */
+@media (max-width: 600px) {
+  html, body {
+    height: 100dvh;
+    height: 100vh;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  body {
+    margin: 0;
+  }
+
+  .layout {
+    grid-template-columns: 1fr;
+    padding: 8px 6px;
+    gap: 6px;
+    height: 100%;
+    grid-template-rows: auto 1fr;
+    align-items: stretch;
+  }
+
+  .hud-panel {
+    padding: 8px 10px;
+    border-radius: 12px;
+  }
+
+  .hud-panel h1 {
+    font-size: 1.2rem;
+    margin-bottom: 4px;
+  }
+
+  .hud-panel p {
+    display: none;
+  }
+
+  .back-link {
+    font-size: 0.82rem;
+    margin-bottom: 2px;
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+
+  .stats div {
+    padding: 4px 8px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+  }
+
+  .stats span {
+    font-size: 0.78rem;
+  }
+
+  .mute-btn,
+  .fullscreen-btn {
+    padding: 6px;
+    font-size: 0.82rem;
+    margin-top: 4px;
+  }
+
+  .restart-btn {
+    padding: 8px;
+    font-size: 0.88rem;
+    margin-top: 4px;
+  }
+
+  .symbiosis-action-btn {
+    padding: 8px;
+    font-size: 0.95rem;
+    min-height: 44px;
+    margin-top: 4px;
+  }
+
+  .game-canvas {
+    width: 100%;
+    height: auto;
+    max-height: 100%;
+    border-radius: 12px;
+    min-height: 0;
+  }
+}
+
+/* --- Very short phones --- */
+@media (max-width: 600px) and (max-height: 620px) {
+  .layout {
+    padding: 4px 4px;
+    gap: 4px;
+  }
+
+  .hud-panel {
+    padding: 6px 8px;
+  }
+
+  .hud-panel h1 {
+    font-size: 1rem;
+    margin-bottom: 2px;
+  }
+
+  .back-link {
+    display: none;
+  }
+
+  .stats {
+    gap: 3px;
+  }
+
+  .stats div {
+    padding: 3px 6px;
+    font-size: 0.78rem;
+  }
+
+  .mute-btn,
+  .fullscreen-btn {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .restart-btn,
   .mute-btn,

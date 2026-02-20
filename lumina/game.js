@@ -1340,6 +1340,54 @@
     if (!document.hidden) lastTime = performance.now();
   });
 
+  /* --- Prevent scrolling / pull-to-refresh on mobile --- */
+  document.addEventListener("touchmove", (e) => { e.preventDefault(); }, { passive: false });
+  document.addEventListener("touchstart", (e) => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+
+  /* --- Dynamic canvas sizing for mobile portrait --- */
+  const _gameHeader = document.querySelector('.game__header');
+  const _gameHud = document.querySelector('.game__hud');
+  const _mobileControls = document.getElementById('mobileControls');
+  const _settingsBar = document.querySelector('.settings-bar');
+
+  function fitCanvasToScreen() {
+    const isMobile = window.innerWidth <= 600;
+    if (!isMobile) { canvas.style.width = ''; canvas.style.height = ''; return; }
+
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const headerH = _gameHeader ? _gameHeader.offsetHeight : 0;
+    const hudH = _gameHud ? _gameHud.offsetHeight : 0;
+    const ctrlH = (_mobileControls && getComputedStyle(_mobileControls).display !== 'none') ? _mobileControls.offsetHeight : 0;
+    const settingsH = (_settingsBar && getComputedStyle(_settingsBar).display !== 'none') ? _settingsBar.offsetHeight : 0;
+
+    const chrome = headerH + hudH + ctrlH + settingsH + 16 + 12 + 16 + 24;
+    const availH = vh - chrome;
+    const availW = vw - 12 - 16;
+
+    const aspectRatio = 480 / 720;
+    let canvasW, canvasH;
+
+    canvasH = availH;
+    canvasW = canvasH * aspectRatio;
+
+    if (canvasW > availW) {
+      canvasW = availW;
+      canvasH = canvasW / aspectRatio;
+    }
+
+    canvasW = Math.max(canvasW, 200);
+    canvasH = Math.max(canvasH, 300);
+
+    canvas.style.width = Math.floor(canvasW) + 'px';
+    canvas.style.height = Math.floor(canvasH) + 'px';
+  }
+
+  fitCanvasToScreen();
+  let _resizeTimer;
+  window.addEventListener('resize', () => { clearTimeout(_resizeTimer); _resizeTimer = setTimeout(fitCanvasToScreen, 80); });
+  window.addEventListener('orientationchange', () => { setTimeout(fitCanvasToScreen, 200); });
+
   init();
 
   if (typeof Leaderboard !== 'undefined') {

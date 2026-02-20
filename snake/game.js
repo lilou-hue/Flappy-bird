@@ -2009,6 +2009,45 @@ function loadBestScore() {
   }
 }
 
+/* --- Prevent scrolling / pull-to-refresh on mobile --- */
+document.addEventListener("touchmove", (e) => { e.preventDefault(); }, { passive: false });
+document.addEventListener("touchstart", (e) => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+
+/* --- Dynamic canvas sizing for mobile portrait --- */
+const _gameHeader = document.querySelector('.game__header');
+const _gamePanel = document.querySelector('.game__panel');
+const _gameHud = document.querySelector('.game__hud');
+const _dpad = document.getElementById('dpad');
+const _settingsBar = document.querySelector('.settings-bar');
+
+function fitCanvasToScreen() {
+  const isMobile = window.innerWidth <= 600;
+  if (!isMobile) { canvas.style.width = ''; canvas.style.height = ''; return; }
+
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const headerH = _gameHeader ? _gameHeader.offsetHeight : 0;
+  const hudH = _gameHud ? _gameHud.offsetHeight : 0;
+  const dpadH = (_dpad && getComputedStyle(_dpad).display !== 'none') ? _dpad.offsetHeight : 0;
+  const settingsH = (_settingsBar && getComputedStyle(_settingsBar).display !== 'none') ? _settingsBar.offsetHeight : 0;
+
+  const chrome = headerH + hudH + dpadH + settingsH + 16 + 12 + 16 + 24;
+  const availH = vh - chrome;
+  const availW = vw - 12 - 16;
+
+  /* 1:1 aspect ratio */
+  let size = Math.min(availH, availW);
+  size = Math.max(size, 180);
+
+  canvas.style.width = Math.floor(size) + 'px';
+  canvas.style.height = Math.floor(size) + 'px';
+}
+
+fitCanvasToScreen();
+let _resizeTimer;
+window.addEventListener('resize', () => { clearTimeout(_resizeTimer); _resizeTimer = setTimeout(fitCanvasToScreen, 80); });
+window.addEventListener('orientationchange', () => { setTimeout(fitCanvasToScreen, 200); });
+
 loadBestScore();
 loadMute();
 loadPreferences();

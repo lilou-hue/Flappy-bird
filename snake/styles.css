@@ -510,15 +510,223 @@ canvas {
   padding: 16px;
 }
 
-@media (max-width: 540px) {
+/* --- Mobile portrait: fill viewport, maximize canvas --- */
+@media (max-width: 600px) {
+  html, body {
+    height: 100dvh;
+    height: 100vh;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  body {
+    padding: 8px 6px;
+    align-items: stretch;
+  }
+
+  .game {
+    max-width: 100%;
+    height: 100%;
+    grid-template-rows: auto auto auto;
+    gap: 6px;
+  }
+
+  .game__header {
+    padding: 0 4px;
+  }
+
+  .game__header h1 {
+    font-size: 1.4rem;
+    margin-bottom: 0;
+  }
+
+  .game__header p {
+    font-size: 0.78rem;
+  }
+
+  .back-link {
+    font-size: 0.82rem;
+    margin-bottom: 2px;
+  }
+
+  .game__panel {
+    padding: 8px;
+    gap: 8px;
+    border-radius: 14px;
+    overflow: hidden;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  canvas {
+    max-width: 100%;
+    border-radius: 10px;
+    flex-shrink: 0;
+  }
+
   .game__hud {
     grid-template-columns: 1fr 1fr auto auto auto;
     gap: 8px;
+    width: 100%;
+  }
+
+  .hud__score {
+    font-size: 0.75rem;
+    gap: 1px;
+  }
+
+  .hud__score strong {
+    font-size: 1.3rem;
   }
 
   .hud__button {
     padding: 8px 14px;
-    font-size: 0.82rem;
+    font-size: 0.8rem;
+  }
+
+  .settings-bar {
+    gap: 8px;
+  }
+
+  .setting-group {
+    font-size: 0.75rem;
+  }
+
+  .dpad {
+    grid-template-columns: 52px 52px 52px;
+    grid-template-rows: 52px 52px 52px;
+    gap: 3px;
+  }
+
+  .dpad__btn {
+    width: 48px;
+    height: 48px;
+    font-size: 1.2rem;
+  }
+
+  .achievements-panel {
+    display: none;
+  }
+
+  .game__footer {
+    display: none;
+  }
+}
+
+/* --- Very short phones --- */
+@media (max-width: 600px) and (max-height: 620px) {
+  body {
+    padding: 4px 4px;
+  }
+
+  .game {
+    gap: 4px;
+  }
+
+  .game__header h1 {
+    font-size: 1.2rem;
+  }
+
+  .game__header p {
+    display: none;
+  }
+
+  .game__panel {
+    padding: 6px;
+    gap: 4px;
+  }
+
+  .settings-bar {
+    display: none;
+  }
+
+  .dpad {
+    grid-template-columns: 46px 46px 46px;
+    grid-template-rows: 46px 46px 46px;
+    gap: 2px;
+  }
+
+  .dpad__btn {
+    width: 42px;
+    height: 42px;
+    font-size: 1rem;
+    border-radius: 10px;
+  }
+
+  .hud__score strong {
+    font-size: 1.1rem;
+  }
+}
+
+/* --- Landscape on mobile --- */
+@media (max-height: 500px) and (orientation: landscape) {
+  html, body {
+    height: 100dvh;
+    height: 100vh;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  body {
+    padding: 4px 8px;
+  }
+
+  .game {
+    max-width: 100%;
+    height: 100%;
+    grid-template-rows: auto 1fr;
+    gap: 4px;
+  }
+
+  .game__header h1 {
+    font-size: 1.1rem;
+    margin-bottom: 0;
+  }
+
+  .game__header p,
+  .game__footer,
+  .achievements-panel {
+    display: none;
+  }
+
+  .back-link {
+    font-size: 0.75rem;
+    margin-bottom: 0;
+  }
+
+  .game__panel {
+    padding: 6px;
+    gap: 6px;
+    border-radius: 10px;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  canvas {
+    width: auto;
+    max-width: 100%;
+    height: 100%;
+    max-height: 100%;
+    min-height: 0;
+    border-radius: 8px;
+  }
+
+  .hud__score strong {
+    font-size: 1.1rem;
+  }
+
+  .hud__button {
+    padding: 6px 12px;
+    font-size: 0.75rem;
+  }
+
+  .settings-bar {
+    display: none;
   }
 }
 

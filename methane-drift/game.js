@@ -3682,6 +3682,49 @@ if (symbiosisBtn) {
 
 /* ========== INIT ========== */
 
+/* --- Prevent scrolling / pull-to-refresh on mobile --- */
+document.addEventListener("touchmove", (e) => { e.preventDefault(); }, { passive: false });
+document.addEventListener("touchstart", (e) => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+
+/* --- Dynamic canvas sizing for mobile portrait --- */
+const _hudPanel = document.querySelector('.hud-panel');
+
+function fitCanvasToScreen() {
+  const isMobile = window.innerWidth <= 600;
+  if (!isMobile) { canvas.style.width = ''; canvas.style.height = ''; return; }
+
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const hudH = _hudPanel ? _hudPanel.offsetHeight : 0;
+
+  const chrome = hudH + 16 + 12;
+  const availH = vh - chrome;
+  const availW = vw - 12;
+
+  const aspectRatio = 960 / 540;
+  let canvasW, canvasH;
+
+  /* 16:9 landscape ratio — fit by width on portrait phones */
+  canvasW = availW;
+  canvasH = canvasW / aspectRatio;
+
+  if (canvasH > availH) {
+    canvasH = availH;
+    canvasW = canvasH * aspectRatio;
+  }
+
+  canvasW = Math.max(canvasW, 200);
+  canvasH = Math.max(canvasH, 112);
+
+  canvas.style.width = Math.floor(canvasW) + 'px';
+  canvas.style.height = Math.floor(canvasH) + 'px';
+}
+
+fitCanvasToScreen();
+let _resizeTimer;
+window.addEventListener('resize', () => { clearTimeout(_resizeTimer); _resizeTimer = setTimeout(fitCanvasToScreen, 80); });
+window.addEventListener('orientationchange', () => { setTimeout(fitCanvasToScreen, 200); });
+
 Audio.init();
 loadProgress();
 loadBestScore();

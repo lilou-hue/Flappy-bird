@@ -3055,6 +3055,33 @@
   canvas.addEventListener('mousedown', handleTap);
   canvas.addEventListener('touchstart', handleTap, { passive: false });
 
+  /* --- Prevent scrolling / pull-to-refresh on mobile --- */
+  document.addEventListener("touchmove", (e) => { e.preventDefault(); }, { passive: false });
+
+  /* --- Dynamic canvas sizing for mobile --- */
+  function fitCanvasToScreen() {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const aspectRatio = W / H;
+    let cw, ch;
+
+    ch = vh;
+    cw = ch * aspectRatio;
+
+    if (cw > vw) {
+      cw = vw;
+      ch = cw / aspectRatio;
+    }
+
+    canvas.style.width = Math.floor(cw) + 'px';
+    canvas.style.height = Math.floor(ch) + 'px';
+  }
+
+  fitCanvasToScreen();
+  let _resizeTimer;
+  window.addEventListener('resize', () => { clearTimeout(_resizeTimer); _resizeTimer = setTimeout(fitCanvasToScreen, 80); });
+  window.addEventListener('orientationchange', () => { setTimeout(fitCanvasToScreen, 200); });
+
   /* ────────────────── Init ────────────────── */
   load();
   window.addEventListener('beforeunload', save);
