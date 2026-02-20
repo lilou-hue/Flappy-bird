@@ -202,6 +202,7 @@ const resetGame = () => {
   gameState.shakeIntensity = 0;
   gameState.scorePop = 0;
   gameState.lastScore = 0;
+  gameState._lbSubmitted = false;
   scoreLabel.textContent = gameState.score;
   initClouds();
   initHills();
@@ -914,6 +915,12 @@ const update = (deltaSeconds) => {
   if (gameState.isGameOver) {
     const wasNewBest = gameState.score > gameState.best;
     saveBestScore();
+    if (!gameState._lbSubmitted && gameState.score > 0) {
+      gameState._lbSubmitted = true;
+      if (typeof Leaderboard !== 'undefined') {
+        Leaderboard.submitScore('flappy-bird', gameState.score).then(() => Leaderboard.refresh('flappy-bird'));
+      }
+    }
     if (!feathersSpawned) {
       spawnFeatherParticles();
       feathersSpawned = true;
@@ -1105,6 +1112,79 @@ if (muteButton) {
   updateMuteLabel();
 }
 
+/* --- Dynamic canvas sizing for mobile portrait --- */
+const gameHeader = document.querySelector('.game__header');
+const gamePanel = document.querySelector('.game__panel');
+const gameHud = document.querySelector('.game__hud');
+
+function fitCanvasToScreen() {
+  const isMobile = window.innerWidth <= 600;
+
+  if (!isMobile) {
+    /* Desktop/tablet: clear any inline overrides, let CSS handle it */
+    canvas.style.width = '';
+    canvas.style.height = '';
+    return;
+  }
+
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+
+  /* Measure non-canvas elements */
+  const headerH = gameHeader ? gameHeader.offsetHeight : 0;
+  const hudH = gameHud ? gameHud.offsetHeight : 0;
+
+  /* Account for body padding, game gaps, panel padding */
+  const bodyPad = 16;  /* top + bottom body padding on mobile */
+  const gameGap = 12;  /* gap between header and panel */
+  const panelPad = 16; /* panel top + bottom padding */
+  const panelGap = 8;  /* gap between canvas and HUD inside panel */
+
+  const chrome = headerH + hudH + bodyPad + gameGap + panelPad + panelGap;
+  const availH = vh - chrome;
+  const availW = vw - 12 - panelPad; /* body side padding + panel side padding */
+
+  /* Fit 9:16 aspect ratio into available space */
+  const aspectRatio = 9 / 16;
+  let canvasW, canvasH;
+
+  /* Try fitting by height first */
+  canvasH = availH;
+  canvasW = canvasH * aspectRatio;
+
+  /* If too wide, fit by width instead */
+  if (canvasW > availW) {
+    canvasW = availW;
+    canvasH = canvasW / aspectRatio;
+  }
+
+  /* Clamp to reasonable minimums */
+  canvasW = Math.max(canvasW, 200);
+  canvasH = Math.max(canvasH, 356);
+
+  canvas.style.width = Math.floor(canvasW) + 'px';
+  canvas.style.height = Math.floor(canvasH) + 'px';
+}
+
+fitCanvasToScreen();
+
+/* Debounced resize handler */
+let resizeTimer;
+function onResize() {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(fitCanvasToScreen, 80);
+}
+
+window.addEventListener('resize', onResize);
+window.addEventListener('orientationchange', () => {
+  /* Orientation change needs a longer delay for viewport to settle */
+  setTimeout(fitCanvasToScreen, 200);
+});
+
 loadBestScore();
 resetGame();
 requestAnimationFrame(loop);
+
+if (typeof Leaderboard !== 'undefined') {
+  document.getElementById('leaderboardPanel').appendChild(Leaderboard.createPanel('flappy-bird'));
+}
