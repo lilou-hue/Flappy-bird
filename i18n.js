@@ -198,6 +198,7 @@ const I18N = (() => {
       // Snake
       snakeInstructions: 'Arrow keys or swipe to steer. Eat, grow, survive the closing walls.',
       snakeAriaLabel: 'Snake game',
+      joystickLabel: 'Direction joystick',
       snakeTip: 'Tip: the walls close in every 15 points \u2014 turn up the volume!',
       themeNeon: 'Neon Green',
       themeCyber: 'Cyber Purple',
@@ -244,7 +245,7 @@ const I18N = (() => {
       snakeTut1Title: 'Welcome to Snake!',
       snakeTut1Text: "Guide your snake to eat food and grow longer. Don't hit the walls or yourself!",
       snakeTut2Title: 'Controls',
-      snakeTut2Text: 'Use arrow keys (or WASD) on desktop, swipe or use the D-pad on mobile.',
+      snakeTut2Text: 'Use arrow keys (or WASD) on desktop, swipe or use the joystick on mobile.',
       snakeTut3Title: 'Food Types',
       snakeTut3Text: 'Orange = normal (+1). Gold = bonus (+3, slow-mo). Pink = speed boost. Purple = poison (-1). Cyan = magnet. White = ghost. Blue = freeze.',
       snakeTut4Title: 'Closing Walls',
@@ -391,6 +392,13 @@ const I18N = (() => {
       loadingScores: 'Loading scores…',
       submittedScore: 'Score submitted!',
       lbPlayer: 'Player',
+
+      // Profile
+      profileTitle: 'Player Profile',
+      profileLink: '\uD83D\uDC64 Player Profile',
+      profileTotalScore: 'Total Best Score',
+      profileGamesPlayed: 'Games Played',
+      profileTotalRuns: 'Total Runs',
     },
 
     ko: {
@@ -567,6 +575,7 @@ const I18N = (() => {
       mdHeavyAirAdapted: '무거운 공기 적응',
       snakeInstructions: '화살표 키 또는 스와이프로 조종. 먹고, 성장하고, 벽이 좁아져도 살아남으세요.',
       snakeAriaLabel: '스네이크 게임',
+      joystickLabel: '방향 조이스틱',
       snakeTip: '팁: 15점마다 벽이 좁아집니다 \u2014 볼륨을 올려보세요!',
       themeNeon: '네온 그린',
       themeCyber: '사이버 퍼플',
@@ -613,7 +622,7 @@ const I18N = (() => {
       snakeTut1Title: '스네이크에 오신 것을 환영합니다!',
       snakeTut1Text: '뱀을 조종하여 음식을 먹고 길게 성장하세요. 벽이나 자신에게 부딪히지 마세요!',
       snakeTut2Title: '조작법',
-      snakeTut2Text: '데스크톱에서는 화살표 키(또는 WASD), 모바일에서는 스와이프 또는 D-패드를 사용하세요.',
+      snakeTut2Text: '데스크톱에서는 화살표 키(또는 WASD), 모바일에서는 스와이프 또는 조이스틱을 사용하세요.',
       snakeTut3Title: '음식 종류',
       snakeTut3Text: '주황 = 일반(+1). 금색 = 보너스(+3, 슬로모). 분홍 = 스피드. 보라 = 독(-1). 청록 = 자석. 흰색 = 유령. 파랑 = 냉동.',
       snakeTut4Title: '벽 축소',
@@ -754,6 +763,13 @@ const I18N = (() => {
       loadingScores: '점수 로딩 중…',
       submittedScore: '점수가 제출되었습니다!',
       lbPlayer: '플레이어',
+
+      // Profile
+      profileTitle: '플레이어 프로필',
+      profileLink: '\uD83D\uDC64 플레이어 프로필',
+      profileTotalScore: '총 최고 점수',
+      profileGamesPlayed: '플레이한 게임',
+      profileTotalRuns: '총 플레이 횟수',
     },
 
     ja: {
@@ -930,6 +946,7 @@ const I18N = (() => {
       mdHeavyAirAdapted: '重い空気に適応',
       snakeInstructions: '矢印キーまたはスワイプで操作。食べて、成長して、壁が迫る中で生き延びよう。',
       snakeAriaLabel: 'スネークゲーム',
+      joystickLabel: '方向ジョイスティック',
       snakeTip: 'ヒント：15点ごとに壁が迫ります \u2014 音量を上げよう！',
       themeNeon: 'ネオングリーン',
       themeCyber: 'サイバーパープル',
@@ -976,7 +993,7 @@ const I18N = (() => {
       snakeTut1Title: 'スネークへようこそ！',
       snakeTut1Text: 'ヘビを操って食べ物を食べて長くなろう。壁や自分にぶつからないで！',
       snakeTut2Title: '操作方法',
-      snakeTut2Text: 'デスクトップでは矢印キー（またはWASD）、モバイルではスワイプまたはDパッド。',
+      snakeTut2Text: 'デスクトップでは矢印キー（またはWASD）、モバイルではスワイプまたはジョイスティック。',
       snakeTut3Title: '食べ物の種類',
       snakeTut3Text: 'オレンジ=通常(+1)。金=ボーナス(+3)。ピンク=スピード。紫=毒(-1)。シアン=磁石。白=ゴースト。青=冷凍。',
       snakeTut4Title: '壁の縮小',
@@ -1117,6 +1134,13 @@ const I18N = (() => {
       loadingScores: 'スコアを読み込み中…',
       submittedScore: 'スコアを送信しました！',
       lbPlayer: 'プレイヤー',
+
+      // Profile
+      profileTitle: 'プレイヤープロフィール',
+      profileLink: '\uD83D\uDC64 プロフィール',
+      profileTotalScore: 'ベストスコア合計',
+      profileGamesPlayed: 'プレイしたゲーム',
+      profileTotalRuns: '合計プレイ回数',
     },
 
     tr: {
@@ -1293,6 +1317,7 @@ const I18N = (() => {
       mdHeavyAirAdapted: 'Ağır Havaya Uyum',
       snakeInstructions: 'Ok tuşları veya kaydır. Ye, büyü, daralan duvarlardan kurtul.',
       snakeAriaLabel: 'Yılan oyunu',
+      joystickLabel: 'Yön joystick',
       snakeTip: 'İpucu: her 15 puanda duvarlar daralır \u2014 sesi aç!',
       themeNeon: 'Neon Yeşil',
       themeCyber: 'Siber Mor',
@@ -1339,7 +1364,7 @@ const I18N = (() => {
       snakeTut1Title: 'Yılan\'a Hoş Geldin!',
       snakeTut1Text: 'Yılanını yönlendirerek yemek ye ve uzat. Duvarlara veya kendine çarpma!',
       snakeTut2Title: 'Kontroller',
-      snakeTut2Text: 'Masaüstünde ok tuşları (veya WASD), mobilde kaydır veya D-pad kullan.',
+      snakeTut2Text: 'Masaüstünde ok tuşları (veya WASD), mobilde kaydır veya joystick kullan.',
       snakeTut3Title: 'Yemek Türleri',
       snakeTut3Text: 'Turuncu = normal (+1). Altın = bonus (+3). Pembe = hız. Mor = zehir (-1). Cyan = mıknatıs. Beyaz = hayalet. Mavi = dondurucu.',
       snakeTut4Title: 'Daralan Duvarlar',
@@ -1480,6 +1505,13 @@ const I18N = (() => {
       loadingScores: 'Skorlar yükleniyor…',
       submittedScore: 'Skor gönderildi!',
       lbPlayer: 'Oyuncu',
+
+      // Profile
+      profileTitle: 'Oyuncu Profili',
+      profileLink: '\uD83D\uDC64 Oyuncu Profili',
+      profileTotalScore: 'Toplam En Yüksek Skor',
+      profileGamesPlayed: 'Oynanan Oyunlar',
+      profileTotalRuns: 'Toplam Oyun',
     },
 
     fr: {
@@ -1656,6 +1688,7 @@ const I18N = (() => {
       mdHeavyAirAdapted: 'Air lourd adapté',
       snakeInstructions: 'Flèches ou glisse pour diriger. Mange, grandis, survis aux murs qui se ferment.',
       snakeAriaLabel: 'Jeu du serpent',
+      joystickLabel: 'Joystick directionnel',
       snakeTip: 'Astuce : les murs se referment tous les 15 points \u2014 monte le son !',
       themeNeon: 'Vert Néon',
       themeCyber: 'Violet Cyber',
@@ -1702,7 +1735,7 @@ const I18N = (() => {
       snakeTut1Title: 'Bienvenue dans Snake !',
       snakeTut1Text: 'Guide ton serpent pour manger et grandir. Ne touche pas les murs ni toi-même !',
       snakeTut2Title: 'Contrôles',
-      snakeTut2Text: 'Flèches (ou WASD) sur bureau, glisse ou D-pad sur mobile.',
+      snakeTut2Text: 'Flèches (ou WASD) sur bureau, glisse ou joystick sur mobile.',
       snakeTut3Title: 'Types de nourriture',
       snakeTut3Text: 'Orange = normal (+1). Or = bonus (+3). Rose = vitesse. Violet = poison (-1). Cyan = aimant. Blanc = fantôme. Bleu = gel.',
       snakeTut4Title: 'Murs qui se ferment',
@@ -1843,6 +1876,13 @@ const I18N = (() => {
       loadingScores: 'Chargement des scores…',
       submittedScore: 'Score envoyé !',
       lbPlayer: 'Joueur',
+
+      // Profile
+      profileTitle: 'Profil du Joueur',
+      profileLink: '\uD83D\uDC64 Profil du Joueur',
+      profileTotalScore: 'Score Total',
+      profileGamesPlayed: 'Jeux Joués',
+      profileTotalRuns: 'Parties Totales',
     },
 
     sv: {
@@ -2019,6 +2059,7 @@ const I18N = (() => {
       mdHeavyAirAdapted: 'Tung luft anpassad',
       snakeInstructions: 'Piltangenter eller svep för att styra. Ät, väx, överlev de stängande väggarna.',
       snakeAriaLabel: 'Ormspel',
+      joystickLabel: 'Riktningsjoystick',
       snakeTip: 'Tips: väggarna stängs var 15:e poäng \u2014 skruva upp volymen!',
       themeNeon: 'Neongrön',
       themeCyber: 'Cyberlila',
@@ -2065,7 +2106,7 @@ const I18N = (() => {
       snakeTut1Title: 'Välkommen till Snake!',
       snakeTut1Text: 'Styr din orm för att äta och bli längre. Rör inte väggarna eller dig själv!',
       snakeTut2Title: 'Kontroller',
-      snakeTut2Text: 'Piltangenter (eller WASD) på dator, svep eller D-pad på mobil.',
+      snakeTut2Text: 'Piltangenter (eller WASD) på dator, svep eller joystick på mobil.',
       snakeTut3Title: 'Mattyper',
       snakeTut3Text: 'Orange = normal (+1). Guld = bonus (+3). Rosa = hastighet. Lila = gift (-1). Cyan = magnet. Vit = spöke. Blå = frys.',
       snakeTut4Title: 'Stängande Väggar',
@@ -2206,6 +2247,13 @@ const I18N = (() => {
       loadingScores: 'Laddar poäng…',
       submittedScore: 'Poäng skickad!',
       lbPlayer: 'Spelare',
+
+      // Profile
+      profileTitle: 'Spelarprofil',
+      profileLink: '\uD83D\uDC64 Spelarprofil',
+      profileTotalScore: 'Totalt Bästa Poäng',
+      profileGamesPlayed: 'Spelade Spel',
+      profileTotalRuns: 'Totala Omgångar',
     },
 
     zh: {
@@ -2382,6 +2430,7 @@ const I18N = (() => {
       mdHeavyAirAdapted: '重空气适应',
       snakeInstructions: '方向键或滑动操控。吃食物、成长、在墙壁缩小时存活。',
       snakeAriaLabel: '贪吃蛇游戏',
+      joystickLabel: '方向摇杆',
       snakeTip: '提示：每15分墙壁会缩小 \u2014 把音量调大！',
       themeNeon: '霓虹绿',
       themeCyber: '赛博紫',
@@ -2428,7 +2477,7 @@ const I18N = (() => {
       snakeTut1Title: '欢迎来到贪吃蛇！',
       snakeTut1Text: '操控你的蛇吃食物变长。不要撞到墙壁或自己！',
       snakeTut2Title: '操作方式',
-      snakeTut2Text: '电脑用方向键（或WASD），手机用滑动或方向键。',
+      snakeTut2Text: '电脑用方向键（或WASD），手机用滑动或摇杆。',
       snakeTut3Title: '食物类型',
       snakeTut3Text: '橙色=普通(+1)。金色=奖励(+3)。粉色=加速。紫色=毒(-1)。青色=磁铁。白色=幽灵。蓝色=冰冻。',
       snakeTut4Title: '墙壁缩小',
@@ -2569,6 +2618,13 @@ const I18N = (() => {
       loadingScores: '加载分数中…',
       submittedScore: '分数已提交！',
       lbPlayer: '玩家',
+
+      // Profile
+      profileTitle: '玩家档案',
+      profileLink: '\uD83D\uDC64 玩家档案',
+      profileTotalScore: '最高分总和',
+      profileGamesPlayed: '已玩游戏',
+      profileTotalRuns: '总局数',
     },
   };
 
