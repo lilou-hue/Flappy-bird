@@ -103,7 +103,9 @@ const Leaderboard = (() => {
     });
   }
 
-  /* ── Score submission ──────────────────────────────────── */
+  /* ── Score submission (max 2 entries per player per game) ── */
+  const MAX_ENTRIES_PER_PLAYER = 2;
+
   async function submitScore(gameId, score) {
     if (!score || score <= 0) return;
     initFirebase();
@@ -113,6 +115,20 @@ const Leaderboard = (() => {
     if (!nickname) return;
 
     const ref = db.ref('leaderboards/' + gameId);
+
+    // Find existing entries by this player
+    const snap = await ref.orderByChild('nickname').equalTo(nickname).once('value');
+    const existing = [];
+    snap.forEach(child => { existing.push({ key: child.key, score: child.val().score }); });
+
+    if (existing.length >= MAX_ENTRIES_PER_PLAYER) {
+      // Find the lowest score among the player's entries
+      existing.sort((a, b) => a.score - b.score);
+      if (score <= existing[0].score) return; // new score isn't better, skip
+      // Remove the lowest to make room
+      await ref.child(existing[0].key).remove();
+    }
+
     await ref.push({
       nickname: nickname,
       score: score,
