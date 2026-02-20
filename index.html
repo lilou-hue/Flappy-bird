@@ -258,6 +258,63 @@
         100% { opacity: 0.7; }
       }
 
+      /* Profile link */
+      .profile-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #ccc;
+        text-decoration: none;
+        font-size: 0.95rem;
+        padding: 0.5rem 1rem;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,0.12);
+        background: rgba(255,255,255,0.05);
+        margin-bottom: 1.5rem;
+        transition: all 0.2s;
+      }
+      .profile-link:hover {
+        color: #fff;
+        border-color: rgba(255,204,77,0.4);
+        background: rgba(255,204,77,0.08);
+      }
+
+      /* Card entrance animation */
+      .game-card {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: cardSlideIn 0.4s ease forwards;
+      }
+      .game-card:nth-child(1) { animation-delay: 0.05s; }
+      .game-card:nth-child(2) { animation-delay: 0.1s; }
+      .game-card:nth-child(3) { animation-delay: 0.15s; }
+      .game-card:nth-child(4) { animation-delay: 0.2s; }
+      .game-card:nth-child(5) { animation-delay: 0.25s; }
+      .game-card:nth-child(6) { animation-delay: 0.3s; }
+      .game-card:nth-child(7) { animation-delay: 0.35s; }
+      .game-card:nth-child(8) { animation-delay: 0.4s; }
+
+      @keyframes cardSlideIn {
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      /* Best score badge on cards */
+      .card-best {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(0,0,0,0.6);
+        backdrop-filter: blur(6px);
+        color: #ffcc4d;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 0.25rem 0.6rem;
+        border-radius: 999px;
+        border: 1px solid rgba(255,204,77,0.3);
+        z-index: 2;
+        font-variant-numeric: tabular-nums;
+      }
+
       @media (max-width: 680px) {
         .games-grid {
           grid-template-columns: 1fr;
@@ -272,6 +329,7 @@
   <body>
     <h1 data-i18n="gameArcade">Game Arcade</h1>
     <p class="subtitle" data-i18n="pickAGame">Pick a game and start playing</p>
+    <a href="/profile/" class="profile-link" data-i18n="profileLink">&#x1F464; Player Profile</a>
 
     <div class="games-grid">
       <a href="/flappy-bird/" class="game-card">
@@ -1365,6 +1423,39 @@
       I18N.createSelector(document.body);
       I18N.applyDOM();
       window.addEventListener('langchange', () => I18N.applyDOM());
+
+      // Show best scores on cards
+      (function() {
+        const bestKeys = [
+          'flappyBest', 'methaneDriftBest', 'snakeBest', 'luminaBest',
+          'phantomRoadBest', null, 'tetrisBest', 'gunGameBest'
+        ];
+        const cards = document.querySelectorAll('.game-card');
+        cards.forEach((card, i) => {
+          const key = bestKeys[i];
+          if (!key) {
+            // Unicorn clicker — read from save object
+            try {
+              const save = JSON.parse(localStorage.getItem('unicornClickerSave') || '{}');
+              const sp = Number(save.lifetimeSP) || 0;
+              if (sp > 0) {
+                const badge = document.createElement('span');
+                badge.className = 'card-best';
+                badge.textContent = '\u2B50 ' + sp.toLocaleString() + ' SP';
+                card.querySelector('.card-preview').appendChild(badge);
+              }
+            } catch(e) {}
+            return;
+          }
+          const val = Number(localStorage.getItem(key)) || 0;
+          if (val > 0) {
+            const badge = document.createElement('span');
+            badge.className = 'card-best';
+            badge.textContent = '\u2B50 ' + val.toLocaleString();
+            card.querySelector('.card-preview').appendChild(badge);
+          }
+        });
+      })();
     </script>
   </body>
 </html>

@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Player Profile</title>
+    <style>
+      :root { font-family: "Segoe UI", "Trebuchet MS", system-ui, sans-serif; color-scheme: dark; }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+        color: #f0f0f0;
+        padding: 2rem 1rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .back-link {
+        align-self: flex-start;
+        color: #aaa;
+        text-decoration: none;
+        font-size: 0.95rem;
+        margin-bottom: 1.5rem;
+        transition: color 0.2s;
+      }
+      .back-link:hover { color: #fff; }
+
+      .profile-header {
+        text-align: center;
+        margin-bottom: 2rem;
+      }
+      .profile-header h1 {
+        font-size: 2.2rem;
+        background: linear-gradient(90deg, #ffcc4d, #ff7b54, #ff4da6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.3rem;
+      }
+      .profile-nickname {
+        font-size: 1.2rem;
+        color: #ccc;
+      }
+
+      /* Stats overview */
+      .stats-overview {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-bottom: 2rem;
+        max-width: 600px;
+        width: 100%;
+      }
+      .stat-card {
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 12px;
+        padding: 1rem 1.5rem;
+        text-align: center;
+        flex: 1;
+        min-width: 120px;
+        backdrop-filter: blur(8px);
+      }
+      .stat-card .stat-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #ffcc4d;
+        display: block;
+      }
+      .stat-card .stat-label {
+        font-size: 0.8rem;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-top: 0.2rem;
+      }
+
+      /* Game scores grid */
+      .scores-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 1rem;
+        max-width: 600px;
+        width: 100%;
+        margin-bottom: 2rem;
+      }
+      .score-card {
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 12px;
+        padding: 1rem 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        backdrop-filter: blur(8px);
+        transition: transform 0.2s, border-color 0.2s;
+      }
+      .score-card:hover {
+        transform: translateY(-2px);
+      }
+      .score-icon {
+        font-size: 1.8rem;
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .score-info { flex: 1; }
+      .score-info h3 {
+        font-size: 1rem;
+        margin-bottom: 0.2rem;
+      }
+      .score-info .score-best {
+        font-size: 1.4rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+      .score-info .score-label {
+        font-size: 0.75rem;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .no-score {
+        color: #555;
+        font-style: italic;
+        font-size: 0.9rem;
+      }
+
+      /* Game-specific accent colors */
+      .accent-flappy    { border-left: 3px solid #7be495; }
+      .accent-flappy .score-icon  { background: rgba(123,228,149,0.15); color: #7be495; }
+      .accent-flappy .score-best  { color: #7be495; }
+
+      .accent-tetris    { border-left: 3px solid #00d4ff; }
+      .accent-tetris .score-icon  { background: rgba(0,212,255,0.15); color: #00d4ff; }
+      .accent-tetris .score-best  { color: #00d4ff; }
+
+      .accent-snake     { border-left: 3px solid #39ff14; }
+      .accent-snake .score-icon   { background: rgba(57,255,20,0.15); color: #39ff14; }
+      .accent-snake .score-best   { color: #39ff14; }
+
+      .accent-lumina    { border-left: 3px solid #4dc9f6; }
+      .accent-lumina .score-icon  { background: rgba(77,201,246,0.15); color: #4dc9f6; }
+      .accent-lumina .score-best  { color: #4dc9f6; }
+
+      .accent-phantom   { border-left: 3px solid #ff8c32; }
+      .accent-phantom .score-icon { background: rgba(255,140,50,0.15); color: #ff8c32; }
+      .accent-phantom .score-best { color: #ff8c32; }
+
+      .accent-methane   { border-left: 3px solid #17cdd3; }
+      .accent-methane .score-icon { background: rgba(23,205,211,0.15); color: #17cdd3; }
+      .accent-methane .score-best { color: #17cdd3; }
+
+      .accent-unicorn   { border-left: 3px solid #ff69b4; }
+      .accent-unicorn .score-icon { background: rgba(255,105,180,0.15); color: #ff69b4; }
+      .accent-unicorn .score-best { color: #ff69b4; }
+
+      .accent-gungame   { border-left: 3px solid #ff6b35; }
+      .accent-gungame .score-icon { background: rgba(255,107,53,0.15); color: #ff6b35; }
+      .accent-gungame .score-best { color: #ff6b35; }
+
+      /* Entrance animation */
+      .score-card {
+        opacity: 0;
+        transform: translateY(12px);
+        animation: cardIn 0.35s ease forwards;
+      }
+      .score-card:nth-child(1) { animation-delay: 0.05s; }
+      .score-card:nth-child(2) { animation-delay: 0.1s; }
+      .score-card:nth-child(3) { animation-delay: 0.15s; }
+      .score-card:nth-child(4) { animation-delay: 0.2s; }
+      .score-card:nth-child(5) { animation-delay: 0.25s; }
+      .score-card:nth-child(6) { animation-delay: 0.3s; }
+      .score-card:nth-child(7) { animation-delay: 0.35s; }
+      .score-card:nth-child(8) { animation-delay: 0.4s; }
+
+      @keyframes cardIn {
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      @media (max-width: 600px) {
+        body { padding: 1rem 0.75rem; }
+        .profile-header h1 { font-size: 1.8rem; }
+        .scores-grid { grid-template-columns: 1fr; }
+        .stat-card .stat-value { font-size: 1.4rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <a href="/" class="back-link" data-i18n="backToGames">&larr; Back to Games</a>
+
+    <div class="profile-header">
+      <h1 data-i18n="profileTitle">Player Profile</h1>
+      <p class="profile-nickname" id="nickname"></p>
+    </div>
+
+    <div class="stats-overview" id="statsOverview">
+      <div class="stat-card">
+        <span class="stat-value" id="totalScore">0</span>
+        <span class="stat-label" data-i18n="profileTotalScore">Total Best Score</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value" id="gamesPlayed">0</span>
+        <span class="stat-label" data-i18n="profileGamesPlayed">Games Played</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value" id="totalRuns">0</span>
+        <span class="stat-label" data-i18n="profileTotalRuns">Total Runs</span>
+      </div>
+    </div>
+
+    <div class="scores-grid" id="scoresGrid"></div>
+
+    <script src="../i18n.js"></script>
+    <script>
+    (function() {
+      const games = [
+        { id: 'flappy',  key: 'flappyBest',       title: 'Flappy Bird',          icon: '\uD83D\uDC26', accent: 'flappy',  label: 'Best Score' },
+        { id: 'tetris',  key: 'tetrisBest',        title: 'Tetris',               icon: '\uD83D\uDFE6', accent: 'tetris',  label: 'Best Score' },
+        { id: 'snake',   key: 'snakeBest',         title: 'Snake',                icon: '\uD83D\uDC0D', accent: 'snake',   label: 'Best Score' },
+        { id: 'lumina',  key: 'luminaBest',        title: 'Lumina',               icon: '\uD83D\uDD2E', accent: 'lumina',  label: 'Best Depth' },
+        { id: 'phantom', key: 'phantomRoadBest',   title: 'Phantom Road',         icon: '\uD83D\uDE97', accent: 'phantom', label: 'Best Distance' },
+        { id: 'methane', key: 'methaneDriftBest',  title: 'Methane Drift',        icon: '\uD83D\uDE80', accent: 'methane', label: 'Best Score' },
+        { id: 'unicorn', key: null,                title: 'Unicorn Fart Clicker', icon: '\uD83E\uDD84', accent: 'unicorn', label: 'Lifetime SP', saveKey: 'unicornClickerSave', field: 'lifetimeSP' },
+        { id: 'gungame', key: 'gunGameBest',       title: 'Gun Game',             icon: '\uD83D\uDD2B', accent: 'gungame', label: 'Best Score' },
+      ];
+
+      // Read nickname
+      const nickname = localStorage.getItem('arcade_nickname') || 'Player';
+      document.getElementById('nickname').textContent = nickname;
+
+      // Read scores
+      let totalScore = 0;
+      let gamesWithScore = 0;
+      const grid = document.getElementById('scoresGrid');
+
+      for (const game of games) {
+        let score = 0;
+        if (game.saveKey) {
+          try {
+            const save = JSON.parse(localStorage.getItem(game.saveKey) || '{}');
+            score = Number(save[game.field]) || 0;
+          } catch(e) {}
+        } else if (game.key) {
+          score = Number(localStorage.getItem(game.key)) || 0;
+        }
+
+        if (score > 0) {
+          gamesWithScore++;
+          totalScore += score;
+        }
+
+        const card = document.createElement('div');
+        card.className = 'score-card accent-' + game.accent;
+        card.innerHTML =
+          '<div class="score-icon">' + game.icon + '</div>' +
+          '<div class="score-info">' +
+            '<h3>' + game.title + '</h3>' +
+            (score > 0
+              ? '<span class="score-best">' + score.toLocaleString() + '</span><span class="score-label">' + game.label + '</span>'
+              : '<span class="no-score">Not played yet</span>') +
+          '</div>';
+        grid.appendChild(card);
+      }
+
+      document.getElementById('totalScore').textContent = totalScore.toLocaleString();
+      document.getElementById('gamesPlayed').textContent = gamesWithScore + '/8';
+
+      // Total runs from methane drift progress
+      let totalRuns = 0;
+      try {
+        const mdProgress = JSON.parse(localStorage.getItem('methaneDriftProgress') || '{}');
+        totalRuns += Number(mdProgress.totalRuns) || 0;
+      } catch(e) {}
+      try {
+        totalRuns += Number(localStorage.getItem('gunGameWins')) || 0;
+      } catch(e) {}
+      document.getElementById('totalRuns').textContent = totalRuns > 0 ? totalRuns : '-';
+
+      // i18n
+      if (typeof I18N !== 'undefined') {
+        I18N.applyDOM();
+        window.addEventListener('langchange', () => I18N.applyDOM());
+      }
+    })();
+    </script>
+  </body>
+</html>

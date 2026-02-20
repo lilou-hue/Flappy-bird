@@ -13,6 +13,67 @@ window.addEventListener('langchange', () => {
   draw();
 });
 
+/* ── Achievements ────────────────────────────────────────── */
+const FB_ACHIEVEMENTS = [
+  { id: 'first_flight',  icon: '\u2708\uFE0F', title: 'First Flight',   desc: 'Pass your first pipe',     check: s => s.bestScore >= 1 },
+  { id: 'score_10',      icon: '\uD83D\uDD1F', title: 'Double Digits',  desc: 'Score 10 in one game',     check: s => s.bestScore >= 10 },
+  { id: 'score_25',      icon: '\uD83D\uDE80', title: 'High Flyer',     desc: 'Score 25 in one game',     check: s => s.bestScore >= 25 },
+  { id: 'score_50',      icon: '\uD83D\uDC51', title: 'Sky King',       desc: 'Score 50 in one game',     check: s => s.bestScore >= 50 },
+  { id: 'flap_500',      icon: '\uD83D\uDCAA', title: 'Flap Master',    desc: 'Flap 500 times total',     check: s => s.totalFlaps >= 500 },
+  { id: 'games_10',      icon: '\uD83C\uDFAE', title: 'Dedicated',      desc: 'Play 10 games',            check: s => s.gamesPlayed >= 10 },
+];
+
+let fbAchStats = { bestScore: 0, totalFlaps: 0, gamesPlayed: 0 };
+let fbUnlocked = new Set();
+let fbAchQueue = [];
+let fbAchTimer = 0;
+
+function loadFbAch() {
+  try {
+    const s = JSON.parse(localStorage.getItem('flappyAch') || '{}');
+    if (s.unlocked) fbUnlocked = new Set(s.unlocked);
+    if (s.stats) Object.assign(fbAchStats, s.stats);
+  } catch (_) {}
+}
+function saveFbAch() {
+  localStorage.setItem('flappyAch', JSON.stringify({ unlocked: [...fbUnlocked], stats: fbAchStats }));
+}
+function checkFbAch() {
+  for (const a of FB_ACHIEVEMENTS) {
+    if (!fbUnlocked.has(a.id) && a.check(fbAchStats)) {
+      fbUnlocked.add(a.id);
+      fbAchQueue.push(a);
+      saveFbAch();
+    }
+  }
+}
+function showFbAchPopup() {
+  if (fbAchTimer > 0 || fbAchQueue.length === 0) return;
+  const a = fbAchQueue.shift();
+  const popup = document.getElementById('achievementPopup');
+  document.getElementById('achievementPopupIcon').textContent = a.icon;
+  document.getElementById('achievementPopupTitle').textContent = a.title;
+  document.getElementById('achievementPopupDesc').textContent = a.desc;
+  popup.classList.add('show');
+  fbAchTimer = 3;
+  setTimeout(() => { popup.classList.remove('show'); setTimeout(() => { fbAchTimer = 0; showFbAchPopup(); }, 500); }, 3000);
+}
+function renderFbAchList() {
+  const list = document.getElementById('achievementsList');
+  list.innerHTML = '';
+  for (const a of FB_ACHIEVEMENTS) {
+    const el = document.createElement('div');
+    el.className = 'achievement-item' + (fbUnlocked.has(a.id) ? ' unlocked' : '');
+    el.innerHTML = '<span class="achievement-item__icon">' + a.icon + '</span><span>' + a.title + '</span>';
+    list.appendChild(el);
+  }
+}
+document.getElementById('achievementsToggle').addEventListener('click', () => {
+  document.getElementById('achievementsList').classList.toggle('open');
+  renderFbAchList();
+});
+loadFbAch();
+
 const gameState = {
   gravity: 1800,
   lift: -520,
@@ -203,6 +264,7 @@ const resetGame = () => {
   gameState.scorePop = 0;
   gameState.lastScore = 0;
   gameState._lbSubmitted = false;
+  gameState._achCounted = false;
   scoreLabel.textContent = gameState.score;
   initClouds();
   initHills();
@@ -855,6 +917,8 @@ const updateScore = () => {
       scoreLabel.textContent = gameState.score;
       gameState.scorePop = 1;
       Audio.score();
+      fbAchStats.bestScore = Math.max(fbAchStats.bestScore, gameState.score);
+      checkFbAch(); showFbAchPopup();
     }
   });
 };
@@ -915,6 +979,11 @@ const update = (deltaSeconds) => {
   if (gameState.isGameOver) {
     const wasNewBest = gameState.score > gameState.best;
     saveBestScore();
+    if (!gameState._achCounted) {
+      gameState._achCounted = true;
+      fbAchStats.gamesPlayed++;
+      checkFbAch(); showFbAchPopup(); saveFbAch();
+    }
     if (!gameState._lbSubmitted && gameState.score > 0) {
       gameState._lbSubmitted = true;
       if (typeof Leaderboard !== 'undefined') {
@@ -1064,6 +1133,7 @@ const flap = () => {
   if (gameState.isRunning) {
     bird.velocity = gameState.lift;
     Audio.flap();
+    fbAchStats.totalFlaps++;
   }
 };
 
