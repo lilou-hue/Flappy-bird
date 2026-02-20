@@ -10,6 +10,67 @@
   I18N.applyDOM();
   window.addEventListener('langchange', () => { I18N.applyDOM(); });
 
+  /* ── Achievements ────────────────────────────────────────── */
+  const TETRIS_ACHIEVEMENTS = [
+    { id: 'first_line',    icon: '\u2728', title: 'First Clear',      desc: 'Clear your first line',       check: s => s.totalLines >= 1 },
+    { id: 'lines_50',      icon: '\uD83D\uDD25', title: 'Line Master',      desc: 'Clear 50 lines total',        check: s => s.totalLines >= 50 },
+    { id: 'score_5k',      icon: '\uD83D\uDC8E', title: 'Score 5000',        desc: 'Score 5000 in one game',      check: s => s.bestScore >= 5000 },
+    { id: 'score_10k',     icon: '\uD83D\uDC51', title: 'Score 10000',       desc: 'Score 10000 in one game',     check: s => s.bestScore >= 10000 },
+    { id: 'level_10',      icon: '\uD83D\uDCC8', title: 'Level 10',          desc: 'Reach level 10',              check: s => s.bestLevel >= 10 },
+    { id: 'games_10',      icon: '\uD83C\uDFAE', title: 'Dedicated',         desc: 'Play 10 games',               check: s => s.gamesPlayed >= 10 },
+  ];
+
+  let tetAchStats = { totalLines: 0, bestScore: 0, bestLevel: 0, gamesPlayed: 0 };
+  let tetUnlocked = new Set();
+  let tetAchQueue = [];
+  let tetAchTimer = 0;
+
+  function loadTetAch() {
+    try {
+      const s = JSON.parse(localStorage.getItem('tetrisAch') || '{}');
+      if (s.unlocked) tetUnlocked = new Set(s.unlocked);
+      if (s.stats) Object.assign(tetAchStats, s.stats);
+    } catch (_) {}
+  }
+  function saveTetAch() {
+    localStorage.setItem('tetrisAch', JSON.stringify({ unlocked: [...tetUnlocked], stats: tetAchStats }));
+  }
+  function checkTetAch() {
+    for (const a of TETRIS_ACHIEVEMENTS) {
+      if (!tetUnlocked.has(a.id) && a.check(tetAchStats)) {
+        tetUnlocked.add(a.id);
+        tetAchQueue.push(a);
+        saveTetAch();
+      }
+    }
+  }
+  function showTetAchPopup() {
+    if (tetAchTimer > 0 || tetAchQueue.length === 0) return;
+    const a = tetAchQueue.shift();
+    const popup = document.getElementById('achievementPopup');
+    document.getElementById('achievementPopupIcon').textContent = a.icon;
+    document.getElementById('achievementPopupTitle').textContent = a.title;
+    document.getElementById('achievementPopupDesc').textContent = a.desc;
+    popup.classList.add('show');
+    tetAchTimer = 3;
+    setTimeout(() => { popup.classList.remove('show'); setTimeout(() => { tetAchTimer = 0; showTetAchPopup(); }, 500); }, 3000);
+  }
+  function renderTetAchList() {
+    const list = document.getElementById('achievementsList');
+    list.innerHTML = '';
+    for (const a of TETRIS_ACHIEVEMENTS) {
+      const el = document.createElement('div');
+      el.className = 'achievement-item' + (tetUnlocked.has(a.id) ? ' unlocked' : '');
+      el.innerHTML = '<span class="achievement-item__icon">' + a.icon + '</span><span>' + a.title + '</span>';
+      list.appendChild(el);
+    }
+  }
+  document.getElementById('achievementsToggle').addEventListener('click', () => {
+    document.getElementById('achievementsList').classList.toggle('open');
+    renderTetAchList();
+  });
+  loadTetAch();
+
   /* ================================================================== */
   /*  Constants                                                          */
   /* ================================================================== */
@@ -436,6 +497,8 @@
       // Lines & level
       const prevLevel = state.level;
       state.lines += fullRows.length;
+      tetAchStats.totalLines += fullRows.length;
+      checkTetAch(); showTetAchPopup();
       state.level = Math.min(29, Math.floor(state.lines / 10) + 1);
       state.dropInterval = getDropInterval(state.level);
       if (state.level > prevLevel) {
@@ -504,6 +567,10 @@
     if (typeof Leaderboard !== 'undefined' && state.score > 0) {
       Leaderboard.submitScore('tetris', state.score).then(() => Leaderboard.refresh('tetris'));
     }
+    tetAchStats.gamesPlayed++;
+    tetAchStats.bestScore = Math.max(tetAchStats.bestScore, state.score);
+    tetAchStats.bestLevel = Math.max(tetAchStats.bestLevel, state.level || 0);
+    checkTetAch(); showTetAchPopup(); saveTetAch();
   }
 
   /* ================================================================== */
