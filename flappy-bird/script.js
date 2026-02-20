@@ -1076,6 +1076,17 @@ canvas.addEventListener("dblclick", (event) => {
   event.preventDefault();
 });
 
+/* --- Prevent scrolling / pull-to-refresh on mobile --- */
+document.addEventListener("touchmove", (event) => {
+  event.preventDefault();
+}, { passive: false });
+
+document.addEventListener("touchstart", (event) => {
+  if (event.touches.length > 1) {
+    event.preventDefault();
+  }
+}, { passive: false });
+
 restartButton.addEventListener("click", () => {
   resetGame();
 });
