@@ -544,11 +544,14 @@
     // Wings (evo 2+) — unicorn draws its own wings in drawSkinUnicorn
     if (evo >= 2 && skinKey !== 'unicorn') {
       const sk = SKINS.find(s => s.key === skinKey) || SKINS[0];
+      // Use the same scale factor the skin draw functions use (S = 1 + evo * 0.1)
+      // so wings stay aligned with the body at all evolution levels
+      const ws = 1 + evo * 0.1;
       const wf = Math.sin(gameTime * 3.5) * 20;
       const wc = evo >= 5 ? [255, 240, 180] : evo >= 3 ? [190, 170, 255] : [255, 220, 240];
-      const lx = (-10 + sk.wingDx) * bs;
-      const rx = (10 - sk.wingDx) * bs;
-      const wy = (-20 + sk.wingDy) * bs;
+      const lx = (-10 + sk.wingDx) * ws;
+      const rx = (10 - sk.wingDx) * ws;
+      const wy = (-20 + sk.wingDy) * ws;
 
       // Left wing — 3 layered feathers
       ctx.save();
@@ -557,14 +560,14 @@
       for (let f = 0; f < 3; f++) {
         ctx.fillStyle = `rgba(${wc[0]},${wc[1]},${wc[2]},${0.65 - f * 0.13})`;
         ctx.beginPath();
-        ctx.ellipse(-5 * bs - f * 4, -10 * bs + f * 3, 7 * bs, 16 * bs - f * 2, -0.4 + f * 0.15, 0, Math.PI * 2);
+        ctx.ellipse(-5 * ws - f * 4, -10 * ws + f * 3, 7 * ws, 16 * ws - f * 2, -0.4 + f * 0.15, 0, Math.PI * 2);
         ctx.fill();
         ctx.strokeStyle = `rgba(${Math.max(0, wc[0] - 40)},${Math.max(0, wc[1] - 40)},${Math.max(0, wc[2] - 20)},0.25)`;
         ctx.lineWidth = 1.2;
         ctx.stroke();
       }
       ctx.fillStyle = 'rgba(255,255,255,0.18)';
-      ctx.beginPath(); ctx.ellipse(-6 * bs, -14 * bs, 4 * bs, 7 * bs, -0.3, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(-6 * ws, -14 * ws, 4 * ws, 7 * ws, -0.3, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
 
       // Right wing — 3 layered feathers
@@ -574,14 +577,14 @@
       for (let f = 0; f < 3; f++) {
         ctx.fillStyle = `rgba(${wc[0]},${wc[1]},${wc[2]},${0.55 - f * 0.1})`;
         ctx.beginPath();
-        ctx.ellipse(5 * bs + f * 4, -10 * bs + f * 3, 7 * bs, 16 * bs - f * 2, 0.4 - f * 0.15, 0, Math.PI * 2);
+        ctx.ellipse(5 * ws + f * 4, -10 * ws + f * 3, 7 * ws, 16 * ws - f * 2, 0.4 - f * 0.15, 0, Math.PI * 2);
         ctx.fill();
         ctx.strokeStyle = `rgba(${Math.max(0, wc[0] - 40)},${Math.max(0, wc[1] - 40)},${Math.max(0, wc[2] - 20)},0.25)`;
         ctx.lineWidth = 1.2;
         ctx.stroke();
       }
       ctx.fillStyle = 'rgba(255,255,255,0.13)';
-      ctx.beginPath(); ctx.ellipse(6 * bs, -14 * bs, 4 * bs, 7 * bs, 0.3, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(6 * ws, -14 * ws, 4 * ws, 7 * ws, 0.3, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
     }
     // Orbiting sparkles (evo 1+)
