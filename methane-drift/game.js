@@ -100,6 +100,38 @@ const bestNode = document.getElementById('best');
 const muteBtn = document.getElementById('muteBtn');
 const comboNode = document.getElementById('combo');
 
+/* ── Achievement UI ─────────────────────────────────────── */
+let mdAchQueue = [];
+let mdAchTimer = 0;
+
+function showMdAchPopup() {
+  if (mdAchTimer > 0 || mdAchQueue.length === 0) return;
+  const a = mdAchQueue.shift();
+  const popup = document.getElementById('achievementPopup');
+  document.getElementById('achievementPopupIcon').textContent = '🏆';
+  document.getElementById('achievementPopupTitle').textContent = a.name;
+  document.getElementById('achievementPopupDesc').textContent = a.desc;
+  popup.classList.add('show');
+  mdAchTimer = 3;
+  setTimeout(() => { popup.classList.remove('show'); setTimeout(() => { mdAchTimer = 0; showMdAchPopup(); }, 500); }, 3000);
+}
+
+function renderMdAchList() {
+  const list = document.getElementById('achievementsList');
+  list.innerHTML = '';
+  for (const a of ACHIEVEMENTS) {
+    const el = document.createElement('div');
+    el.className = 'achievement-item' + (progress.achievements.includes(a.id) ? ' unlocked' : '');
+    el.innerHTML = '<span class="achievement-item__icon">🏆</span><span>' + a.name + '</span>';
+    list.appendChild(el);
+  }
+}
+
+document.getElementById('achievementsToggle').addEventListener('click', () => {
+  document.getElementById('achievementsList').classList.toggle('open');
+  renderMdAchList();
+});
+
 /* --- i18n setup --- */
 const _t = (key) => I18N.t(key);
 I18N.createSelector(document.querySelector('.hud-panel'));
@@ -1098,6 +1130,8 @@ function checkAchievements() {
   if (unlocked.length > 0) {
     world.newAchievements = unlocked;
     world.achievementToast = { items: unlocked, timer: 3.0 };
+    mdAchQueue.push(...unlocked);
+    showMdAchPopup();
   }
 }
 

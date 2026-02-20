@@ -27,9 +27,22 @@
         <button id="fullscreenBtn" class="fullscreen-btn" type="button" aria-label="Toggle fullscreen" data-i18n="mdFullscreen">Fullscreen</button>
         <button id="restartBtn" class="restart-btn" hidden data-i18n="mdPlayAgain">Play Again</button>
         <button id="symbiosisBtn" class="symbiosis-action-btn" hidden aria-label="Activate Shield" data-i18n="mdShieldBtnLabel">Shield</button>
+        <!-- Achievements panel -->
+        <div class="achievements-panel" id="achievementsPanel">
+          <button class="achievements-toggle" id="achievementsToggle" type="button" data-i18n="achievements">Achievements</button>
+          <div class="achievements-list" id="achievementsList"></div>
+        </div>
       </section>
       <canvas id="game" class="game-canvas" width="960" height="540" aria-label="Methane Drift game"></canvas>
     </main>
+    <!-- Achievement popup -->
+    <div class="achievement-popup" id="achievementPopup">
+      <div class="achievement-popup__icon" id="achievementPopupIcon"></div>
+      <div class="achievement-popup__text">
+        <strong id="achievementPopupTitle"></strong>
+        <span id="achievementPopupDesc"></span>
+      </div>
+    </div>
     <div id="leaderboardPanel"></div>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
