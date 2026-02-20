@@ -15,13 +15,13 @@
 const Leaderboard = (() => {
   /* ── Firebase setup ────────────────────────────────────── */
   const firebaseConfig = {
-    apiKey:            "YOUR_API_KEY",
-    authDomain:        "YOUR_PROJECT.firebaseapp.com",
-    databaseURL:       "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-    projectId:         "YOUR_PROJECT",
-    storageBucket:     "YOUR_PROJECT.appspot.com",
-    messagingSenderId: "000000000000",
-    appId:             "YOUR_APP_ID"
+    apiKey:            "AIzaSyAi0xSa5-xpJ3tpMAMxNIMAkJdg7QrVWRg",
+    authDomain:        "slayplay-d931f.firebaseapp.com",
+    databaseURL:       "https://slayplay-d931f-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId:         "slayplay-d931f",
+    storageBucket:     "slayplay-d931f.firebasestorage.app",
+    messagingSenderId: "322440730209",
+    appId:             "1:322440730209:web:6effcaeef9f44b4ea7fc20"
   };
 
   let db = null;
