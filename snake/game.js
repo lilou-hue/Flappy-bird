@@ -1944,13 +1944,16 @@ window.addEventListener("keydown", (e) => {
   }
 });
 
-/* Touch / Swipe */
+/* Touch / Swipe on canvas */
+canvas.style.touchAction = 'none';
 let touchStart = null;
+let touchStartTime = 0;
 
 canvas.addEventListener("pointerdown", (e) => {
   e.preventDefault();
   getAudio();
   touchStart = { x: e.clientX, y: e.clientY };
+  touchStartTime = performance.now();
   if (state.phase === "dead") resetGame();
 });
 
@@ -1958,42 +1961,103 @@ canvas.addEventListener("pointermove", (e) => {
   if (!touchStart) return;
   const dx = e.clientX - touchStart.x;
   const dy = e.clientY - touchStart.y;
-  const threshold = 20;
-  if (Math.abs(dx) < threshold && Math.abs(dy) < threshold) return;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  const elapsed = performance.now() - touchStartTime;
+  // Fast swipes (high velocity) use lower threshold
+  const velocity = dist / Math.max(elapsed, 1);
+  const threshold = velocity > 0.4 ? 8 : 12;
+  if (dist < threshold) return;
   if (Math.abs(dx) > Math.abs(dy)) {
     queueDirection(dx > 0 ? { x: 1, y: 0 } : { x: -1, y: 0 });
   } else {
     queueDirection(dy > 0 ? { x: 0, y: 1 } : { x: 0, y: -1 });
   }
   touchStart = { x: e.clientX, y: e.clientY };
+  touchStartTime = performance.now();
 });
 
 canvas.addEventListener("pointerup", () => { touchStart = null; });
 canvas.addEventListener("pointercancel", () => { touchStart = null; });
 
-/* D-Pad Buttons */
-const dpadDirMap = {
-  up:    { x: 0, y: -1 },
-  down:  { x: 0, y: 1 },
-  left:  { x: -1, y: 0 },
-  right: { x: 1, y: 0 },
-};
+/* Virtual Joystick */
+const joystickBase = document.getElementById('joystickBase');
+const joystickKnob = document.getElementById('joystickKnob');
+let joystickCenter = null;
+let joystickActive = false;
+let joystickTickId = null;
+let joystickCurrentDir = null;
 
-document.querySelectorAll(".dpad__btn[data-dir]").forEach(btn => {
-  function handleDpad(e) {
+if (joystickBase && joystickKnob) {
+  joystickBase.addEventListener("pointerdown", (e) => {
     e.preventDefault();
     getAudio();
-    const dir = dpadDirMap[btn.dataset.dir];
-    if (!dir) return;
+    joystickBase.setPointerCapture(e.pointerId);
+    joystickActive = true;
+    joystickKnob.classList.add('active');
+    const rect = joystickBase.getBoundingClientRect();
+    joystickCenter = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    updateJoystick(e.clientX, e.clientY);
     if (state.phase === "dead") resetGame();
-    queueDirection(dir);
-  }
-  btn.addEventListener("pointerdown", handleDpad);
-  // Allow holding and sliding to another button
-  btn.addEventListener("pointerenter", (e) => {
-    if (e.buttons > 0) handleDpad(e);
+    // Start continuous direction ticking
+    joystickTickId = setInterval(() => {
+      if (joystickCurrentDir) queueDirection(joystickCurrentDir);
+    }, 80);
   });
-});
+
+  joystickBase.addEventListener("pointermove", (e) => {
+    if (!joystickActive) return;
+    e.preventDefault();
+    updateJoystick(e.clientX, e.clientY);
+  });
+
+  joystickBase.addEventListener("pointerup", endJoystick);
+  joystickBase.addEventListener("pointercancel", endJoystick);
+}
+
+function updateJoystick(px, py) {
+  if (!joystickCenter) return;
+  const dx = px - joystickCenter.x;
+  const dy = py - joystickCenter.y;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  const baseRadius = joystickBase.offsetWidth / 2;
+  const knobRadius = joystickKnob.offsetWidth / 2;
+  const maxDist = baseRadius - knobRadius;
+
+  // Clamp knob position to base radius
+  const clampedDist = Math.min(dist, maxDist);
+  const angle = Math.atan2(dy, dx);
+  const knobX = clampedDist * Math.cos(angle);
+  const knobY = clampedDist * Math.sin(angle);
+  joystickKnob.style.transform = `translate(${knobX}px, ${knobY}px)`;
+
+  // Dead zone
+  if (dist < 15) {
+    joystickCurrentDir = null;
+    return;
+  }
+
+  // Snap to 4 cardinal directions using 45-degree sectors
+  const deg = ((angle * 180 / Math.PI) + 360) % 360;
+  let dir;
+  if (deg >= 315 || deg < 45) dir = { x: 1, y: 0 };       // right
+  else if (deg >= 45 && deg < 135) dir = { x: 0, y: 1 };   // down
+  else if (deg >= 135 && deg < 225) dir = { x: -1, y: 0 };  // left
+  else dir = { x: 0, y: -1 };                                // up
+
+  joystickCurrentDir = dir;
+  queueDirection(dir);
+}
+
+function endJoystick() {
+  joystickActive = false;
+  joystickCurrentDir = null;
+  joystickCenter = null;
+  if (joystickTickId) { clearInterval(joystickTickId); joystickTickId = null; }
+  if (joystickKnob) {
+    joystickKnob.classList.remove('active');
+    joystickKnob.style.transform = 'translate(0px, 0px)';
+  }
+}
 
 /* Buttons */
 restartButton.addEventListener("click", () => { resetGame(); });
@@ -2017,7 +2081,7 @@ document.addEventListener("touchstart", (e) => { if (e.touches.length > 1) e.pre
 const _gameHeader = document.querySelector('.game__header');
 const _gamePanel = document.querySelector('.game__panel');
 const _gameHud = document.querySelector('.game__hud');
-const _dpad = document.getElementById('dpad');
+const _joystickZone = document.getElementById('joystickZone');
 const _settingsBar = document.querySelector('.settings-bar');
 
 function fitCanvasToScreen() {
@@ -2028,7 +2092,7 @@ function fitCanvasToScreen() {
   const vh = window.innerHeight;
   const headerH = _gameHeader ? _gameHeader.offsetHeight : 0;
   const hudH = _gameHud ? _gameHud.offsetHeight : 0;
-  const dpadH = (_dpad && getComputedStyle(_dpad).display !== 'none') ? _dpad.offsetHeight : 0;
+  const dpadH = (_joystickZone && getComputedStyle(_joystickZone).display !== 'none') ? _joystickZone.offsetHeight : 0;
   const settingsH = (_settingsBar && getComputedStyle(_settingsBar).display !== 'none') ? _settingsBar.offsetHeight : 0;
 
   const chrome = headerH + hudH + dpadH + settingsH + 16 + 12 + 16 + 24;
