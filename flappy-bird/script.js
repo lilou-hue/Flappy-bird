@@ -32,38 +32,6 @@ const gameState = {
   lastScore: 0,
 };
 
-/* --- Gun Game Mode --- */
-let gameMode = 'classic'; // 'classic' or 'gunGame'
-let modeSelected = false; // whether the player has chosen a mode
-
-const gunState = {
-  tier: 1,
-  destroys: 0,
-  cooldown: 0,
-  projectiles: [],
-  pipeFragments: [],
-  invincibleTimer: 0,
-  tierFlash: 0,
-  tierFlashName: '',
-  victoryTriggered: false,
-  highestTier: 1,
-  totalDestroyed: 0,
-  screenFlash: 0,
-  demotionMsg: '',
-  demotionTimer: 0,
-};
-
-const weaponDefs = [
-  { name: 'Seed Spit',      fireRate: 400,  speed: 350, damage: 1, radius: 3,  projectileCount: 1, spread: 0, piercing: false, explosive: false, explosionRadius: 0, arcGravity: 0, lifetime: 2 },
-  { name: 'Egg Toss',       fireRate: 500,  speed: 300, damage: 1, radius: 5,  projectileCount: 1, spread: 0, piercing: false, explosive: false, explosionRadius: 0, arcGravity: 200, lifetime: 2.5 },
-  { name: 'Feather Darts',  fireRate: 350,  speed: 400, damage: 1, radius: 3,  projectileCount: 3, spread: 0.25, piercing: false, explosive: false, explosionRadius: 0, arcGravity: 0, lifetime: 1.8 },
-  { name: 'Acorn Cannon',   fireRate: 600,  speed: 280, damage: 2, radius: 6,  projectileCount: 1, spread: 0, piercing: false, explosive: true, explosionRadius: 40, arcGravity: 150, lifetime: 3 },
-  { name: 'Wind Gust',      fireRate: 700,  speed: 500, damage: 1, radius: 12, projectileCount: 1, spread: 0, piercing: true, explosive: false, explosionRadius: 0, arcGravity: 0, lifetime: 1.2 },
-  { name: 'Sonic Screech',  fireRate: 800,  speed: 900, damage: 2, radius: 8,  projectileCount: 1, spread: 0, piercing: true, explosive: true, explosionRadius: 50, arcGravity: 0, lifetime: 0.8 },
-  { name: 'Lightning Bolt', fireRate: 500,  speed: 1200, damage: 3, radius: 4, projectileCount: 1, spread: 0, piercing: true, explosive: false, explosionRadius: 0, arcGravity: 0, lifetime: 0.5 },
-  { name: 'Phoenix Fire',   fireRate: 900,  speed: 250, damage: 3, radius: 14, projectileCount: 1, spread: 0, piercing: true, explosive: true, explosionRadius: 60, arcGravity: 0, lifetime: 3 },
-];
-
 const bird = {
   x: 80,
   y: canvas.height / 2,
@@ -235,23 +203,6 @@ const resetGame = () => {
   gameState.scorePop = 0;
   gameState.lastScore = 0;
   scoreLabel.textContent = gameState.score;
-  if (gameMode === 'gunGame') {
-    // On demotion reset, tier is preserved externally before calling resetGame
-    gunState.cooldown = 0;
-    gunState.projectiles = [];
-    gunState.pipeFragments = [];
-    gunState.invincibleTimer = 0;
-    gunState.tierFlash = 0;
-    gunState.screenFlash = 0;
-    gunState.victoryTriggered = false;
-    gunState.demotionTimer = 0;
-    applyGunDifficulty();
-  } else {
-    // Restore classic defaults (may have been modified by gun game)
-    gameState.speed = 190;
-    gameState.gap = 150;
-    gameState.pipeInterval = 1400;
-  }
   initClouds();
   initHills();
   initTrees();
@@ -269,11 +220,10 @@ const spawnPipe = () => {
   const topHeight = Math.floor(
     Math.random() * (maxHeight - minHeight + 1) + minHeight
   );
-  const pipeObj = {
+  pipes.push({
     x: canvas.width + gameState.pipeWidth,
     top: topHeight,
     passed: false,
-    /* Randomized vine/crack data per pipe */
     vines: [
       { xOff: 8 + Math.random() * 20, amp: 2 + Math.random() * 3, freq: 0.04 + Math.random() * 0.02 },
       { xOff: 30 + Math.random() * 15, amp: 1.5 + Math.random() * 2, freq: 0.05 + Math.random() * 0.03 },
@@ -282,17 +232,7 @@ const spawnPipe = () => {
       { xOff: 10 + Math.random() * 30, yStart: Math.random() * 0.3, len: 15 + Math.random() * 25, angle: -0.3 + Math.random() * 0.6 },
       { xOff: 5 + Math.random() * 40, yStart: 0.4 + Math.random() * 0.3, len: 10 + Math.random() * 20, angle: -0.4 + Math.random() * 0.8 },
     ],
-  };
-  if (gameMode === 'gunGame') {
-    const reinforceChance = gunState.tier >= 4 ? 0.3 + 0.2 * ((gunState.tier - 4) / 4) : 0;
-    const isReinforced = Math.random() < reinforceChance;
-    pipeObj.topHP = isReinforced ? 2 : 1;
-    pipeObj.bottomHP = isReinforced ? 2 : 1;
-    pipeObj.reinforced = isReinforced;
-    pipeObj.topDestroyed = false;
-    pipeObj.bottomDestroyed = false;
-  }
-  pipes.push(pipeObj);
+  });
 };
 
 /* --- Wind particles for speed feel --- */
@@ -335,331 +275,6 @@ function lerpColor(a, b, t) {
   const rg = Math.round(ag + (bg - ag) * t);
   const rb = Math.round(ab + (bb - ab) * t);
   return `rgb(${rr}, ${rg}, ${rb})`;
-}
-
-/* --- Gun Game: difficulty scaling --- */
-function applyGunDifficulty() {
-  if (gameMode !== 'gunGame') return;
-  gameState.speed = 190 + (gunState.tier - 1) * 10;
-  gameState.gap = 150 - (gunState.tier - 1) * 5;
-  gameState.pipeInterval = 1400 - (gunState.tier - 1) * 50;
-}
-
-/* --- Gun Game: full reset (for victory replay or mode switch) --- */
-function fullGunReset() {
-  gunState.tier = 1;
-  gunState.destroys = 0;
-  gunState.cooldown = 0;
-  gunState.projectiles = [];
-  gunState.pipeFragments = [];
-  gunState.invincibleTimer = 0;
-  gunState.tierFlash = 0;
-  gunState.tierFlashName = '';
-  gunState.victoryTriggered = false;
-  gunState.highestTier = 1;
-  gunState.totalDestroyed = 0;
-  gunState.screenFlash = 0;
-  gunState.demotionMsg = '';
-  gunState.demotionTimer = 0;
-}
-
-/* --- Gun Game: shoot --- */
-function shoot() {
-  if (gameMode !== 'gunGame') return;
-  if (!gameState.isRunning || gameState.isGameOver || gunState.victoryTriggered) return;
-  if (gunState.cooldown > 0) return;
-
-  const wep = weaponDefs[gunState.tier - 1];
-  gunState.cooldown = wep.fireRate / 1000;
-
-  for (let i = 0; i < wep.projectileCount; i++) {
-    const spreadAngle = wep.projectileCount > 1
-      ? -wep.spread + (2 * wep.spread * i / (wep.projectileCount - 1))
-      : 0;
-    const vx = Math.cos(spreadAngle) * wep.speed;
-    const vy = Math.sin(spreadAngle) * wep.speed;
-    gunState.projectiles.push({
-      x: bird.x + bird.radius,
-      y: bird.y,
-      vx: vx,
-      vy: vy,
-      damage: wep.damage,
-      radius: wep.radius,
-      lifetime: wep.lifetime,
-      tier: gunState.tier,
-      piercing: wep.piercing,
-      explosive: wep.explosive,
-      explosionRadius: wep.explosionRadius,
-      arcGravity: wep.arcGravity,
-      age: 0,
-      trail: [],
-    });
-  }
-  Audio.gunShoot(gunState.tier);
-}
-
-/* --- Gun Game: projectile-pipe collision --- */
-function projectileHitsPipe(proj, pipe) {
-  const pw = gameState.pipeWidth;
-  const gap = gameState.gap;
-  // Check top section
-  if (!pipe.topDestroyed) {
-    const topRect = { x: pipe.x, y: 0, w: pw, h: pipe.top };
-    if (circleRectCollision(proj.x, proj.y, proj.radius, topRect)) {
-      return 'top';
-    }
-  }
-  // Check bottom section
-  if (!pipe.bottomDestroyed) {
-    const botY = pipe.top + gap;
-    const botRect = { x: pipe.x, y: botY, w: pw, h: canvas.height - botY };
-    if (circleRectCollision(proj.x, proj.y, proj.radius, botRect)) {
-      return 'bottom';
-    }
-  }
-  return null;
-}
-
-function circleRectCollision(cx, cy, cr, rect) {
-  const closestX = Math.max(rect.x, Math.min(cx, rect.x + rect.w));
-  const closestY = Math.max(rect.y, Math.min(cy, rect.y + rect.h));
-  const dx = cx - closestX;
-  const dy = cy - closestY;
-  return (dx * dx + dy * dy) < (cr * cr);
-}
-
-/* --- Gun Game: damage and destroy pipes --- */
-function damagePipe(pipe, section, damage, projX, projY) {
-  const hpKey = section === 'top' ? 'topHP' : 'bottomHP';
-  pipe[hpKey] -= damage;
-  if (pipe[hpKey] <= 0) {
-    destroyPipeSection(pipe, section, projX, projY);
-  } else {
-    Audio.gunPipeHit();
-  }
-}
-
-function destroyPipeSection(pipe, section, projX, projY) {
-  const destroyedKey = section === 'top' ? 'topDestroyed' : 'bottomDestroyed';
-  pipe[destroyedKey] = true;
-
-  // Spawn fragments
-  const fragCount = 6 + Math.floor(Math.random() * 5);
-  const pw = gameState.pipeWidth;
-  const sectionY = section === 'top' ? pipe.top - 20 : pipe.top + gameState.gap + 20;
-  for (let i = 0; i < fragCount; i++) {
-    gunState.pipeFragments.push({
-      x: pipe.x + Math.random() * pw,
-      y: sectionY + (Math.random() - 0.5) * 40,
-      vx: (Math.random() - 0.5) * 200,
-      vy: -100 - Math.random() * 150,
-      w: 4 + Math.random() * 8,
-      h: 3 + Math.random() * 6,
-      rot: Math.random() * Math.PI * 2,
-      rotSpeed: (Math.random() - 0.5) * 10,
-      alpha: 1,
-      color: pipe.reinforced ? '#8a8a8a' : '#3da870',
-    });
-  }
-
-  // Spawn impact particles
-  for (let i = 0; i < 8; i++) {
-    const angle = Math.random() * Math.PI * 2;
-    gunState.pipeFragments.push({
-      x: projX || pipe.x + pw / 2,
-      y: projY || sectionY,
-      vx: Math.cos(angle) * (60 + Math.random() * 80),
-      vy: Math.sin(angle) * (60 + Math.random() * 80),
-      w: 2 + Math.random() * 3,
-      h: 2 + Math.random() * 3,
-      rot: 0,
-      rotSpeed: 0,
-      alpha: 0.8,
-      color: '#c8b060',
-    });
-  }
-
-  gunState.totalDestroyed++;
-  Audio.gunPipeDestroy();
-
-  // Don't count towards tier advancement during victory explosion
-  if (!gunState.victoryTriggered) {
-    gunState.destroys++;
-    if (gunState.destroys >= 3) {
-      advanceTier();
-    }
-  }
-}
-
-/* --- Gun Game: explosive damage --- */
-function explosiveDamage(proj) {
-  const r = proj.explosionRadius;
-  for (const pipe of pipes) {
-    if (pipe.topHP === undefined) continue;
-    const pw = gameState.pipeWidth;
-    const pipeCenterX = pipe.x + pw / 2;
-    // Check top section
-    if (!pipe.topDestroyed) {
-      const topCenterY = pipe.top / 2;
-      const dx = proj.x - pipeCenterX;
-      const dy = proj.y - topCenterY;
-      if (Math.sqrt(dx * dx + dy * dy) < r + pw / 2) {
-        damagePipe(pipe, 'top', proj.damage, proj.x, proj.y);
-      }
-    }
-    // Check bottom section
-    if (!pipe.bottomDestroyed) {
-      const botY = pipe.top + gameState.gap;
-      const botCenterY = (botY + canvas.height) / 2;
-      const dx = proj.x - pipeCenterX;
-      const dy = proj.y - botCenterY;
-      if (Math.sqrt(dx * dx + dy * dy) < r + pw / 2) {
-        damagePipe(pipe, 'bottom', proj.damage, proj.x, proj.y);
-      }
-    }
-  }
-  // Screen flash for explosive weapons
-  gunState.screenFlash = 0.15;
-  // Screen shake
-  gameState.shakeTimer = 6;
-  gameState.shakeIntensity = 4;
-  // Expanding ring effect
-  gunState.pipeFragments.push({
-    x: proj.x, y: proj.y,
-    vx: 0, vy: 0, w: 0, h: 0,
-    rot: 0, rotSpeed: 0,
-    alpha: 0.6, color: 'ring',
-    ringRadius: 5, ringMaxRadius: proj.explosionRadius,
-  });
-}
-
-/* --- Gun Game: tier advancement --- */
-function advanceTier() {
-  if (gunState.tier >= 8) {
-    // Victory!
-    triggerVictory();
-    return;
-  }
-  gunState.tier++;
-  gunState.destroys = 0;
-  gunState.invincibleTimer = 0.5;
-  gunState.tierFlash = 1.5;
-  gunState.tierFlashName = weaponDefs[gunState.tier - 1].name;
-  if (gunState.tier > gunState.highestTier) gunState.highestTier = gunState.tier;
-  applyGunDifficulty();
-  Audio.gunTierUp();
-}
-
-/* --- Gun Game: tier demotion on death --- */
-function demoteTier() {
-  const prevTier = gunState.tier;
-  gunState.tier = Math.max(1, gunState.tier - 1);
-  gunState.destroys = 0;
-  gunState.demotionMsg = `Demoted to Tier ${gunState.tier}`;
-  gunState.demotionTimer = 2;
-  Audio.gunTierDown();
-}
-
-/* --- Gun Game: victory --- */
-function triggerVictory() {
-  gunState.victoryTriggered = true;
-  // Explode all remaining pipes
-  for (const pipe of pipes) {
-    if (pipe.topHP !== undefined) {
-      if (!pipe.topDestroyed) destroyPipeSection(pipe, 'top', pipe.x + gameState.pipeWidth / 2, pipe.top);
-      if (!pipe.bottomDestroyed) destroyPipeSection(pipe, 'bottom', pipe.x + gameState.pipeWidth / 2, pipe.top + gameState.gap);
-    }
-  }
-  // Save wins
-  const wins = Number(localStorage.getItem('flappyGunGameWins') || 0) + 1;
-  localStorage.setItem('flappyGunGameWins', String(wins));
-  const bestTier = Math.max(Number(localStorage.getItem('flappyGunGameBestTier') || 0), 8);
-  localStorage.setItem('flappyGunGameBestTier', String(bestTier));
-  Audio.gunVictory();
-}
-
-/* --- Gun Game: update projectiles --- */
-function updateProjectiles(dt) {
-  for (const proj of gunState.projectiles) {
-    proj.vx += 0; // no horizontal drag
-    proj.vy += proj.arcGravity * dt;
-    proj.x += proj.vx * dt;
-    proj.y += proj.vy * dt;
-    proj.age += dt;
-    proj.lifetime -= dt;
-
-    // Trail for phoenix fire
-    if (proj.tier === 8) {
-      proj.trail.push({ x: proj.x, y: proj.y, alpha: 0.8 });
-      if (proj.trail.length > 12) proj.trail.shift();
-    }
-
-    // Lightning: instant hit to nearest pipe
-    if (proj.tier === 7 && proj.age < 0.05) {
-      let nearestPipe = null;
-      let nearestDist = Infinity;
-      for (const pipe of pipes) {
-        if (pipe.topHP === undefined) continue;
-        const dx = pipe.x + gameState.pipeWidth / 2 - bird.x;
-        if (dx > 0 && dx < nearestDist) {
-          nearestDist = dx;
-          nearestPipe = pipe;
-        }
-      }
-      if (nearestPipe) {
-        proj.targetPipe = nearestPipe;
-        // Hit whichever section is closer to bird
-        const topDist = Math.abs(bird.y - nearestPipe.top / 2);
-        const botDist = Math.abs(bird.y - (nearestPipe.top + gameState.gap + (canvas.height - nearestPipe.top - gameState.gap) / 2));
-        const section = (!nearestPipe.topDestroyed && topDist < botDist) ? 'top' : (!nearestPipe.bottomDestroyed ? 'bottom' : 'top');
-        if ((section === 'top' && !nearestPipe.topDestroyed) || (section === 'bottom' && !nearestPipe.bottomDestroyed)) {
-          damagePipe(nearestPipe, section, proj.damage, nearestPipe.x + gameState.pipeWidth / 2, bird.y);
-        }
-        proj.lifetime = 0.3; // Keep visible briefly
-        proj.piercing = false; // Don't hit again
-      }
-    }
-
-    // Check collision with pipes (non-lightning)
-    if (proj.tier !== 7) {
-      for (const pipe of pipes) {
-        if (pipe.topHP === undefined) continue;
-        const section = projectileHitsPipe(proj, pipe);
-        if (section) {
-          if (proj.explosive) {
-            explosiveDamage(proj);
-          } else {
-            damagePipe(pipe, section, proj.damage, proj.x, proj.y);
-          }
-          if (!proj.piercing) {
-            proj.lifetime = 0;
-            break;
-          }
-          // Piercing: continue checking other pipes
-        }
-      }
-    }
-  }
-
-  // Remove expired projectiles
-  gunState.projectiles = gunState.projectiles.filter(p => p.lifetime > 0 && p.x < canvas.width + 20 && p.x > -20 && p.y > -20 && p.y < canvas.height + 20);
-}
-
-/* --- Gun Game: update fragments --- */
-function updateFragments(dt) {
-  for (const frag of gunState.pipeFragments) {
-    if (frag.color === 'ring') {
-      frag.ringRadius += (frag.ringMaxRadius || 60) * dt * 4;
-      frag.alpha -= dt * 3;
-    } else {
-      frag.vy += 400 * dt; // gravity
-      frag.x += frag.vx * dt;
-      frag.y += frag.vy * dt;
-      frag.rot += frag.rotSpeed * dt;
-      frag.alpha -= dt * 0.8;
-    }
-  }
-  gunState.pipeFragments = gunState.pipeFragments.filter(f => f.alpha > 0);
 }
 
 const drawBackground = () => {
@@ -1022,40 +637,21 @@ const drawPipes = () => {
     const capH = 18;
     const capX = pipe.x - 5;
 
-    const isGunGame = gameMode === 'gunGame';
-    const isReinforced = isGunGame && pipe.reinforced;
-
     /* Top pipe body */
     const topGrad = context.createLinearGradient(pipe.x, 0, pipe.x + gameState.pipeWidth, 0);
-    if (isReinforced) {
-      topGrad.addColorStop(0, "#6a6a6a");
-      topGrad.addColorStop(0.3, "#8a8a8a");
-      topGrad.addColorStop(0.7, "#7a7a7a");
-      topGrad.addColorStop(1, "#5a5a5a");
-    } else {
-      topGrad.addColorStop(0, "#2d8a5e");
-      topGrad.addColorStop(0.3, "#3da870");
-      topGrad.addColorStop(0.7, "#35966a");
-      topGrad.addColorStop(1, "#28774e");
-    }
-    /* Skip drawing destroyed top section */
-    if (!(isGunGame && pipe.topDestroyed)) {
+    topGrad.addColorStop(0, "#2d8a5e");
+    topGrad.addColorStop(0.3, "#3da870");
+    topGrad.addColorStop(0.7, "#35966a");
+    topGrad.addColorStop(1, "#28774e");
     context.fillStyle = topGrad;
     context.fillRect(pipe.x, 0, gameState.pipeWidth, pipe.top - capH);
 
     /* Top cap */
     const capGrad = context.createLinearGradient(capX, 0, capX + capW, 0);
-    if (isReinforced) {
-      capGrad.addColorStop(0, "#6a6a6a");
-      capGrad.addColorStop(0.3, "#9a9a9a");
-      capGrad.addColorStop(0.7, "#8a8a8a");
-      capGrad.addColorStop(1, "#5a5a5a");
-    } else {
-      capGrad.addColorStop(0, "#2d8a5e");
-      capGrad.addColorStop(0.3, "#45b87a");
-      capGrad.addColorStop(0.7, "#3da870");
-      capGrad.addColorStop(1, "#28774e");
-    }
+    capGrad.addColorStop(0, "#2d8a5e");
+    capGrad.addColorStop(0.3, "#45b87a");
+    capGrad.addColorStop(0.7, "#3da870");
+    capGrad.addColorStop(1, "#28774e");
     context.fillStyle = capGrad;
     context.beginPath();
     context.roundRect(capX, pipe.top - capH, capW, capH, [4, 4, 0, 0]);
@@ -1102,18 +698,6 @@ const drawPipes = () => {
       context.fill();
     }
 
-    /* Crack overlay for reinforced pipes at 1 HP */
-    if (isGunGame && pipe.reinforced && pipe.topHP === 1) {
-      context.strokeStyle = 'rgba(200, 50, 50, 0.5)';
-      context.lineWidth = 2;
-      context.beginPath();
-      context.moveTo(pipe.x + 10, pipe.top - 30);
-      context.lineTo(pipe.x + 30, pipe.top - 10);
-      context.lineTo(pipe.x + 20, pipe.top - 5);
-      context.stroke();
-    }
-    } /* end top destroyed check */
-
     const bottomY = pipe.top + gameState.gap;
 
     /* Ambient shadow/glow at pipe gap openings */
@@ -1132,8 +716,6 @@ const drawPipes = () => {
     context.fillStyle = botGapShadow;
     context.fillRect(pipe.x - 5, bottomY - gapShadowH + 2, capW, gapShadowH);
 
-    /* Skip drawing destroyed bottom section */
-    if (!(isGunGame && pipe.bottomDestroyed)) {
     /* Bottom pipe body */
     context.fillStyle = topGrad;
     context.fillRect(pipe.x, bottomY + capH, gameState.pipeWidth, canvas.height - bottomY - capH);
@@ -1176,24 +758,10 @@ const drawPipes = () => {
       context.stroke();
     }
 
-    /* Crack overlay for reinforced bottom pipe at 1 HP */
-    if (isGunGame && pipe.reinforced && pipe.bottomHP === 1) {
-      context.strokeStyle = 'rgba(200, 50, 50, 0.5)';
-      context.lineWidth = 2;
-      context.beginPath();
-      context.moveTo(pipe.x + 10, bottomY + capH + 10);
-      context.lineTo(pipe.x + 30, bottomY + capH + 30);
-      context.lineTo(pipe.x + 20, bottomY + capH + 35);
-      context.stroke();
-    }
-    } /* end bottom destroyed check */
-
     /* Pipe shadow (inner edge) */
     context.fillStyle = "rgba(0, 0, 0, 0.1)";
-    if (!(isGunGame && pipe.topDestroyed))
-      context.fillRect(pipe.x + gameState.pipeWidth - 8, 0, 8, pipe.top - capH);
-    if (!(isGunGame && pipe.bottomDestroyed))
-      context.fillRect(pipe.x + gameState.pipeWidth - 8, bottomY + capH, 8, canvas.height - bottomY - capH);
+    context.fillRect(pipe.x + gameState.pipeWidth - 8, 0, 8, pipe.top - capH);
+    context.fillRect(pipe.x + gameState.pipeWidth - 8, bottomY + capH, 8, canvas.height - bottomY - capH);
   });
 };
 
@@ -1275,11 +843,6 @@ const detectCollision = (pipe) => {
   const hitTop = bird.y - bird.radius < pipe.top;
   const hitBottom = bird.y + bird.radius > pipe.top + gameState.gap;
 
-  if (gameMode === 'gunGame') {
-    const topHit = hitTop && !pipe.topDestroyed;
-    const botHit = hitBottom && !pipe.bottomDestroyed;
-    return topHit || botHit;
-  }
   return hitTop || hitBottom;
 };
 
@@ -1330,15 +893,10 @@ const update = (deltaSeconds) => {
   bird.trail.push({ x: bird.x, y: bird.y });
   if (bird.trail.length > 8) bird.trail.shift();
 
-  /* Gun game: skip collision detection during invincibility */
-  const isInvincible = gameMode === 'gunGame' && gunState.invincibleTimer > 0;
-
   if (bird.y + bird.radius >= canvas.height - 90 || bird.y - bird.radius <= 0) {
-    if (!isInvincible) {
-      gameState.isGameOver = true;
-      gameState.shakeTimer = 12;
-      gameState.shakeIntensity = 6;
-    }
+    gameState.isGameOver = true;
+    gameState.shakeTimer = 12;
+    gameState.shakeIntensity = 6;
   }
 
   pipes.forEach((pipe) => {
@@ -1347,57 +905,27 @@ const update = (deltaSeconds) => {
 
   pipes = pipes.filter((pipe) => pipe.x + gameState.pipeWidth > -10);
 
-  if (!isInvincible && pipes.some(detectCollision)) {
+  if (pipes.some(detectCollision)) {
     gameState.isGameOver = true;
     gameState.shakeTimer = 12;
     gameState.shakeIntensity = 6;
   }
 
   if (gameState.isGameOver) {
-    if (gameMode === 'gunGame') {
-      // Gun game: demote tier, don't end permanently
-      if (!feathersSpawned) {
-        spawnFeatherParticles();
-        feathersSpawned = true;
-        demoteTier();
-        Audio.crash();
-        Audio.stopDrone();
-      }
-    } else {
-      const wasNewBest = gameState.score > gameState.best;
-      saveBestScore();
-      if (!feathersSpawned) {
-        spawnFeatherParticles();
-        feathersSpawned = true;
-        Audio.crash();
-        Audio.stopDrone();
-        if (wasNewBest && gameState.score > 0) {
-          Audio.newHighScore();
-        }
+    const wasNewBest = gameState.score > gameState.best;
+    saveBestScore();
+    if (!feathersSpawned) {
+      spawnFeatherParticles();
+      feathersSpawned = true;
+      Audio.crash();
+      Audio.stopDrone();
+      if (wasNewBest && gameState.score > 0) {
+        Audio.newHighScore();
       }
     }
   }
 
   updateScore();
-
-  /* Gun Game updates */
-  if (gameMode === 'gunGame' && !gameState.isGameOver) {
-    gunState.cooldown = Math.max(0, gunState.cooldown - deltaSeconds);
-    gunState.invincibleTimer = Math.max(0, gunState.invincibleTimer - deltaSeconds);
-    gunState.tierFlash = Math.max(0, gunState.tierFlash - deltaSeconds);
-    gunState.screenFlash = Math.max(0, gunState.screenFlash - deltaSeconds);
-    gunState.demotionTimer = Math.max(0, gunState.demotionTimer - deltaSeconds);
-    updateProjectiles(deltaSeconds);
-    updateFragments(deltaSeconds);
-  }
-  if (gameMode === 'gunGame' && gameState.isGameOver) {
-    updateFragments(deltaSeconds);
-    // Update projectiles even when dead so they finish animating
-    for (const proj of gunState.projectiles) {
-      proj.lifetime -= deltaSeconds;
-    }
-    gunState.projectiles = gunState.projectiles.filter(p => p.lifetime > 0);
-  }
 
   /* Update clouds */
   for (const cloud of clouds) {
@@ -1459,365 +987,6 @@ const update = (deltaSeconds) => {
   }
 };
 
-/* --- Gun Game: draw projectiles --- */
-function drawProjectiles() {
-  for (const proj of gunState.projectiles) {
-    context.save();
-    switch (proj.tier) {
-      case 1: // Seed: small brown circle
-        context.fillStyle = '#8B6914';
-        context.beginPath();
-        context.arc(proj.x, proj.y, 3, 0, Math.PI * 2);
-        context.fill();
-        break;
-      case 2: // Egg: white oval with speckles
-        context.fillStyle = '#FFFFF0';
-        context.beginPath();
-        context.ellipse(proj.x, proj.y, 4, 6, Math.atan2(proj.vy, proj.vx), 0, Math.PI * 2);
-        context.fill();
-        context.fillStyle = '#D4C5A0';
-        for (let s = 0; s < 3; s++) {
-          context.beginPath();
-          context.arc(proj.x + (Math.random() - 0.5) * 4, proj.y + (Math.random() - 0.5) * 4, 0.8, 0, Math.PI * 2);
-          context.fill();
-        }
-        break;
-      case 3: // Feather Darts: elongated triangles
-        context.translate(proj.x, proj.y);
-        context.rotate(Math.atan2(proj.vy, proj.vx));
-        context.fillStyle = '#E8D080';
-        context.beginPath();
-        context.moveTo(8, 0);
-        context.lineTo(-4, -2.5);
-        context.lineTo(-4, 2.5);
-        context.closePath();
-        context.fill();
-        break;
-      case 4: // Acorn: rounded body + cap
-        context.fillStyle = '#8B5E3C';
-        context.beginPath();
-        context.arc(proj.x, proj.y + 1, 5, 0, Math.PI * 2);
-        context.fill();
-        context.fillStyle = '#6B4226';
-        context.beginPath();
-        context.ellipse(proj.x, proj.y - 3, 6, 3, 0, Math.PI, Math.PI * 2);
-        context.fill();
-        break;
-      case 5: // Wind Gust: translucent arc
-        context.globalAlpha = 0.4;
-        context.strokeStyle = '#A0D8FF';
-        context.lineWidth = 3;
-        context.beginPath();
-        for (let i = 0; i < 20; i++) {
-          const px = proj.x + i * 2;
-          const py = proj.y + Math.sin(i * 0.5 + proj.age * 10) * 6;
-          if (i === 0) context.moveTo(px, py);
-          else context.lineTo(px, py);
-        }
-        context.stroke();
-        context.globalAlpha = 1;
-        break;
-      case 6: { // Sonic Screech: horizontal gradient band
-        const grad6 = context.createLinearGradient(proj.x, proj.y - 6, proj.x, proj.y + 6);
-        grad6.addColorStop(0, 'rgba(255, 200, 0, 0)');
-        grad6.addColorStop(0.3, 'rgba(255, 200, 0, 0.5)');
-        grad6.addColorStop(0.5, 'rgba(255, 255, 100, 0.8)');
-        grad6.addColorStop(0.7, 'rgba(255, 200, 0, 0.5)');
-        grad6.addColorStop(1, 'rgba(255, 200, 0, 0)');
-        context.fillStyle = grad6;
-        context.fillRect(proj.x, proj.y - 6, canvas.width - proj.x, 12);
-        break;
-      }
-      case 7: { // Lightning: jagged line to target
-        context.strokeStyle = '#FFFF44';
-        context.lineWidth = 2;
-        context.shadowColor = '#FFFF00';
-        context.shadowBlur = 8;
-        context.beginPath();
-        context.moveTo(bird.x + bird.radius, bird.y);
-        const targetX = proj.targetPipe ? proj.targetPipe.x + gameState.pipeWidth / 2 : proj.x;
-        const targetY = proj.targetPipe ? bird.y : proj.y;
-        const segments = 8;
-        for (let i = 1; i <= segments; i++) {
-          const t = i / segments;
-          const lx = bird.x + bird.radius + (targetX - bird.x - bird.radius) * t + (Math.random() - 0.5) * 15;
-          const ly = bird.y + (targetY - bird.y) * t + (Math.random() - 0.5) * 10;
-          context.lineTo(lx, ly);
-        }
-        context.stroke();
-        context.shadowBlur = 0;
-        break;
-      }
-      case 8: // Phoenix Fire: fireball with ember trail
-        // Trail
-        for (let i = 0; i < proj.trail.length; i++) {
-          const t = proj.trail[i];
-          const age = i / proj.trail.length;
-          context.globalAlpha = t.alpha * age * 0.5;
-          context.fillStyle = `hsl(${20 + age * 30}, 100%, ${50 + age * 20}%)`;
-          context.beginPath();
-          context.arc(t.x, t.y, proj.radius * age * 0.6, 0, Math.PI * 2);
-          context.fill();
-        }
-        context.globalAlpha = 1;
-        // Fireball
-        {
-          const fireGrad = context.createRadialGradient(proj.x, proj.y, 2, proj.x, proj.y, proj.radius);
-          fireGrad.addColorStop(0, '#FFFFFF');
-          fireGrad.addColorStop(0.3, '#FFCC00');
-          fireGrad.addColorStop(0.7, '#FF6600');
-          fireGrad.addColorStop(1, 'rgba(255, 0, 0, 0.3)');
-          context.fillStyle = fireGrad;
-          context.beginPath();
-          context.arc(proj.x, proj.y, proj.radius, 0, Math.PI * 2);
-          context.fill();
-        }
-        break;
-    }
-    context.restore();
-  }
-}
-
-/* --- Gun Game: draw pipe fragments --- */
-function drawPipeFragments() {
-  for (const frag of gunState.pipeFragments) {
-    if (frag.color === 'ring') {
-      context.strokeStyle = `rgba(255, 200, 50, ${frag.alpha})`;
-      context.lineWidth = 2;
-      context.beginPath();
-      context.arc(frag.x, frag.y, frag.ringRadius, 0, Math.PI * 2);
-      context.stroke();
-      continue;
-    }
-    context.save();
-    context.translate(frag.x, frag.y);
-    context.rotate(frag.rot);
-    context.globalAlpha = frag.alpha;
-    context.fillStyle = frag.color;
-    context.fillRect(-frag.w / 2, -frag.h / 2, frag.w, frag.h);
-    context.restore();
-  }
-}
-
-/* --- Gun Game: draw HUD --- */
-function drawGunHUD() {
-  context.fillStyle = 'rgba(0, 0, 0, 0.4)';
-  context.fillRect(5, 5, 140, 38);
-  context.fillStyle = '#FFFFFF';
-  context.font = "bold 14px 'Trebuchet MS'";
-  context.textAlign = 'left';
-  context.fillText(`TIER ${gunState.tier}/8`, 12, 20);
-  context.font = "11px 'Trebuchet MS'";
-  context.fillStyle = '#FFD700';
-  context.fillText(weaponDefs[gunState.tier - 1].name, 12, 36);
-
-  // Destroy progress circles
-  const circleStartX = canvas.width - 55;
-  for (let i = 0; i < 3; i++) {
-    const cx = circleStartX + i * 16;
-    const cy = 18;
-    context.beginPath();
-    context.arc(cx, cy, 6, 0, Math.PI * 2);
-    if (i < gunState.destroys) {
-      context.fillStyle = '#FFD700';
-      context.fill();
-    } else {
-      context.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-      context.lineWidth = 1.5;
-      context.stroke();
-    }
-  }
-
-  // Cooldown bar
-  const wep = weaponDefs[gunState.tier - 1];
-  const cooldownPct = gunState.cooldown / (wep.fireRate / 1000);
-  context.fillStyle = 'rgba(0, 0, 0, 0.3)';
-  context.fillRect(12, 42, 80, 4);
-  context.fillStyle = cooldownPct > 0 ? '#FF6644' : '#44FF66';
-  context.fillRect(12, 42, 80 * (1 - cooldownPct), 4);
-
-  // Tier flash
-  if (gunState.tierFlash > 0) {
-    const alpha = Math.min(1, gunState.tierFlash);
-    const scale = 1 + (1.5 - gunState.tierFlash) * 0.3;
-    context.save();
-    context.globalAlpha = alpha;
-    context.translate(canvas.width / 2, canvas.height * 0.3);
-    context.scale(scale, scale);
-    context.fillStyle = '#FFD700';
-    context.font = "bold 22px 'Trebuchet MS'";
-    context.textAlign = 'center';
-    context.fillText(`TIER ${gunState.tier}`, 0, 0);
-    context.font = "16px 'Trebuchet MS'";
-    context.fillStyle = '#FFFFFF';
-    context.fillText(gunState.tierFlashName, 0, 24);
-    context.restore();
-  }
-
-  // Demotion message
-  if (gunState.demotionTimer > 0) {
-    context.globalAlpha = Math.min(1, gunState.demotionTimer);
-    context.fillStyle = '#FF4444';
-    context.font = "bold 16px 'Trebuchet MS'";
-    context.textAlign = 'center';
-    context.fillText(gunState.demotionMsg, canvas.width / 2, canvas.height * 0.4);
-    context.globalAlpha = 1;
-  }
-}
-
-/* --- Gun Game: mode selection screen --- */
-function drawModeSelect() {
-  const vg = context.createRadialGradient(
-    canvas.width / 2, canvas.height / 2, canvas.height * 0.1,
-    canvas.width / 2, canvas.height / 2, canvas.height * 0.7
-  );
-  vg.addColorStop(0, "rgba(0, 0, 0, 0.25)");
-  vg.addColorStop(1, "rgba(0, 0, 0, 0.55)");
-  context.fillStyle = vg;
-  context.fillRect(0, 0, canvas.width, canvas.height);
-
-  context.fillStyle = '#FFFFFF';
-  context.font = "bold 30px 'Trebuchet MS'";
-  context.textAlign = 'center';
-  context.fillText('Flappy Bird', canvas.width / 2, canvas.height / 2 - 80);
-
-  context.font = "16px 'Trebuchet MS'";
-  context.fillStyle = 'rgba(255,255,255,0.7)';
-  context.fillText('Choose a mode:', canvas.width / 2, canvas.height / 2 - 45);
-
-  const btnW = 160, btnH = 44;
-  const btnX = canvas.width / 2 - btnW / 2;
-  const classicY = canvas.height / 2 - 20;
-  context.fillStyle = '#3da870';
-  context.beginPath();
-  context.roundRect(btnX, classicY, btnW, btnH, 8);
-  context.fill();
-  context.fillStyle = '#FFFFFF';
-  context.font = "bold 18px 'Trebuchet MS'";
-  context.fillText('Classic', canvas.width / 2, classicY + 28);
-
-  const gunY = canvas.height / 2 + 40;
-  context.fillStyle = '#cc4444';
-  context.beginPath();
-  context.roundRect(btnX, gunY, btnW, btnH, 8);
-  context.fill();
-  context.fillStyle = '#FFFFFF';
-  context.fillText('Gun Game', canvas.width / 2, gunY + 28);
-
-  drawModeSelect._classicRect = { x: btnX, y: classicY, w: btnW, h: btnH };
-  drawModeSelect._gunRect = { x: btnX, y: gunY, w: btnW, h: btnH };
-}
-
-/* --- Gun Game: weapon indicator on bird --- */
-function drawBirdWeapon() {
-  if (gameMode !== 'gunGame' || !gameState.isRunning) return;
-  context.save();
-  context.translate(bird.x, bird.y);
-  const tilt = Math.max(-0.5, Math.min(0.65, bird.velocity * 0.0012));
-  context.rotate(tilt);
-  const tier = gunState.tier;
-  if (tier <= 2) {
-    context.fillStyle = tier === 1 ? '#8B6914' : '#FFFFF0';
-    context.beginPath();
-    context.moveTo(bird.radius + 2, -4);
-    context.lineTo(bird.radius + 14, 0);
-    context.lineTo(bird.radius + 2, 4);
-    context.closePath();
-    context.fill();
-  } else if (tier <= 4) {
-    context.fillStyle = '#555555';
-    context.fillRect(-2, -bird.radius - 4, 10, 4);
-    context.fillStyle = '#888888';
-    context.beginPath();
-    context.arc(8, -bird.radius - 2, 3, 0, Math.PI * 2);
-    context.fill();
-  } else if (tier <= 6) {
-    const auraColor = tier === 5 ? 'rgba(160, 216, 255, 0.3)' : 'rgba(255, 200, 0, 0.3)';
-    const auraGrad = context.createRadialGradient(0, 0, bird.radius, 0, 0, bird.radius + 10);
-    auraGrad.addColorStop(0, auraColor);
-    auraGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-    context.fillStyle = auraGrad;
-    context.beginPath();
-    context.arc(0, 0, bird.radius + 10, 0, Math.PI * 2);
-    context.fill();
-  } else {
-    const coronaColor = tier === 7 ? '#FFFF44' : '#FF6600';
-    for (let i = 0; i < 8; i++) {
-      const angle = (i / 8) * Math.PI * 2 + performance.now() * 0.005;
-      const len = bird.radius + 6 + Math.sin(performance.now() * 0.01 + i) * 4;
-      context.strokeStyle = coronaColor;
-      context.lineWidth = 1.5;
-      context.globalAlpha = 0.6;
-      context.beginPath();
-      context.moveTo(Math.cos(angle) * bird.radius, Math.sin(angle) * bird.radius);
-      context.lineTo(Math.cos(angle) * len, Math.sin(angle) * len);
-      context.stroke();
-    }
-    context.globalAlpha = 1;
-  }
-  context.restore();
-}
-
-/* --- Gun Game: victory screen --- */
-function drawVictory() {
-  const vg = context.createRadialGradient(
-    canvas.width / 2, canvas.height / 2, 20,
-    canvas.width / 2, canvas.height / 2, canvas.height * 0.6
-  );
-  vg.addColorStop(0, "rgba(255, 200, 0, 0.3)");
-  vg.addColorStop(1, "rgba(0, 0, 0, 0.6)");
-  context.fillStyle = vg;
-  context.fillRect(0, 0, canvas.width, canvas.height);
-
-  context.save();
-  context.shadowColor = '#FFD700';
-  context.shadowBlur = 30;
-  context.fillStyle = '#FFD700';
-  context.font = "bold 42px 'Trebuchet MS'";
-  context.textAlign = 'center';
-  context.fillText('VICTORY!', canvas.width / 2, canvas.height / 2 - 40);
-  context.restore();
-
-  const totalScore = gameState.score + gunState.totalDestroyed * 2;
-  context.fillStyle = '#FFFFFF';
-  context.font = "18px 'Trebuchet MS'";
-  context.textAlign = 'center';
-  context.fillText(`Score: ${totalScore}`, canvas.width / 2, canvas.height / 2 + 10);
-  context.fillText(`Pipes Destroyed: ${gunState.totalDestroyed}`, canvas.width / 2, canvas.height / 2 + 35);
-  context.fillText(`Pipes Passed: ${gameState.score}`, canvas.width / 2, canvas.height / 2 + 60);
-
-  context.fillStyle = 'rgba(255, 255, 255, 0.6)';
-  context.font = "14px 'Trebuchet MS'";
-  context.fillText('Tap or press Space to play again', canvas.width / 2, canvas.height / 2 + 100);
-}
-
-/* --- Gun Game: game over overlay --- */
-function drawGunGameOver() {
-  const vg = context.createRadialGradient(
-    canvas.width / 2, canvas.height / 2, canvas.height * 0.1,
-    canvas.width / 2, canvas.height / 2, canvas.height * 0.7
-  );
-  vg.addColorStop(0, "rgba(0, 0, 0, 0.25)");
-  vg.addColorStop(1, "rgba(0, 0, 0, 0.55)");
-  context.fillStyle = vg;
-  context.fillRect(0, 0, canvas.width, canvas.height);
-
-  context.fillStyle = '#FF6644';
-  context.font = "bold 28px 'Trebuchet MS'";
-  context.textAlign = 'center';
-  context.fillText('Game Over', canvas.width / 2, canvas.height / 2 - 30);
-
-  context.fillStyle = '#FFFFFF';
-  context.font = "16px 'Trebuchet MS'";
-  context.fillText(`Demoted to Tier ${gunState.tier}`, canvas.width / 2, canvas.height / 2 + 5);
-  context.fillText(`Highest Tier: ${gunState.highestTier}`, canvas.width / 2, canvas.height / 2 + 30);
-  context.fillText(`Pipes Destroyed: ${gunState.totalDestroyed}`, canvas.width / 2, canvas.height / 2 + 55);
-
-  context.fillStyle = 'rgba(255, 255, 255, 0.6)';
-  context.font = "14px 'Trebuchet MS'";
-  context.fillText('Tap or press Space to retry', canvas.width / 2, canvas.height / 2 + 90);
-}
-
 const draw = () => {
   context.save();
 
@@ -1832,51 +1001,16 @@ const draw = () => {
   drawBackground();
   drawWind();
   drawPipes();
-  if (gameMode === 'gunGame') {
-    drawPipeFragments();
-    drawProjectiles();
-  }
   drawBird();
-  if (gameMode === 'gunGame') drawBirdWeapon();
   drawFeatherParticles();
   drawScorePop();
 
-  /* Gun game invincibility blink */
-  if (gameMode === 'gunGame' && gunState.invincibleTimer > 0) {
-    if (Math.floor(gunState.invincibleTimer * 10) % 2 === 0) {
-      context.fillStyle = 'rgba(255, 255, 255, 0.15)';
-      context.beginPath();
-      context.arc(bird.x, bird.y, bird.radius + 6, 0, Math.PI * 2);
-      context.fill();
-    }
-  }
-
-  /* Gun game screen flash */
-  if (gameMode === 'gunGame' && gunState.screenFlash > 0) {
-    context.fillStyle = `rgba(255, 255, 200, ${gunState.screenFlash * 2})`;
-    context.fillRect(0, 0, canvas.width, canvas.height);
-  }
-
-  if (gameMode === 'gunGame' && gameState.isRunning) drawGunHUD();
-
   if (!gameState.isRunning && !gameState.isGameOver) {
-    if (!modeSelected) {
-      drawModeSelect();
-    } else {
-      drawOverlay(I18N.t("tapToStart"), gameMode === 'gunGame' ? 'F/Right-tap to shoot, Space/Left-tap to flap' : I18N.t("keepBirdInGaps"));
-    }
+    drawOverlay(I18N.t("tapToStart"), I18N.t("keepBirdInGaps"));
   }
 
   if (gameState.isGameOver) {
-    if (gameMode === 'gunGame') {
-      drawGunGameOver();
-    } else {
-      drawOverlay(I18N.t("gameOver"), I18N.t("tapOrSpaceTryAgain"));
-    }
-  }
-
-  if (gameMode === 'gunGame' && gunState.victoryTriggered) {
-    drawVictory();
+    drawOverlay(I18N.t("gameOver"), I18N.t("tapOrSpaceTryAgain"));
   }
 
   context.restore();
@@ -1914,13 +1048,10 @@ const flap = () => {
   Audio.resume();
 
   if (gameState.isGameOver) {
-    if (gameMode === 'gunGame' && gunState.victoryTriggered) {
-      fullGunReset();
-    }
     resetGame();
-    if (modeSelected) startGame();
+    startGame();
   } else if (!gameState.isRunning) {
-    if (modeSelected) startGame();
+    startGame();
   }
 
   if (gameState.isRunning) {
@@ -1934,60 +1065,10 @@ window.addEventListener("keydown", (event) => {
     event.preventDefault();
     flap();
   }
-  if ((event.code === "KeyF" || event.code === "Enter") && gameMode === 'gunGame') {
-    event.preventDefault();
-    shoot();
-  }
 });
 
 canvas.addEventListener("pointerdown", (event) => {
   event.preventDefault();
-
-  // Mode selection screen: check button clicks
-  if (!modeSelected && !gameState.isRunning && !gameState.isGameOver) {
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    const clickX = (event.clientX - rect.left) * scaleX;
-    const clickY = (event.clientY - rect.top) * scaleY;
-
-    const classicRect = drawModeSelect._classicRect;
-    const gunRect = drawModeSelect._gunRect;
-
-    if (classicRect && clickX >= classicRect.x && clickX <= classicRect.x + classicRect.w &&
-        clickY >= classicRect.y && clickY <= classicRect.y + classicRect.h) {
-      Audio.init();
-      Audio.resume();
-      gameMode = 'classic';
-      modeSelected = true;
-      resetGame();
-      draw();
-      return;
-    }
-    if (gunRect && clickX >= gunRect.x && clickX <= gunRect.x + gunRect.w &&
-        clickY >= gunRect.y && clickY <= gunRect.y + gunRect.h) {
-      Audio.init();
-      Audio.resume();
-      gameMode = 'gunGame';
-      modeSelected = true;
-      fullGunReset();
-      resetGame();
-      draw();
-      return;
-    }
-    return; // Don't flap if clicking outside buttons
-  }
-
-  // Gun game: split touch zones
-  if (gameMode === 'gunGame' && gameState.isRunning && !gameState.isGameOver) {
-    const rect = canvas.getBoundingClientRect();
-    const clickX = (event.clientX - rect.left) * (canvas.width / rect.width);
-    if (clickX > canvas.width / 2) {
-      shoot();
-      return;
-    }
-  }
-
   flap();
 });
 
@@ -1996,9 +1077,6 @@ canvas.addEventListener("dblclick", (event) => {
 });
 
 restartButton.addEventListener("click", () => {
-  modeSelected = false;
-  gameMode = 'classic';
-  fullGunReset();
   resetGame();
 });
 

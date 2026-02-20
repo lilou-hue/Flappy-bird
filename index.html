@@ -218,6 +218,17 @@
       .game-card:nth-child(5)::before { border-color: rgba(255, 140, 50, 0.5); box-shadow: 0 0 20px rgba(255, 140, 50, 0.15); }
       .game-card:nth-child(6)::before { border-color: rgba(255, 105, 180, 0.5); box-shadow: 0 0 20px rgba(255, 105, 180, 0.15); }
       .game-card:nth-child(7)::before { border-color: rgba(0, 210, 255, 0.5); box-shadow: 0 0 20px rgba(0, 210, 255, 0.15); }
+      .game-card:nth-child(8)::before { border-color: rgba(255, 107, 53, 0.5); box-shadow: 0 0 20px rgba(255, 107, 53, 0.15); }
+
+      .gun-game-preview {
+        background: linear-gradient(180deg, #1a2540, #2c3e50 50%, #1a252f 85%, #0f1820 100%);
+      }
+
+      .gun-game-tag {
+        background: rgba(255, 107, 53, 0.15);
+        color: #ff6b35;
+        border: 1px solid rgba(255, 107, 53, 0.3);
+      }
 
       /* Floating background stars */
       body::before {
@@ -337,6 +348,17 @@
           <h2 data-i18n="tetrisTitle">Tetris</h2>
           <p data-i18n="tetrisDesc">Stack tetrominoes, clear lines, and chase the high score. Classic puzzle action with a neon twist!</p>
           <span class="card-tag tetris-tag" data-i18n="puzzle">Puzzle</span>
+        </div>
+      </a>
+
+      <a href="/gun-game/" class="game-card">
+        <div class="card-preview gun-game-preview">
+          <canvas id="gunGameCanvas" width="360" height="200"></canvas>
+        </div>
+        <div class="card-body">
+          <h2>Gun Game</h2>
+          <p>Flap and shoot! Destroy pipes with 8 weapon tiers. Advance by destroying 3 per tier to win!</p>
+          <span class="card-tag gun-game-tag">Action</span>
         </div>
       </a>
     </div>
@@ -1058,6 +1080,151 @@
             x.fillStyle = `rgba(255,255,255,${flashTimer*0.8})`;
             x.fillRect(ox, oy+3*cellH, 18*cellW, cellH);
           }
+
+          requestAnimationFrame(draw);
+        }
+        requestAnimationFrame(draw);
+      })();
+
+      /* ─ Gun Game Preview ─ */
+      (function() {
+        const c = document.getElementById('gunGameCanvas');
+        if (!c) return;
+        const x = c.getContext('2d');
+        let t = 0;
+        const pipes = [{x: 250, gap: 80, topHP: 1}, {x: 150, gap: 100, topHP: 2}];
+        const fragments = [];
+        let projX = -20, projY = 0, projActive = false, projTimer = 0;
+
+        function draw() {
+          t += 0.016;
+          /* Sky with fire tint */
+          const sky = x.createLinearGradient(0,0,0,H);
+          sky.addColorStop(0,'#3a5070'); sky.addColorStop(0.5,'#5a7090');
+          sky.addColorStop(0.85,'#d4e0d4'); sky.addColorStop(1,'#7be495');
+          x.fillStyle = sky; x.fillRect(0,0,W,H);
+
+          /* Clouds */
+          x.fillStyle = 'rgba(255,255,255,0.15)';
+          for (let i = 0; i < 3; i++) {
+            const cx = ((i*130 + 20 - t*12) % (W+80)) - 40;
+            x.beginPath(); x.ellipse(cx, 25+i*20, 30, 10, 0, 0, Math.PI*2); x.fill();
+          }
+
+          /* Pipes */
+          for (const p of pipes) {
+            const px = ((p.x - t*35) % (W+80)) + 40;
+            const gapY = 55 + p.gap * 0.3;
+            const isReinforced = p.topHP > 1;
+            const pg = x.createLinearGradient(px,0,px+42,0);
+            if (isReinforced) {
+              pg.addColorStop(0,'#6a6a6a'); pg.addColorStop(0.4,'#8a8a8a'); pg.addColorStop(1,'#5a5a5a');
+            } else {
+              pg.addColorStop(0,'#2d8a5e'); pg.addColorStop(0.4,'#3da870'); pg.addColorStop(1,'#28774e');
+            }
+            x.fillStyle = pg;
+            x.fillRect(px, 0, 42, gapY-35);
+            x.fillRect(px, gapY+35, 42, H-gapY-35);
+            /* Caps */
+            x.fillStyle = isReinforced ? '#9a9a9a' : '#45b87a';
+            x.fillRect(px-4, gapY-35, 50, 10);
+            x.fillRect(px-4, gapY+25, 50, 10);
+          }
+
+          /* Projectile */
+          projTimer += 0.016;
+          if (projTimer > 2) {
+            projTimer = 0;
+            projActive = true;
+            projX = 102;
+            projY = H*0.42 + Math.sin(t*3)*14;
+          }
+          if (projActive) {
+            projX += 4;
+            /* Fireball */
+            const fg = x.createRadialGradient(projX, projY, 1, projX, projY, 8);
+            fg.addColorStop(0, '#FFFFFF');
+            fg.addColorStop(0.3, '#FFCC00');
+            fg.addColorStop(0.7, '#FF6600');
+            fg.addColorStop(1, 'rgba(255,0,0,0.2)');
+            x.fillStyle = fg;
+            x.beginPath(); x.arc(projX, projY, 8, 0, Math.PI*2); x.fill();
+            /* Trail */
+            for (let i = 1; i <= 4; i++) {
+              x.fillStyle = `rgba(255,100,0,${0.3-i*0.06})`;
+              x.beginPath(); x.arc(projX - i*8, projY, 5-i, 0, Math.PI*2); x.fill();
+            }
+            if (projX > W + 10) projActive = false;
+            /* Check pipe hit */
+            for (const p of pipes) {
+              const px = ((p.x - t*35) % (W+80)) + 40;
+              if (projX > px && projX < px+42) {
+                /* Spawn fragments */
+                for (let i = 0; i < 5; i++) {
+                  fragments.push({
+                    x: projX, y: projY,
+                    vx: (Math.random()-0.5)*120,
+                    vy: -50 - Math.random()*80,
+                    life: 0.6, size: 2+Math.random()*4,
+                    color: p.topHP > 1 ? '#8a8a8a' : '#3da870',
+                  });
+                }
+                projActive = false;
+                break;
+              }
+            }
+          }
+
+          /* Fragments */
+          for (let i = fragments.length-1; i >= 0; i--) {
+            const f = fragments[i];
+            f.vy += 200 * 0.016;
+            f.x += f.vx * 0.016;
+            f.y += f.vy * 0.016;
+            f.life -= 0.016;
+            if (f.life <= 0) { fragments.splice(i,1); continue; }
+            x.fillStyle = f.color;
+            x.globalAlpha = f.life;
+            x.fillRect(f.x-f.size/2, f.y-f.size/2, f.size, f.size);
+            x.globalAlpha = 1;
+          }
+
+          /* Bird */
+          const birdY = H*0.42 + Math.sin(t*3)*14;
+          const wing = Math.sin(t*8)*5;
+          x.save(); x.translate(90, birdY);
+          x.rotate(Math.sin(t*3)*0.15);
+          /* Body */
+          const bg = x.createRadialGradient(-2,-2,2,0,0,12);
+          bg.addColorStop(0,'#ffe066'); bg.addColorStop(1,'#f0a030');
+          x.fillStyle = bg; x.beginPath(); x.arc(0,0,12,0,Math.PI*2); x.fill();
+          /* Wing */
+          x.fillStyle = '#f0a030'; x.beginPath();
+          x.ellipse(-5,wing+2,7,3.5,-0.3,0,Math.PI*2); x.fill();
+          /* Beak */
+          x.fillStyle = '#ff7b54'; x.beginPath();
+          x.moveTo(10,-2); x.lineTo(17,0); x.lineTo(10,2); x.closePath(); x.fill();
+          /* Eye */
+          x.fillStyle = '#fff'; x.beginPath(); x.arc(-1,-4,3.5,0,Math.PI*2); x.fill();
+          x.fillStyle = '#1b2a36'; x.beginPath(); x.arc(0,-4,1.8,0,Math.PI*2); x.fill();
+          /* Weapon aura */
+          const auraGrad = x.createRadialGradient(0,0,12,0,0,22);
+          auraGrad.addColorStop(0,'rgba(255,100,0,0.2)');
+          auraGrad.addColorStop(1,'rgba(255,100,0,0)');
+          x.fillStyle = auraGrad;
+          x.beginPath(); x.arc(0,0,22,0,Math.PI*2); x.fill();
+          x.restore();
+
+          /* Ground */
+          x.fillStyle = '#6cd47e'; x.fillRect(0,H-18,W,18);
+
+          /* Tier HUD indicator */
+          x.fillStyle = 'rgba(0,0,0,0.4)';
+          x.fillRect(5,5,70,18);
+          x.fillStyle = '#FFD700';
+          x.font = "bold 10px 'Segoe UI', system-ui, sans-serif";
+          x.textAlign = 'left';
+          x.fillText('TIER 8/8', 10, 17);
 
           requestAnimationFrame(draw);
         }

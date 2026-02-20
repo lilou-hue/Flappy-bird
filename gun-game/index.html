@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gun Game</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="game">
+      <header class="game__header">
+        <a href="/" class="back-link" data-i18n="backToGames">&larr; Back to Games</a>
+        <h1>Gun Game</h1>
+        <p>Space/Left-tap to flap &bull; F/Enter/Right-tap to shoot &bull; Destroy pipes to advance!</p>
+      </header>
+      <section class="game__panel">
+        <canvas id="gameCanvas" width="360" height="640" aria-label="Gun Game"></canvas>
+        <div class="game__hud">
+          <div class="hud__score">
+            <span data-i18n="score">Score</span>
+            <strong id="score">0</strong>
+          </div>
+          <div class="hud__score">
+            <span data-i18n="best">Best</span>
+            <strong id="bestScore">0</strong>
+          </div>
+          <button id="restartButton" class="hud__button" type="button" data-i18n="restart">Restart</button>
+          <button id="muteButton" class="hud__button hud__button--mute" type="button">Mute</button>
+        </div>
+      </section>
+      <footer class="game__footer">
+        <p>Tip: Destroy 3 pipes per tier to advance. Reach Tier 8 and complete it to win!</p>
+      </footer>
+    </main>
+    <script src="../i18n.js"></script>
+    <script src="audio.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>
