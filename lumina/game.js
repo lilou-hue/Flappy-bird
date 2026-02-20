@@ -781,6 +781,9 @@
       if (dyingTimer <= 0) {
         state = STATE.GAMEOVER;
         if (score > bestScore) { bestScore = score; saveBest(bestScore); bestEl.textContent = bestScore; }
+        if (typeof Leaderboard !== 'undefined' && score > 0) {
+          Leaderboard.submitScore('lumina', score).then(() => Leaderboard.refresh('lumina'));
+        }
         achStats.bestScore = Math.max(achStats.bestScore, score);
         achStats.maxZone = Math.max(achStats.maxZone, zoneIndex());
         checkAch(); showAchPopup(); saveAch();
@@ -1338,4 +1341,8 @@
   });
 
   init();
+
+  if (typeof Leaderboard !== 'undefined') {
+    document.getElementById('leaderboardPanel').appendChild(Leaderboard.createPanel('lumina'));
+  }
 })();

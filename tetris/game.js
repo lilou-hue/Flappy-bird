@@ -501,6 +501,9 @@
       state.best = state.score;
       localStorage.setItem("tetrisBest", String(state.best));
     }
+    if (typeof Leaderboard !== 'undefined' && state.score > 0) {
+      Leaderboard.submitScore('tetris', state.score).then(() => Leaderboard.refresh('tetris'));
+    }
   }
 
   /* ================================================================== */
@@ -1418,4 +1421,8 @@
   }
   resetGame();
   requestAnimationFrame(loop);
+
+  if (typeof Leaderboard !== 'undefined') {
+    document.getElementById('leaderboardPanel').appendChild(Leaderboard.createPanel('tetris'));
+  }
 })();

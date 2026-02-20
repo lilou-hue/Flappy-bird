@@ -550,6 +550,10 @@ function gameOver() {
     localStorage.setItem("phantomRoadBest", state.bestScore);
     bestEl.textContent = state.bestScore;
   }
+
+  if (typeof Leaderboard !== 'undefined' && state.score > 0) {
+    Leaderboard.submitScore('phantom-road', state.score).then(() => Leaderboard.refresh('phantom-road'));
+  }
 }
 
 // ── Zone helpers ─────────────────────────────────────────
@@ -2444,3 +2448,7 @@ function loop(timestamp) {
 }
 
 requestAnimationFrame(loop);
+
+if (typeof Leaderboard !== 'undefined') {
+  document.getElementById('leaderboardPanel').appendChild(Leaderboard.createPanel('phantom-road'));
+}

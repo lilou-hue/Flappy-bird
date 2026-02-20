@@ -1050,6 +1050,10 @@ function finishCrash() {
   restartBtn.hidden = false;
   const isNew = saveBestScore();
 
+  if (typeof Leaderboard !== 'undefined' && world.score > 0) {
+    Leaderboard.submitScore('methane-drift', world.score).then(() => Leaderboard.refresh('methane-drift'));
+  }
+
   /* Stop music */
   if (Audio.stopMusic) Audio.stopMusic();
 
@@ -3686,3 +3690,7 @@ try {
 } catch (e) { /* */ }
 resetGame();
 requestAnimationFrame(gameLoop);
+
+if (typeof Leaderboard !== 'undefined') {
+  document.getElementById('leaderboardPanel').appendChild(Leaderboard.createPanel('methane-drift'));
+}

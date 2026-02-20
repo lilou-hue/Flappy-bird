@@ -382,6 +382,15 @@ const I18N = (() => {
       ucYesRestart: 'Yes, restart',
       ucCancel: 'Cancel',
       ucLv: 'Lv',
+
+      // Leaderboard
+      leaderboard: 'Leaderboard',
+      enterNickname: 'Enter your nickname',
+      submitScore: 'Submit',
+      noScoresYet: 'No scores yet. Be the first!',
+      loadingScores: 'Loading scores…',
+      submittedScore: 'Score submitted!',
+      lbPlayer: 'Player',
     },
 
     ko: {
@@ -736,6 +745,15 @@ const I18N = (() => {
       ucYesRestart: '네, 재시작',
       ucCancel: '취소',
       ucLv: 'Lv',
+
+      // Leaderboard
+      leaderboard: '리더보드',
+      enterNickname: '닉네임을 입력하세요',
+      submitScore: '제출',
+      noScoresYet: '아직 점수가 없습니다. 첫 번째가 되세요!',
+      loadingScores: '점수 로딩 중…',
+      submittedScore: '점수가 제출되었습니다!',
+      lbPlayer: '플레이어',
     },
 
     ja: {
@@ -1090,6 +1108,15 @@ const I18N = (() => {
       ucYesRestart: 'はい、リスタート',
       ucCancel: 'キャンセル',
       ucLv: 'Lv',
+
+      // Leaderboard
+      leaderboard: 'リーダーボード',
+      enterNickname: 'ニックネームを入力',
+      submitScore: '送信',
+      noScoresYet: 'まだスコアがありません。最初のプレイヤーになろう！',
+      loadingScores: 'スコアを読み込み中…',
+      submittedScore: 'スコアを送信しました！',
+      lbPlayer: 'プレイヤー',
     },
 
     tr: {
@@ -1444,6 +1471,15 @@ const I18N = (() => {
       ucYesRestart: 'Evet, yeniden başlat',
       ucCancel: 'İptal',
       ucLv: 'Sv',
+
+      // Leaderboard
+      leaderboard: 'Skor Tablosu',
+      enterNickname: 'Takma adınızı girin',
+      submitScore: 'Gönder',
+      noScoresYet: 'Henüz skor yok. İlk siz olun!',
+      loadingScores: 'Skorlar yükleniyor…',
+      submittedScore: 'Skor gönderildi!',
+      lbPlayer: 'Oyuncu',
     },
 
     fr: {
@@ -1798,6 +1834,15 @@ const I18N = (() => {
       ucYesRestart: 'Oui, recommencer',
       ucCancel: 'Annuler',
       ucLv: 'Nv',
+
+      // Leaderboard
+      leaderboard: 'Classement',
+      enterNickname: 'Entrez votre pseudo',
+      submitScore: 'Envoyer',
+      noScoresYet: 'Aucun score. Soyez le premier !',
+      loadingScores: 'Chargement des scores…',
+      submittedScore: 'Score envoyé !',
+      lbPlayer: 'Joueur',
     },
 
     sv: {
@@ -2152,6 +2197,15 @@ const I18N = (() => {
       ucYesRestart: 'Ja, starta om',
       ucCancel: 'Avbryt',
       ucLv: 'Nv',
+
+      // Leaderboard
+      leaderboard: 'Topplista',
+      enterNickname: 'Ange ditt smeknamn',
+      submitScore: 'Skicka',
+      noScoresYet: 'Inga poäng ännu. Bli först!',
+      loadingScores: 'Laddar poäng…',
+      submittedScore: 'Poäng skickad!',
+      lbPlayer: 'Spelare',
     },
 
     zh: {
@@ -2506,6 +2560,15 @@ const I18N = (() => {
       ucYesRestart: '是的，重新开始',
       ucCancel: '取消',
       ucLv: 'Lv',
+
+      // Leaderboard
+      leaderboard: '排行榜',
+      enterNickname: '输入你的昵称',
+      submitScore: '提交',
+      noScoresYet: '暂无分数，成为第一个！',
+      loadingScores: '加载分数中…',
+      submittedScore: '分数已提交！',
+      lbPlayer: '玩家',
     },
   };
 

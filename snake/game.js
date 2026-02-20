@@ -1297,6 +1297,10 @@ function die() {
     localStorage.setItem("snakeBest", String(state.best));
   }
 
+  if (typeof Leaderboard !== 'undefined' && state.score > 0) {
+    Leaderboard.submitScore('snake', state.score).then(() => Leaderboard.refresh('snake'));
+  }
+
   checkAchievements();
   showAchievementPopup();
   saveAchievements();
@@ -2015,3 +2019,7 @@ requestAnimationFrame(gameLoop);
 
 // Show tutorial on first visit
 showTutorial();
+
+if (typeof Leaderboard !== 'undefined') {
+  document.getElementById('leaderboardPanel').appendChild(Leaderboard.createPanel('snake'));
+}
