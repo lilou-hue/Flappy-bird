@@ -2130,5 +2130,18 @@ requestAnimationFrame(gameLoop);
 showTutorial();
 
 if (typeof Leaderboard !== 'undefined') {
-  document.getElementById('leaderboardPanel').appendChild(Leaderboard.createPanel('snake'));
+  const lbPanel = document.getElementById('leaderboardPanel');
+  lbPanel.appendChild(Leaderboard.createPanel('snake'));
+
+  // Mobile leaderboard toggle
+  const lbToggleBtn = document.getElementById('leaderboardToggle');
+  if (lbToggleBtn) {
+    lbToggleBtn.addEventListener('click', () => {
+      lbPanel.classList.toggle('lb-visible');
+    });
+    // Close leaderboard when tapping outside on mobile
+    lbPanel.addEventListener('click', (e) => {
+      if (e.target === lbPanel) lbPanel.classList.remove('lb-visible');
+    });
+  }
 }
