@@ -283,7 +283,7 @@
   function save() {
     state.lastSave = Date.now();
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch(e) {}
-    if (typeof Leaderboard !== 'undefined' && state.lifetimeSP > 0) {
+    if (typeof Leaderboard !== 'undefined' && state.lifetimeSP > 0 && Leaderboard.getNickname()) {
       Leaderboard.submitScore('unicorn-clicker', Math.floor(state.lifetimeSP));
     }
     saveUCAch();
@@ -3209,7 +3209,14 @@
     lbPanel.appendChild(Leaderboard.createPanel('unicorn-clicker'));
     const lbToggleBtn = document.getElementById('leaderboardToggle');
     if (lbToggleBtn) {
-      lbToggleBtn.addEventListener('click', () => { lbPanel.classList.toggle('lb-visible'); });
+      lbToggleBtn.addEventListener('click', () => {
+        lbPanel.classList.toggle('lb-visible');
+        // First time opening: prompt nickname and submit score
+        if (lbPanel.classList.contains('lb-visible') && !Leaderboard.getNickname() && state.lifetimeSP > 0) {
+          Leaderboard.submitScore('unicorn-clicker', Math.floor(state.lifetimeSP))
+            .then(() => Leaderboard.refresh('unicorn-clicker'));
+        }
+      });
       lbPanel.addEventListener('click', (e) => { if (e.target === lbPanel) lbPanel.classList.remove('lb-visible'); });
     }
   }
