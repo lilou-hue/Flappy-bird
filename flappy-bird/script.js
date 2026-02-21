@@ -4,6 +4,10 @@ const scoreLabel = document.getElementById("score");
 const bestScoreLabel = document.getElementById("bestScore");
 const restartButton = document.getElementById("restartButton");
 
+/* ── Virtual game dimensions (all game logic uses these) ── */
+const GAME_W = 360;
+const GAME_H = 640;
+
 /* --- i18n setup --- */
 I18N.createSelector(document.querySelector('.game__header'));
 I18N.applyDOM();
@@ -95,7 +99,7 @@ const gameState = {
 
 const bird = {
   x: 80,
-  y: canvas.height / 2,
+  y: GAME_H / 2,
   radius: 14,
   velocity: 0,
   trail: [],
@@ -126,11 +130,11 @@ let dripState = {
 function initHills() {
   hills = [];
   const segments = 20;
-  const segW = canvas.width / segments;
+  const segW = GAME_W / segments;
   for (let i = 0; i <= segments; i++) {
     hills.push({
       x: i * segW,
-      y: canvas.height - 90 - 20 - Math.sin(i * 0.7) * 18 - Math.sin(i * 1.3) * 10,
+      y: GAME_H - 90 - 20 - Math.sin(i * 0.7) * 18 - Math.sin(i * 1.3) * 10,
     });
   }
 }
@@ -141,7 +145,7 @@ function initTrees() {
   const count = 6 + Math.floor(Math.random() * 4);
   for (let i = 0; i < count; i++) {
     trees.push({
-      x: Math.random() * canvas.width,
+      x: Math.random() * GAME_W,
       height: 14 + Math.random() * 20,
       width: 8 + Math.random() * 10,
     });
@@ -151,8 +155,8 @@ function initTrees() {
 /* --- Generate grass blade tufts along ground top edge --- */
 function initGrass() {
   grassBlades = [];
-  const groundTop = canvas.height - 90;
-  for (let x = 0; x < canvas.width; x += 3 + Math.random() * 5) {
+  const groundTop = GAME_H - 90;
+  for (let x = 0; x < GAME_W; x += 3 + Math.random() * 5) {
     grassBlades.push({
       x: x,
       height: 4 + Math.random() * 8,
@@ -164,11 +168,11 @@ function initGrass() {
 /* --- Init flowers/mushrooms on ground edge --- */
 function initFlowers() {
   flowers = [];
-  const groundTop = canvas.height - 90;
+  const groundTop = GAME_H - 90;
   const count = 5 + Math.floor(Math.random() * 4);
   for (let i = 0; i < count; i++) {
     flowers.push({
-      x: 20 + Math.random() * (canvas.width - 40),
+      x: 20 + Math.random() * (GAME_W - 40),
       y: groundTop,
       type: Math.random() > 0.3 ? "flower" : "mushroom",
       size: 3 + Math.random() * 3,
@@ -183,8 +187,8 @@ function initButterflies() {
   butterflies = [];
   for (let i = 0; i < 3; i++) {
     butterflies.push({
-      x: 50 + Math.random() * (canvas.width - 100),
-      y: 80 + Math.random() * (canvas.height * 0.35),
+      x: 50 + Math.random() * (GAME_W - 100),
+      y: 80 + Math.random() * (GAME_H * 0.35),
       phase: Math.random() * Math.PI * 2,
       wingPhase: Math.random() * Math.PI * 2,
       speedX: 8 + Math.random() * 15,
@@ -201,8 +205,8 @@ function initLeaves() {
   leafParticles = [];
   for (let i = 0; i < 4; i++) {
     leafParticles.push({
-      x: Math.random() * canvas.width,
-      y: 60 + Math.random() * (canvas.height - 160),
+      x: Math.random() * GAME_W,
+      y: 60 + Math.random() * (GAME_H - 160),
       size: 3 + Math.random() * 3,
       speedX: 10 + Math.random() * 20,
       speedY: 5 + Math.random() * 15,
@@ -219,8 +223,8 @@ function initClouds() {
   clouds = [];
   for (let i = 0; i < 8; i += 1) {
     clouds.push({
-      x: Math.random() * canvas.width,
-      y: 30 + Math.random() * (canvas.height * 0.5),
+      x: Math.random() * GAME_W,
+      y: 30 + Math.random() * (GAME_H * 0.5),
       width: 40 + Math.random() * 60,
       height: 16 + Math.random() * 20,
       speed: 0.15 + Math.random() * 0.35,
@@ -246,7 +250,7 @@ const saveBestScore = () => {
 };
 
 const resetGame = () => {
-  bird.y = canvas.height / 2;
+  bird.y = GAME_H / 2;
   bird.velocity = 0;
   bird.trail = [];
   bird.wingAngle = 0;
@@ -279,12 +283,12 @@ const resetGame = () => {
 
 const spawnPipe = () => {
   const minHeight = 60;
-  const maxHeight = canvas.height - gameState.gap - 160;
+  const maxHeight = GAME_H - gameState.gap - 160;
   const topHeight = Math.floor(
     Math.random() * (maxHeight - minHeight + 1) + minHeight
   );
   pipes.push({
-    x: canvas.width + gameState.pipeWidth,
+    x: GAME_W + gameState.pipeWidth,
     top: topHeight,
     passed: false,
     vines: [
@@ -301,8 +305,8 @@ const spawnPipe = () => {
 /* --- Wind particles for speed feel --- */
 const spawnWindParticle = () => {
   windParticles.push({
-    x: canvas.width + 5,
-    y: Math.random() * canvas.height,
+    x: GAME_W + 5,
+    y: Math.random() * GAME_H,
     length: 8 + Math.random() * 18,
     speed: 280 + Math.random() * 180,
     alpha: 0.08 + Math.random() * 0.12,
@@ -350,13 +354,13 @@ const drawBackground = () => {
   const skyBot = lerpColor("#7be495", "#7be495", scoreProgress * 0.3);
 
   /* Sky gradient */
-  const skyGrad = context.createLinearGradient(0, 0, 0, canvas.height);
+  const skyGrad = context.createLinearGradient(0, 0, 0, GAME_H);
   skyGrad.addColorStop(0, skyTop);
   skyGrad.addColorStop(0.55, skyMid);
   skyGrad.addColorStop(0.85, skyLow);
   skyGrad.addColorStop(1, skyBot);
   context.fillStyle = skyGrad;
-  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.fillRect(0, 0, GAME_W, GAME_H);
 
   /* Sun glow in top-left */
   const sunX = 60;
@@ -390,7 +394,7 @@ const drawBackground = () => {
   }
 
   /* Distant rolling hills layer */
-  const groundTop = canvas.height - 90;
+  const groundTop = GAME_H - 90;
   if (hills.length > 1) {
     context.fillStyle = "rgba(80, 160, 100, 0.25)";
     context.beginPath();
@@ -398,7 +402,7 @@ const drawBackground = () => {
     for (const h of hills) {
       context.lineTo(h.x, h.y);
     }
-    context.lineTo(canvas.width, groundTop);
+    context.lineTo(GAME_W, groundTop);
     context.closePath();
     context.fill();
 
@@ -409,7 +413,7 @@ const drawBackground = () => {
     for (let i = 0; i < hills.length; i++) {
       context.lineTo(hills[i].x, hills[i].y + 8 + Math.sin(i * 1.1) * 6);
     }
-    context.lineTo(canvas.width, groundTop);
+    context.lineTo(GAME_W, groundTop);
     context.closePath();
     context.fill();
   }
@@ -447,13 +451,13 @@ const drawBackground = () => {
 
   /* Ground layers */
   context.fillStyle = "rgba(123, 228, 149, 0.5)";
-  context.fillRect(0, groundTop, canvas.width, 90);
+  context.fillRect(0, groundTop, GAME_W, 90);
 
-  const groundGrad = context.createLinearGradient(0, canvas.height - 35, 0, canvas.height);
+  const groundGrad = context.createLinearGradient(0, GAME_H - 35, 0, GAME_H);
   groundGrad.addColorStop(0, "#6cd47e");
   groundGrad.addColorStop(1, "#4fb866");
   context.fillStyle = groundGrad;
-  context.fillRect(0, canvas.height - 35, canvas.width, 35);
+  context.fillRect(0, GAME_H - 35, GAME_W, 35);
 
   /* Grass blade tufts along ground top edge */
   context.strokeStyle = "#3aad55";
@@ -781,7 +785,7 @@ const drawPipes = () => {
 
     /* Bottom pipe body */
     context.fillStyle = topGrad;
-    context.fillRect(pipe.x, bottomY + capH, gameState.pipeWidth, canvas.height - bottomY - capH);
+    context.fillRect(pipe.x, bottomY + capH, gameState.pipeWidth, GAME_H - bottomY - capH);
 
     /* Bottom cap */
     context.fillStyle = capGrad;
@@ -791,13 +795,13 @@ const drawPipes = () => {
 
     /* Highlight stripe on bottom pipe */
     context.fillStyle = "rgba(255, 255, 255, 0.12)";
-    context.fillRect(pipe.x + 8, bottomY + capH, 6, canvas.height - bottomY - capH);
+    context.fillRect(pipe.x + 8, bottomY + capH, 6, GAME_H - bottomY - capH);
 
     /* Crack/texture lines on bottom pipe */
     context.strokeStyle = "rgba(20, 60, 30, 0.15)";
     context.lineWidth = 0.8;
     for (const crack of pipe.cracks) {
-      const bpHeight = canvas.height - bottomY - capH;
+      const bpHeight = GAME_H - bottomY - capH;
       const crackY = bottomY + capH + crack.yStart * bpHeight;
       context.beginPath();
       context.moveTo(pipe.x + crack.xOff, crackY);
@@ -813,7 +817,7 @@ const drawPipes = () => {
     context.lineWidth = 1.2;
     for (const vine of pipe.vines) {
       context.beginPath();
-      for (let vy = bottomY + capH; vy < canvas.height; vy += 4) {
+      for (let vy = bottomY + capH; vy < GAME_H; vy += 4) {
         const vx = pipe.x + vine.xOff + Math.sin(vy * vine.freq) * vine.amp;
         if (vy === bottomY + capH) context.moveTo(vx, vy);
         else context.lineTo(vx, vy);
@@ -824,7 +828,7 @@ const drawPipes = () => {
     /* Pipe shadow (inner edge) */
     context.fillStyle = "rgba(0, 0, 0, 0.1)";
     context.fillRect(pipe.x + gameState.pipeWidth - 8, 0, 8, pipe.top - capH);
-    context.fillRect(pipe.x + gameState.pipeWidth - 8, bottomY + capH, 8, canvas.height - bottomY - capH);
+    context.fillRect(pipe.x + gameState.pipeWidth - 8, bottomY + capH, 8, GAME_H - bottomY - capH);
   });
 };
 
@@ -858,7 +862,7 @@ const drawScorePop = () => {
     const scale = 1 + gameState.scorePop * 0.6;
     const alpha = gameState.scorePop;
     context.save();
-    context.translate(canvas.width / 2, canvas.height * 0.15);
+    context.translate(GAME_W / 2, GAME_H * 0.15);
     context.scale(scale, scale);
     context.fillStyle = `rgba(255, 255, 255, ${alpha})`;
     context.font = "bold 28px 'Trebuchet MS'";
@@ -873,26 +877,26 @@ const drawScorePop = () => {
 const drawOverlay = (title, subtitle) => {
   /* Soft vignette instead of flat overlay */
   const vg = context.createRadialGradient(
-    canvas.width / 2, canvas.height / 2, canvas.height * 0.1,
-    canvas.width / 2, canvas.height / 2, canvas.height * 0.7
+    GAME_W / 2, GAME_H / 2, GAME_H * 0.1,
+    GAME_W / 2, GAME_H / 2, GAME_H * 0.7
   );
   vg.addColorStop(0, "rgba(0, 0, 0, 0.25)");
   vg.addColorStop(1, "rgba(0, 0, 0, 0.55)");
   context.fillStyle = vg;
-  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.fillRect(0, 0, GAME_W, GAME_H);
 
   /* Title with subtle shadow */
   context.fillStyle = "rgba(0, 0, 0, 0.3)";
   context.font = "bold 34px 'Trebuchet MS'";
   context.textAlign = "center";
-  context.fillText(title, canvas.width / 2 + 1, canvas.height / 2 - 15);
+  context.fillText(title, GAME_W / 2 + 1, GAME_H / 2 - 15);
 
   context.fillStyle = "#ffffff";
-  context.fillText(title, canvas.width / 2, canvas.height / 2 - 16);
+  context.fillText(title, GAME_W / 2, GAME_H / 2 - 16);
 
   context.fillStyle = "rgba(255, 255, 255, 0.7)";
   context.font = "16px 'Trebuchet MS'";
-  context.fillText(subtitle, canvas.width / 2, canvas.height / 2 + 18);
+  context.fillText(subtitle, GAME_W / 2, GAME_H / 2 + 18);
 };
 
 const detectCollision = (pipe) => {
@@ -958,7 +962,7 @@ const update = (deltaSeconds) => {
   bird.trail.push({ x: bird.x, y: bird.y });
   if (bird.trail.length > 8) bird.trail.shift();
 
-  if (bird.y + bird.radius >= canvas.height - 90 || bird.y - bird.radius <= 0) {
+  if (bird.y + bird.radius >= GAME_H - 90 || bird.y - bird.radius <= 0) {
     gameState.isGameOver = true;
     gameState.shakeTimer = 12;
     gameState.shakeIntensity = 6;
@@ -1007,8 +1011,8 @@ const update = (deltaSeconds) => {
   for (const cloud of clouds) {
     cloud.x -= cloud.speed * deltaSeconds * 60;
     if (cloud.x < -cloud.width) {
-      cloud.x = canvas.width + cloud.width;
-      cloud.y = 30 + Math.random() * (canvas.height * 0.5);
+      cloud.x = GAME_W + cloud.width;
+      cloud.y = 30 + Math.random() * (GAME_H * 0.5);
     }
   }
 
@@ -1025,8 +1029,8 @@ const update = (deltaSeconds) => {
     leaf.phase += deltaSeconds * 2;
     leaf.rot += leaf.rotSpeed * deltaSeconds;
     if (leaf.x < -10) {
-      leaf.x = canvas.width + 10;
-      leaf.y = 60 + Math.random() * (canvas.height - 160);
+      leaf.x = GAME_W + 10;
+      leaf.y = 60 + Math.random() * (GAME_H - 160);
     }
   }
 
@@ -1037,10 +1041,10 @@ const update = (deltaSeconds) => {
     bf.x += Math.sin(bf.phase) * bf.speedX * deltaSeconds;
     bf.y += Math.cos(bf.phase * 0.7) * bf.speedY * deltaSeconds;
     /* Wrap around */
-    if (bf.x < -20) bf.x = canvas.width + 20;
-    if (bf.x > canvas.width + 20) bf.x = -20;
+    if (bf.x < -20) bf.x = GAME_W + 20;
+    if (bf.x > GAME_W + 20) bf.x = -20;
     if (bf.y < 40) bf.y = 40;
-    if (bf.y > canvas.height * 0.45) bf.y = canvas.height * 0.45;
+    if (bf.y > GAME_H * 0.45) bf.y = GAME_H * 0.45;
   }
 
   /* Update drip animation */
@@ -1064,6 +1068,15 @@ const update = (deltaSeconds) => {
 };
 
 const draw = () => {
+  /* Clear full canvas at native resolution */
+  context.setTransform(1, 0, 0, 1, 0, 0);
+  context.clearRect(0, 0, canvas.width, canvas.height);
+
+  /* Scale from game coordinates (360×640) to canvas pixels */
+  const scaleX = canvas.width / GAME_W;
+  const scaleY = canvas.height / GAME_H;
+  context.setTransform(scaleX, 0, 0, scaleY, 0, 0);
+
   context.save();
 
   /* Apply screen shake */
@@ -1073,7 +1086,6 @@ const draw = () => {
     context.translate(sx, sy);
   }
 
-  context.clearRect(-10, -10, canvas.width + 20, canvas.height + 20);
   drawBackground();
   drawWind();
   drawPipes();
@@ -1090,6 +1102,7 @@ const draw = () => {
   }
 
   context.restore();
+  context.setTransform(1, 0, 0, 1, 0, 0);
 };
 
 const loop = (timestamp) => {
@@ -1141,6 +1154,13 @@ window.addEventListener("keydown", (event) => {
   if (event.code === "Space") {
     event.preventDefault();
     flap();
+  }
+  if (event.code === "KeyF" && !event.ctrlKey && !event.metaKey && !event.altKey) {
+    const tag = document.activeElement?.tagName;
+    if (tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'SELECT') {
+      event.preventDefault();
+      toggleFullscreen();
+    }
   }
 });
 
@@ -1207,30 +1227,73 @@ function enablePseudoFs() {
   document.getElementById("gameContainer").classList.add("pseudo-fullscreen");
   document.body.style.overflow = "hidden";
   updateFsButton();
+  /* Delay to let CSS layout settle before measuring */
+  requestAnimationFrame(() => updateCanvasSize());
 }
 function disablePseudoFs() {
   pseudoFullscreen = false; isFullscreen = false;
   document.getElementById("gameContainer").classList.remove("pseudo-fullscreen");
   document.body.style.overflow = "";
   updateFsButton();
+  updateCanvasSize();
 }
 function updateFsButton() {
   if (fullscreenButton) fullscreenButton.textContent = isFullscreen ? "\u2715" : "\u26F6";
 }
-document.addEventListener("fullscreenchange", () => { isFullscreen = !!document.fullscreenElement; updateFsButton(); });
-document.addEventListener("webkitfullscreenchange", () => { isFullscreen = !!document.webkitFullscreenElement; updateFsButton(); });
+document.addEventListener("fullscreenchange", () => {
+  isFullscreen = !!document.fullscreenElement;
+  updateFsButton();
+  /* Delay to let fullscreen layout settle */
+  requestAnimationFrame(() => updateCanvasSize());
+});
+document.addEventListener("webkitfullscreenchange", () => {
+  isFullscreen = !!document.webkitFullscreenElement;
+  updateFsButton();
+  requestAnimationFrame(() => updateCanvasSize());
+});
 if (fullscreenButton) fullscreenButton.addEventListener("click", toggleFullscreen);
 
-/* --- Dynamic canvas sizing for mobile portrait --- */
+/* ── Canvas sizing (DPI-aware) ──────────────────────────── */
 const gameHeader = document.querySelector('.game__header');
 const gamePanel = document.querySelector('.game__panel');
 const gameHud = document.querySelector('.game__hud');
+
+function updateCanvasSize() {
+  const dpr = window.devicePixelRatio || 1;
+
+  if (isFullscreen) {
+    /* In fullscreen: compute exact size maintaining 9:16 aspect ratio */
+    const screenW = window.innerWidth;
+    const screenH = window.innerHeight - 52; /* reserve space for HUD */
+    const aspect = GAME_W / GAME_H;
+    let cssW, cssH;
+    if (screenW / screenH > aspect) {
+      cssH = screenH;
+      cssW = Math.floor(cssH * aspect);
+    } else {
+      cssW = screenW;
+      cssH = Math.floor(cssW / aspect);
+    }
+    canvas.style.width = cssW + 'px';
+    canvas.style.height = cssH + 'px';
+    canvas.width = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+  } else {
+    /* Normal mode: CSS handles layout, sync resolution to display */
+    fitCanvasToScreen();
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) {
+      canvas.width = Math.round(rect.width * dpr);
+      canvas.height = Math.round(rect.height * dpr);
+    }
+  }
+  draw();
+}
 
 function fitCanvasToScreen() {
   const isMobile = window.innerWidth <= 600;
 
   if (!isMobile) {
-    /* Desktop/tablet: clear any inline overrides, let CSS handle it */
     canvas.style.width = '';
     canvas.style.height = '';
     return;
@@ -1239,35 +1302,29 @@ function fitCanvasToScreen() {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
 
-  /* Measure non-canvas elements */
   const headerH = gameHeader ? gameHeader.offsetHeight : 0;
   const hudH = gameHud ? gameHud.offsetHeight : 0;
 
-  /* Account for body padding, game gaps, panel padding */
-  const bodyPad = 16;  /* top + bottom body padding on mobile */
-  const gameGap = 12;  /* gap between header and panel */
-  const panelPad = 16; /* panel top + bottom padding */
-  const panelGap = 8;  /* gap between canvas and HUD inside panel */
+  const bodyPad = 16;
+  const gameGap = 12;
+  const panelPad = 16;
+  const panelGap = 8;
 
   const chrome = headerH + hudH + bodyPad + gameGap + panelPad + panelGap;
   const availH = vh - chrome;
-  const availW = vw - 12 - panelPad; /* body side padding + panel side padding */
+  const availW = vw - 12 - panelPad;
 
-  /* Fit 9:16 aspect ratio into available space */
   const aspectRatio = 9 / 16;
   let canvasW, canvasH;
 
-  /* Try fitting by height first */
   canvasH = availH;
   canvasW = canvasH * aspectRatio;
 
-  /* If too wide, fit by width instead */
   if (canvasW > availW) {
     canvasW = availW;
     canvasH = canvasW / aspectRatio;
   }
 
-  /* Clamp to reasonable minimums */
   canvasW = Math.max(canvasW, 200);
   canvasH = Math.max(canvasH, 356);
 
@@ -1275,22 +1332,20 @@ function fitCanvasToScreen() {
   canvas.style.height = Math.floor(canvasH) + 'px';
 }
 
-fitCanvasToScreen();
-
 /* Debounced resize handler */
 let resizeTimer;
 function onResize() {
   clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(fitCanvasToScreen, 80);
+  resizeTimer = setTimeout(updateCanvasSize, 80);
 }
 
 window.addEventListener('resize', onResize);
 window.addEventListener('orientationchange', () => {
-  /* Orientation change needs a longer delay for viewport to settle */
-  setTimeout(fitCanvasToScreen, 200);
+  setTimeout(updateCanvasSize, 200);
 });
 
 loadBestScore();
+updateCanvasSize();
 resetGame();
 requestAnimationFrame(loop);
 
