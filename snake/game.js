@@ -1143,6 +1143,9 @@ function tick(now) {
   // Check food
   if (newHead.x === food.x && newHead.y === food.y) {
     eatFood(now);
+    // Arena may have shrunk — clamp newHead to new bounds
+    newHead.x = Math.max(state.arenaMin, Math.min(state.arenaMax, newHead.x));
+    newHead.y = Math.max(state.arenaMin, Math.min(state.arenaMax, newHead.y));
   }
 
   // Move
