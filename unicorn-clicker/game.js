@@ -3213,6 +3213,45 @@
       lbPanel.addEventListener('click', (e) => { if (e.target === lbPanel) lbPanel.classList.remove('lb-visible'); });
     }
   }
+  /* ── Fullscreen ──────────────────────────────────────────── */
+  const fullscreenButton = document.getElementById("fullscreenButton");
+  let isFullscreen = false;
+  let pseudoFullscreen = false;
+
+  function toggleFullscreen() {
+    if (isFullscreen) exitFs(); else enterFs();
+  }
+  function enterFs() {
+    const el = document.documentElement;
+    const p = el.requestFullscreen ? el.requestFullscreen()
+      : el.webkitRequestFullscreen ? el.webkitRequestFullscreen()
+      : null;
+    if (!p) enablePseudoFs();
+  }
+  function exitFs() {
+    if (pseudoFullscreen) { disablePseudoFs(); return; }
+    if (document.exitFullscreen) document.exitFullscreen();
+    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+  }
+  function enablePseudoFs() {
+    pseudoFullscreen = true; isFullscreen = true;
+    document.body.classList.add("pseudo-fullscreen");
+    document.body.style.overflow = "hidden";
+    updateFsButton();
+  }
+  function disablePseudoFs() {
+    pseudoFullscreen = false; isFullscreen = false;
+    document.body.classList.remove("pseudo-fullscreen");
+    document.body.style.overflow = "";
+    updateFsButton();
+  }
+  function updateFsButton() {
+    if (fullscreenButton) fullscreenButton.textContent = isFullscreen ? "\u2715" : "\u26F6";
+  }
+  document.addEventListener("fullscreenchange", () => { isFullscreen = !!document.fullscreenElement; updateFsButton(); });
+  document.addEventListener("webkitfullscreenchange", () => { isFullscreen = !!document.webkitFullscreenElement; updateFsButton(); });
+  if (fullscreenButton) fullscreenButton.addEventListener("click", toggleFullscreen);
+
   window.addEventListener('beforeunload', save);
   requestAnimationFrame(loop);
 })();

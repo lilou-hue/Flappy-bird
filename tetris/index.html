@@ -8,7 +8,7 @@
     <script src="../i18n.js"></script>
   </head>
   <body>
-    <main class="game">
+    <main class="game" id="gameContainer">
       <header class="game__header">
         <a href="/" class="back-link" data-i18n="backToGames">&larr; Back to Games</a>
         <h1 data-i18n="tetrisTitle">Tetris</h1>
@@ -36,6 +36,7 @@
             <strong id="bestScore">0</strong>
           </div>
           <button id="muteButton" class="hud__mute" type="button" aria-label="Toggle sound">&#x1F50A;</button>
+          <button id="fullscreenButton" class="hud__mute" type="button" aria-label="Toggle fullscreen" data-i18n-aria="fullscreen">&#x26F6;</button>
           <button id="leaderboardToggle" class="lb-toggle-btn" type="button" aria-label="Toggle leaderboard">&#x1F3C6;</button>
           <button id="restartButton" class="hud__button" type="button" data-i18n="restart">Restart</button>
         </div>

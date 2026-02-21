@@ -1875,6 +1875,45 @@ if (muteButton) {
   updateMuteLabel();
 }
 
+/* ── Fullscreen ──────────────────────────────────────────── */
+const fullscreenButton = document.getElementById("fullscreenButton");
+let isFullscreen = false;
+let pseudoFullscreen = false;
+
+function toggleFullscreen() {
+  if (isFullscreen) exitFs(); else enterFs();
+}
+function enterFs() {
+  const el = document.getElementById("gameContainer") || document.documentElement;
+  const p = el.requestFullscreen ? el.requestFullscreen()
+    : el.webkitRequestFullscreen ? el.webkitRequestFullscreen()
+    : null;
+  if (!p) enablePseudoFs();
+}
+function exitFs() {
+  if (pseudoFullscreen) { disablePseudoFs(); return; }
+  if (document.exitFullscreen) document.exitFullscreen();
+  else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+}
+function enablePseudoFs() {
+  pseudoFullscreen = true; isFullscreen = true;
+  document.getElementById("gameContainer").classList.add("pseudo-fullscreen");
+  document.body.style.overflow = "hidden";
+  updateFsButton();
+}
+function disablePseudoFs() {
+  pseudoFullscreen = false; isFullscreen = false;
+  document.getElementById("gameContainer").classList.remove("pseudo-fullscreen");
+  document.body.style.overflow = "";
+  updateFsButton();
+}
+function updateFsButton() {
+  if (fullscreenButton) fullscreenButton.textContent = isFullscreen ? "\u2715" : "\u26F6";
+}
+document.addEventListener("fullscreenchange", () => { isFullscreen = !!document.fullscreenElement; updateFsButton(); });
+document.addEventListener("webkitfullscreenchange", () => { isFullscreen = !!document.webkitFullscreenElement; updateFsButton(); });
+if (fullscreenButton) fullscreenButton.addEventListener("click", toggleFullscreen);
+
 /* --- Prevent scrolling / pull-to-refresh on mobile --- */
 document.addEventListener("touchmove", (e) => { e.preventDefault(); }, { passive: false });
 document.addEventListener("touchstart", (e) => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });

@@ -692,11 +692,42 @@
   muteBtn.addEventListener("click", () => { muted = !muted; muteBtn.textContent = muted ? "\u{1F507}" : "\u{1F50A}"; if (masterGain) masterGain.gain.value = muted ? 0 : 0.35; saveMute(muted); });
 
   // Fullscreen
-  fullscreenBtn.addEventListener("click", () => {
-    const el = document.getElementById("gameContainer");
-    if (!document.fullscreenElement) (el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen).call(el);
-    else (document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen).call(document);
-  });
+  let isFullscreen = false;
+  let pseudoFullscreen = false;
+
+  function toggleFullscreen() {
+    if (isFullscreen) exitFs(); else enterFs();
+  }
+  function enterFs() {
+    const el = document.getElementById("gameContainer") || document.documentElement;
+    const p = el.requestFullscreen ? el.requestFullscreen()
+      : el.webkitRequestFullscreen ? el.webkitRequestFullscreen()
+      : null;
+    if (!p) enablePseudoFs();
+  }
+  function exitFs() {
+    if (pseudoFullscreen) { disablePseudoFs(); return; }
+    if (document.exitFullscreen) document.exitFullscreen();
+    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+  }
+  function enablePseudoFs() {
+    pseudoFullscreen = true; isFullscreen = true;
+    document.getElementById("gameContainer").classList.add("pseudo-fullscreen");
+    document.body.style.overflow = "hidden";
+    updateFsButton();
+  }
+  function disablePseudoFs() {
+    pseudoFullscreen = false; isFullscreen = false;
+    document.getElementById("gameContainer").classList.remove("pseudo-fullscreen");
+    document.body.style.overflow = "";
+    updateFsButton();
+  }
+  function updateFsButton() {
+    if (fullscreenBtn) fullscreenBtn.textContent = isFullscreen ? "\u2715" : "\u26F6";
+  }
+  document.addEventListener("fullscreenchange", () => { isFullscreen = !!document.fullscreenElement; updateFsButton(); });
+  document.addEventListener("webkitfullscreenchange", () => { isFullscreen = !!document.webkitFullscreenElement; updateFsButton(); });
+  fullscreenBtn.addEventListener("click", toggleFullscreen);
 
   // Theme & Skin
   function applyTheme(name) {

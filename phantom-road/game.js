@@ -551,14 +551,36 @@ restartBtn.addEventListener("click", restartGame);
 muteBtn.addEventListener("click", () => audio.toggleMute());
 
 // ── Fullscreen (mobile) ─────────────────────────────────
+let isFullscreen = false;
+let pseudoFullscreen = false;
+
 function toggleFullscreen() {
-  const el = document.documentElement;
-  if (!document.fullscreenElement) {
-    (el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen || (() => {})).call(el);
-  } else {
-    (document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen || (() => {})).call(document);
-  }
+  if (isFullscreen) exitFs(); else enterFs();
 }
+function enterFs() {
+  const el = document.documentElement;
+  const p = el.requestFullscreen ? el.requestFullscreen()
+    : el.webkitRequestFullscreen ? el.webkitRequestFullscreen()
+    : null;
+  if (!p) enablePseudoFs();
+}
+function exitFs() {
+  if (pseudoFullscreen) { disablePseudoFs(); return; }
+  if (document.exitFullscreen) document.exitFullscreen();
+  else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+}
+function enablePseudoFs() {
+  pseudoFullscreen = true; isFullscreen = true;
+  document.body.classList.add("pseudo-fullscreen");
+  document.body.style.overflow = "hidden";
+}
+function disablePseudoFs() {
+  pseudoFullscreen = false; isFullscreen = false;
+  document.body.classList.remove("pseudo-fullscreen");
+  document.body.style.overflow = "";
+}
+document.addEventListener("fullscreenchange", () => { isFullscreen = !!document.fullscreenElement; });
+document.addEventListener("webkitfullscreenchange", () => { isFullscreen = !!document.webkitFullscreenElement; });
 function canFullscreen() {
   return !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
 }

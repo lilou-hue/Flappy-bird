@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <main class="game">
+    <main class="game" id="gameContainer">
       <header class="game__header">
         <a href="/" class="back-link" data-i18n="backToGames">&larr; Back to Games</a>
         <h1>Gun Game</h1>
@@ -26,6 +26,7 @@
           </div>
           <button id="restartButton" class="hud__button" type="button" data-i18n="restart">Restart</button>
           <button id="muteButton" class="hud__button hud__button--mute" type="button">Mute</button>
+          <button id="fullscreenButton" class="hud__mute" type="button" aria-label="Toggle fullscreen" data-i18n-aria="fullscreen">&#x26F6;</button>
           <button id="leaderboardToggle" class="lb-toggle-btn" type="button" aria-label="Toggle leaderboard">&#x1F3C6;</button>
         </div>
       </section>

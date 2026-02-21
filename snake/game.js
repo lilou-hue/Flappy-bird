@@ -861,16 +861,41 @@ function toggleMute() {
 }
 
 /* ── Fullscreen ────────────────────────────────────────────── */
+let isFullscreen = false;
+let pseudoFullscreen = false;
 
 function toggleFullscreen() {
-  const el = document.getElementById("gameContainer");
-  if (!document.fullscreenElement) {
-    (el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen).call(el);
-  } else {
-    (document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen).call(document);
-  }
+  if (isFullscreen) exitFs(); else enterFs();
 }
-
+function enterFs() {
+  const el = document.getElementById("gameContainer") || document.documentElement;
+  const p = el.requestFullscreen ? el.requestFullscreen()
+    : el.webkitRequestFullscreen ? el.webkitRequestFullscreen()
+    : null;
+  if (!p) enablePseudoFs();
+}
+function exitFs() {
+  if (pseudoFullscreen) { disablePseudoFs(); return; }
+  if (document.exitFullscreen) document.exitFullscreen();
+  else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+}
+function enablePseudoFs() {
+  pseudoFullscreen = true; isFullscreen = true;
+  document.getElementById("gameContainer").classList.add("pseudo-fullscreen");
+  document.body.style.overflow = "hidden";
+  updateFsButton();
+}
+function disablePseudoFs() {
+  pseudoFullscreen = false; isFullscreen = false;
+  document.getElementById("gameContainer").classList.remove("pseudo-fullscreen");
+  document.body.style.overflow = "";
+  updateFsButton();
+}
+function updateFsButton() {
+  if (fullscreenButton) fullscreenButton.textContent = isFullscreen ? "\u2715" : "\u26F6";
+}
+document.addEventListener("fullscreenchange", () => { isFullscreen = !!document.fullscreenElement; updateFsButton(); });
+document.addEventListener("webkitfullscreenchange", () => { isFullscreen = !!document.webkitFullscreenElement; updateFsButton(); });
 fullscreenButton.addEventListener("click", toggleFullscreen);
 
 /* ── Theme & Skin Switching ───────────────────────────────── */
