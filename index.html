@@ -3,72 +3,277 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Game Arcade</title>
+    <title>SlayPlay</title>
     <style>
+      @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
       :root {
-        font-family: "Segoe UI", "Trebuchet MS", system-ui, sans-serif;
+        --accent: #c084fc;
+        --accent2: #f472b6;
+        --accent3: #38bdf8;
+        --bg: #09090b;
+        --card-bg: rgba(255,255,255,0.04);
+        --card-border: rgba(255,255,255,0.07);
+        --text: #fafafa;
+        --text-dim: #a1a1aa;
+        font-family: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
         color-scheme: dark;
       }
 
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
 
       body {
         min-height: 100vh;
         display: flex;
         flex-direction: column;
         align-items: center;
-        background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-        color: #f0f0f0;
-        padding: 2rem 1rem;
+        background: var(--bg);
+        color: var(--text);
+        padding: 0 1rem 3rem;
+        overflow-x: hidden;
       }
 
-      h1 {
-        font-size: 2.6rem;
-        margin-bottom: 0.3rem;
-        letter-spacing: 0.04em;
-        background: linear-gradient(90deg, #ffcc4d, #ff7b54, #ff4da6);
+      /* ── Ambient background ── */
+      .ambient {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 0;
+        overflow: hidden;
+      }
+      .ambient__orb {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(80px);
+        opacity: 0.15;
+        animation: orbFloat 20s ease-in-out infinite alternate;
+      }
+      .ambient__orb--1 {
+        width: 600px; height: 600px;
+        background: var(--accent);
+        top: -200px; left: -100px;
+      }
+      .ambient__orb--2 {
+        width: 500px; height: 500px;
+        background: var(--accent2);
+        bottom: -150px; right: -100px;
+        animation-delay: -10s;
+        animation-direction: alternate-reverse;
+      }
+      .ambient__orb--3 {
+        width: 400px; height: 400px;
+        background: var(--accent3);
+        top: 40%; left: 50%;
+        transform: translateX(-50%);
+        animation-delay: -5s;
+        opacity: 0.08;
+      }
+      @keyframes orbFloat {
+        0% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(30px, -20px) scale(1.05); }
+        66% { transform: translate(-20px, 30px) scale(0.95); }
+        100% { transform: translate(10px, 10px) scale(1.02); }
+      }
+
+      /* ── Dot grid ── */
+      .ambient::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
+        background-size: 32px 32px;
+      }
+
+      /* ── Header ── */
+      .hero {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+        padding: 3rem 1rem 2rem;
+        max-width: 760px;
+        width: 100%;
+      }
+
+      /* ── Logo ── */
+      .logo {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+        margin-bottom: 0.75rem;
+      }
+      .logo__icon {
+        width: 48px;
+        height: 48px;
+        flex-shrink: 0;
+      }
+      .logo__text {
+        font-size: 3.2rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        background: linear-gradient(135deg, #c084fc, #f472b6, #fb923c, #facc15);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
+        background-size: 300% 300%;
+        animation: logoShimmer 8s ease-in-out infinite;
+        line-height: 1.1;
+      }
+      @keyframes logoShimmer {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
       }
 
-      .subtitle {
-        color: #aaa;
-        margin-bottom: 2.5rem;
-        font-size: 1.1rem;
+      .tagline {
+        color: var(--text-dim);
+        font-size: 1.05rem;
+        font-weight: 400;
+        margin-bottom: 1.5rem;
+        letter-spacing: 0.01em;
       }
 
+      /* ── Nav bar ── */
+      .nav-bar {
+        display: flex;
+        gap: 0.6rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-bottom: 0.5rem;
+      }
+      .nav-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        color: var(--text-dim);
+        text-decoration: none;
+        font-size: 0.88rem;
+        font-weight: 500;
+        padding: 0.45rem 1rem;
+        border-radius: 999px;
+        border: 1px solid var(--card-border);
+        background: var(--card-bg);
+        backdrop-filter: blur(12px);
+        transition: all 0.2s ease;
+      }
+      .nav-pill:hover {
+        color: var(--text);
+        border-color: rgba(192,132,252,0.35);
+        background: rgba(192,132,252,0.08);
+        transform: translateY(-1px);
+      }
+
+      /* ── Stats Dashboard ── */
+      .stats-dashboard {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.75rem;
+        max-width: 760px;
+        width: 100%;
+        margin-bottom: 2rem;
+        position: relative;
+        z-index: 1;
+      }
+      .stats-dashboard.hidden { display: none; }
+
+      .stat-card {
+        background: var(--card-bg);
+        backdrop-filter: blur(16px);
+        border: 1px solid var(--card-border);
+        border-radius: 16px;
+        padding: 1rem 0.6rem;
+        text-align: center;
+        transition: transform 0.2s ease, border-color 0.2s ease;
+      }
+      .stat-card:hover {
+        transform: translateY(-2px);
+        border-color: rgba(192,132,252,0.2);
+      }
+      .stat-card__icon { font-size: 1.4rem; margin-bottom: 0.25rem; }
+      .stat-card__value {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--accent);
+        font-variant-numeric: tabular-nums;
+        margin-bottom: 0.1rem;
+      }
+      .stat-card__label {
+        font-size: 0.7rem;
+        color: var(--text-dim);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-weight: 500;
+      }
+
+      /* ── Game Grid ── */
       .games-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 1.5rem;
+        gap: 1.25rem;
         max-width: 760px;
         width: 100%;
+        position: relative;
+        z-index: 1;
       }
 
       .game-card {
         position: relative;
         display: flex;
         flex-direction: column;
-        border-radius: 16px;
+        border-radius: 20px;
         overflow: hidden;
         text-decoration: none;
         color: inherit;
-        transition: transform 0.22s ease, box-shadow 0.22s ease;
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        backdrop-filter: blur(12px);
+        transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+        opacity: 0;
+        transform: translateY(24px);
+        animation: cardReveal 0.5s ease forwards;
+      }
+      .game-card:nth-child(1) { animation-delay: 0.05s; }
+      .game-card:nth-child(2) { animation-delay: 0.1s; }
+      .game-card:nth-child(3) { animation-delay: 0.15s; }
+      .game-card:nth-child(4) { animation-delay: 0.2s; }
+      .game-card:nth-child(5) { animation-delay: 0.25s; }
+      .game-card:nth-child(6) { animation-delay: 0.3s; }
+      .game-card:nth-child(7) { animation-delay: 0.35s; }
+      .game-card:nth-child(8) { animation-delay: 0.4s; }
+      @keyframes cardReveal {
+        to { opacity: 1; transform: translateY(0); }
       }
 
       .game-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+        transform: translateY(-6px);
+        box-shadow:
+          0 20px 40px rgba(0,0,0,0.4),
+          0 0 0 1px rgba(255,255,255,0.08);
       }
+      .game-card:active { transform: translateY(-2px); }
 
-      .game-card:active {
-        transform: translateY(0);
+      /* Hover glow — per card accent */
+      .game-card::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 20px;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+        z-index: 2;
       }
+      .game-card:hover::after { opacity: 1; }
+
+      .game-card:nth-child(1)::after { box-shadow: inset 0 0 0 1px rgba(123,228,149,0.4), 0 0 30px rgba(123,228,149,0.08); }
+      .game-card:nth-child(2)::after { box-shadow: inset 0 0 0 1px rgba(23,205,211,0.4), 0 0 30px rgba(23,205,211,0.08); }
+      .game-card:nth-child(3)::after { box-shadow: inset 0 0 0 1px rgba(57,255,20,0.4), 0 0 30px rgba(57,255,20,0.08); }
+      .game-card:nth-child(4)::after { box-shadow: inset 0 0 0 1px rgba(77,201,246,0.4), 0 0 30px rgba(77,201,246,0.08); }
+      .game-card:nth-child(5)::after { box-shadow: inset 0 0 0 1px rgba(255,140,50,0.4), 0 0 30px rgba(255,140,50,0.08); }
+      .game-card:nth-child(6)::after { box-shadow: inset 0 0 0 1px rgba(255,105,180,0.4), 0 0 30px rgba(255,105,180,0.08); }
+      .game-card:nth-child(7)::after { box-shadow: inset 0 0 0 1px rgba(0,210,255,0.4), 0 0 30px rgba(0,210,255,0.08); }
+      .game-card:nth-child(8)::after { box-shadow: inset 0 0 0 1px rgba(255,107,53,0.4), 0 0 30px rgba(255,107,53,0.08); }
+
+      .game-card:hover .card-preview canvas { filter: brightness(1.12) saturate(1.1); }
 
       .card-preview {
         height: 200px;
@@ -79,313 +284,147 @@
         position: relative;
         overflow: hidden;
       }
-
       .card-preview canvas {
         position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        transition: filter 0.3s ease;
       }
 
       .card-body {
-        padding: 1.2rem 1.4rem 1.4rem;
-        background: rgba(255, 255, 255, 0.06);
-        backdrop-filter: blur(8px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-top: none;
-        border-radius: 0 0 16px 16px;
+        padding: 1.1rem 1.3rem 1.3rem;
         flex: 1;
       }
-
       .card-body h2 {
-        font-size: 1.3rem;
-        margin-bottom: 0.4rem;
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 0.35rem;
+        letter-spacing: -0.01em;
       }
-
       .card-body p {
-        color: #bbb;
-        font-size: 0.95rem;
-        line-height: 1.5;
+        color: var(--text-dim);
+        font-size: 0.9rem;
+        line-height: 1.55;
+        font-weight: 400;
       }
 
       .card-tag {
         display: inline-block;
-        margin-top: 0.7rem;
-        padding: 0.25rem 0.7rem;
+        margin-top: 0.65rem;
+        padding: 0.2rem 0.65rem;
         border-radius: 999px;
-        font-size: 0.78rem;
+        font-size: 0.72rem;
         font-weight: 600;
-        letter-spacing: 0.03em;
+        letter-spacing: 0.04em;
         text-transform: uppercase;
       }
 
-      .flappy-preview {
-        background: linear-gradient(180deg, #7bd0ff, #d7f3ff 65%, #7be495 100%);
-      }
+      .flappy-preview   { background: linear-gradient(180deg, #7bd0ff, #d7f3ff 65%, #7be495 100%); }
+      .methane-preview   { background: linear-gradient(180deg, #182550, #11153d, #040612); }
+      .snake-preview     { background: linear-gradient(180deg, #0a2e1a, #051a0d, #020a05); }
+      .lumina-preview    { background: linear-gradient(180deg, #0a0830, #06041a, #020114); }
+      .phantom-preview   { background: linear-gradient(180deg, #1a1020, #0c0810, #060408); }
+      .unicorn-preview   { background: linear-gradient(180deg, #2d1b69, #1a0f40, #0f0a2a); }
+      .tetris-preview    { background: linear-gradient(180deg, #0a1230, #060918, #030510); }
+      .gun-game-preview  { background: linear-gradient(180deg, #1a2540, #2c3e50 50%, #1a252f 85%, #0f1820 100%); }
 
-      .flappy-tag {
-        background: rgba(61, 153, 112, 0.3);
-        color: #7be495;
-        border: 1px solid rgba(123, 228, 149, 0.3);
-      }
+      .flappy-tag    { background: rgba(123,228,149,0.12); color: #7be495; border: 1px solid rgba(123,228,149,0.2); }
+      .methane-tag   { background: rgba(23,205,211,0.12); color: #17cdd3; border: 1px solid rgba(23,205,211,0.2); }
+      .snake-tag     { background: rgba(57,255,20,0.12); color: #39ff14; border: 1px solid rgba(57,255,20,0.2); }
+      .lumina-tag    { background: rgba(77,201,246,0.12); color: #4dc9f6; border: 1px solid rgba(77,201,246,0.2); }
+      .phantom-tag   { background: rgba(255,140,50,0.12); color: #ff8c32; border: 1px solid rgba(255,140,50,0.2); }
+      .unicorn-tag   { background: rgba(255,105,180,0.12); color: #ff69b4; border: 1px solid rgba(255,105,180,0.2); }
+      .tetris-tag    { background: rgba(0,210,255,0.12); color: #00d4ff; border: 1px solid rgba(0,210,255,0.2); }
+      .gun-game-tag  { background: rgba(255,107,53,0.12); color: #ff6b35; border: 1px solid rgba(255,107,53,0.2); }
 
-      .methane-preview {
-        background: linear-gradient(180deg, #182550, #11153d, #040612);
-      }
-
-      .methane-tag {
-        background: rgba(23, 205, 211, 0.15);
-        color: #17cdd3;
-        border: 1px solid rgba(23, 205, 211, 0.3);
-      }
-
-      .snake-preview {
-        background: linear-gradient(180deg, #0a2e1a, #051a0d, #020a05);
-      }
-
-      .snake-tag {
-        background: rgba(57, 255, 20, 0.15);
-        color: #39ff14;
-        border: 1px solid rgba(57, 255, 20, 0.3);
-      }
-
-      .lumina-preview {
-        background: linear-gradient(180deg, #0a0830, #06041a, #020114);
-      }
-
-      .lumina-tag {
-        background: rgba(77, 201, 246, 0.15);
-        color: #4dc9f6;
-        border: 1px solid rgba(77, 201, 246, 0.3);
-      }
-
-      .phantom-preview {
-        background: linear-gradient(180deg, #1a1020, #0c0810, #060408);
-      }
-
-      .phantom-tag {
-        background: rgba(255, 140, 50, 0.15);
-        color: #ff8c32;
-        border: 1px solid rgba(255, 140, 50, 0.3);
-      }
-
-      .unicorn-preview {
-        background: linear-gradient(180deg, #2d1b69, #1a0f40, #0f0a2a);
-      }
-
-      .unicorn-tag {
-        background: rgba(255, 105, 180, 0.15);
-        color: #ff69b4;
-        border: 1px solid rgba(255, 105, 180, 0.3);
-      }
-
-      .tetris-preview {
-        background: linear-gradient(180deg, #0a1230, #060918, #030510);
-      }
-
-      .tetris-tag {
-        background: rgba(0, 210, 255, 0.15);
-        color: #00d4ff;
-        border: 1px solid rgba(0, 210, 255, 0.3);
-      }
-
-      /* Hover glow borders */
-      .game-card::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        border-radius: 16px;
-        border: 2px solid transparent;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-        pointer-events: none;
-        z-index: 1;
-      }
-
-      .game-card:hover::before {
-        opacity: 1;
-      }
-
-      .game-card:hover .card-preview canvas {
-        filter: brightness(1.15);
-      }
-
-      .game-card:nth-child(1)::before { border-color: rgba(123, 228, 149, 0.5); box-shadow: 0 0 20px rgba(123, 228, 149, 0.15); }
-      .game-card:nth-child(2)::before { border-color: rgba(23, 205, 211, 0.5); box-shadow: 0 0 20px rgba(23, 205, 211, 0.15); }
-      .game-card:nth-child(3)::before { border-color: rgba(57, 255, 20, 0.5); box-shadow: 0 0 20px rgba(57, 255, 20, 0.15); }
-      .game-card:nth-child(4)::before { border-color: rgba(77, 201, 246, 0.5); box-shadow: 0 0 20px rgba(77, 201, 246, 0.15); }
-      .game-card:nth-child(5)::before { border-color: rgba(255, 140, 50, 0.5); box-shadow: 0 0 20px rgba(255, 140, 50, 0.15); }
-      .game-card:nth-child(6)::before { border-color: rgba(255, 105, 180, 0.5); box-shadow: 0 0 20px rgba(255, 105, 180, 0.15); }
-      .game-card:nth-child(7)::before { border-color: rgba(0, 210, 255, 0.5); box-shadow: 0 0 20px rgba(0, 210, 255, 0.15); }
-      .game-card:nth-child(8)::before { border-color: rgba(255, 107, 53, 0.5); box-shadow: 0 0 20px rgba(255, 107, 53, 0.15); }
-
-      .gun-game-preview {
-        background: linear-gradient(180deg, #1a2540, #2c3e50 50%, #1a252f 85%, #0f1820 100%);
-      }
-
-      .gun-game-tag {
-        background: rgba(255, 107, 53, 0.15);
-        color: #ff6b35;
-        border: 1px solid rgba(255, 107, 53, 0.3);
-      }
-
-      /* Floating background stars */
-      body::before {
-        content: "";
-        position: fixed;
-        inset: 0;
-        pointer-events: none;
-        background-image:
-          radial-gradient(1px 1px at 10% 15%, rgba(255,255,255,0.3), transparent),
-          radial-gradient(1px 1px at 25% 80%, rgba(255,255,255,0.2), transparent),
-          radial-gradient(1.5px 1.5px at 50% 30%, rgba(255,255,255,0.25), transparent),
-          radial-gradient(1px 1px at 70% 65%, rgba(255,255,255,0.2), transparent),
-          radial-gradient(1px 1px at 85% 10%, rgba(255,255,255,0.15), transparent),
-          radial-gradient(1.5px 1.5px at 35% 50%, rgba(255,255,255,0.2), transparent),
-          radial-gradient(1px 1px at 60% 90%, rgba(255,255,255,0.25), transparent),
-          radial-gradient(1px 1px at 90% 45%, rgba(255,255,255,0.15), transparent),
-          radial-gradient(1px 1px at 5% 55%, rgba(255,255,255,0.2), transparent),
-          radial-gradient(1px 1px at 45% 5%, rgba(255,255,255,0.2), transparent),
-          radial-gradient(1px 1px at 78% 88%, rgba(255,255,255,0.15), transparent),
-          radial-gradient(1px 1px at 15% 38%, rgba(255,255,255,0.2), transparent);
-        animation: starTwinkle 8s ease-in-out infinite alternate;
-      }
-
-      @keyframes starTwinkle {
-        0% { opacity: 0.6; }
-        50% { opacity: 1; }
-        100% { opacity: 0.7; }
-      }
-
-      /* Profile link */
-      .profile-link {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        color: #ccc;
-        text-decoration: none;
-        font-size: 0.95rem;
-        padding: 0.5rem 1rem;
-        border-radius: 999px;
-        border: 1px solid rgba(255,255,255,0.12);
-        background: rgba(255,255,255,0.05);
-        margin-bottom: 1.5rem;
-        transition: all 0.2s;
-      }
-      .profile-link:hover {
-        color: #fff;
-        border-color: rgba(255,204,77,0.4);
-        background: rgba(255,204,77,0.08);
-      }
-
-      /* Card entrance animation */
-      .game-card {
-        opacity: 0;
-        transform: translateY(20px);
-        animation: cardSlideIn 0.4s ease forwards;
-      }
-      .game-card:nth-child(1) { animation-delay: 0.05s; }
-      .game-card:nth-child(2) { animation-delay: 0.1s; }
-      .game-card:nth-child(3) { animation-delay: 0.15s; }
-      .game-card:nth-child(4) { animation-delay: 0.2s; }
-      .game-card:nth-child(5) { animation-delay: 0.25s; }
-      .game-card:nth-child(6) { animation-delay: 0.3s; }
-      .game-card:nth-child(7) { animation-delay: 0.35s; }
-      .game-card:nth-child(8) { animation-delay: 0.4s; }
-
-      @keyframes cardSlideIn {
-        to { opacity: 1; transform: translateY(0); }
-      }
-
-      /* Best score badge on cards */
       .card-best {
         position: absolute;
-        top: 10px;
-        right: 10px;
-        background: rgba(0,0,0,0.6);
-        backdrop-filter: blur(6px);
-        color: #ffcc4d;
-        font-size: 0.75rem;
-        font-weight: 700;
-        padding: 0.25rem 0.6rem;
+        top: 10px; right: 10px;
+        background: rgba(0,0,0,0.55);
+        backdrop-filter: blur(8px);
+        color: #facc15;
+        font-size: 0.72rem;
+        font-weight: 600;
+        padding: 0.2rem 0.55rem;
         border-radius: 999px;
-        border: 1px solid rgba(255,204,77,0.3);
-        z-index: 2;
+        border: 1px solid rgba(250,204,21,0.2);
+        z-index: 3;
         font-variant-numeric: tabular-nums;
       }
 
-      /* Stats Dashboard */
-      .stats-dashboard {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 1rem;
-        max-width: 760px;
-        width: 100%;
-        margin-bottom: 2rem;
-      }
-
-      .stats-dashboard.hidden { display: none; }
-
-      .stat-card {
-        background: rgba(255,255,255,0.06);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 14px;
-        padding: 1rem 0.8rem;
+      /* ── Footer ── */
+      .footer {
+        position: relative;
+        z-index: 1;
+        margin-top: 3rem;
         text-align: center;
-        transition: transform 0.2s, box-shadow 0.2s;
+        color: rgba(161,161,170,0.4);
+        font-size: 0.8rem;
       }
 
-      .stat-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-      }
-
-      .stat-card__icon {
-        font-size: 1.6rem;
-        margin-bottom: 0.3rem;
-      }
-
-      .stat-card__value {
-        font-size: 1.4rem;
-        font-weight: 700;
-        color: #ffcc4d;
-        margin-bottom: 0.15rem;
-        font-variant-numeric: tabular-nums;
-      }
-
-      .stat-card__label {
-        font-size: 0.75rem;
-        color: #aaa;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-      }
-
+      /* ── Responsive ── */
       @media (max-width: 680px) {
-        .games-grid {
-          grid-template-columns: 1fr;
-        }
-
-        h1 {
-          font-size: 2rem;
-        }
-
+        .hero { padding: 2rem 0.5rem 1.5rem; }
+        .logo__icon { width: 36px; height: 36px; }
+        .logo__text { font-size: 2.2rem; }
+        .tagline { font-size: 0.9rem; margin-bottom: 1rem; }
+        .games-grid { grid-template-columns: 1fr; gap: 1rem; }
         .stats-dashboard {
           grid-template-columns: repeat(2, 1fr);
-          gap: 0.6rem;
+          gap: 0.5rem;
         }
-
-        .stat-card { padding: 0.7rem 0.5rem; }
-        .stat-card__icon { font-size: 1.3rem; }
+        .stat-card { padding: 0.65rem 0.4rem; border-radius: 12px; }
+        .stat-card__icon { font-size: 1.2rem; }
         .stat-card__value { font-size: 1.1rem; }
+        .ambient__orb { filter: blur(60px); opacity: 0.1; }
+      }
+
+      @media (max-width: 360px) {
+        .logo__text { font-size: 1.8rem; }
+        .nav-pill { font-size: 0.8rem; padding: 0.4rem 0.8rem; }
       }
     </style>
   </head>
   <body>
-    <h1 data-i18n="gameArcade">Game Arcade</h1>
-    <p class="subtitle" data-i18n="pickAGame">Pick a game and start playing</p>
-    <a href="/profile/" class="profile-link" data-i18n="profileLink">&#x1F464; Player Profile</a>
+    <!-- Ambient background -->
+    <div class="ambient" aria-hidden="true">
+      <div class="ambient__orb ambient__orb--1"></div>
+      <div class="ambient__orb ambient__orb--2"></div>
+      <div class="ambient__orb ambient__orb--3"></div>
+    </div>
+
+    <header class="hero">
+      <div class="logo">
+        <svg class="logo__icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <!-- Controller body -->
+          <rect x="6" y="16" width="36" height="20" rx="10" fill="url(#logo-grad)" />
+          <!-- D-pad -->
+          <rect x="13" y="23" width="3" height="9" rx="1" fill="#09090b" opacity="0.6"/>
+          <rect x="10" y="26" width="9" height="3" rx="1" fill="#09090b" opacity="0.6"/>
+          <!-- Buttons -->
+          <circle cx="33" cy="24" r="2" fill="#f472b6" opacity="0.9"/>
+          <circle cx="37" cy="28" r="2" fill="#c084fc" opacity="0.9"/>
+          <!-- Lightning bolt accent -->
+          <path d="M24 6 L21 18 L26 16 L22 30 L28 16 L23 18 Z" fill="url(#bolt-grad)" opacity="0.9"/>
+          <defs>
+            <linearGradient id="logo-grad" x1="6" y1="16" x2="42" y2="36" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#c084fc"/>
+              <stop offset="0.5" stop-color="#f472b6"/>
+              <stop offset="1" stop-color="#fb923c"/>
+            </linearGradient>
+            <linearGradient id="bolt-grad" x1="22" y1="6" x2="26" y2="30" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#facc15"/>
+              <stop offset="1" stop-color="#fb923c"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <span class="logo__text">SlayPlay</span>
+      </div>
+      <p class="tagline" data-i18n="pickAGame">Pick a game. Start slaying.</p>
+      <nav class="nav-bar">
+        <a href="/profile/" class="nav-pill" data-i18n="profileLink">&#x1F464; Profile</a>
+      </nav>
+    </header>
 
     <div class="stats-dashboard hidden" id="statsDashboard">
       <div class="stat-card">
@@ -499,6 +538,11 @@
         </div>
       </a>
     </div>
+
+    <footer class="footer">
+      <p>SlayPlay &mdash; built for fun</p>
+    </footer>
+
     <script>
     /* ── Animated Canvas Previews ── */
     (function() {
@@ -514,20 +558,17 @@
 
         function draw() {
           t += 0.016;
-          /* Sky */
           const sky = x.createLinearGradient(0,0,0,H);
           sky.addColorStop(0,'#5cb8ff'); sky.addColorStop(0.6,'#a8e0ff');
           sky.addColorStop(0.85,'#d4f0d4'); sky.addColorStop(1,'#7be495');
           x.fillStyle = sky; x.fillRect(0,0,W,H);
 
-          /* Clouds */
           x.fillStyle = 'rgba(255,255,255,0.25)';
           for (let i = 0; i < 4; i++) {
             const cx = ((i*110 + 40 - t*15) % (W+80)) - 40;
             x.beginPath(); x.ellipse(cx, 30+i*18, 35, 12, 0, 0, Math.PI*2); x.fill();
           }
 
-          /* Pipes */
           for (const p of pipes) {
             const px = ((p.x - t*40) % (W+80)) + 40;
             const gapY = 60 + p.gap * 0.3;
@@ -536,35 +577,27 @@
             x.fillStyle = pg;
             x.fillRect(px, 0, 42, gapY-35);
             x.fillRect(px, gapY+35, 42, H-gapY-35);
-            /* Caps */
             x.fillStyle = '#45b87a';
             x.fillRect(px-4, gapY-35, 50, 10);
             x.fillRect(px-4, gapY+25, 50, 10);
           }
 
-          /* Bird */
           const birdY = H*0.42 + Math.sin(t*3)*14;
           const wing = Math.sin(t*8)*5;
           x.save(); x.translate(90, birdY);
           x.rotate(Math.sin(t*3)*0.15);
-          /* Body */
           const bg = x.createRadialGradient(-2,-2,2,0,0,12);
           bg.addColorStop(0,'#ffe066'); bg.addColorStop(1,'#f0a030');
           x.fillStyle = bg; x.beginPath(); x.arc(0,0,12,0,Math.PI*2); x.fill();
-          /* Wing */
           x.fillStyle = '#f0a030'; x.beginPath();
           x.ellipse(-5,wing+2,7,3.5,-0.3,0,Math.PI*2); x.fill();
-          /* Beak */
           x.fillStyle = '#ff7b54'; x.beginPath();
           x.moveTo(10,-2); x.lineTo(17,0); x.lineTo(10,2); x.closePath(); x.fill();
-          /* Eye */
           x.fillStyle = '#fff'; x.beginPath(); x.arc(-1,-4,3.5,0,Math.PI*2); x.fill();
           x.fillStyle = '#1b2a36'; x.beginPath(); x.arc(0,-4,1.8,0,Math.PI*2); x.fill();
           x.restore();
 
-          /* Ground */
           x.fillStyle = '#6cd47e'; x.fillRect(0,H-18,W,18);
-
           requestAnimationFrame(draw);
         }
         requestAnimationFrame(draw);
@@ -581,19 +614,16 @@
 
         function draw() {
           t += 0.016;
-          /* Background */
           const bg = x.createLinearGradient(0,0,0,H);
           bg.addColorStop(0,'#1a2248'); bg.addColorStop(0.5,'#111540'); bg.addColorStop(1,'#030410');
           x.fillStyle = bg; x.fillRect(0,0,W,H);
 
-          /* Stars */
           for (const s of stars) {
             const a = 0.3 + Math.sin(t*2+s.x)*0.2;
             x.fillStyle = `rgba(180,210,255,${a})`;
             x.fillRect(s.x, s.y, s.s, s.s);
           }
 
-          /* Motes */
           for (const m of motes) {
             const mx = m.x + Math.sin(t*0.5+m.p)*20;
             const my = m.y + Math.cos(t*0.3+m.p)*10;
@@ -601,25 +631,20 @@
             x.beginPath(); x.arc(mx, my, m.s, 0, Math.PI*2); x.fill();
           }
 
-          /* Glider */
           const gy = H*0.45 + Math.sin(t*1.8)*16;
           x.save(); x.translate(W*0.35, gy);
           x.rotate(Math.sin(t*1.8)*0.12);
-          /* Glow */
           const gl = x.createRadialGradient(0,0,0,0,0,22);
           gl.addColorStop(0,'rgba(100,240,220,0.4)'); gl.addColorStop(1,'rgba(100,240,220,0)');
           x.fillStyle = gl; x.beginPath(); x.arc(0,0,22,0,Math.PI*2); x.fill();
-          /* Body */
           x.fillStyle = 'rgba(130,255,220,0.85)';
           x.beginPath(); x.moveTo(14,0); x.lineTo(-4,-7); x.lineTo(-10,0); x.lineTo(-4,7); x.closePath(); x.fill();
-          /* Trail */
           for (let i = 1; i <= 5; i++) {
             x.fillStyle = `rgba(100,220,200,${0.3-i*0.05})`;
             x.beginPath(); x.arc(-10-i*6, Math.sin(t*3+i)*2, 3-i*0.4, 0, Math.PI*2); x.fill();
           }
           x.restore();
 
-          /* Obstacles */
           for (let i = 0; i < 3; i++) {
             const ox = ((W*0.6 + i*130 - t*30) % (W+100)) + 50;
             const oy = 40 + i*55;
@@ -643,10 +668,8 @@
 
         function draw() {
           t += 0.016;
-          /* Background */
           x.fillStyle = '#0a0f0a'; x.fillRect(0,0,W,H);
 
-          /* Grid */
           x.strokeStyle = 'rgba(0,255,100,0.04)'; x.lineWidth = 1;
           for (let i = 0; i <= W; i += 20) {
             x.beginPath(); x.moveTo(i,0); x.lineTo(i,H); x.stroke();
@@ -655,11 +678,9 @@
             x.beginPath(); x.moveTo(0,i); x.lineTo(W,i); x.stroke();
           }
 
-          /* Border */
           x.strokeStyle = 'rgba(57,255,20,0.3)'; x.lineWidth = 2;
           x.strokeRect(1,1,W-2,H-2);
 
-          /* Snake body — sinuous path */
           const segs = 14;
           for (let i = segs; i >= 0; i--) {
             const phase = t*2.5 - i*0.4;
@@ -683,7 +704,6 @@
             x.fill();
             x.restore();
 
-            /* Eyes on head */
             if (i === 0) {
               x.fillStyle = '#fff';
               x.beginPath(); x.arc(sx+4,sy-4,2.5,0,Math.PI*2); x.fill();
@@ -694,7 +714,6 @@
             }
           }
 
-          /* Food */
           const fx = 310, fy = H*0.5 + Math.sin(t*3)*6;
           const pulse = 8 + Math.sin(t*4)*3;
           x.save();
@@ -718,10 +737,8 @@
 
         function draw() {
           t += 0.016;
-          /* Background */
           x.fillStyle = '#06041a'; x.fillRect(0,0,W,H);
 
-          /* Cave walls */
           x.beginPath(); x.moveTo(0,0);
           for (let y = 0; y <= H; y += 4) {
             const wx = 60 + Math.sin(y*0.02+t*0.5)*30 + Math.sin(y*0.05)*15;
@@ -742,17 +759,14 @@
           wg2.addColorStop(0,'rgb(42,74,106)'); wg2.addColorStop(1,'rgba(42,74,106,0.3)');
           x.fillStyle = wg2; x.fill();
 
-          /* Crystal player */
           const py = H*0.4 + Math.sin(t*1.5)*12;
           const px = W*0.5 + Math.sin(t*0.8)*30;
 
-          /* Player light */
           const lg = x.createRadialGradient(px,py,0,px,py,90);
           lg.addColorStop(0,'rgba(77,201,246,0.25)'); lg.addColorStop(0.5,'rgba(77,201,246,0.08)');
           lg.addColorStop(1,'rgba(77,201,246,0)');
           x.fillStyle = lg; x.beginPath(); x.arc(px,py,90,0,Math.PI*2); x.fill();
 
-          /* Player body */
           x.save(); x.translate(px,py); x.rotate(Math.sin(t*2)*0.1);
           const pg = x.createRadialGradient(0,0,0,0,0,16);
           pg.addColorStop(0,'rgba(200,240,255,0.9)'); pg.addColorStop(1,'rgba(77,201,246,0.3)');
@@ -763,7 +777,6 @@
           x.closePath(); x.fill();
           x.restore();
 
-          /* Shards */
           for (let i = 0; i < 3; i++) {
             const sx = 100+i*120, sy = 60+i*50 + Math.sin(t*2+i*2)*6;
             const rot = t*2+i;
@@ -776,7 +789,6 @@
             x.restore();
           }
 
-          /* Vignette */
           const vg = x.createRadialGradient(W/2,H/2,H*0.2,W/2,H/2,H*0.8);
           vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,0.6)');
           x.fillStyle = vg; x.fillRect(0,0,W,H);
@@ -796,12 +808,10 @@
 
         function draw() {
           t += 0.016;
-          /* Background */
           const bg = x.createLinearGradient(0,0,0,H);
           bg.addColorStop(0,'#2d1b69'); bg.addColorStop(0.6,'#1a0f40'); bg.addColorStop(1,'#0f0a2a');
           x.fillStyle = bg; x.fillRect(0,0,W,H);
 
-          /* Nebula hints */
           x.globalAlpha = 0.06;
           const ng = x.createRadialGradient(W*0.3,H*0.2,0,W*0.3,H*0.2,60);
           ng.addColorStop(0,'#ff69b4'); ng.addColorStop(1,'transparent');
@@ -811,7 +821,6 @@
           x.fillStyle = ng2; x.fillRect(0,0,W,H);
           x.globalAlpha = 1;
 
-          /* Moon */
           const mx = W*0.88, my = H*0.15;
           x.fillStyle = 'rgba(255,250,230,0.05)';
           x.beginPath(); x.arc(mx,my,20,0,Math.PI*2); x.fill();
@@ -823,13 +832,12 @@
           x.beginPath(); x.arc(mx-3,my-1,2,0,Math.PI*2); x.fill();
           x.beginPath(); x.arc(mx+3,my+2,1.5,0,Math.PI*2); x.fill();
 
-          /* Stars */
           for (let i = 0; i < 20; i++) {
             const sx = (i*47+20) % W, sy = (i*31+10) % (H*0.6);
             const a = 0.3 + Math.sin(t*2+i)*0.2;
             x.fillStyle = `rgba(255,255,255,${a})`;
             x.beginPath(); x.arc(sx, sy, 1, 0, Math.PI*2); x.fill();
-            if (i < 3) { /* cross sparkle on a few */
+            if (i < 3) {
               x.strokeStyle = `rgba(255,255,255,${a*0.5})`;
               x.lineWidth = 0.5;
               const len = 3 + Math.sin(t*3+i)*1;
@@ -838,7 +846,6 @@
             }
           }
 
-          /* Ground with wavy edge */
           const gg = x.createLinearGradient(0,H*0.78,0,H);
           gg.addColorStop(0,'#2ecc71'); gg.addColorStop(0.4,'#27ae60'); gg.addColorStop(1,'#1a7a42');
           x.fillStyle = gg;
@@ -849,13 +856,10 @@
           }
           x.lineTo(W,H); x.closePath(); x.fill();
 
-          /* Flowers with petals */
           for (let i = 0; i < 5; i++) {
             const fx = 30+i*70, fy = H*0.83 + Math.sin(t+i)*1.5;
-            /* Stem */
             x.strokeStyle = '#2a8a4a'; x.lineWidth = 1;
             x.beginPath(); x.moveTo(fx,fy+3); x.lineTo(fx,fy+8); x.stroke();
-            /* Petals */
             for (let p = 0; p < 5; p++) {
               const pa = (p/5)*Math.PI*2 + t*0.3;
               x.fillStyle = `hsl(${i*60+p*8},75%,68%)`;
@@ -867,7 +871,6 @@
             x.beginPath(); x.arc(fx,fy,1.2,0,Math.PI*2); x.fill();
           }
 
-          /* Spawn puffs periodically */
           if (Math.sin(t*2.5) > 0.95 && puffs.length < 8) {
             const shapes = ['ellipse','cloud','star'];
             puffs.push({x:130, y:95+Math.random()*10, vx:-1-Math.random()*2, vy:-0.5-Math.random(),
@@ -875,7 +878,6 @@
               shape:shapes[Math.floor(Math.random()*3)], angle:Math.random()*Math.PI*2});
           }
 
-          /* Puffs (varied shapes) */
           for (let i = puffs.length-1; i >= 0; i--) {
             const p = puffs[i];
             p.x += p.vx*0.5; p.y += p.vy*0.3;
@@ -906,7 +908,6 @@
           const OL = '#3d2244';
           x.save(); x.translate(ux, uy);
 
-          /* Helper: 4-point star */
           function star4(sx,sy,r,rot){
             x.save(); x.translate(sx,sy); x.rotate(rot||0);
             x.beginPath();
@@ -918,7 +919,6 @@
             x.closePath(); x.fill(); x.restore();
           }
 
-          /* Tail (fluffy puffs) */
           for(let i=0;i<5;i++){
             const hue=(i*55+t*60)%360;
             const tx=-16-i*6-Math.sin(t*2.5+i*0.7)*3;
@@ -932,23 +932,19 @@
             x.beginPath(); x.arc(tx-tr*0.25,ty-tr*0.3,tr*0.3,0,Math.PI*2); x.fill();
           }
 
-          /* Back legs (stubby) */
           x.fillStyle='#e0a8c0'; x.strokeStyle=OL; x.lineWidth=1.5;
           x.beginPath(); x.ellipse(-10,20,4,7,0,0,Math.PI*2); x.fill(); x.stroke();
           x.beginPath(); x.ellipse(7,20,4,7,0,0,Math.PI*2); x.fill(); x.stroke();
 
-          /* Body (small round chibi) */
           const bGrad=x.createRadialGradient(-2,6,2,0,8,20);
           bGrad.addColorStop(0,'#fff5f9'); bGrad.addColorStop(0.5,'#ffd8e8'); bGrad.addColorStop(1,'#f0a8c0');
           x.fillStyle=bGrad;
           x.beginPath(); x.ellipse(0,8,20,15,0,0,Math.PI*2); x.fill();
           x.strokeStyle=OL; x.lineWidth=1.8;
           x.beginPath(); x.ellipse(0,8,20,15,0,0,Math.PI*2); x.stroke();
-          /* Body highlight */
           x.fillStyle='rgba(255,255,255,0.15)';
           x.beginPath(); x.ellipse(-5,3,9,4,-0.3,0,Math.PI*2); x.fill();
 
-          /* Front legs (on top) */
           x.fillStyle='#f5c8d8'; x.strokeStyle=OL; x.lineWidth=1.5;
           x.beginPath(); x.ellipse(-7,22,4,7,0,0,Math.PI*2); x.fill(); x.stroke();
           x.fillStyle='rgba(255,255,255,0.12)';
@@ -958,7 +954,6 @@
           x.fillStyle='rgba(255,255,255,0.12)';
           x.beginPath(); x.ellipse(9,20,1.5,2.5,0,0,Math.PI*2); x.fill();
 
-          /* Cute wings */
           const wFlap=Math.sin(t*3.5)*12;
           x.save(); x.translate(-14,-4); x.rotate((-35+wFlap)*Math.PI/180);
           for(let f=0;f<3;f++){
@@ -975,24 +970,18 @@
           }
           x.restore();
 
-          /* HEAD (huge chibi ~55% of character) */
           const headR=25, headY=-14;
-          /* Head shadow on body */
           x.fillStyle='rgba(0,0,0,0.05)';
           x.beginPath(); x.ellipse(0,0,headR*0.7,4,0,0,Math.PI*2); x.fill();
-          /* Head fill */
           const hGrad=x.createRadialGradient(-3,headY-4,3,0,headY,headR);
           hGrad.addColorStop(0,'#fff8fa'); hGrad.addColorStop(0.4,'#ffe8f0'); hGrad.addColorStop(1,'#f0b0c8');
           x.fillStyle=hGrad;
           x.beginPath(); x.ellipse(0,headY,headR,headR*0.92,0,0,Math.PI*2); x.fill();
-          /* Head outline */
           x.strokeStyle=OL; x.lineWidth=2;
           x.beginPath(); x.ellipse(0,headY,headR,headR*0.92,0,0,Math.PI*2); x.stroke();
-          /* Head highlight */
           x.fillStyle='rgba(255,255,255,0.12)';
           x.beginPath(); x.ellipse(-headR*0.25,headY-headR*0.35,headR*0.45,headR*0.25,-0.3,0,Math.PI*2); x.fill();
 
-          /* Ear */
           x.fillStyle='#f5c0d5';
           x.beginPath(); x.moveTo(-4,headY-16); x.quadraticCurveTo(-12,headY-32,-6,headY-36);
           x.quadraticCurveTo(2,headY-30,0,headY-18); x.closePath(); x.fill();
@@ -1001,20 +990,18 @@
           x.beginPath(); x.moveTo(-3,headY-18); x.quadraticCurveTo(-9,headY-30,-5,headY-33);
           x.quadraticCurveTo(0,headY-28,-1,headY-20); x.closePath(); x.fill();
 
-          /* Mane (fluffy filled puffs) */
           for(let i=0;i<5;i++){
             const hue=(i*50+t*50)%360;
-            const mx=-5+i*2;
-            const my=headY-headR*0.65-Math.sin(t*2.5+i*0.8)*2;
+            const mmx=-5+i*2;
+            const mmy=headY-headR*0.65-Math.sin(t*2.5+i*0.8)*2;
             const mr=5-i*0.2;
             x.fillStyle=`hsl(${hue},78%,58%)`;
-            x.beginPath(); x.arc(mx-4,my+i*3,mr,0,Math.PI*2); x.fill();
+            x.beginPath(); x.arc(mmx-4,mmy+i*3,mr,0,Math.PI*2); x.fill();
             x.strokeStyle=`hsl(${hue},55%,38%)`; x.lineWidth=1; x.stroke();
             x.fillStyle=`hsla(${hue},90%,80%,0.5)`;
-            x.beginPath(); x.arc(mx-4-mr*0.2,my+i*3-mr*0.3,mr*0.3,0,Math.PI*2); x.fill();
+            x.beginPath(); x.arc(mmx-4-mr*0.2,mmy+i*3-mr*0.3,mr*0.3,0,Math.PI*2); x.fill();
           }
 
-          /* Horn (ornate with spiral) */
           const hornX=4, hornY2=headY-headR*0.85, hornLen=18, hornW2=5;
           const hrGrad=x.createLinearGradient(hornX,hornY2,hornX,hornY2-hornLen);
           hrGrad.addColorStop(0,'#ffd700'); hrGrad.addColorStop(0.4,'#ffe680'); hrGrad.addColorStop(1,'#fffae0');
@@ -1025,53 +1012,42 @@
           x.quadraticCurveTo(hornX+hornW2/4,hornY2-hornLen*0.5,hornX+hornW2/2,hornY2);
           x.closePath(); x.fill();
           x.strokeStyle='#b8860b'; x.lineWidth=1.5; x.stroke();
-          /* Spiral grooves */
           x.strokeStyle='rgba(255,255,255,0.3)'; x.lineWidth=0.7;
           for(let g=0;g<4;g++){
-            const gt=(g+0.5)/5, gy2=hornY2-hornLen*gt, gw=(hornW2/2)*(1-gt)+0.5;
-            x.beginPath(); x.moveTo(hornX-gw,gy2); x.quadraticCurveTo(hornX,gy2-2,hornX+gw,gy2); x.stroke();
+            const gt=(g+0.5)/5, gpy=hornY2-hornLen*gt, gw=(hornW2/2)*(1-gt)+0.5;
+            x.beginPath(); x.moveTo(hornX-gw,gpy); x.quadraticCurveTo(hornX,gpy-2,hornX+gw,gpy); x.stroke();
           }
-          /* Horn sparkle */
           x.fillStyle='#fff'; x.shadowColor='#ffd700'; x.shadowBlur=6;
           star4(hornX,hornY2-hornLen+1,2+Math.sin(t*5)*0.8,t*3);
           x.shadowBlur=0;
 
-          /* EYES (big anime chibi) */
           const eyeSp=9, eyeYp=headY+2, eyeRx=7.5, eyeRy=9;
           const blinkC=t%4, isBlink=blinkC>3.85&&blinkC<3.95;
           const eOpen=isBlink?0.08:1;
 
           for(let side=-1;side<=1;side+=2){
             const ex=side*eyeSp;
-            /* Sclera */
             x.fillStyle='#fff';
             x.beginPath(); x.ellipse(ex,eyeYp,eyeRx,eyeRy*eOpen,0,0,Math.PI*2); x.fill();
             x.strokeStyle=OL; x.lineWidth=1.8;
             x.beginPath(); x.ellipse(ex,eyeYp,eyeRx,eyeRy*eOpen,0,0,Math.PI*2); x.stroke();
 
             if(!isBlink){
-              /* Iris */
               const iR=5.5, iY=eyeYp+1;
               const iGrad=x.createRadialGradient(ex,iY-iR*0.3,0.5,ex,iY,iR);
               iGrad.addColorStop(0,'#a080e0'); iGrad.addColorStop(0.5,'#6040b0'); iGrad.addColorStop(1,'#2d1b69');
               x.fillStyle=iGrad;
               x.beginPath(); x.arc(ex,iY,iR,0,Math.PI*2); x.fill();
-              /* Pupil */
               x.fillStyle='#0a0018';
               x.beginPath(); x.arc(ex,iY+0.5,iR*0.55,0,Math.PI*2); x.fill();
-              /* Main highlight */
               x.fillStyle='#fff';
               x.beginPath(); x.ellipse(ex+2*side*0.5,iY-2.5,2.5,3,0,0,Math.PI*2); x.fill();
-              /* Secondary highlight */
               x.fillStyle='rgba(255,255,255,0.7)';
               x.beginPath(); x.arc(ex-1.5*side*0.5,iY+2,1.5,0,Math.PI*2); x.fill();
-              /* Tiny sparkle */
               x.fillStyle='#fff';
               x.beginPath(); x.arc(ex+1,iY-3.5,0.8,0,Math.PI*2); x.fill();
-              /* Upper eyelash */
               x.strokeStyle=OL; x.lineWidth=2;
               x.beginPath(); x.arc(ex,eyeYp,eyeRx,Math.PI+0.3,Math.PI*2-0.3); x.stroke();
-              /* Lash tips */
               x.lineWidth=1.5;
               const lx1=ex+eyeRx*Math.cos(-0.3), ly1=eyeYp+eyeRy*Math.sin(-0.3);
               x.beginPath(); x.moveTo(lx1,ly1); x.lineTo(lx1+side*2,ly1-3); x.stroke();
@@ -1080,12 +1056,10 @@
             }
           }
 
-          /* Blush circles */
           x.fillStyle='rgba(255,130,170,0.3)';
           x.beginPath(); x.ellipse(-eyeSp-4,eyeYp+7,5.5,3.5,0,0,Math.PI*2); x.fill();
           x.beginPath(); x.ellipse(eyeSp+4,eyeYp+7,5.5,3.5,0,0,Math.PI*2); x.fill();
 
-          /* Mouth (w-shape) */
           const mY=eyeYp+10;
           x.strokeStyle='#c06080'; x.lineWidth=1.5; x.lineCap='round';
           x.beginPath();
@@ -1093,11 +1067,9 @@
           x.quadraticCurveTo(1.5,mY+2,3,mY); x.stroke();
           x.lineCap='butt';
 
-          /* Nose dot */
           x.fillStyle='rgba(220,140,170,0.5)';
           x.beginPath(); x.arc(0,mY-3,1,0,Math.PI*2); x.fill();
 
-          /* Orbiting sparkle stars */
           for(let i=0;i<6;i++){
             const a=t*1.8+(i/6)*Math.PI*2;
             const d=34+Math.sin(t+i)*5;
@@ -1110,7 +1082,6 @@
 
           x.restore();
 
-          /* Label with glow */
           x.shadowColor = '#ffd700'; x.shadowBlur = 6;
           x.fillStyle = '#ffd700';
           x.font = 'bold 14px "Segoe UI", system-ui, sans-serif';
@@ -1130,7 +1101,6 @@
         const x = c.getContext('2d');
         let t = 0;
         const colors = ['#00d4ff','#ffdd00','#b44dff','#44ff44','#ff4444','#4488ff','#ff8833'];
-        // Pre-placed blocks at bottom
         const placed = [];
         for (let row = 0; row < 4; row++) {
           for (let col = 0; col < 18; col++) {
@@ -1139,12 +1109,11 @@
             }
           }
         }
-        // Falling piece cycle
         const pieces = [
-          [[0,0],[0,1],[1,0],[1,1]], // O
-          [[0,0],[0,1],[0,2],[0,3]], // I
-          [[0,1],[1,0],[1,1],[1,2]], // T
-          [[0,0],[0,1],[1,1],[1,2]], // S
+          [[0,0],[0,1],[1,0],[1,1]],
+          [[0,0],[0,1],[0,2],[0,3]],
+          [[0,1],[1,0],[1,1],[1,2]],
+          [[0,0],[0,1],[1,1],[1,2]],
         ];
         let pieceIdx = 0;
         let pieceY = -2;
@@ -1155,7 +1124,6 @@
           t += 0.016;
           x.fillStyle = '#08091a'; x.fillRect(0,0,W,H);
 
-          // Grid
           const cellW = 20, cellH = 20;
           const ox = (W - 18*cellW)/2, oy = H - 5*cellH - 10;
           x.strokeStyle = 'rgba(0,210,255,0.05)'; x.lineWidth = 0.5;
@@ -1166,11 +1134,9 @@
             x.beginPath(); x.moveTo(ox, oy - j*cellH); x.lineTo(ox+18*cellW, oy - j*cellH); x.stroke();
           }
 
-          // Border
           x.strokeStyle = 'rgba(0,210,255,0.25)'; x.lineWidth = 1.5;
           x.strokeRect(ox-1, 8, 18*cellW+2, H-16);
 
-          // Placed blocks
           for (const b of placed) {
             const bx = ox + b.col*cellW + 1;
             const by = oy + (3-b.row)*cellH + 1;
@@ -1184,7 +1150,6 @@
             x.restore();
           }
 
-          // Falling piece
           pieceY += 0.025;
           const piece = pieces[pieceIdx];
           const pc = colors[pieceIdx % colors.length];
@@ -1211,7 +1176,6 @@
             }
           }
 
-          // Line clear flash
           if (flashTimer > 0) {
             flashTimer -= 0.016;
             x.fillStyle = `rgba(255,255,255,${flashTimer*0.8})`;
@@ -1235,20 +1199,17 @@
 
         function draw() {
           t += 0.016;
-          /* Sky with fire tint */
           const sky = x.createLinearGradient(0,0,0,H);
           sky.addColorStop(0,'#3a5070'); sky.addColorStop(0.5,'#5a7090');
           sky.addColorStop(0.85,'#d4e0d4'); sky.addColorStop(1,'#7be495');
           x.fillStyle = sky; x.fillRect(0,0,W,H);
 
-          /* Clouds */
           x.fillStyle = 'rgba(255,255,255,0.15)';
           for (let i = 0; i < 3; i++) {
             const cx = ((i*130 + 20 - t*12) % (W+80)) - 40;
             x.beginPath(); x.ellipse(cx, 25+i*20, 30, 10, 0, 0, Math.PI*2); x.fill();
           }
 
-          /* Pipes */
           for (const p of pipes) {
             const px = ((p.x - t*35) % (W+80)) + 40;
             const gapY = 55 + p.gap * 0.3;
@@ -1262,13 +1223,11 @@
             x.fillStyle = pg;
             x.fillRect(px, 0, 42, gapY-35);
             x.fillRect(px, gapY+35, 42, H-gapY-35);
-            /* Caps */
             x.fillStyle = isReinforced ? '#9a9a9a' : '#45b87a';
             x.fillRect(px-4, gapY-35, 50, 10);
             x.fillRect(px-4, gapY+25, 50, 10);
           }
 
-          /* Projectile */
           projTimer += 0.016;
           if (projTimer > 2) {
             projTimer = 0;
@@ -1278,7 +1237,6 @@
           }
           if (projActive) {
             projX += 4;
-            /* Fireball */
             const fg = x.createRadialGradient(projX, projY, 1, projX, projY, 8);
             fg.addColorStop(0, '#FFFFFF');
             fg.addColorStop(0.3, '#FFCC00');
@@ -1286,17 +1244,14 @@
             fg.addColorStop(1, 'rgba(255,0,0,0.2)');
             x.fillStyle = fg;
             x.beginPath(); x.arc(projX, projY, 8, 0, Math.PI*2); x.fill();
-            /* Trail */
             for (let i = 1; i <= 4; i++) {
               x.fillStyle = `rgba(255,100,0,${0.3-i*0.06})`;
               x.beginPath(); x.arc(projX - i*8, projY, 5-i, 0, Math.PI*2); x.fill();
             }
             if (projX > W + 10) projActive = false;
-            /* Check pipe hit */
             for (const p of pipes) {
               const px = ((p.x - t*35) % (W+80)) + 40;
               if (projX > px && projX < px+42) {
-                /* Spawn fragments */
                 for (let i = 0; i < 5; i++) {
                   fragments.push({
                     x: projX, y: projY,
@@ -1312,7 +1267,6 @@
             }
           }
 
-          /* Fragments */
           for (let i = fragments.length-1; i >= 0; i--) {
             const f = fragments[i];
             f.vy += 200 * 0.016;
@@ -1326,25 +1280,19 @@
             x.globalAlpha = 1;
           }
 
-          /* Bird */
           const birdY = H*0.42 + Math.sin(t*3)*14;
           const wing = Math.sin(t*8)*5;
           x.save(); x.translate(90, birdY);
           x.rotate(Math.sin(t*3)*0.15);
-          /* Body */
           const bg = x.createRadialGradient(-2,-2,2,0,0,12);
           bg.addColorStop(0,'#ffe066'); bg.addColorStop(1,'#f0a030');
           x.fillStyle = bg; x.beginPath(); x.arc(0,0,12,0,Math.PI*2); x.fill();
-          /* Wing */
           x.fillStyle = '#f0a030'; x.beginPath();
           x.ellipse(-5,wing+2,7,3.5,-0.3,0,Math.PI*2); x.fill();
-          /* Beak */
           x.fillStyle = '#ff7b54'; x.beginPath();
           x.moveTo(10,-2); x.lineTo(17,0); x.lineTo(10,2); x.closePath(); x.fill();
-          /* Eye */
           x.fillStyle = '#fff'; x.beginPath(); x.arc(-1,-4,3.5,0,Math.PI*2); x.fill();
           x.fillStyle = '#1b2a36'; x.beginPath(); x.arc(0,-4,1.8,0,Math.PI*2); x.fill();
-          /* Weapon aura */
           const auraGrad = x.createRadialGradient(0,0,12,0,0,22);
           auraGrad.addColorStop(0,'rgba(255,100,0,0.2)');
           auraGrad.addColorStop(1,'rgba(255,100,0,0)');
@@ -1352,10 +1300,8 @@
           x.beginPath(); x.arc(0,0,22,0,Math.PI*2); x.fill();
           x.restore();
 
-          /* Ground */
           x.fillStyle = '#6cd47e'; x.fillRect(0,H-18,W,18);
 
-          /* Tier HUD indicator */
           x.fillStyle = 'rgba(0,0,0,0.4)';
           x.fillRect(5,5,70,18);
           x.fillStyle = '#FFD700';
@@ -1381,18 +1327,15 @@
         function draw() {
           t += 0.016;
 
-          /* Dark background */
           const bg = x.createLinearGradient(0,0,0,H);
           bg.addColorStop(0,'#0c0810'); bg.addColorStop(1,'#060408');
           x.fillStyle = bg; x.fillRect(0,0,W,H);
 
-          /* Road */
           const roadW = 130;
           const rcx = W/2 + Math.sin(t*0.8)*30;
           x.fillStyle = '#2a2a38';
           x.fillRect(rcx - roadW/2, 0, roadW, H);
 
-          /* Road edge glow lines */
           x.strokeStyle = '#ff8c32';
           x.lineWidth = 2;
           x.shadowColor = '#ff8c32';
@@ -1401,7 +1344,6 @@
           x.beginPath(); x.moveTo(rcx + roadW/2, 0); x.lineTo(rcx + roadW/2, H); x.stroke();
           x.shadowBlur = 0;
 
-          /* Lane dashes */
           x.setLineDash([10, 20]);
           x.strokeStyle = 'rgba(255,140,50,0.25)';
           x.lineWidth = 1.5;
@@ -1409,7 +1351,6 @@
           x.beginPath(); x.moveTo(rcx, -offset); x.lineTo(rcx, H); x.stroke();
           x.setLineDash([]);
 
-          /* Oncoming traffic */
           for (let i = 0; i < 2; i++) {
             const ty = ((t * 100 + i * 140) % (H + 80)) - 40;
             const tx = rcx + (i === 0 ? -25 : 22);
@@ -1419,7 +1360,6 @@
             if (x.roundRect) { x.roundRect(tx-10, ty-18, 20, 36, 4); }
             else { x.rect(tx-10, ty-18, 20, 36); }
             x.fill();
-            /* Headlights */
             x.fillStyle = '#ffe8a0';
             x.shadowColor = '#ffe8a0';
             x.shadowBlur = 6;
@@ -1428,11 +1368,9 @@
             x.shadowBlur = 0;
           }
 
-          /* Player car */
           const carY = H * 0.7;
           const carX = rcx + Math.sin(t*1.5)*15;
           x.save(); x.translate(carX, carY);
-          /* Body */
           const cg = x.createLinearGradient(-11, -20, 11, 20);
           cg.addColorStop(0, '#ff6633'); cg.addColorStop(1, '#cc3311');
           x.fillStyle = cg;
@@ -1440,16 +1378,13 @@
           if (x.roundRect) { x.roundRect(-11, -20, 22, 40, 5); }
           else { x.rect(-11, -20, 22, 40); }
           x.fill();
-          /* Windshield */
           x.fillStyle = 'rgba(100,180,255,0.4)';
           x.fillRect(-8, -17, 16, 10);
-          /* Headlights */
           x.fillStyle = '#ffe8a0';
           x.shadowColor = '#ffe8a0'; x.shadowBlur = 8;
           x.fillRect(-9, -20, 5, 3);
           x.fillRect(4, -20, 5, 3);
           x.shadowBlur = 0;
-          /* Rear lights */
           x.fillStyle = '#ff2200';
           x.shadowColor = '#ff2200'; x.shadowBlur = 6;
           x.fillRect(-9, 17, 5, 3);
@@ -1457,7 +1392,6 @@
           x.shadowBlur = 0;
           x.restore();
 
-          /* Headlight cone darkness overlay */
           x.fillStyle = 'rgba(0,0,0,0.7)';
           x.fillRect(0, 0, W, H);
           x.save();
@@ -1473,7 +1407,6 @@
           x.lineTo(carX + 80, -10);
           x.lineTo(carX + 10, carY - 20);
           x.fill();
-          /* Car glow */
           const cGlow = x.createRadialGradient(carX, carY, 8, carX, carY, 50);
           cGlow.addColorStop(0, 'rgba(255,255,255,0.85)');
           cGlow.addColorStop(1, 'rgba(255,255,255,0)');
@@ -1482,7 +1415,6 @@
           x.globalCompositeOperation = 'source-over';
           x.restore();
 
-          /* Rain */
           x.strokeStyle = 'rgba(180,200,255,0.25)';
           x.lineWidth = 1;
           for (const d of rainDrops) {
@@ -1513,7 +1445,6 @@
         cards.forEach((card, i) => {
           const key = bestKeys[i];
           if (!key) {
-            // Unicorn clicker — read from save object
             try {
               const save = JSON.parse(localStorage.getItem('unicornClickerSave') || '{}');
               const sp = Number(save.lifetimeSP) || 0;
@@ -1541,7 +1472,6 @@
       (function() {
         const dashboard = document.getElementById('statsDashboard');
 
-        // Achievement data from all games
         const achKeys = [
           { key: 'flappyAchievements', total: 0 },
           { key: 'methaneDriftAch', total: 0 },
@@ -1572,19 +1502,16 @@
           } catch(e) {}
         }
 
-        // Combined best scores
         const bestKeys = ['flappyBest', 'methaneDriftBest', 'snakeBest', 'luminaBest', 'phantomRoadBest', 'tetrisBest', 'gunGameBest'];
         let combinedBest = 0;
         for (const key of bestKeys) {
           combinedBest += Number(localStorage.getItem(key)) || 0;
         }
-        // Add unicorn lifetime SP
         try {
           const ucSave = JSON.parse(localStorage.getItem('unicornClickerSave') || '{}');
           combinedBest += Math.floor(Number(ucSave.lifetimeSP) || 0);
         } catch(e) {}
 
-        // Day streak
         const today = new Date().toISOString().split('T')[0];
         let streakData;
         try {
@@ -1592,7 +1519,7 @@
         } catch(e) { streakData = {}; }
 
         if (streakData.lastDate === today) {
-          // Already visited today, keep streak
+          // Already visited today
         } else {
           const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
           if (streakData.lastDate === yesterday) {
@@ -1606,7 +1533,6 @@
 
         const streak = streakData.streak || 1;
 
-        // Only show dashboard if there's any data
         if (totalAch > 0 || combinedBest > 0 || maxPlayed > 0) {
           dashboard.classList.remove('hidden');
           document.getElementById('statFavGame').textContent = favGame || '-';
