@@ -2560,5 +2560,11 @@ window.addEventListener('orientationchange', () => { setTimeout(fitCanvasToScree
 requestAnimationFrame(loop);
 
 if (typeof Leaderboard !== 'undefined') {
-  document.getElementById('leaderboardPanel').appendChild(Leaderboard.createPanel('phantom-road'));
+  const lbPanel = document.getElementById('leaderboardPanel');
+  lbPanel.appendChild(Leaderboard.createPanel('phantom-road'));
+  const lbToggleBtn = document.getElementById('leaderboardToggle');
+  if (lbToggleBtn) {
+    lbToggleBtn.addEventListener('click', () => { lbPanel.classList.toggle('lb-visible'); });
+    lbPanel.addEventListener('click', (e) => { if (e.target === lbPanel) lbPanel.classList.remove('lb-visible'); });
+  }
 }

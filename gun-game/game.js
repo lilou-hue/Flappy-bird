@@ -1921,5 +1921,13 @@ window.addEventListener('orientationchange', () => { setTimeout(fitCanvasToScree
 
 loadBestScore();
 resetGame();
-if (typeof Leaderboard !== 'undefined') Leaderboard.createPanel('gun-game');
+if (typeof Leaderboard !== 'undefined') {
+  const lbPanel = document.getElementById('leaderboardPanel');
+  lbPanel.appendChild(Leaderboard.createPanel('gun-game'));
+  const lbToggleBtn = document.getElementById('leaderboardToggle');
+  if (lbToggleBtn) {
+    lbToggleBtn.addEventListener('click', () => { lbPanel.classList.toggle('lb-visible'); });
+    lbPanel.addEventListener('click', (e) => { if (e.target === lbPanel) lbPanel.classList.remove('lb-visible'); });
+  }
+}
 requestAnimationFrame(loop);

@@ -160,7 +160,27 @@
   to   { opacity: 1; }
 }
 
-/* --- Mobile: compact leaderboard --- */
+/* ── Leaderboard toggle button — hidden on desktop, shown on mobile ── */
+.lb-toggle-btn {
+  display: none;
+  border: none;
+  background: none;
+  font-size: 1.4rem;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 8px;
+  line-height: 1;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+.lb-toggle-btn:hover {
+  background: rgba(0,210,255,0.1);
+  transform: scale(1.1);
+}
+.lb-toggle-btn:active {
+  transform: scale(0.95);
+}
+
+/* --- Mobile: compact leaderboard + slide-up panel --- */
 @media (max-width: 600px) {
   .lb-panel {
     max-width: 100%;
@@ -188,5 +208,34 @@
 
   .lb-table td {
     padding: 0.35rem 0.4rem;
+  }
+
+  .lb-toggle-btn {
+    display: flex;
+  }
+
+  /* Leaderboard slides up from bottom, doesn't steal space from game */
+  #leaderboardPanel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-height: 35vh;
+    overflow-y: auto;
+    z-index: 100;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+    pointer-events: none;
+  }
+
+  #leaderboardPanel.lb-visible {
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  #leaderboardPanel .lb-panel {
+    border-radius: 12px 12px 0 0;
+    margin: 0;
+    max-width: 100%;
   }
 }

@@ -3204,7 +3204,15 @@
 
   /* ────────────────── Init ────────────────── */
   load();
-  if (typeof Leaderboard !== 'undefined') Leaderboard.createPanel('unicorn-clicker');
+  if (typeof Leaderboard !== 'undefined') {
+    const lbPanel = document.getElementById('leaderboardPanel');
+    lbPanel.appendChild(Leaderboard.createPanel('unicorn-clicker'));
+    const lbToggleBtn = document.getElementById('leaderboardToggle');
+    if (lbToggleBtn) {
+      lbToggleBtn.addEventListener('click', () => { lbPanel.classList.toggle('lb-visible'); });
+      lbPanel.addEventListener('click', (e) => { if (e.target === lbPanel) lbPanel.classList.remove('lb-visible'); });
+    }
+  }
   window.addEventListener('beforeunload', save);
   requestAnimationFrame(loop);
 })();

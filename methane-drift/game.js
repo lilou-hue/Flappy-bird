@@ -3769,5 +3769,11 @@ resetGame();
 requestAnimationFrame(gameLoop);
 
 if (typeof Leaderboard !== 'undefined') {
-  document.getElementById('leaderboardPanel').appendChild(Leaderboard.createPanel('methane-drift'));
+  const lbPanel = document.getElementById('leaderboardPanel');
+  lbPanel.appendChild(Leaderboard.createPanel('methane-drift'));
+  const lbToggleBtn = document.getElementById('leaderboardToggle');
+  if (lbToggleBtn) {
+    lbToggleBtn.addEventListener('click', () => { lbPanel.classList.toggle('lb-visible'); });
+    lbPanel.addEventListener('click', (e) => { if (e.target === lbPanel) lbPanel.classList.remove('lb-visible'); });
+  }
 }

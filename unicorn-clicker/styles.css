@@ -47,6 +47,25 @@ canvas {
   border-color: rgba(200, 170, 255, 0.8);
 }
 
+#leaderboardToggle {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 100;
+  padding: 6px 10px;
+  background: rgba(30, 20, 60, 0.75);
+  border: 2px solid rgba(180, 140, 255, 0.5);
+  border-radius: 20px;
+  backdrop-filter: blur(6px);
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+#leaderboardToggle:hover {
+  background: rgba(60, 40, 110, 0.85);
+  border-color: rgba(200, 170, 255, 0.8);
+}
+
 /* ── Achievements ────────────────────────────────────────── */
 .achievements-panel {
   position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%);
