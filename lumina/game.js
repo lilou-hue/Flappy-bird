@@ -235,78 +235,63 @@
   let currentSkin = PLAYER_SKINS.classic;
 
   // ── Achievements ──────────────────────────────────────────
-  const ACHIEVEMENTS = [
-    { id: "first_shard",    icon: "\uD83D\uDC8E", title: "First Light",       desc: "Collect your first shard",         check: s => s.totalShards >= 1 },
-    { id: "shards_25",      icon: "\u2728",       title: "Shard Collector",   desc: "Collect 25 shards in one game",    check: s => s.shardsThisGame >= 25 },
-    { id: "shards_50",      icon: "\uD83C\uDF1F", title: "Crystal Hoarder",   desc: "Collect 50 shards in one game",    check: s => s.shardsThisGame >= 50 },
-    { id: "depth_10",       icon: "\uD83C\uDFC5", title: "Deep Diver",        desc: "Reach depth 10",                   check: s => s.bestScore >= 10 },
-    { id: "depth_30",       icon: "\uD83C\uDFC6", title: "Abyssal Explorer",  desc: "Reach depth 30",                   check: s => s.bestScore >= 30 },
-    { id: "depth_60",       icon: "\uD83D\uDC51", title: "Depth Master",      desc: "Reach depth 60",                   check: s => s.bestScore >= 60 },
-    { id: "zone_2",         icon: "\uD83D\uDD2E", title: "Zone Traveller",    desc: "Reach zone 2",                     check: s => s.maxZone >= 1 },
-    { id: "zone_4",         icon: "\uD83C\uDF0C", title: "Deep Zone",         desc: "Reach zone 4",                     check: s => s.maxZone >= 3 },
-    { id: "zone_5",         icon: "\u2B50",       title: "Final Zone",        desc: "Reach the last zone",              check: s => s.maxZone >= 4 },
-    { id: "pulse_50",       icon: "\uD83D\uDCA5", title: "Pulse Master",      desc: "Use 50 pulses total",              check: s => s.totalPulses >= 50 },
-    { id: "shield_grab",    icon: "\uD83D\uDEE1\uFE0F",  title: "Protected",         desc: "Collect a shield shard",           check: s => s.shieldsGrabbed >= 1 },
-    { id: "teleport_grab",  icon: "\uD83C\uDF00", title: "Warped",            desc: "Use a teleport shard",             check: s => s.teleportsUsed >= 1 },
-    { id: "lightbomb_grab", icon: "\u2600\uFE0F",  title: "Supernova",         desc: "Collect a light bomb",             check: s => s.lightBombsUsed >= 1 },
-    { id: "dark_grab",      icon: "\uD83C\uDF11", title: "Embrace Darkness",  desc: "Touch a dark shard",               check: s => s.darkShardsHit >= 1 },
-    { id: "survivor",       icon: "\uD83D\uDCAA", title: "Survivor",          desc: "Survive with light below 20%",     check: s => s.survivedLowLight },
-    { id: "games_10",       icon: "\uD83C\uDFAE", title: "Dedicated",         desc: "Play 10 games",                    check: s => s.gamesPlayed >= 10 },
+  const LM_ACHIEVEMENTS = [
+    { id: "first_dive",  icon: "\uD83C\uDF0A", title: "First Dive",       desc: "Reach depth 1",    check: s => s.bestDepth >= 1 },
+    { id: "depth_10",    icon: "\uD83C\uDFC5", title: "Deep Diver",       desc: "Reach depth 10",   check: s => s.bestDepth >= 10 },
+    { id: "depth_25",    icon: "\uD83C\uDFC6", title: "Abyssal Explorer", desc: "Reach depth 25",   check: s => s.bestDepth >= 25 },
+    { id: "depth_50",    icon: "\uD83D\uDC51", title: "Depth Master",     desc: "Reach depth 50",   check: s => s.bestDepth >= 50 },
+    { id: "depth_100",   icon: "\u2B50",       title: "Abyss Lord",       desc: "Reach depth 100",  check: s => s.bestDepth >= 100 },
+    { id: "dedicated",   icon: "\uD83C\uDFAE", title: "Dedicated",        desc: "Play 10 games",    check: s => s.gamesPlayed >= 10 },
   ];
 
-  let achStats = {
-    totalShards: 0, shardsThisGame: 0, bestScore: 0, maxZone: 0,
-    totalPulses: 0, shieldsGrabbed: 0, teleportsUsed: 0,
-    lightBombsUsed: 0, darkShardsHit: 0, survivedLowLight: false,
-    gamesPlayed: 0,
-  };
-  let unlockedAch = new Set();
-  let achPopupQueue = [];
-  let achPopupTimer = 0;
+  let lmAchStats = { bestDepth: 0, gamesPlayed: 0 };
+  let lmAchUnlocked = new Set();
+  let lmAchQueue = [];
+  let lmAchTimer = 0;
 
-  function loadAch() {
+  function loadLmAch() {
     try {
       const s = JSON.parse(localStorage.getItem("luminaAch") || "{}");
-      if (s.unlocked) unlockedAch = new Set(s.unlocked);
-      if (s.stats) Object.assign(achStats, s.stats);
+      if (s.unlocked) lmAchUnlocked = new Set(s.unlocked);
+      if (s.stats) Object.assign(lmAchStats, s.stats);
     } catch (_) {}
   }
-  function saveAch() {
-    localStorage.setItem("luminaAch", JSON.stringify({ unlocked: [...unlockedAch], stats: achStats }));
+  function saveLmAch() {
+    localStorage.setItem("luminaAch", JSON.stringify({ unlocked: [...lmAchUnlocked], stats: lmAchStats }));
   }
-  function checkAch() {
-    for (const a of ACHIEVEMENTS) {
-      if (!unlockedAch.has(a.id) && a.check(achStats)) {
-        unlockedAch.add(a.id);
-        achPopupQueue.push(a);
-        saveAch();
+  function checkLmAch() {
+    for (const a of LM_ACHIEVEMENTS) {
+      if (!lmAchUnlocked.has(a.id) && a.check(lmAchStats)) {
+        lmAchUnlocked.add(a.id);
+        lmAchQueue.push(a);
+        saveLmAch();
       }
     }
   }
-  function showAchPopup() {
-    if (achPopupTimer > 0 || achPopupQueue.length === 0) return;
-    const a = achPopupQueue.shift();
+  function showLmAchPopup() {
+    if (lmAchTimer > 0 || lmAchQueue.length === 0) return;
+    const a = lmAchQueue.shift();
     const popup = document.getElementById("achievementPopup");
     document.getElementById("achievementPopupIcon").textContent = a.icon;
     document.getElementById("achievementPopupTitle").textContent = a.title;
     document.getElementById("achievementPopupDesc").textContent = a.desc;
     popup.classList.add("show");
-    achPopupTimer = 3;
-    setTimeout(() => { popup.classList.remove("show"); setTimeout(() => { achPopupTimer = 0; }, 500); }, 3000);
+    lmAchTimer = 3;
+    setTimeout(() => { popup.classList.remove("show"); setTimeout(() => { lmAchTimer = 0; showLmAchPopup(); }, 500); }, 3000);
   }
-  function renderAchList() {
+  function renderLmAchList() {
     const list = document.getElementById("achievementsList");
     list.innerHTML = "";
-    for (const a of ACHIEVEMENTS) {
+    for (const a of LM_ACHIEVEMENTS) {
       const el = document.createElement("div");
-      el.className = "achievement-item" + (unlockedAch.has(a.id) ? " unlocked" : "");
+      el.className = "achievement-item" + (lmAchUnlocked.has(a.id) ? " unlocked" : "");
       el.innerHTML = `<span class="achievement-item__icon">${a.icon}</span><span>${a.title}</span>`;
       list.appendChild(el);
     }
   }
   document.getElementById("achievementsToggle").addEventListener("click", () => {
     document.getElementById("achievementsList").classList.toggle("open");
-    renderAchList();
+    renderLmAchList();
   });
 
   // ── Tutorial ──────────────────────────────────────────────
@@ -527,7 +512,7 @@
     bestScore = loadBest(); muted = loadMute();
     muteBtn.textContent = muted ? "\u{1F507}" : "\u{1F50A}";
     bestEl.textContent = bestScore;
-    loadPreferences(); loadAch(); renderAchList();
+    loadPreferences(); loadLmAch(); renderLmAchList();
     resetGame(); state = STATE.MENU; menuTime = 0;
     lastTime = performance.now();
     requestAnimationFrame(loop);
@@ -548,7 +533,6 @@
     timeDilation = 1;
     waterDrops = []; waterDropTimer = 0;
     shieldActive = false; shieldTimer = 0;
-    achStats.shardsThisGame = 0;
     seedNoise(); generateBgCrystals();
     scoreEl.textContent = "0";
     generateAhead(CFG.H * 2);
@@ -737,7 +721,7 @@
 
   function handleAction() {
     initAudio(); resumeAudio();
-    if (state === STATE.MENU || state === STATE.GAMEOVER) { resetGame(); state = STATE.PLAYING; startAmbient(); achStats.gamesPlayed++; saveAch(); return; }
+    if (state === STATE.MENU || state === STATE.GAMEOVER) { resetGame(); state = STATE.PLAYING; startAmbient(); lmAchStats.gamesPlayed++; saveLmAch(); return; }
     if (state === STATE.PLAYING) doPulse();
   }
   function handlePause() {
@@ -749,7 +733,6 @@
     if (pulseCooldown > 0 || lightRadius < CFG.LIGHT_MIN + 10) return;
     player.vy += CFG.PULSE_FORCE; pulseCooldown = CFG.PULSE_COOLDOWN; pulseAnim = 1.0;
     lightRadius = Math.min(CFG.LIGHT_MAX, lightRadius + 15); timeDilation = 0.3;
-    achStats.totalPulses++; saveAch();
     const pal = currentPalette();
     for (let i = 0; i < 35; i++) {
       const a = (Math.PI*2*i)/35+rand(-0.15,0.15), spd = rand(80,220);
@@ -784,9 +767,8 @@
         if (typeof Leaderboard !== 'undefined' && score > 0) {
           Leaderboard.submitScore('lumina', score).then(() => Leaderboard.refresh('lumina'));
         }
-        achStats.bestScore = Math.max(achStats.bestScore, score);
-        achStats.maxZone = Math.max(achStats.maxZone, zoneIndex());
-        checkAch(); showAchPopup(); saveAch();
+        lmAchStats.bestDepth = Math.max(lmAchStats.bestDepth, score);
+        checkLmAch(); showLmAchPopup(); saveLmAch();
       }
       return;
     }
@@ -832,7 +814,6 @@
     lightRadius = Math.max(CFG.LIGHT_MIN, lightRadius - (CFG.LIGHT_DRAIN + score * CFG.LIGHT_DRAIN_SCALE) * darkMult * adt);
 
     // Track low light survival
-    if (lightRadius < CFG.LIGHT_MIN + (CFG.LIGHT_MAX - CFG.LIGHT_MIN) * 0.2) achStats.survivedLowLight = true;
 
     // Shield timer
     if (shieldActive) { shieldTimer -= dt; if (shieldTimer <= 0) shieldActive = false; }
@@ -848,8 +829,9 @@
       if (Math.abs(s.y - cameraY - CFG.H/2) > CFG.H) continue;
       if (dist(player.x, player.y, s.x, s.y) < CFG.PLAYER_R + 10) {
         s.collected = true; score++; scoreEl.textContent = score;
+        lmAchStats.bestDepth = Math.max(lmAchStats.bestDepth, score);
+        checkLmAch(); showLmAchPopup();
         lightRadius = Math.min(CFG.LIGHT_MAX, lightRadius + CFG.LIGHT_RESTORE);
-        achStats.totalShards++; achStats.shardsThisGame++;
         const pal = currentPalette();
         for (let i = 0; i < 18; i++) { const a = (Math.PI*2*i)/18, spd = rand(40,130); spawnParticle("burst", s.x, s.y, Math.cos(a)*spd, Math.sin(a)*spd, rand(0.4,0.8), rand(2,5), [clamp(pal.crystal[0]+randInt(-30,30),0,255), clamp(pal.crystal[1]+randInt(-30,30),0,255), clamp(pal.crystal[2]+randInt(-30,30),0,255)], 1); }
         sfxCollect(); haptic(25);
@@ -862,11 +844,11 @@
       if (Math.abs(sp.y - cameraY - CFG.H/2) > CFG.H) continue;
       if (dist(player.x, player.y, sp.x, sp.y) < CFG.PLAYER_R + 12) {
         sp.collected = true;
-        if (sp.type === "shield") { shieldActive = true; shieldTimer = 8; achStats.shieldsGrabbed++; sfxShield(); haptic([40,20,40]); for(let i=0;i<12;i++){const a=(Math.PI*2*i)/12;spawnParticle("burst",sp.x,sp.y,Math.cos(a)*80,Math.sin(a)*80,0.5,3,[100,180,255],0.8);} }
-        else if (sp.type === "teleport") { player.y += 150; cameraY += 100; achStats.teleportsUsed++; sfxTeleport(); haptic([60,30,60]); for(let i=0;i<20;i++){spawnParticle("nova",player.x,player.y,rand(-100,100),rand(-100,100),rand(0.3,0.6),rand(2,4),[200,150,255],0.7);} }
-        else if (sp.type === "lightbomb") { lightRadius = CFG.LIGHT_MAX; achStats.lightBombsUsed++; sfxLightBomb(); haptic([30,15,30,15,80]); for(let i=0;i<30;i++){const a=(Math.PI*2*i)/30;spawnParticle("nova",player.x,player.y,Math.cos(a)*150,Math.sin(a)*150,rand(0.4,0.8),rand(3,6),[255,255,180],1);} }
-        else if (sp.type === "dark") { lightRadius = Math.max(CFG.LIGHT_MIN, lightRadius - 50); achStats.darkShardsHit++; sfxDarkShard(); haptic([100,50,100]); shakeTimer = 0.3; for(let i=0;i<15;i++){spawnParticle("wisp",sp.x+rand(-10,10),sp.y+rand(-10,10),rand(-30,30),rand(-30,30),rand(0.5,1),rand(3,7),[30,0,50],0.6);} }
-        checkAch(); showAchPopup();
+        if (sp.type === "shield") { shieldActive = true; shieldTimer = 8; sfxShield(); haptic([40,20,40]); for(let i=0;i<12;i++){const a=(Math.PI*2*i)/12;spawnParticle("burst",sp.x,sp.y,Math.cos(a)*80,Math.sin(a)*80,0.5,3,[100,180,255],0.8);} }
+        else if (sp.type === "teleport") { player.y += 150; cameraY += 100; sfxTeleport(); haptic([60,30,60]); for(let i=0;i<20;i++){spawnParticle("nova",player.x,player.y,rand(-100,100),rand(-100,100),rand(0.3,0.6),rand(2,4),[200,150,255],0.7);} }
+        else if (sp.type === "lightbomb") { lightRadius = CFG.LIGHT_MAX; sfxLightBomb(); haptic([30,15,30,15,80]); for(let i=0;i<30;i++){const a=(Math.PI*2*i)/30;spawnParticle("nova",player.x,player.y,Math.cos(a)*150,Math.sin(a)*150,rand(0.4,0.8),rand(3,6),[255,255,180],1);} }
+        else if (sp.type === "dark") { lightRadius = Math.max(CFG.LIGHT_MIN, lightRadius - 50); sfxDarkShard(); haptic([100,50,100]); shakeTimer = 0.3; for(let i=0;i<15;i++){spawnParticle("wisp",sp.x+rand(-10,10),sp.y+rand(-10,10),rand(-30,30),rand(-30,30),rand(0.5,1),rand(3,7),[30,0,50],0.6);} }
+        checkLmAch(); showLmAchPopup();
       }
     }
 
@@ -931,7 +913,7 @@
     if (shakeTimer > 0) { shakeTimer -= dt; shakeX = rand(-shakeTimer*8, shakeTimer*8); shakeY = rand(-shakeTimer*8, shakeTimer*8); } else { shakeX = 0; shakeY = 0; }
 
     updateParticles(adt);
-    checkAch(); showAchPopup();
+    checkLmAch(); showLmAchPopup();
   }
 
   function updateParticles(dt) {
