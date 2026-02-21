@@ -71,6 +71,189 @@
   });
   loadTetAch();
 
+  /* ── Themes ────────────────────────────────────────────────────────── */
+  const TETRIS_THEMES = {
+    classic: {
+      name: () => I18N.t('tetThemeClassic'),
+      bg: '#08091a', field: '#060816',
+      gridColor: 'rgba(0,210,255,0.06)', borderColor: 'rgba(0,210,255,0.35)',
+      textColor: '#c0d8ff', accentColor: '#00d4ff',
+      colors: { I: '#00d4ff', O: '#ffdd00', T: '#b44dff', S: '#44ff44', Z: '#ff4444', J: '#4488ff', L: '#ff8833' },
+      glows:  { I: 'rgba(0,212,255,0.5)', O: 'rgba(255,221,0,0.5)', T: 'rgba(180,77,255,0.5)', S: 'rgba(68,255,68,0.5)', Z: 'rgba(255,68,68,0.5)', J: 'rgba(68,136,255,0.5)', L: 'rgba(255,136,51,0.5)' },
+    },
+    neon: {
+      name: () => I18N.t('tetThemeNeon'),
+      bg: '#0a0014', field: '#08000f',
+      gridColor: 'rgba(255,0,200,0.06)', borderColor: 'rgba(255,0,200,0.35)',
+      textColor: '#ffc0e8', accentColor: '#ff00c8',
+      colors: { I: '#00ffff', O: '#ffff00', T: '#ff00ff', S: '#00ff66', Z: '#ff0066', J: '#6666ff', L: '#ff8800' },
+      glows:  { I: 'rgba(0,255,255,0.5)', O: 'rgba(255,255,0,0.5)', T: 'rgba(255,0,255,0.5)', S: 'rgba(0,255,102,0.5)', Z: 'rgba(255,0,102,0.5)', J: 'rgba(102,102,255,0.5)', L: 'rgba(255,136,0,0.5)' },
+    },
+    retro: {
+      name: () => I18N.t('tetThemeRetro'),
+      bg: '#1a1408', field: '#16120a',
+      gridColor: 'rgba(200,160,80,0.06)', borderColor: 'rgba(200,160,80,0.3)',
+      textColor: '#d4c8a0', accentColor: '#c8a050',
+      colors: { I: '#6bb5c0', O: '#d4a840', T: '#a070a0', S: '#6aaa60', Z: '#c06050', J: '#5080a0', L: '#c08040' },
+      glows:  { I: 'rgba(107,181,192,0.4)', O: 'rgba(212,168,64,0.4)', T: 'rgba(160,112,160,0.4)', S: 'rgba(106,170,96,0.4)', Z: 'rgba(192,96,80,0.4)', J: 'rgba(80,128,160,0.4)', L: 'rgba(192,128,64,0.4)' },
+    },
+    pastel: {
+      name: () => I18N.t('tetThemePastel'),
+      bg: '#f0f0f8', field: '#e8e8f0',
+      gridColor: 'rgba(100,100,140,0.08)', borderColor: 'rgba(100,100,140,0.2)',
+      textColor: '#505070', accentColor: '#8080c0',
+      colors: { I: '#88ccdd', O: '#eedd88', T: '#cc99cc', S: '#88cc88', Z: '#dd8888', J: '#8899cc', L: '#ddaa77' },
+      glows:  { I: 'rgba(136,204,221,0.3)', O: 'rgba(238,221,136,0.3)', T: 'rgba(204,153,204,0.3)', S: 'rgba(136,204,136,0.3)', Z: 'rgba(221,136,136,0.3)', J: 'rgba(136,153,204,0.3)', L: 'rgba(221,170,119,0.3)' },
+    },
+    midnight: {
+      name: () => I18N.t('tetThemeMidnight'),
+      bg: '#040408', field: '#030306',
+      gridColor: 'rgba(60,60,100,0.08)', borderColor: 'rgba(60,60,100,0.25)',
+      textColor: '#8080a0', accentColor: '#5050a0',
+      colors: { I: '#3388aa', O: '#aa8833', T: '#7744aa', S: '#338844', Z: '#aa3344', J: '#3355aa', L: '#aa6633' },
+      glows:  { I: 'rgba(51,136,170,0.4)', O: 'rgba(170,136,51,0.4)', T: 'rgba(119,68,170,0.4)', S: 'rgba(51,136,68,0.4)', Z: 'rgba(170,51,68,0.4)', J: 'rgba(51,85,170,0.4)', L: 'rgba(170,102,51,0.4)' },
+    },
+  };
+
+  /* ── Block Skins ──────────────────────────────────────────────────── */
+  function lightenColor(hex, amt) {
+    let r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+    r = Math.min(255, r + amt); g = Math.min(255, g + amt); b = Math.min(255, b + amt);
+    return '#' + [r,g,b].map(c => c.toString(16).padStart(2,'0')).join('');
+  }
+  function darkenColor(hex, amt) {
+    let r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+    r = Math.max(0, r - amt); g = Math.max(0, g - amt); b = Math.max(0, b - amt);
+    return '#' + [r,g,b].map(c => c.toString(16).padStart(2,'0')).join('');
+  }
+
+  const TETRIS_SKINS = {
+    standard: {
+      name: () => I18N.t('tetSkinStandard'),
+      drawBlock(x, y, color, glow, dimmed, ctx) {
+        const margin = 1, bx = x+margin, by = y+margin, bs = CELL-margin*2, r = 3;
+        ctx.save();
+        if (glow && !dimmed) { ctx.shadowBlur = 6; ctx.shadowColor = glow; }
+        else if (glow && dimmed) { ctx.shadowBlur = 3; ctx.shadowColor = glow; }
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(bx, by, bs, bs, r); else ctx.rect(bx, by, bs, bs);
+        ctx.fill(); ctx.shadowBlur = 0;
+        ctx.fillStyle = 'rgba(255,255,255,0.12)';
+        ctx.fillRect(bx+1, by+1, bs-2, 2); ctx.fillRect(bx+1, by+1, 2, bs-2);
+        ctx.fillStyle = 'rgba(0,0,0,0.18)';
+        ctx.fillRect(bx+1, by+bs-3, bs-2, 2); ctx.fillRect(bx+bs-3, by+1, 2, bs-2);
+        ctx.restore();
+      }
+    },
+    glossy: {
+      name: () => I18N.t('tetSkinGlossy'),
+      drawBlock(x, y, color, glow, dimmed, ctx) {
+        const margin = 1, bx = x+margin, by = y+margin, bs = CELL-margin*2, r = 4;
+        ctx.save();
+        if (glow && !dimmed) { ctx.shadowBlur = 6; ctx.shadowColor = glow; }
+        const grad = ctx.createLinearGradient(bx, by, bx, by+bs);
+        grad.addColorStop(0, lightenColor(color, 60));
+        grad.addColorStop(0.3, color);
+        grad.addColorStop(1, darkenColor(color, 40));
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(bx, by, bs, bs, r); else ctx.rect(bx, by, bs, bs);
+        ctx.fill(); ctx.shadowBlur = 0;
+        ctx.fillStyle = 'rgba(255,255,255,0.25)';
+        ctx.fillRect(bx+3, by+2, bs-6, 4);
+        ctx.restore();
+      }
+    },
+    pixel: {
+      name: () => I18N.t('tetSkinPixel'),
+      drawBlock(x, y, color, glow, dimmed, ctx) {
+        const margin = 1, bx = x+margin, by = y+margin, bs = CELL-margin*2;
+        ctx.save();
+        if (glow && !dimmed) { ctx.shadowBlur = 4; ctx.shadowColor = glow; }
+        ctx.fillStyle = color;
+        ctx.fillRect(bx, by, bs, bs);
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = lightenColor(color, 50);
+        ctx.fillRect(bx, by, bs, 3); ctx.fillRect(bx, by, 3, bs);
+        ctx.fillStyle = darkenColor(color, 50);
+        ctx.fillRect(bx, by+bs-3, bs, 3); ctx.fillRect(bx+bs-3, by, 3, bs);
+        ctx.fillStyle = darkenColor(color, 20);
+        ctx.fillRect(bx+3, by+3, bs-6, bs-6);
+        ctx.restore();
+      }
+    },
+    glow: {
+      name: () => I18N.t('tetSkinGlow'),
+      drawBlock(x, y, color, glow, dimmed, ctx) {
+        const margin = 1, bx = x+margin, by = y+margin, bs = CELL-margin*2, r = 3;
+        ctx.save();
+        ctx.fillStyle = darkenColor(color, 80);
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(bx, by, bs, bs, r); else ctx.rect(bx, by, bs, bs);
+        ctx.fill();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = dimmed ? 1 : 2;
+        if (!dimmed) { ctx.shadowBlur = 10; ctx.shadowColor = glow || color; }
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        ctx.restore();
+      }
+    },
+    candy: {
+      name: () => I18N.t('tetSkinCandy'),
+      drawBlock(x, y, color, glow, dimmed, ctx) {
+        const margin = 1, bx = x+margin, by = y+margin, bs = CELL-margin*2, r = 8;
+        ctx.save();
+        if (glow && !dimmed) { ctx.shadowBlur = 5; ctx.shadowColor = glow; }
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(bx, by, bs, bs, r); else ctx.rect(bx, by, bs, bs);
+        ctx.fill(); ctx.shadowBlur = 0;
+        ctx.fillStyle = 'rgba(255,255,255,0.3)';
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(bx+3, by+2, bs-6, bs/2-2, [5,5,0,0]); else ctx.rect(bx+3, by+2, bs-6, bs/2-2);
+        ctx.fill();
+        ctx.restore();
+      }
+    },
+  };
+
+  let currentThemeName = localStorage.getItem('tetrisTheme') || 'classic';
+  let currentSkinName = localStorage.getItem('tetrisSkin') || 'standard';
+  let currentTheme = TETRIS_THEMES[currentThemeName] || TETRIS_THEMES.classic;
+  let currentSkin = TETRIS_SKINS[currentSkinName] || TETRIS_SKINS.standard;
+
+  // Populate dropdowns
+  const themeSelect = document.getElementById('themeSelect');
+  const skinSelect = document.getElementById('skinSelect');
+  for (const key in TETRIS_THEMES) {
+    const opt = document.createElement('option');
+    opt.value = key; opt.textContent = TETRIS_THEMES[key].name();
+    if (key === currentThemeName) opt.selected = true;
+    themeSelect.appendChild(opt);
+  }
+  for (const key in TETRIS_SKINS) {
+    const opt = document.createElement('option');
+    opt.value = key; opt.textContent = TETRIS_SKINS[key].name();
+    if (key === currentSkinName) opt.selected = true;
+    skinSelect.appendChild(opt);
+  }
+  themeSelect.addEventListener('change', () => {
+    currentThemeName = themeSelect.value;
+    currentTheme = TETRIS_THEMES[currentThemeName] || TETRIS_THEMES.classic;
+    localStorage.setItem('tetrisTheme', currentThemeName);
+  });
+  skinSelect.addEventListener('change', () => {
+    currentSkinName = skinSelect.value;
+    currentSkin = TETRIS_SKINS[currentSkinName] || TETRIS_SKINS.standard;
+    localStorage.setItem('tetrisSkin', currentSkinName);
+  });
+
+  // Helper to get themed color for a piece type
+  function themedColor(pieceType) { return currentTheme.colors[pieceType] || PIECES[pieceType].color; }
+  function themedGlow(pieceType) { return currentTheme.glows[pieceType] || PIECES[pieceType].glow; }
+
   /* ================================================================== */
   /*  Constants                                                          */
   /* ================================================================== */
@@ -422,14 +605,12 @@
     if (!state.current) return;
     const { type, rotation, row, col } = state.current;
     const cells = getCells(type, rotation, row, col);
-    const color = PIECES[type].color;
-
     state.lockFlashCells = [];
     let anyAbove = false;
     for (const [r, c] of cells) {
       if (r < 0) continue;
       if (r < 4) anyAbove = true;
-      state.board[r][c] = color;
+      state.board[r][c] = type;
       state.lockFlashCells.push([r, c]);
     }
     state.lockFlash = 0.3;
@@ -485,11 +666,11 @@
       // Particles
       for (const row of fullRows) {
         for (let c = 0; c < COLS; c++) {
-          const color2 = state.board[row][c];
+          const pt = state.board[row][c];
           spawnLineClearParticles(
             FIELD_X + c * CELL + CELL / 2,
             FIELD_Y + (row - 4) * CELL + CELL / 2,
-            color2
+            pt ? themedColor(pt) : '#fff'
           );
         }
       }
@@ -1041,42 +1222,7 @@
   /*  Rendering                                                          */
   /* ================================================================== */
   function drawBlock(x, y, color, glow, dimmed) {
-    const margin = 1;
-    const bx = x + margin;
-    const by = y + margin;
-    const bs = CELL - margin * 2;
-    const r = 3;
-
-    ctx2d.save();
-    if (glow && !dimmed) {
-      ctx2d.shadowBlur = 6;
-      ctx2d.shadowColor = glow;
-    } else if (glow && dimmed) {
-      ctx2d.shadowBlur = 3;
-      ctx2d.shadowColor = glow;
-    }
-
-    ctx2d.fillStyle = color;
-    ctx2d.beginPath();
-    if (ctx2d.roundRect) {
-      ctx2d.roundRect(bx, by, bs, bs, r);
-    } else {
-      ctx2d.rect(bx, by, bs, bs);
-    }
-    ctx2d.fill();
-    ctx2d.shadowBlur = 0;
-
-    // Inner highlight (top-left)
-    ctx2d.fillStyle = "rgba(255,255,255,0.12)";
-    ctx2d.fillRect(bx + 1, by + 1, bs - 2, 2);
-    ctx2d.fillRect(bx + 1, by + 1, 2, bs - 2);
-
-    // Inner shadow (bottom-right)
-    ctx2d.fillStyle = "rgba(0,0,0,0.18)";
-    ctx2d.fillRect(bx + 1, by + bs - 3, bs - 2, 2);
-    ctx2d.fillRect(bx + bs - 3, by + 1, 2, bs - 2);
-
-    ctx2d.restore();
+    currentSkin.drawBlock(x, y, color, glow, dimmed, ctx2d);
   }
 
   function drawMiniBlock(x, y, size, color) {
@@ -1102,7 +1248,7 @@
     ctx2d.save();
     ctx2d.globalAlpha = alpha !== undefined ? alpha : 1;
     for (const [dr, dc] of cells) {
-      drawMiniBlock(offsetX + dc * cellSize, offsetY + dr * cellSize, cellSize, piece.color);
+      drawMiniBlock(offsetX + dc * cellSize, offsetY + dr * cellSize, cellSize, themedColor(type));
     }
     ctx2d.restore();
   }
@@ -1118,15 +1264,15 @@
     }
 
     // Background
-    ctx2d.fillStyle = "#08091a";
+    ctx2d.fillStyle = currentTheme.bg;
     ctx2d.fillRect(0, 0, CW, CH);
 
     // Draw playfield background
-    ctx2d.fillStyle = "#060816";
+    ctx2d.fillStyle = currentTheme.field;
     ctx2d.fillRect(FIELD_X, FIELD_Y, FIELD_W, FIELD_H);
 
     // Grid lines
-    ctx2d.strokeStyle = "rgba(0,210,255,0.06)";
+    ctx2d.strokeStyle = currentTheme.gridColor;
     ctx2d.lineWidth = 0.5;
     for (let c = 0; c <= COLS; c++) {
       const x = FIELD_X + c * CELL;
@@ -1144,7 +1290,7 @@
     }
 
     // Playfield border
-    ctx2d.strokeStyle = "rgba(0,210,255,0.35)";
+    ctx2d.strokeStyle = currentTheme.borderColor;
     ctx2d.lineWidth = 2;
     ctx2d.strokeRect(FIELD_X - 1, FIELD_Y - 1, FIELD_W + 2, FIELD_H + 2);
 
@@ -1152,8 +1298,8 @@
     if (state.phase !== "paused") {
       for (let r = 4; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
-          const color = state.board[r][c];
-          if (color) {
+          const pieceType = state.board[r][c];
+          if (pieceType) {
             const bx = FIELD_X + c * CELL;
             const by = FIELD_Y + (r - 4) * CELL;
 
@@ -1161,7 +1307,7 @@
             if (state.phase === "gameover" && r > state.gameOverRow) {
               drawBlock(bx, by, "#333340", null, true);
             } else {
-              drawBlock(bx, by, color, null, true);
+              drawBlock(bx, by, themedColor(pieceType), themedGlow(pieceType), true);
             }
           }
         }
@@ -1212,13 +1358,12 @@
 
       // Current piece
       if (state.current) {
-        const piece = PIECES[state.current.type];
         const cells = getCells(state.current.type, state.current.rotation, state.current.row, state.current.col);
         for (const [r, c] of cells) {
           if (r >= 4) {
             const bx = FIELD_X + c * CELL;
             const by = FIELD_Y + (r - 4) * CELL;
-            drawBlock(bx, by, piece.color, piece.glow, false);
+            drawBlock(bx, by, themedColor(state.current.type), themedGlow(state.current.type), false);
           }
         }
       }
@@ -1226,15 +1371,20 @@
 
     // Level up flash
     if (state.levelUpFlash > 0) {
-      ctx2d.fillStyle = `rgba(0,210,255,${state.levelUpFlash * 0.3})`;
+      const ar = parseInt(currentTheme.accentColor.slice(1,3),16);
+      const ag = parseInt(currentTheme.accentColor.slice(3,5),16);
+      const ab = parseInt(currentTheme.accentColor.slice(5,7),16);
+      ctx2d.fillStyle = `rgba(${ar},${ag},${ab},${state.levelUpFlash * 0.3})`;
       ctx2d.fillRect(FIELD_X, FIELD_Y, FIELD_W, FIELD_H);
     }
 
     // ---- Side panels ----
 
     // Hold box
-    ctx2d.fillStyle = "rgba(0,210,255,0.08)";
-    ctx2d.strokeStyle = "rgba(0,210,255,0.2)";
+    const accentAlpha08 = currentTheme.accentColor + '14';
+    const accentAlpha20 = currentTheme.accentColor + '33';
+    ctx2d.fillStyle = accentAlpha08;
+    ctx2d.strokeStyle = accentAlpha20;
     ctx2d.lineWidth = 1;
     const holdBoxX = 8;
     const holdBoxY = FIELD_Y;
@@ -1242,7 +1392,7 @@
     const holdBoxH = 80;
     ctx2d.fillRect(holdBoxX, holdBoxY, holdBoxW, holdBoxH);
     ctx2d.strokeRect(holdBoxX, holdBoxY, holdBoxW, holdBoxH);
-    ctx2d.fillStyle = "#c0d8ff";
+    ctx2d.fillStyle = currentTheme.textColor;
     ctx2d.font = '700 10px "Trebuchet MS", system-ui, sans-serif';
     ctx2d.textAlign = "center";
     ctx2d.fillText("HOLD", holdBoxX + holdBoxW / 2, holdBoxY + 14);
@@ -1258,26 +1408,27 @@
     }
 
     // Score, Level, Lines on left panel
+    const dimText = currentTheme.textColor + '80';
     const infoY = holdBoxY + holdBoxH + 20;
     ctx2d.textAlign = "left";
-    ctx2d.fillStyle = "rgba(192,216,255,0.5)";
+    ctx2d.fillStyle = dimText;
     ctx2d.font = '700 10px "Trebuchet MS", system-ui, sans-serif';
     ctx2d.fillText("SCORE", holdBoxX + 4, infoY);
-    ctx2d.fillStyle = "#c0d8ff";
+    ctx2d.fillStyle = currentTheme.textColor;
     ctx2d.font = '700 16px "Trebuchet MS", system-ui, sans-serif';
     ctx2d.fillText(Math.floor(state.displayScore).toLocaleString(), holdBoxX + 4, infoY + 18);
 
-    ctx2d.fillStyle = "rgba(192,216,255,0.5)";
+    ctx2d.fillStyle = dimText;
     ctx2d.font = '700 10px "Trebuchet MS", system-ui, sans-serif';
     ctx2d.fillText("LEVEL", holdBoxX + 4, infoY + 44);
-    ctx2d.fillStyle = "#c0d8ff";
+    ctx2d.fillStyle = currentTheme.textColor;
     ctx2d.font = '700 16px "Trebuchet MS", system-ui, sans-serif';
     ctx2d.fillText(String(state.level), holdBoxX + 4, infoY + 62);
 
-    ctx2d.fillStyle = "rgba(192,216,255,0.5)";
+    ctx2d.fillStyle = dimText;
     ctx2d.font = '700 10px "Trebuchet MS", system-ui, sans-serif';
     ctx2d.fillText("LINES", holdBoxX + 4, infoY + 88);
-    ctx2d.fillStyle = "#c0d8ff";
+    ctx2d.fillStyle = currentTheme.textColor;
     ctx2d.font = '700 16px "Trebuchet MS", system-ui, sans-serif';
     ctx2d.fillText(String(state.lines), holdBoxX + 4, infoY + 106);
 
@@ -1286,12 +1437,12 @@
     const nextBoxY = FIELD_Y;
     const nextBoxW = 82;
     const nextBoxH = 340;
-    ctx2d.fillStyle = "rgba(0,210,255,0.08)";
-    ctx2d.strokeStyle = "rgba(0,210,255,0.2)";
+    ctx2d.fillStyle = accentAlpha08;
+    ctx2d.strokeStyle = accentAlpha20;
     ctx2d.lineWidth = 1;
     ctx2d.fillRect(nextBoxX, nextBoxY, nextBoxW, nextBoxH);
     ctx2d.strokeRect(nextBoxX, nextBoxY, nextBoxW, nextBoxH);
-    ctx2d.fillStyle = "#c0d8ff";
+    ctx2d.fillStyle = currentTheme.textColor;
     ctx2d.font = '700 10px "Trebuchet MS", system-ui, sans-serif';
     ctx2d.textAlign = "center";
     ctx2d.fillText("NEXT", nextBoxX + nextBoxW / 2, nextBoxY + 14);
@@ -1309,16 +1460,16 @@
     // Best score on right panel
     const bestY = nextBoxY + nextBoxH + 20;
     ctx2d.textAlign = "left";
-    ctx2d.fillStyle = "rgba(192,216,255,0.5)";
+    ctx2d.fillStyle = dimText;
     ctx2d.font = '700 10px "Trebuchet MS", system-ui, sans-serif';
     ctx2d.fillText("BEST", nextBoxX + 4, bestY);
-    ctx2d.fillStyle = "#c0d8ff";
+    ctx2d.fillStyle = currentTheme.textColor;
     ctx2d.font = '700 16px "Trebuchet MS", system-ui, sans-serif';
     ctx2d.fillText(state.best.toLocaleString(), nextBoxX + 4, bestY + 18);
 
     // Combo indicator
     if (state.combo > 0 && state.phase === "playing") {
-      ctx2d.fillStyle = "rgba(192,216,255,0.4)";
+      ctx2d.fillStyle = dimText;
       ctx2d.font = '700 10px "Trebuchet MS", system-ui, sans-serif';
       ctx2d.fillText("COMBO x" + state.combo, nextBoxX + 4, bestY + 44);
     }
@@ -1346,7 +1497,7 @@
       const popAlpha = Math.min(state.scorePop, 1);
       ctx2d.fillStyle = `rgba(255,255,255,${popAlpha})`;
       ctx2d.shadowBlur = 8;
-      ctx2d.shadowColor = "rgba(0,210,255,0.5)";
+      ctx2d.shadowColor = themedGlow('I');
       const floatY = (1 - state.scorePop) * -30;
       ctx2d.fillText(
         state.scorePopValue,
@@ -1369,13 +1520,13 @@
       ctx2d.textAlign = "center";
       ctx2d.save();
       ctx2d.shadowBlur = 20;
-      ctx2d.shadowColor = "rgba(0,210,255,0.6)";
+      ctx2d.shadowColor = currentTheme.accentColor;
       ctx2d.fillStyle = "#fff";
       ctx2d.font = '700 36px "Trebuchet MS", system-ui, sans-serif';
       ctx2d.fillText("TETRIS", CW / 2, CH / 2 - 20);
       ctx2d.restore();
 
-      ctx2d.fillStyle = `rgba(192,216,255,${0.5 + Math.sin(Date.now() / 500) * 0.3})`;
+      ctx2d.fillStyle = currentTheme.textColor + (Math.floor((0.5 + Math.sin(Date.now() / 500) * 0.3) * 255)).toString(16).padStart(2,'0');
       ctx2d.font = '400 14px "Trebuchet MS", system-ui, sans-serif';
       ctx2d.fillText("Press any key to start", CW / 2, CH / 2 + 20);
     }
@@ -1387,7 +1538,7 @@
       ctx2d.fillStyle = "#fff";
       ctx2d.font = '700 32px "Trebuchet MS", system-ui, sans-serif';
       ctx2d.fillText("PAUSED", CW / 2, CH / 2);
-      ctx2d.fillStyle = "rgba(192,216,255,0.6)";
+      ctx2d.fillStyle = currentTheme.textColor + '99';
       ctx2d.font = '400 14px "Trebuchet MS", system-ui, sans-serif';
       ctx2d.fillText("Press Esc to resume", CW / 2, CH / 2 + 30);
     }
@@ -1408,7 +1559,7 @@
       ctx2d.fillText("GAME OVER", CW / 2, CH / 2 - 40);
       ctx2d.restore();
 
-      ctx2d.fillStyle = "rgba(192,216,255,0.7)";
+      ctx2d.fillStyle = currentTheme.textColor + 'b3';
       ctx2d.font = '400 16px "Trebuchet MS", system-ui, sans-serif';
       ctx2d.fillText("Score: " + state.score.toLocaleString(), CW / 2, CH / 2);
       ctx2d.fillText(
@@ -1423,7 +1574,7 @@
         ctx2d.fillText("New Best!", CW / 2, CH / 2 + 52);
       }
 
-      ctx2d.fillStyle = `rgba(192,216,255,${0.4 + Math.sin(Date.now() / 500) * 0.3})`;
+      ctx2d.fillStyle = currentTheme.textColor + (Math.floor((0.4 + Math.sin(Date.now() / 500) * 0.3) * 255)).toString(16).padStart(2,'0');
       ctx2d.font = '400 13px "Trebuchet MS", system-ui, sans-serif';
       ctx2d.fillText("Press Space to restart", CW / 2, CH / 2 + 80);
     }

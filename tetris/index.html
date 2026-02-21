@@ -14,6 +14,16 @@
         <h1 data-i18n="tetrisTitle">Tetris</h1>
         <p data-i18n="tetrisInstructions">Arrow keys to move &amp; rotate. Space to hard drop. Shift to hold.</p>
       </header>
+      <div class="settings-bar">
+        <div class="setting-group">
+          <label for="themeSelect" data-i18n="tetThemeLabel">Theme</label>
+          <select id="themeSelect"></select>
+        </div>
+        <div class="setting-group">
+          <label for="skinSelect" data-i18n="tetSkinLabel">Skin</label>
+          <select id="skinSelect"></select>
+        </div>
+      </div>
       <section class="game__panel">
         <canvas id="gameCanvas" width="480" height="640" aria-label="Tetris game"></canvas>
         <div class="game__hud">

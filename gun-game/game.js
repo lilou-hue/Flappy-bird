@@ -13,6 +13,69 @@ window.addEventListener('langchange', () => {
   draw();
 });
 
+/* ── Achievements ────────────────────────────────────────── */
+const GG_ACHIEVEMENTS = [
+  { id: 'first_blood',     icon: '\uD83D\uDCA5', get title() { return I18N.t('ggAchFirstBlood'); },     get desc() { return I18N.t('ggAchFirstBloodDesc'); },     check: s => s.totalDestroyed >= 1 },
+  { id: 'promotion',       icon: '\u2B50',       get title() { return I18N.t('ggAchPromotion'); },       get desc() { return I18N.t('ggAchPromotionDesc'); },       check: s => s.highestTier >= 2 },
+  { id: 'max_firepower',   icon: '\uD83D\uDD25', get title() { return I18N.t('ggAchMaxFirepower'); },   get desc() { return I18N.t('ggAchMaxFirepowerDesc'); },   check: s => s.highestTier >= 8 },
+  { id: 'victor',          icon: '\uD83C\uDFC6', get title() { return I18N.t('ggAchVictor'); },          get desc() { return I18N.t('ggAchVictorDesc'); },          check: s => s.wins >= 1 },
+  { id: 'war_hero',        icon: '\uD83C\uDF96\uFE0F', get title() { return I18N.t('ggAchWarHero'); },  get desc() { return I18N.t('ggAchWarHeroDesc'); },          check: s => s.wins >= 5 },
+  { id: 'demolition',      icon: '\uD83E\uDDE8', get title() { return I18N.t('ggAchDemolition'); },      get desc() { return I18N.t('ggAchDemolitionDesc'); },      check: s => s.totalDestroyed >= 50 },
+  { id: 'sharpshooter',    icon: '\uD83C\uDFAF', get title() { return I18N.t('ggAchSharpShooter'); },    get desc() { return I18N.t('ggAchSharpShooterDesc'); },    check: s => s.bestScore >= 20 },
+  { id: 'dedicated',       icon: '\uD83C\uDFAE', get title() { return I18N.t('ggAchDedicated'); },       get desc() { return I18N.t('ggAchDedicatedDesc'); },       check: s => s.gamesPlayed >= 10 },
+];
+
+let ggAchStats = { totalDestroyed: 0, highestTier: 1, wins: 0, bestScore: 0, gamesPlayed: 0 };
+let ggUnlocked = new Set();
+let ggAchQueue = [];
+let ggAchTimer = 0;
+
+function loadGGAch() {
+  try {
+    const s = JSON.parse(localStorage.getItem('gunGameAch') || '{}');
+    if (s.unlocked) ggUnlocked = new Set(s.unlocked);
+    if (s.stats) Object.assign(ggAchStats, s.stats);
+  } catch (_) {}
+}
+function saveGGAch() {
+  localStorage.setItem('gunGameAch', JSON.stringify({ unlocked: [...ggUnlocked], stats: ggAchStats }));
+}
+function checkGGAch() {
+  for (const a of GG_ACHIEVEMENTS) {
+    if (!ggUnlocked.has(a.id) && a.check(ggAchStats)) {
+      ggUnlocked.add(a.id);
+      ggAchQueue.push(a);
+      saveGGAch();
+    }
+  }
+}
+function showGGAchPopup() {
+  if (ggAchTimer > 0 || ggAchQueue.length === 0) return;
+  const a = ggAchQueue.shift();
+  const popup = document.getElementById('achievementPopup');
+  document.getElementById('achievementPopupIcon').textContent = a.icon;
+  document.getElementById('achievementPopupTitle').textContent = a.title;
+  document.getElementById('achievementPopupDesc').textContent = a.desc;
+  popup.classList.add('show');
+  ggAchTimer = 3;
+  setTimeout(() => { popup.classList.remove('show'); setTimeout(() => { ggAchTimer = 0; showGGAchPopup(); }, 500); }, 3000);
+}
+function renderGGAchList() {
+  const list = document.getElementById('achievementsList');
+  list.innerHTML = '';
+  for (const a of GG_ACHIEVEMENTS) {
+    const el = document.createElement('div');
+    el.className = 'achievement-item' + (ggUnlocked.has(a.id) ? ' unlocked' : '');
+    el.innerHTML = '<span class="achievement-item__icon">' + a.icon + '</span><span>' + a.title + '</span>';
+    list.appendChild(el);
+  }
+}
+document.getElementById('achievementsToggle').addEventListener('click', () => {
+  document.getElementById('achievementsList').classList.toggle('open');
+  renderGGAchList();
+});
+loadGGAch();
+
 const gameState = {
   gravity: 1800,
   lift: -520,
@@ -459,6 +522,9 @@ function destroyPipeSection(pipe, section, projX, projY) {
   }
 
   gunState.totalDestroyed++;
+  ggAchStats.totalDestroyed++;
+  saveGGAch();
+  checkGGAch();
   Audio.gunPipeDestroy();
 
   if (!gunState.victoryTriggered) {
@@ -518,6 +584,9 @@ function advanceTier() {
   gunState.tierFlash = 1.5;
   gunState.tierFlashName = weaponDefs[gunState.tier - 1].name;
   if (gunState.tier > gunState.highestTier) gunState.highestTier = gunState.tier;
+  if (gunState.tier > ggAchStats.highestTier) ggAchStats.highestTier = gunState.tier;
+  saveGGAch();
+  checkGGAch();
   applyGunDifficulty();
   Audio.gunTierUp();
 }
@@ -544,7 +613,14 @@ function triggerVictory() {
   localStorage.setItem('gunGameWins', String(wins));
   const bestTier = Math.max(Number(localStorage.getItem('gunGameBestTier') || 0), 8);
   localStorage.setItem('gunGameBestTier', String(bestTier));
+  ggAchStats.wins++;
+  ggAchStats.highestTier = 8;
+  saveGGAch();
+  checkGGAch();
   Audio.gunVictory();
+  saveBestScore();
+  const totalScore = gameState.score + gunState.totalDestroyed * 2;
+  if (typeof Leaderboard !== 'undefined') Leaderboard.submitScore('gun-game', totalScore);
 }
 
 /* --- Update projectiles --- */
@@ -1261,6 +1337,11 @@ const update = (deltaSeconds) => {
       demoteTier();
       Audio.crash();
       Audio.stopDrone();
+      if (typeof Leaderboard !== 'undefined') Leaderboard.submitScore('gun-game', gameState.score);
+      ggAchStats.gamesPlayed++;
+      if (gameState.score > ggAchStats.bestScore) ggAchStats.bestScore = gameState.score;
+      saveGGAch();
+      checkGGAch();
     }
   }
 
@@ -1707,6 +1788,7 @@ const loop = (timestamp) => {
 
   update(deltaSeconds);
   draw();
+  showGGAchPopup();
   requestAnimationFrame(loop);
 };
 
@@ -1839,4 +1921,5 @@ window.addEventListener('orientationchange', () => { setTimeout(fitCanvasToScree
 
 loadBestScore();
 resetGame();
+if (typeof Leaderboard !== 'undefined') Leaderboard.createPanel('gun-game');
 requestAnimationFrame(loop);

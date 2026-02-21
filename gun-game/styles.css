@@ -378,3 +378,36 @@ canvas {
     font-size: 2.5rem;
   }
 }
+
+/* ── Achievements ────────────────────────────────────────── */
+.achievements-panel { text-align: center; margin-top: 0.5rem; }
+.achievements-toggle {
+  border: 1px solid rgba(255,107,53,0.2);
+  border-radius: 999px; padding: 8px 20px;
+  background: rgba(26,26,46,0.6); color: rgba(255,180,140,0.7);
+  font-weight: 600; font-size: 0.85rem; cursor: pointer; font-family: inherit;
+  transition: background 0.2s, border-color 0.2s;
+}
+.achievements-toggle:hover { background: rgba(255,107,53,0.08); border-color: rgba(255,107,53,0.4); }
+.achievements-list { display: none; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 12px; }
+.achievements-list.open { display: flex; }
+.achievement-item {
+  display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 10px;
+  font-size: 0.78rem; border: 1px solid rgba(255,107,53,0.1);
+  background: rgba(26,26,46,0.5); color: rgba(255,180,140,0.4);
+  transition: all 0.3s;
+}
+.achievement-item.unlocked { border-color: rgba(255,215,0,0.4); background: rgba(255,215,0,0.08); color: #ffd700; }
+.achievement-item__icon { font-size: 1.1rem; }
+.achievement-popup {
+  position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-120px);
+  display: flex; align-items: center; gap: 10px; padding: 12px 20px; border-radius: 14px;
+  background: rgba(10,10,10,0.95); border: 2px solid rgba(255,215,0,0.5);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.6), 0 0 20px rgba(255,215,0,0.15);
+  z-index: 1000; transition: transform 0.5s cubic-bezier(0.34,1.56,0.64,1); pointer-events: none;
+}
+.achievement-popup.show { transform: translateX(-50%) translateY(0); }
+.achievement-popup__icon { font-size: 1.6rem; }
+.achievement-popup__text { display: flex; flex-direction: column; gap: 2px; }
+.achievement-popup__text strong { color: #ffd700; font-size: 0.9rem; }
+.achievement-popup__text span { color: rgba(255,180,140,0.7); font-size: 0.78rem; }

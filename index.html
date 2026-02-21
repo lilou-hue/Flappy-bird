@@ -315,6 +315,53 @@
         font-variant-numeric: tabular-nums;
       }
 
+      /* Stats Dashboard */
+      .stats-dashboard {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        max-width: 760px;
+        width: 100%;
+        margin-bottom: 2rem;
+      }
+
+      .stats-dashboard.hidden { display: none; }
+
+      .stat-card {
+        background: rgba(255,255,255,0.06);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 14px;
+        padding: 1rem 0.8rem;
+        text-align: center;
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+
+      .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      }
+
+      .stat-card__icon {
+        font-size: 1.6rem;
+        margin-bottom: 0.3rem;
+      }
+
+      .stat-card__value {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #ffcc4d;
+        margin-bottom: 0.15rem;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .stat-card__label {
+        font-size: 0.75rem;
+        color: #aaa;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
       @media (max-width: 680px) {
         .games-grid {
           grid-template-columns: 1fr;
@@ -323,6 +370,15 @@
         h1 {
           font-size: 2rem;
         }
+
+        .stats-dashboard {
+          grid-template-columns: repeat(2, 1fr);
+          gap: 0.6rem;
+        }
+
+        .stat-card { padding: 0.7rem 0.5rem; }
+        .stat-card__icon { font-size: 1.3rem; }
+        .stat-card__value { font-size: 1.1rem; }
       }
     </style>
   </head>
@@ -330,6 +386,29 @@
     <h1 data-i18n="gameArcade">Game Arcade</h1>
     <p class="subtitle" data-i18n="pickAGame">Pick a game and start playing</p>
     <a href="/profile/" class="profile-link" data-i18n="profileLink">&#x1F464; Player Profile</a>
+
+    <div class="stats-dashboard hidden" id="statsDashboard">
+      <div class="stat-card">
+        <div class="stat-card__icon">&#x1F3AE;</div>
+        <div class="stat-card__value" id="statFavGame">-</div>
+        <div class="stat-card__label">Favorite Game</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__icon">&#x1F3C6;</div>
+        <div class="stat-card__value" id="statAchievements">0</div>
+        <div class="stat-card__label">Achievements</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__icon">&#x2B50;</div>
+        <div class="stat-card__value" id="statCombinedBest">0</div>
+        <div class="stat-card__label">Combined Best</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__icon">&#x1F525;</div>
+        <div class="stat-card__value" id="statStreak">0</div>
+        <div class="stat-card__label">Day Streak</div>
+      </div>
+    </div>
 
     <div class="games-grid">
       <a href="/flappy-bird/" class="game-card">
@@ -1455,6 +1534,86 @@
             card.querySelector('.card-preview').appendChild(badge);
           }
         });
+      })();
+    </script>
+    <script>
+      // Stats Dashboard
+      (function() {
+        const dashboard = document.getElementById('statsDashboard');
+
+        // Achievement data from all games
+        const achKeys = [
+          { key: 'flappyAchievements', total: 0 },
+          { key: 'methaneDriftAch', total: 0 },
+          { key: 'snakeAchievements', total: 0 },
+          { key: 'luminaAch', total: 0 },
+          { key: 'phantomRoadAch', total: 0 },
+          { key: 'unicornAch', total: 0 },
+          { key: 'tetrisAch', total: 0 },
+          { key: 'gunGameAch', total: 0 },
+        ];
+
+        const gameNames = ['Flappy Bird', 'Methane Drift', 'Snake', 'Lumina', 'Phantom Road', 'Unicorn Clicker', 'Tetris', 'Gun Game'];
+
+        let totalAch = 0;
+        let maxPlayed = 0;
+        let favGame = '';
+
+        for (let i = 0; i < achKeys.length; i++) {
+          try {
+            const data = JSON.parse(localStorage.getItem(achKeys[i].key) || '{}');
+            const unlocked = data.unlocked ? data.unlocked.length : 0;
+            totalAch += unlocked;
+            const played = data.stats ? (data.stats.gamesPlayed || 0) : 0;
+            if (played > maxPlayed) {
+              maxPlayed = played;
+              favGame = gameNames[i];
+            }
+          } catch(e) {}
+        }
+
+        // Combined best scores
+        const bestKeys = ['flappyBest', 'methaneDriftBest', 'snakeBest', 'luminaBest', 'phantomRoadBest', 'tetrisBest', 'gunGameBest'];
+        let combinedBest = 0;
+        for (const key of bestKeys) {
+          combinedBest += Number(localStorage.getItem(key)) || 0;
+        }
+        // Add unicorn lifetime SP
+        try {
+          const ucSave = JSON.parse(localStorage.getItem('unicornClickerSave') || '{}');
+          combinedBest += Math.floor(Number(ucSave.lifetimeSP) || 0);
+        } catch(e) {}
+
+        // Day streak
+        const today = new Date().toISOString().split('T')[0];
+        let streakData;
+        try {
+          streakData = JSON.parse(localStorage.getItem('arcade_playStreak') || '{}');
+        } catch(e) { streakData = {}; }
+
+        if (streakData.lastDate === today) {
+          // Already visited today, keep streak
+        } else {
+          const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+          if (streakData.lastDate === yesterday) {
+            streakData.streak = (streakData.streak || 0) + 1;
+          } else {
+            streakData.streak = 1;
+          }
+          streakData.lastDate = today;
+          try { localStorage.setItem('arcade_playStreak', JSON.stringify(streakData)); } catch(e) {}
+        }
+
+        const streak = streakData.streak || 1;
+
+        // Only show dashboard if there's any data
+        if (totalAch > 0 || combinedBest > 0 || maxPlayed > 0) {
+          dashboard.classList.remove('hidden');
+          document.getElementById('statFavGame').textContent = favGame || '-';
+          document.getElementById('statAchievements').textContent = totalAch;
+          document.getElementById('statCombinedBest').textContent = combinedBest.toLocaleString();
+          document.getElementById('statStreak').textContent = streak;
+        }
       })();
     </script>
   </body>

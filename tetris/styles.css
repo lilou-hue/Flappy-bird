@@ -437,6 +437,44 @@ canvas {
   }
 }
 
+/* ── Settings bar ────────────────────────────────────────── */
+.settings-bar {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.setting-group {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.setting-group label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: rgba(192,216,255,0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.setting-group select {
+  background: rgba(8,12,30,0.85);
+  border: 1px solid rgba(0,210,255,0.2);
+  border-radius: 8px;
+  color: #c0d8ff;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.8rem;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.setting-group select:hover { border-color: rgba(0,210,255,0.4); }
+.setting-group select:focus-visible { border-color: #00d4ff; }
+
 /* ── Achievements ────────────────────────────────────────── */
 .achievements-panel { text-align: center; margin-top: 0.5rem; }
 .achievements-toggle {

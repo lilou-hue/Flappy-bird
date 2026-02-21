@@ -16,6 +16,87 @@
   const UC_UPG_I18N = { beefyBeans: ['ucBeefyBeans','ucBeefyBeansDesc'], glitterGut: ['ucGlitterGut','ucGlitterGutDesc'], autoFairy: ['ucAutoFairy','ucAutoFairyDesc'], rainbowTurbo: ['ucRainbowTurbo','ucRainbowTurboDesc'], goldenHay: ['ucGoldenHay','ucGoldenHayDesc'], cloudCompressor: ['ucCloudCompressor','ucCloudCompressorDesc'], enchantedBurrito: ['ucEnchantedBurrito','ucEnchantedBurritoDesc'], quantumGas: ['ucQuantumGas','ucQuantumGasDesc'], megaMultiplier: ['ucMegaMultiplier','ucMegaMultiplierDesc'], criticalFart: ['ucCriticalFart','ucCriticalFartDesc'] };
   const UC_EVO_I18N = ['ucEvoBaby','ucEvoSparkle','ucEvoMajestic','ucEvoCosmic','ucEvoFartGod','ucEvoNebulaBeast','ucEvoDimensionRipper','ucEvoOmnifarter'];
 
+  /* ── Achievements ────────────────────────────────────────── */
+  const UC_ACHIEVEMENTS = [
+    { id: 'first_fart',       icon: '\uD83D\uDCA8', get title() { return _t('ucAchFirstFart'); },        get desc() { return _t('ucAchFirstFartDesc'); },        check: s => s.totalClicks >= 1 },
+    { id: 'sparkle_starter',  icon: '\u2728',       get title() { return _t('ucAchSparkleStarter'); },   get desc() { return _t('ucAchSparkleStarterDesc'); },   check: s => s.lifetimeSP >= 1000 },
+    { id: 'sparkle_storm',    icon: '\u26A1',       get title() { return _t('ucAchSparkleStorm'); },     get desc() { return _t('ucAchSparkleStormDesc'); },     check: s => s.lifetimeSP >= 100000 },
+    { id: 'sparkle_supernova',icon: '\uD83C\uDF1F', get title() { return _t('ucAchSparkleSupernova'); }, get desc() { return _t('ucAchSparkleSupernovaDesc'); }, check: s => s.lifetimeSP >= 1000000 },
+    { id: 'evolution',        icon: '\uD83E\uDDEC', get title() { return _t('ucAchEvolution'); },        get desc() { return _t('ucAchEvolutionDesc'); },        check: s => s.evolution >= 1 },
+    { id: 'omnifarter',       icon: '\uD83D\uDC51', get title() { return _t('ucAchOmnifarter'); },       get desc() { return _t('ucAchOmnifarterDesc'); },       check: s => s.evolution >= 7 },
+    { id: 'fully_loaded',     icon: '\uD83D\uDEE0\uFE0F', get title() { return _t('ucAchFullyLoaded'); },get desc() { return _t('ucAchFullyLoadedDesc'); },     check: s => s.allOneTime },
+    { id: 'fashionista',      icon: '\uD83D\uDC57', get title() { return _t('ucAchFashionista'); },      get desc() { return _t('ucAchFashionistaDesc'); },      check: s => s.skinsUnlocked >= 5 },
+    { id: 'tap_master',       icon: '\uD83D\uDC4B', get title() { return _t('ucAchTapMaster'); },        get desc() { return _t('ucAchTapMasterDesc'); },        check: s => s.totalClicks >= 1000 },
+  ];
+
+  let ucUnlocked = new Set();
+  let ucAchQueue = [];
+  let ucAchTimer = 0;
+
+  function loadUCAch() {
+    try {
+      const s = JSON.parse(localStorage.getItem('unicornAch') || '{}');
+      if (s.unlocked) ucUnlocked = new Set(s.unlocked);
+    } catch (_) {}
+  }
+  function saveUCAch() {
+    localStorage.setItem('unicornAch', JSON.stringify({
+      unlocked: [...ucUnlocked],
+      stats: {
+        totalClicks: state.totalClicks,
+        lifetimeSP: state.lifetimeSP,
+        evolution: state.evolution,
+        skinsUnlocked: state.unlockedSkins.length,
+        gamesPlayed: 1,
+      }
+    }));
+  }
+  function ucAchStats() {
+    return {
+      totalClicks: state.totalClicks,
+      lifetimeSP: state.lifetimeSP,
+      evolution: state.evolution,
+      allOneTime: !!(state.upgrades.cloudCompressor && state.upgrades.megaMultiplier && state.upgrades.criticalFart),
+      skinsUnlocked: state.unlockedSkins.length,
+    };
+  }
+  function checkUCAch() {
+    const stats = ucAchStats();
+    for (const a of UC_ACHIEVEMENTS) {
+      if (!ucUnlocked.has(a.id) && a.check(stats)) {
+        ucUnlocked.add(a.id);
+        ucAchQueue.push(a);
+        saveUCAch();
+      }
+    }
+  }
+  function showUCAchPopup() {
+    if (ucAchTimer > 0 || ucAchQueue.length === 0) return;
+    const a = ucAchQueue.shift();
+    const popup = document.getElementById('achievementPopup');
+    document.getElementById('achievementPopupIcon').textContent = a.icon;
+    document.getElementById('achievementPopupTitle').textContent = a.title;
+    document.getElementById('achievementPopupDesc').textContent = a.desc;
+    popup.classList.add('show');
+    ucAchTimer = 3;
+    setTimeout(() => { popup.classList.remove('show'); setTimeout(() => { ucAchTimer = 0; showUCAchPopup(); }, 500); }, 3000);
+  }
+  function renderUCAchList() {
+    const list = document.getElementById('achievementsList');
+    list.innerHTML = '';
+    for (const a of UC_ACHIEVEMENTS) {
+      const el = document.createElement('div');
+      el.className = 'achievement-item' + (ucUnlocked.has(a.id) ? ' unlocked' : '');
+      el.innerHTML = '<span class="achievement-item__icon">' + a.icon + '</span><span>' + a.title + '</span>';
+      list.appendChild(el);
+    }
+  }
+  document.getElementById('achievementsToggle').addEventListener('click', () => {
+    document.getElementById('achievementsList').classList.toggle('open');
+    renderUCAchList();
+  });
+  loadUCAch();
+
   /* ────────────────── Skins ────────────────── */
   const SKINS = [
     { key: 'unicorn',      name: 'Unicorn',       cost: 0,      fartDx: -40, fartDy: 10, wingDx: 0,   wingDy: 0   },
@@ -202,6 +283,10 @@
   function save() {
     state.lastSave = Date.now();
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch(e) {}
+    if (typeof Leaderboard !== 'undefined' && state.lifetimeSP > 0) {
+      Leaderboard.submitScore('unicorn-clicker', Math.floor(state.lifetimeSP));
+    }
+    saveUCAch();
   }
 
   function load() {
@@ -2923,6 +3008,7 @@
     drawShop();
     drawSkinsPanel();
     drawConfirmRestart();
+    showUCAchPopup();
 
     requestAnimationFrame(loop);
   }
@@ -2984,6 +3070,7 @@
             state.unlockedSkins.push(s.key);
             state.skin = s.key;
             SFX.purchase();
+            checkUCAch();
           }
           return;
         }
@@ -3014,6 +3101,7 @@
             else state.upgrades[u.key]++;
             applyUpgrade(u.key);
             SFX.purchase();
+            checkUCAch();
           }
           return;
         }
@@ -3044,6 +3132,7 @@
         spawnFartParticles(CHAR_X, CHAR_Y, 30);
         shakeAmount = 1.5;
         spawnFloatingText(W/2, H*0.3, EVOLUTIONS[state.evolution].name + '!', '#ffd700');
+        checkUCAch();
         return;
       }
     }
@@ -3069,6 +3158,7 @@
       const count = 5 + Math.floor(Math.random() * 6) + state.evolution * 2;
       spawnFartParticles(CHAR_X + sk.fartDx, CHAR_Y + sk.fartDy, count);
       spawnFloatingText(pos.x + (Math.random()-0.5)*30, pos.y - 20, '+' + formatNum(earned), color);
+      checkUCAch();
     }
   }
 
@@ -3114,6 +3204,7 @@
 
   /* ────────────────── Init ────────────────── */
   load();
+  if (typeof Leaderboard !== 'undefined') Leaderboard.createPanel('unicorn-clicker');
   window.addEventListener('beforeunload', save);
   requestAnimationFrame(loop);
 })();

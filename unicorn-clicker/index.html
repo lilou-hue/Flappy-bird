@@ -10,6 +10,24 @@
   <body>
     <a id="backBtn" href="../index.html" aria-label="Back to arcade" data-i18n="ucBackToArcade">&#x2190; Arcade</a>
     <canvas id="gameCanvas" width="480" height="640"></canvas>
+    <!-- Achievement popup -->
+    <div class="achievement-popup" id="achievementPopup">
+      <div class="achievement-popup__icon" id="achievementPopupIcon"></div>
+      <div class="achievement-popup__text">
+        <strong id="achievementPopupTitle"></strong>
+        <span id="achievementPopupDesc"></span>
+      </div>
+    </div>
+    <!-- Achievements panel -->
+    <div class="achievements-panel" id="achievementsPanel">
+      <button class="achievements-toggle" id="achievementsToggle" type="button" data-i18n="achievements">Achievements</button>
+      <div class="achievements-list" id="achievementsList"></div>
+    </div>
+    <div id="leaderboardPanel"></div>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <link rel="stylesheet" href="../leaderboard.css">
+    <script src="../leaderboard.js"></script>
     <script src="audio.js"></script>
     <script src="game.js"></script>
   </body>
