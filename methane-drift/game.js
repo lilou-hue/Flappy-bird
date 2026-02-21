@@ -396,8 +396,10 @@ function enablePseudoFullscreen() {
   pseudoFullscreen = true;
   isFullscreen = true;
   savedCanvasStyle = canvas.style.cssText;
-  canvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999;border:none;border-radius:0;background:#000;';
+  canvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999;border:none;border-radius:0;background:#000;touch-action:none;-webkit-user-select:none;user-select:none;';
   document.body.style.overflow = 'hidden';
+  document.body.style.webkitUserSelect = 'none';
+  document.body.style.userSelect = 'none';
   window.scrollTo(0, 0);
   resizeCanvasToScreen();
   updateFullscreenUI();
@@ -409,6 +411,8 @@ function disablePseudoFullscreen() {
   isFullscreen = false;
   canvas.style.cssText = savedCanvasStyle;
   document.body.style.overflow = '';
+  document.body.style.webkitUserSelect = '';
+  document.body.style.userSelect = '';
   restoreCanvasSize();
   updateFullscreenUI();
   cachedBgZone = -1;
