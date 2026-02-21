@@ -20,7 +20,7 @@ I18N.createSelector(document.querySelector('.game__header'));
 I18N.applyDOM();
 window.addEventListener('langchange', () => {
   I18N.applyDOM();
-  renderAchievementsList();
+  renderSnAchList();
   if (tutorialOverlay && tutorialOverlay.classList.contains('active')) {
     renderTutorialStep();
   }
@@ -333,10 +333,12 @@ let currentSkin = SKINS.classic;
 /* ── Achievements ─────────────────────────────────────────── */
 
 const SNAKE_ACH_I18N = {
+  first_meal: ['snakeAchFirstMeal', 'snakeAchFirstMealDesc'],
   first_bite: ['snakeAchFirstBite', 'snakeAchFirstBiteDesc'],
   hungry: ['snakeAchHungry', 'snakeAchHungryDesc'],
   glutton: ['snakeAchGlutton', 'snakeAchGluttonDesc'],
   score_10: ['snakeAchScore10', 'snakeAchScore10Desc'],
+  score_25: ['snakeAchScore25', 'snakeAchScore25Desc'],
   score_30: ['snakeAchScore30', 'snakeAchScore30Desc'],
   score_50: ['snakeAchScore50', 'snakeAchScore50Desc'],
   speed_demon: ['snakeAchSpeedDemon', 'snakeAchSpeedDemonDesc'],
@@ -351,11 +353,13 @@ const SNAKE_ACH_I18N = {
   games_10: ['snakeAchDedicated', 'snakeAchDedicatedDesc'],
 };
 
-const ACHIEVEMENTS = [
+const SN_ACHIEVEMENTS = [
+  { id: "first_meal",     icon: "\uD83C\uDF7D", get title() { return _t('snakeAchFirstMeal'); },       get desc() { return _t('snakeAchFirstMealDesc'); },          check: (s) => s.score >= 1 },
   { id: "first_bite",     icon: "\uD83C\uDF4E", get title() { return _t('snakeAchFirstBite'); },       get desc() { return _t('snakeAchFirstBiteDesc'); },          check: (s) => s.totalEaten >= 1 },
   { id: "hungry",         icon: "\uD83D\uDD25", get title() { return _t('snakeAchHungry'); },          get desc() { return _t('snakeAchHungryDesc'); },              check: (s) => s.eatenThisGame >= 10 },
   { id: "glutton",        icon: "\uD83C\uDF54", get title() { return _t('snakeAchGlutton'); },         get desc() { return _t('snakeAchGluttonDesc'); },             check: (s) => s.eatenThisGame >= 25 },
   { id: "score_10",       icon: "\uD83C\uDFC5", get title() { return _t('snakeAchScore10'); },         get desc() { return _t('snakeAchScore10Desc'); },             check: (s) => s.score >= 10 },
+  { id: "score_25",       icon: "\uD83C\uDF1F", get title() { return _t('snakeAchScore25'); },         get desc() { return _t('snakeAchScore25Desc'); },             check: (s) => s.score >= 25 },
   { id: "score_30",       icon: "\uD83C\uDFC6", get title() { return _t('snakeAchScore30'); },         get desc() { return _t('snakeAchScore30Desc'); },             check: (s) => s.score >= 30 },
   { id: "score_50",       icon: "\uD83D\uDC8E", get title() { return _t('snakeAchScore50'); },         get desc() { return _t('snakeAchScore50Desc'); },             check: (s) => s.score >= 50 },
   { id: "speed_demon",    icon: "\u26A1",       get title() { return _t('snakeAchSpeedDemon'); },      get desc() { return _t('snakeAchSpeedDemonDesc'); },          check: (s) => s.speedEaten >= 3 },
@@ -370,10 +374,11 @@ const ACHIEVEMENTS = [
   { id: "games_10",       icon: "\uD83C\uDFAE", get title() { return _t('snakeAchDedicated'); },       get desc() { return _t('snakeAchDedicatedDesc'); },           check: (s) => s.gamesPlayed >= 10 },
 ];
 
-let achievementStats = {
+let snAchStats = {
   totalEaten: 0,
   eatenThisGame: 0,
   score: 0,
+  bestScore: 0,
   speedEaten: 0,
   goldenEaten: 0,
   wallShrinks: 0,
@@ -385,56 +390,56 @@ let achievementStats = {
   gamesPlayed: 0,
 };
 
-let unlockedAchievements = new Set();
-let achievementPopupQueue = [];
-let achievementPopupTimer = 0;
+let snAchUnlocked = new Set();
+let snAchPopupQueue = [];
+let snAchPopupTimer = 0;
 
-function loadAchievements() {
+function loadSnAch() {
   try {
-    const saved = JSON.parse(localStorage.getItem("snakeAchievements") || "{}");
-    if (saved.unlocked) unlockedAchievements = new Set(saved.unlocked);
-    if (saved.stats) Object.assign(achievementStats, saved.stats);
+    const saved = JSON.parse(localStorage.getItem("snakeAch") || "{}");
+    if (saved.unlocked) snAchUnlocked = new Set(saved.unlocked);
+    if (saved.stats) Object.assign(snAchStats, saved.stats);
   } catch (_) { /* ignore */ }
 }
 
-function saveAchievements() {
-  localStorage.setItem("snakeAchievements", JSON.stringify({
-    unlocked: [...unlockedAchievements],
-    stats: achievementStats,
+function saveSnAch() {
+  localStorage.setItem("snakeAch", JSON.stringify({
+    unlocked: [...snAchUnlocked],
+    stats: snAchStats,
   }));
 }
 
-function checkAchievements() {
-  for (const ach of ACHIEVEMENTS) {
-    if (!unlockedAchievements.has(ach.id) && ach.check(achievementStats)) {
-      unlockedAchievements.add(ach.id);
-      achievementPopupQueue.push(ach);
-      saveAchievements();
+function checkSnAch() {
+  for (const ach of SN_ACHIEVEMENTS) {
+    if (!snAchUnlocked.has(ach.id) && ach.check(snAchStats)) {
+      snAchUnlocked.add(ach.id);
+      snAchPopupQueue.push(ach);
+      saveSnAch();
     }
   }
 }
 
-function showAchievementPopup() {
-  if (achievementPopupTimer > 0 || achievementPopupQueue.length === 0) return;
-  const ach = achievementPopupQueue.shift();
+function showSnAchPopup() {
+  if (snAchPopupTimer > 0 || snAchPopupQueue.length === 0) return;
+  const ach = snAchPopupQueue.shift();
   const popup = document.getElementById("achievementPopup");
   document.getElementById("achievementPopupIcon").textContent = ach.icon;
   document.getElementById("achievementPopupTitle").textContent = ach.title;
   document.getElementById("achievementPopupDesc").textContent = ach.desc;
   popup.classList.add("show");
-  achievementPopupTimer = 3;
+  snAchPopupTimer = 3;
   setTimeout(() => {
     popup.classList.remove("show");
-    setTimeout(() => { achievementPopupTimer = 0; }, 500);
+    setTimeout(() => { snAchPopupTimer = 0; }, 500);
   }, 3000);
 }
 
-function renderAchievementsList() {
+function renderSnAchList() {
   const list = document.getElementById("achievementsList");
   list.innerHTML = "";
-  for (const ach of ACHIEVEMENTS) {
+  for (const ach of SN_ACHIEVEMENTS) {
     const item = document.createElement("div");
-    item.className = "achievement-item" + (unlockedAchievements.has(ach.id) ? " unlocked" : "");
+    item.className = "achievement-item" + (snAchUnlocked.has(ach.id) ? " unlocked" : "");
     item.innerHTML = `<span class="achievement-item__icon">${ach.icon}</span><span>${ach.title}</span>`;
     list.appendChild(item);
   }
@@ -443,7 +448,7 @@ function renderAchievementsList() {
 document.getElementById("achievementsToggle").addEventListener("click", () => {
   const list = document.getElementById("achievementsList");
   list.classList.toggle("open");
-  renderAchievementsList();
+  renderSnAchList();
 });
 
 /* ── Tutorial ─────────────────────────────────────────────── */
@@ -1012,14 +1017,14 @@ function resetGame() {
   state.poisonFlash = 0;
 
   // Reset per-game achievement stats
-  achievementStats.eatenThisGame = 0;
-  achievementStats.speedEaten = 0;
-  achievementStats.goldenEaten = 0;
-  achievementStats.wallShrinks = 0;
-  achievementStats.poisonEaten = 0;
-  achievementStats.magnetEaten = 0;
-  achievementStats.ghostEaten = 0;
-  achievementStats.freezeEaten = 0;
+  snAchStats.eatenThisGame = 0;
+  snAchStats.speedEaten = 0;
+  snAchStats.goldenEaten = 0;
+  snAchStats.wallShrinks = 0;
+  snAchStats.poisonEaten = 0;
+  snAchStats.magnetEaten = 0;
+  snAchStats.ghostEaten = 0;
+  snAchStats.freezeEaten = 0;
 
   initDustMotes();
   scoreLabel.textContent = "0";
@@ -1032,8 +1037,8 @@ function queueDirection(dir) {
     state.phase = "playing";
     state.lastTime = 0;
     startAmbientHum();
-    achievementStats.gamesPlayed++;
-    saveAchievements();
+    snAchStats.gamesPlayed++;
+    saveSnAch();
   }
   if (state.phase !== "playing") return;
 
@@ -1124,8 +1129,8 @@ function tick(now) {
   }
 
   // Track max length
-  if (snake.segments.length > achievementStats.maxLength) {
-    achievementStats.maxLength = snake.segments.length;
+  if (snake.segments.length > snAchStats.maxLength) {
+    snAchStats.maxLength = snake.segments.length;
   }
 
   // Update speed based on score + power-ups
@@ -1138,16 +1143,16 @@ function tick(now) {
   state.tickInterval = interval;
 
   playSound(soundTick);
-  checkAchievements();
-  showAchievementPopup();
+  checkSnAch();
+  showSnAchPopup();
 }
 
 function eatFood(now) {
   const px = (food.x + 0.5) * CELL;
   const py = (food.y + 0.5) * CELL;
 
-  achievementStats.totalEaten++;
-  achievementStats.eatenThisGame++;
+  snAchStats.totalEaten++;
+  snAchStats.eatenThisGame++;
 
   if (food.type === "normal") {
     state.score += 1;
@@ -1169,7 +1174,7 @@ function eatFood(now) {
     state.scorePopValue = "+3";
     state.slowMoEnd = now + 3000;
     state.speedBoostEnd = 0;
-    achievementStats.goldenEaten++;
+    snAchStats.goldenEaten++;
     spawnParticles(px, py, 18, "#ffd700", 2, 5, 0.4, 0.7, 80, 180);
 
   } else if (food.type === "speed") {
@@ -1182,7 +1187,7 @@ function eatFood(now) {
     state.scorePopValue = "+1 SPEED!";
     state.speedBoostEnd = now + 5000;
     state.slowMoEnd = 0;
-    achievementStats.speedEaten++;
+    snAchStats.speedEaten++;
     spawnParticles(px, py, 12, currentTheme.foodSpeed.inner, 2, 4, 0.3, 0.6, 60, 150);
 
   } else if (food.type === "poison") {
@@ -1193,7 +1198,7 @@ function eatFood(now) {
     state.eatFlashColor = "139,0,255";
     state.scorePopValue = "-1 POISON!";
     state.poisonFlash = 0.5;
-    achievementStats.poisonEaten++;
+    snAchStats.poisonEaten++;
     // Shrink snake if possible
     if (snake.segments.length > 2) {
       snake.segments.pop();
@@ -1209,7 +1214,7 @@ function eatFood(now) {
     state.eatFlashColor = "0,229,255";
     state.scorePopValue = "+2 MAGNET!";
     state.magnetModeEnd = now + 8000;
-    achievementStats.magnetEaten++;
+    snAchStats.magnetEaten++;
     spawnParticles(px, py, 14, currentTheme.foodMagnet.inner, 2, 4, 0.3, 0.6, 60, 150);
 
   } else if (food.type === "ghost") {
@@ -1221,7 +1226,7 @@ function eatFood(now) {
     state.eatFlashColor = "224,224,224";
     state.scorePopValue = "+2 GHOST!";
     state.ghostModeEnd = now + 6000;
-    achievementStats.ghostEaten++;
+    snAchStats.ghostEaten++;
     spawnParticles(px, py, 14, currentTheme.foodGhost.inner, 2, 4, 0.4, 0.7, 50, 130);
 
   } else if (food.type === "freeze") {
@@ -1233,14 +1238,15 @@ function eatFood(now) {
     state.eatFlashColor = "128,216,255";
     state.scorePopValue = "+1 FREEZE!";
     state.freezeModeEnd = now + 5000;
-    achievementStats.freezeEaten++;
+    snAchStats.freezeEaten++;
     spawnParticles(px, py, 16, currentTheme.foodFreeze.inner, 2, 5, 0.4, 0.7, 40, 120);
   }
 
   state.scorePop = 1.0;
   state.headEnlargeTimer = 0.2;
   scoreLabel.textContent = state.score;
-  achievementStats.score = Math.max(achievementStats.score, state.score);
+  snAchStats.score = Math.max(snAchStats.score, state.score);
+  snAchStats.bestScore = Math.max(snAchStats.bestScore, state.score);
 
   // Arena shrink check
   if (state.score > 0 && state.score % 15 === 0 && state.score !== state.lastShrinkScore) {
@@ -1249,7 +1255,7 @@ function eatFood(now) {
       state.arenaMax -= 1;
       state.arenaFlash = 1.0;
       state.lastShrinkScore = state.score;
-      achievementStats.wallShrinks++;
+      snAchStats.wallShrinks++;
       spawnCrackleParticles();
       playSound(soundWallWarning);
       haptics.wallShrink();
@@ -1301,9 +1307,9 @@ function die() {
     Leaderboard.submitScore('snake', state.score).then(() => Leaderboard.refresh('snake'));
   }
 
-  checkAchievements();
-  showAchievementPopup();
-  saveAchievements();
+  checkSnAch();
+  showSnAchPopup();
+  saveSnAch();
 }
 
 /* ── Drawing ───────────────────────────────────────────────── */
@@ -2115,8 +2121,8 @@ window.addEventListener('orientationchange', () => { setTimeout(fitCanvasToScree
 loadBestScore();
 loadMute();
 loadPreferences();
-loadAchievements();
-renderAchievementsList();
+loadSnAch();
+renderSnAchList();
 resetGame();
 requestAnimationFrame(gameLoop);
 
