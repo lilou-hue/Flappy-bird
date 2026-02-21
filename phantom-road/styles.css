@@ -177,9 +177,9 @@ canvas {
 /* ── Mobile portrait: fill viewport ── */
 @media (max-width: 600px) {
   html, body {
-    height: 100dvh;
-    height: 100vh;
-    overflow: hidden;
+    min-height: 100dvh;
+    min-height: 100vh;
+    overflow-x: hidden;
   }
 
   body {

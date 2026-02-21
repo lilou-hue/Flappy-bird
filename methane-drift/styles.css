@@ -325,10 +325,10 @@ body {
 /* --- Mobile portrait: fill viewport --- */
 @media (max-width: 600px) {
   html, body {
-    height: 100dvh;
-    height: 100vh;
-    overflow: hidden;
-    overscroll-behavior: none;
+    min-height: 100dvh;
+    min-height: 100vh;
+    overflow-x: hidden;
+    overscroll-behavior-x: none;
   }
 
   body {
