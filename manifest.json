@@ -1,0 +1,17 @@
+{
+  "name": "SlayPlay Arcade",
+  "short_name": "SlayPlay",
+  "description": "8 games, one arcade. Play Flappy Bird, Snake, Tetris, and more!",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0c29",
+  "theme_color": "#302b63",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -186,10 +186,71 @@
         to { opacity: 1; transform: translateY(0); }
       }
 
+      /* Achievements section */
+      .ach-section {
+        max-width: 600px;
+        width: 100%;
+        margin-bottom: 2rem;
+      }
+      .ach-section h2 {
+        font-size: 1.4rem;
+        margin-bottom: 1rem;
+        color: #ffcc4d;
+      }
+      .ach-total {
+        text-align: center;
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+        color: #ccc;
+      }
+      .ach-total strong {
+        color: #ffcc4d;
+        font-size: 1.3rem;
+      }
+      .ach-bar-bg {
+        width: 100%;
+        height: 8px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 4px;
+        margin-bottom: 1rem;
+        overflow: hidden;
+      }
+      .ach-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #ffcc4d, #ff7b54);
+        border-radius: 4px;
+        transition: width 0.6s ease;
+      }
+      .ach-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 0.75rem;
+      }
+      .ach-game {
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        backdrop-filter: blur(8px);
+      }
+      .ach-game-icon { font-size: 1.4rem; }
+      .ach-game-info { flex: 1; }
+      .ach-game-info h4 { font-size: 0.9rem; margin-bottom: 0.15rem; }
+      .ach-game-info span { font-size: 0.8rem; color: #888; }
+      .ach-game-count {
+        font-weight: 700;
+        font-size: 1rem;
+        color: #ffcc4d;
+      }
+
       @media (max-width: 600px) {
         body { padding: 1rem 0.75rem; }
         .profile-header h1 { font-size: 1.8rem; }
         .scores-grid { grid-template-columns: 1fr; }
+        .ach-grid { grid-template-columns: 1fr; }
         .stat-card .stat-value { font-size: 1.4rem; }
       }
     </style>
@@ -218,6 +279,13 @@
     </div>
 
     <div class="scores-grid" id="scoresGrid"></div>
+
+    <div class="ach-section">
+      <h2 data-i18n="profileAchievements">Achievements</h2>
+      <div class="ach-total" id="achTotal"></div>
+      <div class="ach-bar-bg"><div class="ach-bar-fill" id="achBar"></div></div>
+      <div class="ach-grid" id="achGrid"></div>
+    </div>
 
     <script src="../i18n.js"></script>
     <script>
@@ -284,6 +352,43 @@
         totalRuns += Number(localStorage.getItem('gunGameWins')) || 0;
       } catch(e) {}
       document.getElementById('totalRuns').textContent = totalRuns > 0 ? totalRuns : '-';
+
+      // Achievements summary
+      const achGames = [
+        { title: 'Flappy Bird',          icon: '\uD83D\uDC26', key: 'flappyAch',          total: 6 },
+        { title: 'Tetris',               icon: '\uD83D\uDFE6', key: 'tetrisAch',          total: 6 },
+        { title: 'Snake',                icon: '\uD83D\uDC0D', key: 'snakeAch',           total: 18 },
+        { title: 'Lumina',               icon: '\uD83D\uDD2E', key: 'luminaAch',          total: 6 },
+        { title: 'Phantom Road',         icon: '\uD83D\uDE97', key: 'phantomRoadAch',     total: 6 },
+        { title: 'Methane Drift',        icon: '\uD83D\uDE80', key: 'methaneDriftProgress', total: 6, nested: 'achievements' },
+        { title: 'Gun Game',             icon: '\uD83D\uDD2B', key: 'gunGameAch',         total: 8 },
+        { title: 'Unicorn Fart Clicker', icon: '\uD83E\uDD84', key: 'unicornAch',         total: 9 },
+      ];
+      let totalUnlocked = 0;
+      let totalAvailable = 0;
+      const achGrid = document.getElementById('achGrid');
+      for (const g of achGames) {
+        let unlocked = 0;
+        totalAvailable += g.total;
+        try {
+          const raw = JSON.parse(localStorage.getItem(g.key) || '{}');
+          if (g.nested) {
+            unlocked = Array.isArray(raw[g.nested]) ? raw[g.nested].length : 0;
+          } else {
+            unlocked = Array.isArray(raw.unlocked) ? raw.unlocked.length : 0;
+          }
+        } catch(e) {}
+        totalUnlocked += unlocked;
+        const el = document.createElement('div');
+        el.className = 'ach-game';
+        el.innerHTML =
+          '<span class="ach-game-icon">' + g.icon + '</span>' +
+          '<div class="ach-game-info"><h4>' + g.title + '</h4><span>' + unlocked + ' / ' + g.total + '</span></div>' +
+          '<span class="ach-game-count">' + (unlocked === g.total ? '\u2705' : unlocked + '/' + g.total) + '</span>';
+        achGrid.appendChild(el);
+      }
+      document.getElementById('achTotal').innerHTML = '<strong>' + totalUnlocked + '</strong> / ' + totalAvailable;
+      document.getElementById('achBar').style.width = (totalAvailable > 0 ? (totalUnlocked / totalAvailable * 100) : 0) + '%';
 
       // i18n
       if (typeof I18N !== 'undefined') {

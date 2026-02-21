@@ -4,6 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SlayPlay</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#302b63">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
@@ -532,9 +535,9 @@
           <canvas id="gunGameCanvas" width="360" height="200"></canvas>
         </div>
         <div class="card-body">
-          <h2>Gun Game</h2>
-          <p>Flap and shoot! Destroy pipes with 8 weapon tiers. Advance by destroying 3 per tier to win!</p>
-          <span class="card-tag gun-game-tag">Action</span>
+          <h2 data-i18n="gunGameTitle">Gun Game</h2>
+          <p data-i18n="gunGameDesc">Flap and shoot! Destroy pipes with 8 weapon tiers. Advance by destroying 3 per tier to win!</p>
+          <span class="card-tag gun-game-tag" data-i18n="action">Action</span>
         </div>
       </a>
     </div>
@@ -1541,6 +1544,11 @@
           document.getElementById('statStreak').textContent = streak;
         }
       })();
+    </script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js');
+      }
     </script>
   </body>
 </html>

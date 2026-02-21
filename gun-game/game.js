@@ -1562,7 +1562,7 @@ function drawGunHUD() {
   context.fillStyle = '#FFFFFF';
   context.font = "bold 14px 'Trebuchet MS'";
   context.textAlign = 'left';
-  context.fillText(`TIER ${gunState.tier}/8`, 12, 20);
+  context.fillText(`${I18N.t('ggTierLabel')} ${gunState.tier}/8`, 12, 20);
   context.font = "11px 'Trebuchet MS'";
   context.fillStyle = '#FFD700';
   context.fillText(weaponDefs[gunState.tier - 1].name, 12, 36);
@@ -1600,7 +1600,7 @@ function drawGunHUD() {
     context.fillStyle = '#FFD700';
     context.font = "bold 22px 'Trebuchet MS'";
     context.textAlign = 'center';
-    context.fillText(`TIER ${gunState.tier}`, 0, 0);
+    context.fillText(`${I18N.t('ggTierLabel')} ${gunState.tier}`, 0, 0);
     context.font = "16px 'Trebuchet MS'";
     context.fillStyle = '#FFFFFF';
     context.fillText(gunState.tierFlashName, 0, 24);
@@ -1684,20 +1684,20 @@ function drawVictory() {
   context.fillStyle = '#FFD700';
   context.font = "bold 42px 'Trebuchet MS'";
   context.textAlign = 'center';
-  context.fillText('VICTORY!', canvas.width / 2, canvas.height / 2 - 40);
+  context.fillText(I18N.t('ggVictory'), canvas.width / 2, canvas.height / 2 - 40);
   context.restore();
 
   const totalScore = gameState.score + gunState.totalDestroyed * 2;
   context.fillStyle = '#FFFFFF';
   context.font = "18px 'Trebuchet MS'";
   context.textAlign = 'center';
-  context.fillText(`Score: ${totalScore}`, canvas.width / 2, canvas.height / 2 + 10);
-  context.fillText(`Pipes Destroyed: ${gunState.totalDestroyed}`, canvas.width / 2, canvas.height / 2 + 35);
-  context.fillText(`Pipes Passed: ${gameState.score}`, canvas.width / 2, canvas.height / 2 + 60);
+  context.fillText(`${I18N.t('score')}: ${totalScore}`, canvas.width / 2, canvas.height / 2 + 10);
+  context.fillText(`${I18N.t('ggPipesDestroyed')}: ${gunState.totalDestroyed}`, canvas.width / 2, canvas.height / 2 + 35);
+  context.fillText(`${I18N.t('ggPipesPassed')}: ${gameState.score}`, canvas.width / 2, canvas.height / 2 + 60);
 
   context.fillStyle = 'rgba(255, 255, 255, 0.6)';
   context.font = "14px 'Trebuchet MS'";
-  context.fillText('Tap or press Space to play again', canvas.width / 2, canvas.height / 2 + 100);
+  context.fillText(I18N.t('ggTapReplay'), canvas.width / 2, canvas.height / 2 + 100);
 }
 
 /* --- Game over overlay --- */
@@ -1714,17 +1714,17 @@ function drawGameOver() {
   context.fillStyle = '#FF6644';
   context.font = "bold 28px 'Trebuchet MS'";
   context.textAlign = 'center';
-  context.fillText('Game Over', canvas.width / 2, canvas.height / 2 - 30);
+  context.fillText(I18N.t('gameOver'), canvas.width / 2, canvas.height / 2 - 30);
 
   context.fillStyle = '#FFFFFF';
   context.font = "16px 'Trebuchet MS'";
-  context.fillText(`Demoted to Tier ${gunState.tier}`, canvas.width / 2, canvas.height / 2 + 5);
-  context.fillText(`Highest Tier: ${gunState.highestTier}`, canvas.width / 2, canvas.height / 2 + 30);
-  context.fillText(`Pipes Destroyed: ${gunState.totalDestroyed}`, canvas.width / 2, canvas.height / 2 + 55);
+  context.fillText(`${I18N.t('ggDemotedTo')} ${gunState.tier}`, canvas.width / 2, canvas.height / 2 + 5);
+  context.fillText(`${I18N.t('ggHighestTier')}: ${gunState.highestTier}`, canvas.width / 2, canvas.height / 2 + 30);
+  context.fillText(`${I18N.t('ggPipesDestroyed')}: ${gunState.totalDestroyed}`, canvas.width / 2, canvas.height / 2 + 55);
 
   context.fillStyle = 'rgba(255, 255, 255, 0.6)';
   context.font = "14px 'Trebuchet MS'";
-  context.fillText('Tap or press Space to retry', canvas.width / 2, canvas.height / 2 + 90);
+  context.fillText(I18N.t('ggTapRetry'), canvas.width / 2, canvas.height / 2 + 90);
 }
 
 const draw = () => {
@@ -1764,7 +1764,7 @@ const draw = () => {
   if (gameState.isRunning) drawGunHUD();
 
   if (!gameState.isRunning && !gameState.isGameOver) {
-    drawOverlay(I18N.t("tapToStart"), 'F/Enter/Right-tap to shoot, Space/Left-tap to flap');
+    drawOverlay(I18N.t("tapToStart"), I18N.t('ggControlsHint'));
   }
 
   if (gameState.isGameOver) {

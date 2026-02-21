@@ -1,0 +1,92 @@
+const CACHE_NAME = 'slayplay-v1';
+
+const PRECACHE_URLS = [
+  '/',
+  '/i18n.js',
+  '/leaderboard.js',
+  '/leaderboard.css',
+  '/icon.svg',
+  '/profile/',
+  '/flappy-bird/',
+  '/flappy-bird/game.js',
+  '/flappy-bird/audio.js',
+  '/flappy-bird/styles.css',
+  '/snake/',
+  '/snake/game.js',
+  '/snake/audio.js',
+  '/snake/styles.css',
+  '/tetris/',
+  '/tetris/game.js',
+  '/tetris/audio.js',
+  '/tetris/styles.css',
+  '/lumina/',
+  '/lumina/game.js',
+  '/lumina/audio.js',
+  '/lumina/styles.css',
+  '/phantom-road/',
+  '/phantom-road/game.js',
+  '/phantom-road/audio.js',
+  '/phantom-road/styles.css',
+  '/methane-drift/',
+  '/methane-drift/game.js',
+  '/methane-drift/audio.js',
+  '/methane-drift/styles.css',
+  '/gun-game/',
+  '/gun-game/game.js',
+  '/gun-game/audio.js',
+  '/gun-game/styles.css',
+  '/unicorn-clicker/',
+  '/unicorn-clicker/game.js',
+  '/unicorn-clicker/styles.css',
+];
+
+const NETWORK_FIRST_HOSTS = [
+  'firebasedatabase.app',
+  'googleapis.com',
+  'gstatic.com',
+];
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(PRECACHE_URLS))
+      .then(() => self.skipWaiting())
+  );
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys()
+      .then((keys) => Promise.all(
+        keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))
+      ))
+      .then(() => self.clients.claim())
+  );
+});
+
+self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+
+  // Network-first for Firebase / external APIs
+  if (NETWORK_FIRST_HOSTS.some((h) => url.hostname.includes(h))) {
+    event.respondWith(
+      fetch(event.request)
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Cache-first for game assets
+  event.respondWith(
+    caches.match(event.request).then((cached) => {
+      if (cached) return cached;
+      return fetch(event.request).then((response) => {
+        if (response.ok && url.origin === self.location.origin) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        }
+        return response;
+      });
+    })
+  );
+});
