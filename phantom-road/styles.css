@@ -386,25 +386,20 @@ body.pseudo-fullscreen .game__panel {
   justify-content: center;
   width: 100%;
   max-width: 100%;
-  padding: 8px;
+  padding: 0;
   border-radius: 0;
   border: none;
   background: transparent;
   box-shadow: none;
-  gap: 8px;
+  gap: 0;
 }
 
 :fullscreen canvas,
 :-webkit-full-screen canvas,
 body.pseudo-fullscreen canvas {
-  flex: 1;
   border-radius: 0;
   border: none;
-  width: 100%;
-  max-width: 100vw;
-  max-height: calc(100vh - 48px);
-  max-height: calc(100dvh - 48px);
-  object-fit: contain;
+  box-shadow: 0 0 80px rgba(255, 180, 50, 0.12), 0 0 160px rgba(255, 180, 50, 0.05);
 }
 
 :fullscreen .game__hud,
@@ -413,6 +408,46 @@ body.pseudo-fullscreen .game__hud {
   width: 100%;
   max-width: 600px;
   padding: 4px 12px;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-radius: 10px;
+  color: #fff;
+}
+
+:fullscreen .hud__score,
+:-webkit-full-screen .hud__score,
+body.pseudo-fullscreen .hud__score {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+:fullscreen .hud__score strong,
+:-webkit-full-screen .hud__score strong,
+body.pseudo-fullscreen .hud__score strong {
+  color: #fff;
+}
+
+:fullscreen .hud__button,
+:-webkit-full-screen .hud__button,
+body.pseudo-fullscreen .hud__button {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: none;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+:fullscreen .hud__button:hover,
+:-webkit-full-screen .hud__button:hover,
+body.pseudo-fullscreen .hud__button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: none;
+}
+
+:fullscreen .lb-toggle-btn,
+:-webkit-full-screen .lb-toggle-btn,
+body.pseudo-fullscreen .lb-toggle-btn {
+  display: none !important;
 }
 
 :fullscreen #leaderboardPanel,

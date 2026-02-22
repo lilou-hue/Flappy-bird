@@ -459,6 +459,7 @@ window.addEventListener("keydown", (e) => {
   if (e.key === " " || e.key === "ArrowUp" || e.key === "ArrowDown" ||
       e.key === "ArrowLeft" || e.key === "ArrowRight") e.preventDefault();
 
+  if (e.key === "f" || e.key === "F") { toggleFullscreen(); return; }
   if (state.phase === "start") startGame();
   else if (state.phase === "gameover" && (e.key === " " || e.key === "Enter")) restartGame();
 });
@@ -573,16 +574,47 @@ function enablePseudoFs() {
   pseudoFullscreen = true; isFullscreen = true;
   document.body.classList.add("pseudo-fullscreen");
   document.body.style.overflow = "hidden";
+  updateCanvasSize();
 }
 function disablePseudoFs() {
   pseudoFullscreen = false; isFullscreen = false;
   document.body.classList.remove("pseudo-fullscreen");
   document.body.style.overflow = "";
+  updateCanvasSize();
 }
-document.addEventListener("fullscreenchange", () => { isFullscreen = !!document.fullscreenElement; });
-document.addEventListener("webkitfullscreenchange", () => { isFullscreen = !!document.webkitFullscreenElement; });
+document.addEventListener("fullscreenchange", () => { isFullscreen = !!document.fullscreenElement; updateCanvasSize(); });
+document.addEventListener("webkitfullscreenchange", () => { isFullscreen = !!document.webkitFullscreenElement; updateCanvasSize(); });
 function canFullscreen() {
   return !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
+}
+
+function updateCanvasSize() {
+  const dpr = window.devicePixelRatio || 1;
+  if (isFullscreen) {
+    const screenW = window.innerWidth;
+    const screenH = window.innerHeight - 52;
+    const aspect = W / H;
+    let cssW, cssH;
+    if (screenW / screenH > aspect) {
+      cssH = screenH;
+      cssW = Math.floor(cssH * aspect);
+    } else {
+      cssW = screenW;
+      cssH = Math.floor(cssW / aspect);
+    }
+    canvas.style.width = cssW + 'px';
+    canvas.style.height = cssH + 'px';
+    canvas.width = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+  } else {
+    if (typeof fitCanvasToScreen === 'function') fitCanvasToScreen();
+    else { canvas.style.width = ''; canvas.style.height = ''; }
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) {
+      canvas.width = Math.round(rect.width * dpr);
+      canvas.height = Math.round(rect.height * dpr);
+    }
+  }
 }
 
 // ── Game lifecycle ───────────────────────────────────────
@@ -1390,6 +1422,13 @@ function update(dt) {
 
 // ── Draw ─────────────────────────────────────────────────
 function draw() {
+  /* DPI scaling */
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const scaleX = canvas.width / W;
+  const scaleY = canvas.height / H;
+  ctx.setTransform(scaleX, 0, 0, scaleY, 0, 0);
+
   const zoneBlend = state.phase === "start" ? {
     roadColor: zones[0].roadColor,
     lineColor: zones[0].lineColor,
@@ -1875,6 +1914,8 @@ function draw() {
   }
 
   ctx.restore();
+
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
 }
 
 function drawPlayerCar() {
@@ -2574,10 +2615,10 @@ function fitCanvasToScreen() {
   canvas.style.height = Math.floor(canvasH) + 'px';
 }
 
-fitCanvasToScreen();
+updateCanvasSize();
 let _resizeTimer;
-window.addEventListener('resize', () => { clearTimeout(_resizeTimer); _resizeTimer = setTimeout(fitCanvasToScreen, 80); });
-window.addEventListener('orientationchange', () => { setTimeout(fitCanvasToScreen, 200); });
+window.addEventListener('resize', () => { clearTimeout(_resizeTimer); _resizeTimer = setTimeout(updateCanvasSize, 80); });
+window.addEventListener('orientationchange', () => { setTimeout(updateCanvasSize, 200); });
 
 requestAnimationFrame(loop);
 
