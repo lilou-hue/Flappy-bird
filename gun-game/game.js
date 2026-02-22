@@ -1,5 +1,7 @@
 const canvas = document.getElementById("gameCanvas");
 const context = canvas.getContext("2d");
+const GAME_W = 360;
+const GAME_H = 640;
 const scoreLabel = document.getElementById("score");
 const bestScoreLabel = document.getElementById("bestScore");
 const restartButton = document.getElementById("restartButton");
@@ -126,7 +128,7 @@ const weaponDefs = [
 
 const bird = {
   x: 80,
-  y: canvas.height / 2,
+  y: GAME_H / 2,
   radius: 14,
   velocity: 0,
   trail: [],
@@ -157,11 +159,11 @@ let dripState = {
 function initHills() {
   hills = [];
   const segments = 20;
-  const segW = canvas.width / segments;
+  const segW = GAME_W / segments;
   for (let i = 0; i <= segments; i++) {
     hills.push({
       x: i * segW,
-      y: canvas.height - 90 - 20 - Math.sin(i * 0.7) * 18 - Math.sin(i * 1.3) * 10,
+      y: GAME_H - 90 - 20 - Math.sin(i * 0.7) * 18 - Math.sin(i * 1.3) * 10,
     });
   }
 }
@@ -172,7 +174,7 @@ function initTrees() {
   const count = 6 + Math.floor(Math.random() * 4);
   for (let i = 0; i < count; i++) {
     trees.push({
-      x: Math.random() * canvas.width,
+      x: Math.random() * GAME_W,
       height: 14 + Math.random() * 20,
       width: 8 + Math.random() * 10,
     });
@@ -182,8 +184,8 @@ function initTrees() {
 /* --- Generate grass blade tufts along ground top edge --- */
 function initGrass() {
   grassBlades = [];
-  const groundTop = canvas.height - 90;
-  for (let x = 0; x < canvas.width; x += 3 + Math.random() * 5) {
+  const groundTop = GAME_H - 90;
+  for (let x = 0; x < GAME_W; x += 3 + Math.random() * 5) {
     grassBlades.push({
       x: x,
       height: 4 + Math.random() * 8,
@@ -195,11 +197,11 @@ function initGrass() {
 /* --- Init flowers/mushrooms on ground edge --- */
 function initFlowers() {
   flowers = [];
-  const groundTop = canvas.height - 90;
+  const groundTop = GAME_H - 90;
   const count = 5 + Math.floor(Math.random() * 4);
   for (let i = 0; i < count; i++) {
     flowers.push({
-      x: 20 + Math.random() * (canvas.width - 40),
+      x: 20 + Math.random() * (GAME_W - 40),
       y: groundTop,
       type: Math.random() > 0.3 ? "flower" : "mushroom",
       size: 3 + Math.random() * 3,
@@ -214,8 +216,8 @@ function initButterflies() {
   butterflies = [];
   for (let i = 0; i < 3; i++) {
     butterflies.push({
-      x: 50 + Math.random() * (canvas.width - 100),
-      y: 80 + Math.random() * (canvas.height * 0.35),
+      x: 50 + Math.random() * (GAME_W - 100),
+      y: 80 + Math.random() * (GAME_H * 0.35),
       phase: Math.random() * Math.PI * 2,
       wingPhase: Math.random() * Math.PI * 2,
       speedX: 8 + Math.random() * 15,
@@ -232,8 +234,8 @@ function initLeaves() {
   leafParticles = [];
   for (let i = 0; i < 4; i++) {
     leafParticles.push({
-      x: Math.random() * canvas.width,
-      y: 60 + Math.random() * (canvas.height - 160),
+      x: Math.random() * GAME_W,
+      y: 60 + Math.random() * (GAME_H - 160),
       size: 3 + Math.random() * 3,
       speedX: 10 + Math.random() * 20,
       speedY: 5 + Math.random() * 15,
@@ -250,8 +252,8 @@ function initClouds() {
   clouds = [];
   for (let i = 0; i < 8; i += 1) {
     clouds.push({
-      x: Math.random() * canvas.width,
-      y: 30 + Math.random() * (canvas.height * 0.5),
+      x: Math.random() * GAME_W,
+      y: 30 + Math.random() * (GAME_H * 0.5),
       width: 40 + Math.random() * 60,
       height: 16 + Math.random() * 20,
       speed: 0.15 + Math.random() * 0.35,
@@ -302,7 +304,7 @@ function fullGunReset() {
 }
 
 const resetGame = () => {
-  bird.y = canvas.height / 2;
+  bird.y = GAME_H / 2;
   bird.velocity = 0;
   bird.trail = [];
   bird.wingAngle = 0;
@@ -342,14 +344,14 @@ const resetGame = () => {
 
 const spawnPipe = () => {
   const minHeight = 60;
-  const maxHeight = canvas.height - gameState.gap - 160;
+  const maxHeight = GAME_H - gameState.gap - 160;
   const topHeight = Math.floor(
     Math.random() * (maxHeight - minHeight + 1) + minHeight
   );
   const reinforceChance = gunState.tier >= 4 ? 0.3 + 0.2 * ((gunState.tier - 4) / 4) : 0;
   const isReinforced = Math.random() < reinforceChance;
   pipes.push({
-    x: canvas.width + gameState.pipeWidth,
+    x: GAME_W + gameState.pipeWidth,
     top: topHeight,
     passed: false,
     vines: [
@@ -371,8 +373,8 @@ const spawnPipe = () => {
 /* --- Wind particles for speed feel --- */
 const spawnWindParticle = () => {
   windParticles.push({
-    x: canvas.width + 5,
-    y: Math.random() * canvas.height,
+    x: GAME_W + 5,
+    y: Math.random() * GAME_H,
     length: 8 + Math.random() * 18,
     speed: 280 + Math.random() * 180,
     alpha: 0.08 + Math.random() * 0.12,
@@ -456,7 +458,7 @@ function projectileHitsPipe(proj, pipe) {
   }
   if (!pipe.bottomDestroyed) {
     const botY = pipe.top + gap;
-    const botRect = { x: pipe.x, y: botY, w: pw, h: canvas.height - botY };
+    const botRect = { x: pipe.x, y: botY, w: pw, h: GAME_H - botY };
     if (circleRectCollision(proj.x, proj.y, proj.radius, botRect)) {
       return 'bottom';
     }
@@ -552,7 +554,7 @@ function explosiveDamage(proj) {
     }
     if (!pipe.bottomDestroyed) {
       const botY = pipe.top + gameState.gap;
-      const botCenterY = (botY + canvas.height) / 2;
+      const botCenterY = (botY + GAME_H) / 2;
       const dx = proj.x - pipeCenterX;
       const dy = proj.y - botCenterY;
       if (Math.sqrt(dx * dx + dy * dy) < r + pw / 2) {
@@ -651,7 +653,7 @@ function updateProjectiles(dt) {
       if (nearestPipe) {
         proj.targetPipe = nearestPipe;
         const topDist = Math.abs(bird.y - nearestPipe.top / 2);
-        const botDist = Math.abs(bird.y - (nearestPipe.top + gameState.gap + (canvas.height - nearestPipe.top - gameState.gap) / 2));
+        const botDist = Math.abs(bird.y - (nearestPipe.top + gameState.gap + (GAME_H - nearestPipe.top - gameState.gap) / 2));
         const section = (!nearestPipe.topDestroyed && topDist < botDist) ? 'top' : (!nearestPipe.bottomDestroyed ? 'bottom' : 'top');
         if ((section === 'top' && !nearestPipe.topDestroyed) || (section === 'bottom' && !nearestPipe.bottomDestroyed)) {
           damagePipe(nearestPipe, section, proj.damage, nearestPipe.x + gameState.pipeWidth / 2, bird.y);
@@ -680,7 +682,7 @@ function updateProjectiles(dt) {
     }
   }
 
-  gunState.projectiles = gunState.projectiles.filter(p => p.lifetime > 0 && p.x < canvas.width + 20 && p.x > -20 && p.y > -20 && p.y < canvas.height + 20);
+  gunState.projectiles = gunState.projectiles.filter(p => p.lifetime > 0 && p.x < GAME_W + 20 && p.x > -20 && p.y > -20 && p.y < GAME_H + 20);
 }
 
 /* --- Update fragments --- */
@@ -708,13 +710,13 @@ const drawBackground = () => {
   const skyLow = lerpColor("#d4f0d4", "#ffe0a0", scoreProgress);
   const skyBot = lerpColor("#7be495", "#7be495", scoreProgress * 0.3);
 
-  const skyGrad = context.createLinearGradient(0, 0, 0, canvas.height);
+  const skyGrad = context.createLinearGradient(0, 0, 0, GAME_H);
   skyGrad.addColorStop(0, skyTop);
   skyGrad.addColorStop(0.55, skyMid);
   skyGrad.addColorStop(0.85, skyLow);
   skyGrad.addColorStop(1, skyBot);
   context.fillStyle = skyGrad;
-  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.fillRect(0, 0, GAME_W, GAME_H);
 
   const sunX = 60;
   const sunY = 50;
@@ -744,7 +746,7 @@ const drawBackground = () => {
     context.fill();
   }
 
-  const groundTop = canvas.height - 90;
+  const groundTop = GAME_H - 90;
   if (hills.length > 1) {
     context.fillStyle = "rgba(80, 160, 100, 0.25)";
     context.beginPath();
@@ -752,7 +754,7 @@ const drawBackground = () => {
     for (const h of hills) {
       context.lineTo(h.x, h.y);
     }
-    context.lineTo(canvas.width, groundTop);
+    context.lineTo(GAME_W, groundTop);
     context.closePath();
     context.fill();
 
@@ -762,7 +764,7 @@ const drawBackground = () => {
     for (let i = 0; i < hills.length; i++) {
       context.lineTo(hills[i].x, hills[i].y + 8 + Math.sin(i * 1.1) * 6);
     }
-    context.lineTo(canvas.width, groundTop);
+    context.lineTo(GAME_W, groundTop);
     context.closePath();
     context.fill();
   }
@@ -794,13 +796,13 @@ const drawBackground = () => {
   }
 
   context.fillStyle = "rgba(123, 228, 149, 0.5)";
-  context.fillRect(0, groundTop, canvas.width, 90);
+  context.fillRect(0, groundTop, GAME_W, 90);
 
-  const groundGrad = context.createLinearGradient(0, canvas.height - 35, 0, canvas.height);
+  const groundGrad = context.createLinearGradient(0, GAME_H - 35, 0, GAME_H);
   groundGrad.addColorStop(0, "#6cd47e");
   groundGrad.addColorStop(1, "#4fb866");
   context.fillStyle = groundGrad;
-  context.fillRect(0, canvas.height - 35, canvas.width, 35);
+  context.fillRect(0, GAME_H - 35, GAME_W, 35);
 
   context.strokeStyle = "#3aad55";
   context.lineWidth = 1.2;
@@ -1119,7 +1121,7 @@ const drawPipes = () => {
 
     if (!pipe.bottomDestroyed) {
       context.fillStyle = topGrad;
-      context.fillRect(pipe.x, bottomY + capH, gameState.pipeWidth, canvas.height - bottomY - capH);
+      context.fillRect(pipe.x, bottomY + capH, gameState.pipeWidth, GAME_H - bottomY - capH);
 
       const capGrad2 = context.createLinearGradient(capX, 0, capX + capW, 0);
       if (isReinforced) {
@@ -1139,12 +1141,12 @@ const drawPipes = () => {
       context.fill();
 
       context.fillStyle = "rgba(255, 255, 255, 0.12)";
-      context.fillRect(pipe.x + 8, bottomY + capH, 6, canvas.height - bottomY - capH);
+      context.fillRect(pipe.x + 8, bottomY + capH, 6, GAME_H - bottomY - capH);
 
       context.strokeStyle = "rgba(20, 60, 30, 0.15)";
       context.lineWidth = 0.8;
       for (const crack of pipe.cracks) {
-        const bpHeight = canvas.height - bottomY - capH;
+        const bpHeight = GAME_H - bottomY - capH;
         const crackY = bottomY + capH + crack.yStart * bpHeight;
         context.beginPath();
         context.moveTo(pipe.x + crack.xOff, crackY);
@@ -1159,7 +1161,7 @@ const drawPipes = () => {
       context.lineWidth = 1.2;
       for (const vine of pipe.vines) {
         context.beginPath();
-        for (let vy = bottomY + capH; vy < canvas.height; vy += 4) {
+        for (let vy = bottomY + capH; vy < GAME_H; vy += 4) {
           const vx = pipe.x + vine.xOff + Math.sin(vy * vine.freq) * vine.amp;
           if (vy === bottomY + capH) context.moveTo(vx, vy);
           else context.lineTo(vx, vy);
@@ -1182,7 +1184,7 @@ const drawPipes = () => {
     if (!pipe.topDestroyed)
       context.fillRect(pipe.x + gameState.pipeWidth - 8, 0, 8, pipe.top - capH);
     if (!pipe.bottomDestroyed)
-      context.fillRect(pipe.x + gameState.pipeWidth - 8, bottomY + capH, 8, canvas.height - bottomY - capH);
+      context.fillRect(pipe.x + gameState.pipeWidth - 8, bottomY + capH, 8, GAME_H - bottomY - capH);
   });
 };
 
@@ -1212,7 +1214,7 @@ const drawScorePop = () => {
     const scale = 1 + gameState.scorePop * 0.6;
     const alpha = gameState.scorePop;
     context.save();
-    context.translate(canvas.width / 2, canvas.height * 0.15);
+    context.translate(GAME_W / 2, GAME_H * 0.15);
     context.scale(scale, scale);
     context.fillStyle = `rgba(255, 255, 255, ${alpha})`;
     context.font = "bold 28px 'Trebuchet MS'";
@@ -1226,25 +1228,25 @@ const drawScorePop = () => {
 
 const drawOverlay = (title, subtitle) => {
   const vg = context.createRadialGradient(
-    canvas.width / 2, canvas.height / 2, canvas.height * 0.1,
-    canvas.width / 2, canvas.height / 2, canvas.height * 0.7
+    GAME_W / 2, GAME_H / 2, GAME_H * 0.1,
+    GAME_W / 2, GAME_H / 2, GAME_H * 0.7
   );
   vg.addColorStop(0, "rgba(0, 0, 0, 0.25)");
   vg.addColorStop(1, "rgba(0, 0, 0, 0.55)");
   context.fillStyle = vg;
-  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.fillRect(0, 0, GAME_W, GAME_H);
 
   context.fillStyle = "rgba(0, 0, 0, 0.3)";
   context.font = "bold 34px 'Trebuchet MS'";
   context.textAlign = "center";
-  context.fillText(title, canvas.width / 2 + 1, canvas.height / 2 - 15);
+  context.fillText(title, GAME_W / 2 + 1, GAME_H / 2 - 15);
 
   context.fillStyle = "#ffffff";
-  context.fillText(title, canvas.width / 2, canvas.height / 2 - 16);
+  context.fillText(title, GAME_W / 2, GAME_H / 2 - 16);
 
   context.fillStyle = "rgba(255, 255, 255, 0.7)";
   context.font = "16px 'Trebuchet MS'";
-  context.fillText(subtitle, canvas.width / 2, canvas.height / 2 + 18);
+  context.fillText(subtitle, GAME_W / 2, GAME_H / 2 + 18);
 };
 
 const detectCollision = (pipe) => {
@@ -1309,7 +1311,7 @@ const update = (deltaSeconds) => {
 
   const isInvincible = gunState.invincibleTimer > 0;
 
-  if (bird.y + bird.radius >= canvas.height - 90 || bird.y - bird.radius <= 0) {
+  if (bird.y + bird.radius >= GAME_H - 90 || bird.y - bird.radius <= 0) {
     if (!isInvincible) {
       gameState.isGameOver = true;
       gameState.shakeTimer = 12;
@@ -1367,8 +1369,8 @@ const update = (deltaSeconds) => {
   for (const cloud of clouds) {
     cloud.x -= cloud.speed * deltaSeconds * 60;
     if (cloud.x < -cloud.width) {
-      cloud.x = canvas.width + cloud.width;
-      cloud.y = 30 + Math.random() * (canvas.height * 0.5);
+      cloud.x = GAME_W + cloud.width;
+      cloud.y = 30 + Math.random() * (GAME_H * 0.5);
     }
   }
 
@@ -1383,8 +1385,8 @@ const update = (deltaSeconds) => {
     leaf.phase += deltaSeconds * 2;
     leaf.rot += leaf.rotSpeed * deltaSeconds;
     if (leaf.x < -10) {
-      leaf.x = canvas.width + 10;
-      leaf.y = 60 + Math.random() * (canvas.height - 160);
+      leaf.x = GAME_W + 10;
+      leaf.y = 60 + Math.random() * (GAME_H - 160);
     }
   }
 
@@ -1393,10 +1395,10 @@ const update = (deltaSeconds) => {
     bf.wingPhase += deltaSeconds * 12;
     bf.x += Math.sin(bf.phase) * bf.speedX * deltaSeconds;
     bf.y += Math.cos(bf.phase * 0.7) * bf.speedY * deltaSeconds;
-    if (bf.x < -20) bf.x = canvas.width + 20;
-    if (bf.x > canvas.width + 20) bf.x = -20;
+    if (bf.x < -20) bf.x = GAME_W + 20;
+    if (bf.x > GAME_W + 20) bf.x = -20;
     if (bf.y < 40) bf.y = 40;
-    if (bf.y > canvas.height * 0.45) bf.y = canvas.height * 0.45;
+    if (bf.y > GAME_H * 0.45) bf.y = GAME_H * 0.45;
   }
 
   dripState.timer += deltaSeconds;
@@ -1483,7 +1485,7 @@ function drawProjectiles() {
         grad6.addColorStop(0.7, 'rgba(255, 200, 0, 0.5)');
         grad6.addColorStop(1, 'rgba(255, 200, 0, 0)');
         context.fillStyle = grad6;
-        context.fillRect(proj.x, proj.y - 6, canvas.width - proj.x, 12);
+        context.fillRect(proj.x, proj.y - 6, GAME_W - proj.x, 12);
         break;
       }
       case 7: {
@@ -1567,7 +1569,7 @@ function drawGunHUD() {
   context.fillStyle = '#FFD700';
   context.fillText(weaponDefs[gunState.tier - 1].name, 12, 36);
 
-  const circleStartX = canvas.width - 55;
+  const circleStartX = GAME_W - 55;
   for (let i = 0; i < 3; i++) {
     const cx = circleStartX + i * 16;
     const cy = 18;
@@ -1595,7 +1597,7 @@ function drawGunHUD() {
     const scale = 1 + (1.5 - gunState.tierFlash) * 0.3;
     context.save();
     context.globalAlpha = alpha;
-    context.translate(canvas.width / 2, canvas.height * 0.3);
+    context.translate(GAME_W / 2, GAME_H * 0.3);
     context.scale(scale, scale);
     context.fillStyle = '#FFD700';
     context.font = "bold 22px 'Trebuchet MS'";
@@ -1612,7 +1614,7 @@ function drawGunHUD() {
     context.fillStyle = '#FF4444';
     context.font = "bold 16px 'Trebuchet MS'";
     context.textAlign = 'center';
-    context.fillText(gunState.demotionMsg, canvas.width / 2, canvas.height * 0.4);
+    context.fillText(gunState.demotionMsg, GAME_W / 2, GAME_H * 0.4);
     context.globalAlpha = 1;
   }
 }
@@ -1670,13 +1672,13 @@ function drawBirdWeapon() {
 /* --- Victory screen --- */
 function drawVictory() {
   const vg = context.createRadialGradient(
-    canvas.width / 2, canvas.height / 2, 20,
-    canvas.width / 2, canvas.height / 2, canvas.height * 0.6
+    GAME_W / 2, GAME_H / 2, 20,
+    GAME_W / 2, GAME_H / 2, GAME_H * 0.6
   );
   vg.addColorStop(0, "rgba(255, 200, 0, 0.3)");
   vg.addColorStop(1, "rgba(0, 0, 0, 0.6)");
   context.fillStyle = vg;
-  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.fillRect(0, 0, GAME_W, GAME_H);
 
   context.save();
   context.shadowColor = '#FFD700';
@@ -1684,50 +1686,58 @@ function drawVictory() {
   context.fillStyle = '#FFD700';
   context.font = "bold 42px 'Trebuchet MS'";
   context.textAlign = 'center';
-  context.fillText(I18N.t('ggVictory'), canvas.width / 2, canvas.height / 2 - 40);
+  context.fillText(I18N.t('ggVictory'), GAME_W / 2, GAME_H / 2 - 40);
   context.restore();
 
   const totalScore = gameState.score + gunState.totalDestroyed * 2;
   context.fillStyle = '#FFFFFF';
   context.font = "18px 'Trebuchet MS'";
   context.textAlign = 'center';
-  context.fillText(`${I18N.t('score')}: ${totalScore}`, canvas.width / 2, canvas.height / 2 + 10);
-  context.fillText(`${I18N.t('ggPipesDestroyed')}: ${gunState.totalDestroyed}`, canvas.width / 2, canvas.height / 2 + 35);
-  context.fillText(`${I18N.t('ggPipesPassed')}: ${gameState.score}`, canvas.width / 2, canvas.height / 2 + 60);
+  context.fillText(`${I18N.t('score')}: ${totalScore}`, GAME_W / 2, GAME_H / 2 + 10);
+  context.fillText(`${I18N.t('ggPipesDestroyed')}: ${gunState.totalDestroyed}`, GAME_W / 2, GAME_H / 2 + 35);
+  context.fillText(`${I18N.t('ggPipesPassed')}: ${gameState.score}`, GAME_W / 2, GAME_H / 2 + 60);
 
   context.fillStyle = 'rgba(255, 255, 255, 0.6)';
   context.font = "14px 'Trebuchet MS'";
-  context.fillText(I18N.t('ggTapReplay'), canvas.width / 2, canvas.height / 2 + 100);
+  context.fillText(I18N.t('ggTapReplay'), GAME_W / 2, GAME_H / 2 + 100);
 }
 
 /* --- Game over overlay --- */
 function drawGameOver() {
   const vg = context.createRadialGradient(
-    canvas.width / 2, canvas.height / 2, canvas.height * 0.1,
-    canvas.width / 2, canvas.height / 2, canvas.height * 0.7
+    GAME_W / 2, GAME_H / 2, GAME_H * 0.1,
+    GAME_W / 2, GAME_H / 2, GAME_H * 0.7
   );
   vg.addColorStop(0, "rgba(0, 0, 0, 0.25)");
   vg.addColorStop(1, "rgba(0, 0, 0, 0.55)");
   context.fillStyle = vg;
-  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.fillRect(0, 0, GAME_W, GAME_H);
 
   context.fillStyle = '#FF6644';
   context.font = "bold 28px 'Trebuchet MS'";
   context.textAlign = 'center';
-  context.fillText(I18N.t('gameOver'), canvas.width / 2, canvas.height / 2 - 30);
+  context.fillText(I18N.t('gameOver'), GAME_W / 2, GAME_H / 2 - 30);
 
   context.fillStyle = '#FFFFFF';
   context.font = "16px 'Trebuchet MS'";
-  context.fillText(`${I18N.t('ggDemotedTo')} ${gunState.tier}`, canvas.width / 2, canvas.height / 2 + 5);
-  context.fillText(`${I18N.t('ggHighestTier')}: ${gunState.highestTier}`, canvas.width / 2, canvas.height / 2 + 30);
-  context.fillText(`${I18N.t('ggPipesDestroyed')}: ${gunState.totalDestroyed}`, canvas.width / 2, canvas.height / 2 + 55);
+  context.fillText(`${I18N.t('ggDemotedTo')} ${gunState.tier}`, GAME_W / 2, GAME_H / 2 + 5);
+  context.fillText(`${I18N.t('ggHighestTier')}: ${gunState.highestTier}`, GAME_W / 2, GAME_H / 2 + 30);
+  context.fillText(`${I18N.t('ggPipesDestroyed')}: ${gunState.totalDestroyed}`, GAME_W / 2, GAME_H / 2 + 55);
 
   context.fillStyle = 'rgba(255, 255, 255, 0.6)';
   context.font = "14px 'Trebuchet MS'";
-  context.fillText(I18N.t('ggTapRetry'), canvas.width / 2, canvas.height / 2 + 90);
+  context.fillText(I18N.t('ggTapRetry'), GAME_W / 2, GAME_H / 2 + 90);
 }
 
 const draw = () => {
+  /* Clear at native resolution */
+  context.setTransform(1, 0, 0, 1, 0, 0);
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  /* Scale from game coords to canvas pixels */
+  const scaleX = canvas.width / GAME_W;
+  const scaleY = canvas.height / GAME_H;
+  context.setTransform(scaleX, 0, 0, scaleY, 0, 0);
+
   context.save();
 
   if (gameState.shakeTimer > 0) {
@@ -1736,7 +1746,6 @@ const draw = () => {
     context.translate(sx, sy);
   }
 
-  context.clearRect(-10, -10, canvas.width + 20, canvas.height + 20);
   drawBackground();
   drawWind();
   drawPipes();
@@ -1758,7 +1767,7 @@ const draw = () => {
 
   if (gunState.screenFlash > 0) {
     context.fillStyle = `rgba(255, 255, 200, ${gunState.screenFlash * 2})`;
-    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.fillRect(0, 0, GAME_W, GAME_H);
   }
 
   if (gameState.isRunning) drawGunHUD();
@@ -1776,6 +1785,7 @@ const draw = () => {
   }
 
   context.restore();
+  context.setTransform(1, 0, 0, 1, 0, 0);
 };
 
 const loop = (timestamp) => {
@@ -1827,13 +1837,25 @@ const flap = () => {
 };
 
 window.addEventListener("keydown", (event) => {
+  const tag = (document.activeElement || {}).tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
   if (event.code === "Space") {
     event.preventDefault();
     flap();
   }
-  if (event.code === "KeyF" || event.code === "Enter") {
+  if (event.code === "Enter") {
     event.preventDefault();
     shoot();
+  }
+  if (event.code === "KeyF") {
+    if (!event.ctrlKey && !event.metaKey) {
+      event.preventDefault();
+      if (event.shiftKey) {
+        toggleFullscreen();
+      } else {
+        shoot();
+      }
+    }
   }
 });
 
@@ -1842,8 +1864,8 @@ canvas.addEventListener("pointerdown", (event) => {
 
   if (gameState.isRunning && !gameState.isGameOver) {
     const rect = canvas.getBoundingClientRect();
-    const clickX = (event.clientX - rect.left) * (canvas.width / rect.width);
-    if (clickX > canvas.width / 2) {
+    const clickX = (event.clientX - rect.left) * (GAME_W / rect.width);
+    if (clickX > GAME_W / 2) {
       shoot();
       return;
     }
@@ -1875,6 +1897,37 @@ if (muteButton) {
   updateMuteLabel();
 }
 
+/* ── Canvas sizing ───────────────────────────────────────── */
+function updateCanvasSize() {
+  const dpr = window.devicePixelRatio || 1;
+  if (isFullscreen) {
+    const screenW = window.innerWidth;
+    const screenH = window.innerHeight - 52;
+    const aspect = GAME_W / GAME_H;
+    let cssW, cssH;
+    if (screenW / screenH > aspect) {
+      cssH = screenH;
+      cssW = Math.floor(cssH * aspect);
+    } else {
+      cssW = screenW;
+      cssH = Math.floor(cssW / aspect);
+    }
+    canvas.style.width = cssW + 'px';
+    canvas.style.height = cssH + 'px';
+    canvas.width = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+  } else {
+    if (typeof fitCanvasToScreen === 'function') fitCanvasToScreen();
+    else { canvas.style.width = ''; canvas.style.height = ''; }
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) {
+      canvas.width = Math.round(rect.width * dpr);
+      canvas.height = Math.round(rect.height * dpr);
+    }
+  }
+  draw();
+}
+
 /* ── Fullscreen ──────────────────────────────────────────── */
 const fullscreenButton = document.getElementById("fullscreenButton");
 let isFullscreen = false;
@@ -1900,18 +1953,20 @@ function enablePseudoFs() {
   document.getElementById("gameContainer").classList.add("pseudo-fullscreen");
   document.body.style.overflow = "hidden";
   updateFsButton();
+  requestAnimationFrame(() => updateCanvasSize());
 }
 function disablePseudoFs() {
   pseudoFullscreen = false; isFullscreen = false;
   document.getElementById("gameContainer").classList.remove("pseudo-fullscreen");
   document.body.style.overflow = "";
   updateFsButton();
+  updateCanvasSize();
 }
 function updateFsButton() {
   if (fullscreenButton) fullscreenButton.textContent = isFullscreen ? "\u2715" : "\u26F6";
 }
-document.addEventListener("fullscreenchange", () => { isFullscreen = !!document.fullscreenElement; updateFsButton(); });
-document.addEventListener("webkitfullscreenchange", () => { isFullscreen = !!document.webkitFullscreenElement; updateFsButton(); });
+document.addEventListener("fullscreenchange", () => { isFullscreen = !!document.fullscreenElement; updateFsButton(); requestAnimationFrame(() => updateCanvasSize()); });
+document.addEventListener("webkitfullscreenchange", () => { isFullscreen = !!document.webkitFullscreenElement; updateFsButton(); requestAnimationFrame(() => updateCanvasSize()); });
 if (fullscreenButton) fullscreenButton.addEventListener("click", toggleFullscreen);
 
 /* --- Prevent scrolling / pull-to-refresh on mobile --- */
@@ -1953,10 +2008,10 @@ function fitCanvasToScreen() {
   canvas.style.height = Math.floor(canvasH) + 'px';
 }
 
-fitCanvasToScreen();
+updateCanvasSize();
 let _resizeTimer;
-window.addEventListener('resize', () => { clearTimeout(_resizeTimer); _resizeTimer = setTimeout(fitCanvasToScreen, 80); });
-window.addEventListener('orientationchange', () => { setTimeout(fitCanvasToScreen, 200); });
+window.addEventListener('resize', () => { clearTimeout(_resizeTimer); _resizeTimer = setTimeout(updateCanvasSize, 80); });
+window.addEventListener('orientationchange', () => { setTimeout(updateCanvasSize, 200); });
 
 loadBestScore();
 resetGame();
