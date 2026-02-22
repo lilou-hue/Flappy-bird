@@ -219,6 +219,8 @@
   let shopOpen = false;
   let skinsOpen = false;
   let shopScroll = 0;
+  let isFullscreen = false;
+  let pseudoFullscreen = false;
 
   /* ────────────────── Restart confirm state ────────────────── */
   let confirmRestart = false;
@@ -2994,6 +2996,11 @@
     lastTime = now;
     update(dt);
 
+    /* DPI scaling */
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.setTransform(canvas.width / W, 0, 0, canvas.height / H, 0, 0);
+
     ctx.save();
     if (shakeAmount > 0) {
       ctx.translate((Math.random()-0.5)*shakeAmount*4, (Math.random()-0.5)*shakeAmount*4);
@@ -3009,6 +3016,8 @@
     drawSkinsPanel();
     drawConfirmRestart();
     showUCAchPopup();
+
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
 
     requestAnimationFrame(loop);
   }
@@ -3197,10 +3206,39 @@
     canvas.style.height = Math.floor(ch) + 'px';
   }
 
-  fitCanvasToScreen();
+  function updateCanvasSize() {
+    const dpr = window.devicePixelRatio || 1;
+    if (isFullscreen) {
+      const screenW = window.innerWidth;
+      const screenH = window.innerHeight - 8;
+      const aspect = W / H;
+      let cssW, cssH;
+      if (screenW / screenH > aspect) {
+        cssH = screenH;
+        cssW = Math.floor(cssH * aspect);
+      } else {
+        cssW = screenW;
+        cssH = Math.floor(cssW / aspect);
+      }
+      canvas.style.width = cssW + 'px';
+      canvas.style.height = cssH + 'px';
+      canvas.width = Math.round(cssW * dpr);
+      canvas.height = Math.round(cssH * dpr);
+    } else {
+      if (typeof fitCanvasToScreen === 'function') fitCanvasToScreen();
+      else { canvas.style.width = ''; canvas.style.height = ''; }
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        canvas.width = Math.round(rect.width * dpr);
+        canvas.height = Math.round(rect.height * dpr);
+      }
+    }
+  }
+
+  updateCanvasSize();
   let _resizeTimer;
-  window.addEventListener('resize', () => { clearTimeout(_resizeTimer); _resizeTimer = setTimeout(fitCanvasToScreen, 80); });
-  window.addEventListener('orientationchange', () => { setTimeout(fitCanvasToScreen, 200); });
+  window.addEventListener('resize', () => { clearTimeout(_resizeTimer); _resizeTimer = setTimeout(updateCanvasSize, 80); });
+  window.addEventListener('orientationchange', () => { setTimeout(updateCanvasSize, 200); });
 
   /* ────────────────── Init ────────────────── */
   load();
@@ -3222,8 +3260,6 @@
   }
   /* ── Fullscreen ──────────────────────────────────────────── */
   const fullscreenButton = document.getElementById("fullscreenButton");
-  let isFullscreen = false;
-  let pseudoFullscreen = false;
 
   function toggleFullscreen() {
     if (isFullscreen) exitFs(); else enterFs();
@@ -3245,19 +3281,29 @@
     document.body.classList.add("pseudo-fullscreen");
     document.body.style.overflow = "hidden";
     updateFsButton();
+    setTimeout(updateCanvasSize, 50);
   }
   function disablePseudoFs() {
     pseudoFullscreen = false; isFullscreen = false;
     document.body.classList.remove("pseudo-fullscreen");
     document.body.style.overflow = "";
     updateFsButton();
+    setTimeout(updateCanvasSize, 50);
   }
   function updateFsButton() {
     if (fullscreenButton) fullscreenButton.textContent = isFullscreen ? "\u2715" : "\u26F6";
   }
-  document.addEventListener("fullscreenchange", () => { isFullscreen = !!document.fullscreenElement; updateFsButton(); });
-  document.addEventListener("webkitfullscreenchange", () => { isFullscreen = !!document.webkitFullscreenElement; updateFsButton(); });
+  document.addEventListener("fullscreenchange", () => { isFullscreen = !!document.fullscreenElement; updateFsButton(); setTimeout(updateCanvasSize, 50); });
+  document.addEventListener("webkitfullscreenchange", () => { isFullscreen = !!document.webkitFullscreenElement; updateFsButton(); setTimeout(updateCanvasSize, 50); });
   if (fullscreenButton) fullscreenButton.addEventListener("click", toggleFullscreen);
+
+  /* ── F key shortcut for fullscreen ── */
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'f' || e.key === 'F') {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      toggleFullscreen();
+    }
+  });
 
   window.addEventListener('beforeunload', save);
   requestAnimationFrame(loop);

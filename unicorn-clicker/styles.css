@@ -106,8 +106,8 @@ body.pseudo-fullscreen canvas {
   max-width: 100vw;
   max-height: calc(100vh - 8px);
   max-height: calc(100dvh - 8px);
-  object-fit: contain;
   border-radius: 0;
+  box-shadow: 0 0 80px rgba(200, 140, 255, 0.15), 0 0 160px rgba(200, 140, 255, 0.06);
 }
 
 :fullscreen .uc-fullscreen-btn,
