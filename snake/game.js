@@ -14,6 +14,9 @@ const fullscreenButton = document.getElementById("fullscreenButton");
 const themeSelect = document.getElementById("themeSelect");
 const skinSelect = document.getElementById("skinSelect");
 
+const GAME_W = 480;
+const GAME_H = 480;
+
 /* ── i18n setup ── */
 const _t = (key) => I18N.t(key);
 I18N.createSelector(document.querySelector('.game__header'));
@@ -27,8 +30,8 @@ window.addEventListener('langchange', () => {
 });
 
 const CELL = 20;
-const COLS = canvas.width / CELL;   // 24
-const ROWS = canvas.height / CELL;  // 24
+const COLS = GAME_W / CELL;   // 24
+const ROWS = GAME_H / CELL;  // 24
 
 /* ── Colour Themes ────────────────────────────────────────── */
 
@@ -884,18 +887,48 @@ function enablePseudoFs() {
   document.getElementById("gameContainer").classList.add("pseudo-fullscreen");
   document.body.style.overflow = "hidden";
   updateFsButton();
+  requestAnimationFrame(() => updateCanvasSize());
 }
 function disablePseudoFs() {
   pseudoFullscreen = false; isFullscreen = false;
   document.getElementById("gameContainer").classList.remove("pseudo-fullscreen");
   document.body.style.overflow = "";
   updateFsButton();
+  updateCanvasSize();
 }
 function updateFsButton() {
   if (fullscreenButton) fullscreenButton.textContent = isFullscreen ? "\u2715" : "\u26F6";
 }
-document.addEventListener("fullscreenchange", () => { isFullscreen = !!document.fullscreenElement; updateFsButton(); });
-document.addEventListener("webkitfullscreenchange", () => { isFullscreen = !!document.webkitFullscreenElement; updateFsButton(); });
+function updateCanvasSize() {
+  const dpr = window.devicePixelRatio || 1;
+  if (isFullscreen) {
+    const screenW = window.innerWidth;
+    const screenH = window.innerHeight - 52;
+    const aspect = GAME_W / GAME_H;
+    let cssW, cssH;
+    if (screenW / screenH > aspect) {
+      cssH = screenH;
+      cssW = Math.floor(cssH * aspect);
+    } else {
+      cssW = screenW;
+      cssH = Math.floor(cssW / aspect);
+    }
+    canvas.style.width = cssW + 'px';
+    canvas.style.height = cssH + 'px';
+    canvas.width = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+  } else {
+    if (typeof fitCanvasToScreen === 'function') fitCanvasToScreen();
+    else { canvas.style.width = ''; canvas.style.height = ''; }
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) {
+      canvas.width = Math.round(rect.width * dpr);
+      canvas.height = Math.round(rect.height * dpr);
+    }
+  }
+}
+document.addEventListener("fullscreenchange", () => { isFullscreen = !!document.fullscreenElement; updateFsButton(); requestAnimationFrame(() => updateCanvasSize()); });
+document.addEventListener("webkitfullscreenchange", () => { isFullscreen = !!document.webkitFullscreenElement; updateFsButton(); requestAnimationFrame(() => updateCanvasSize()); });
 fullscreenButton.addEventListener("click", toggleFullscreen);
 
 /* ── Theme & Skin Switching ───────────────────────────────── */
@@ -949,8 +982,8 @@ function initDustMotes() {
   state.dustMotes = [];
   for (let i = 0; i < 8; i++) {
     state.dustMotes.push({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
+      x: Math.random() * GAME_W,
+      y: Math.random() * GAME_H,
       vx: (Math.random() - 0.5) * 8,
       vy: (Math.random() - 0.5) * 8,
       size: 1 + Math.random() * 1.5,
@@ -963,10 +996,10 @@ function updateDustMotes(dt) {
   for (const m of state.dustMotes) {
     m.x += m.vx * dt;
     m.y += m.vy * dt;
-    if (m.x < 0) m.x += canvas.width;
-    if (m.x > canvas.width) m.x -= canvas.width;
-    if (m.y < 0) m.y += canvas.height;
-    if (m.y > canvas.height) m.y -= canvas.height;
+    if (m.x < 0) m.x += GAME_W;
+    if (m.x > GAME_W) m.x -= GAME_W;
+    if (m.y < 0) m.y += GAME_H;
+    if (m.y > GAME_H) m.y -= GAME_H;
   }
 }
 
@@ -1344,25 +1377,25 @@ function die() {
 
 function drawBackground() {
   ctx.fillStyle = currentTheme.bg;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillRect(0, 0, GAME_W, GAME_H);
 
   const vignetteGrad = ctx.createRadialGradient(
-    canvas.width / 2, canvas.height / 2, canvas.width * 0.25,
-    canvas.width / 2, canvas.height / 2, canvas.width * 0.75
+    GAME_W / 2, GAME_H / 2, GAME_W * 0.25,
+    GAME_W / 2, GAME_H / 2, GAME_W * 0.75
   );
   vignetteGrad.addColorStop(0, "rgba(0,0,0,0)");
   vignetteGrad.addColorStop(1, currentTheme.vignetteColor);
   ctx.fillStyle = vignetteGrad;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillRect(0, 0, GAME_W, GAME_H);
 
   if (state.arenaMin > 0) {
     ctx.fillStyle = "rgba(0,0,0,0.4)";
     const amin = state.arenaMin * CELL;
     const amax = (state.arenaMax + 1) * CELL;
-    ctx.fillRect(0, 0, canvas.width, amin);
-    ctx.fillRect(0, amax, canvas.width, canvas.height - amax);
+    ctx.fillRect(0, 0, GAME_W, amin);
+    ctx.fillRect(0, amax, GAME_W, GAME_H - amax);
     ctx.fillRect(0, amin, amin, amax - amin);
-    ctx.fillRect(amax, amin, canvas.width - amax, amax - amin);
+    ctx.fillRect(amax, amin, GAME_W - amax, amax - amin);
   }
 
   ctx.strokeStyle = currentTheme.gridColor;
@@ -1390,13 +1423,13 @@ function drawBackground() {
   // Ghost mode: subtle screen tint
   if (performance.now() < state.ghostModeEnd) {
     ctx.fillStyle = "rgba(200,200,255,0.03)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, GAME_W, GAME_H);
   }
 
   // Poison flash
   if (state.poisonFlash > 0) {
     ctx.fillStyle = `rgba(139,0,255,${state.poisonFlash * 0.15})`;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, GAME_W, GAME_H);
   }
 }
 
@@ -1541,7 +1574,7 @@ function drawSnake(movePhase) {
     const { cx, cy } = positions[i];
     const t = segs.length > 1 ? i / (segs.length - 1) : 0;
 
-    if (isDead && (cx < -50 || cx > canvas.width + 50 || cy < -50 || cy > canvas.height + 50)) continue;
+    if (isDead && (cx < -50 || cx > GAME_W + 50 || cy < -50 || cy > GAME_H + 50)) continue;
 
     if (i === 0) {
       const enlargeScale = state.headEnlargeTimer > 0 ? 1 + state.headEnlargeTimer * 2.5 : 1;
@@ -1776,7 +1809,7 @@ function drawScorePop() {
   const alpha = state.scorePop;
   const yOff = (1 - state.scorePop) * -20;
   ctx.save();
-  ctx.translate(canvas.width / 2, 50 + yOff);
+  ctx.translate(GAME_W / 2, 50 + yOff);
   ctx.scale(scale, scale);
   ctx.globalAlpha = alpha;
   ctx.font = "bold 24px 'Trebuchet MS'";
@@ -1811,7 +1844,7 @@ function drawDeathRing() {
 function drawEatFlash() {
   if (state.eatFlash <= 0) return;
   ctx.fillStyle = `rgba(${state.eatFlashColor},${state.eatFlash})`;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillRect(0, 0, GAME_W, GAME_H);
   state.eatFlash *= 0.85;
   if (state.eatFlash < 0.01) state.eatFlash = 0;
 }
@@ -1846,27 +1879,27 @@ function drawPowerUpIndicators() {
 
 function drawOverlay(title, subtitle, extra) {
   const vg = ctx.createRadialGradient(
-    canvas.width / 2, canvas.height / 2, canvas.height * 0.1,
-    canvas.width / 2, canvas.height / 2, canvas.height * 0.7
+    GAME_W / 2, GAME_H / 2, GAME_H * 0.1,
+    GAME_W / 2, GAME_H / 2, GAME_H * 0.7
   );
   vg.addColorStop(0, "rgba(0,0,0,0.25)");
   vg.addColorStop(1, "rgba(0,0,0,0.55)");
   ctx.fillStyle = vg;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillRect(0, 0, GAME_W, GAME_H);
 
   ctx.fillStyle = "rgba(0,0,0,0.3)";
   ctx.font = "bold 34px 'Trebuchet MS'";
   ctx.textAlign = "center";
-  ctx.fillText(title, canvas.width / 2 + 1, canvas.height / 2 - 15);
+  ctx.fillText(title, GAME_W / 2 + 1, GAME_H / 2 - 15);
   ctx.fillStyle = currentTheme.textColor;
-  ctx.fillText(title, canvas.width / 2, canvas.height / 2 - 16);
+  ctx.fillText(title, GAME_W / 2, GAME_H / 2 - 16);
   ctx.fillStyle = "rgba(255,255,255,0.7)";
   ctx.font = "16px 'Trebuchet MS'";
-  ctx.fillText(subtitle, canvas.width / 2, canvas.height / 2 + 18);
+  ctx.fillText(subtitle, GAME_W / 2, GAME_H / 2 + 18);
   if (extra) {
     ctx.fillStyle = "#ffd700";
     ctx.font = "bold 18px 'Trebuchet MS'";
-    ctx.fillText(extra, canvas.width / 2, canvas.height / 2 + 48);
+    ctx.fillText(extra, GAME_W / 2, GAME_H / 2 + 48);
   }
 }
 
@@ -1925,6 +1958,15 @@ function gameLoop(timestamp) {
     ? Math.min(1, state.tickAccumulator / state.tickInterval)
     : 1;
 
+  /* Clear at native resolution */
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  /* Scale from game coordinates to canvas pixels */
+  const scaleX = canvas.width / GAME_W;
+  const scaleY = canvas.height / GAME_H;
+  ctx.setTransform(scaleX, 0, 0, scaleY, 0, 0);
+
   ctx.save();
   if (state.shakeTimer > 0) {
     ctx.translate((Math.random() - 0.5) * state.shakeIntensity, (Math.random() - 0.5) * state.shakeIntensity);
@@ -1948,6 +1990,7 @@ function gameLoop(timestamp) {
   }
 
   ctx.restore();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
   requestAnimationFrame(gameLoop);
 }
 
@@ -1975,6 +2018,13 @@ window.addEventListener("keydown", (e) => {
   if (e.code === "Space") {
     e.preventDefault();
     if (state.phase === "dead") resetGame();
+  }
+  if (e.code === "KeyF" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    const tag = document.activeElement?.tagName;
+    if (tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'SELECT') {
+      e.preventDefault();
+      toggleFullscreen();
+    }
   }
 });
 
@@ -2142,9 +2192,10 @@ function fitCanvasToScreen() {
 }
 
 fitCanvasToScreen();
+updateCanvasSize();
 let _resizeTimer;
-window.addEventListener('resize', () => { clearTimeout(_resizeTimer); _resizeTimer = setTimeout(fitCanvasToScreen, 80); });
-window.addEventListener('orientationchange', () => { setTimeout(fitCanvasToScreen, 200); });
+window.addEventListener('resize', () => { clearTimeout(_resizeTimer); _resizeTimer = setTimeout(updateCanvasSize, 80); });
+window.addEventListener('orientationchange', () => { setTimeout(updateCanvasSize, 200); });
 
 loadBestScore();
 loadMute();
