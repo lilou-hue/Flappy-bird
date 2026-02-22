@@ -882,6 +882,8 @@
       }
     }
 
+    if (e.code === "KeyF") { toggleFullscreen(); return; }
+
     if (state.phase !== "playing") return;
 
     switch (e.code) {
@@ -1173,23 +1175,54 @@
     if (document.exitFullscreen) document.exitFullscreen();
     else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
   }
+  function updateCanvasSize() {
+    const dpr = window.devicePixelRatio || 1;
+    if (isFullscreen) {
+      const screenW = window.innerWidth;
+      const screenH = window.innerHeight - 52;
+      const aspect = CW / CH;
+      let cssW, cssH;
+      if (screenW / screenH > aspect) {
+        cssH = screenH;
+        cssW = Math.floor(cssH * aspect);
+      } else {
+        cssW = screenW;
+        cssH = Math.floor(cssW / aspect);
+      }
+      canvas.style.width = cssW + 'px';
+      canvas.style.height = cssH + 'px';
+      canvas.width = Math.round(cssW * dpr);
+      canvas.height = Math.round(cssH * dpr);
+    } else {
+      if (typeof fitCanvasToScreen === 'function') fitCanvasToScreen();
+      else { canvas.style.width = ''; canvas.style.height = ''; }
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        canvas.width = Math.round(rect.width * dpr);
+        canvas.height = Math.round(rect.height * dpr);
+      }
+    }
+  }
+
   function enablePseudoFs() {
     pseudoFullscreen = true; isFullscreen = true;
     document.getElementById("gameContainer").classList.add("pseudo-fullscreen");
     document.body.style.overflow = "hidden";
     updateFsButton();
+    requestAnimationFrame(() => updateCanvasSize());
   }
   function disablePseudoFs() {
     pseudoFullscreen = false; isFullscreen = false;
     document.getElementById("gameContainer").classList.remove("pseudo-fullscreen");
     document.body.style.overflow = "";
     updateFsButton();
+    updateCanvasSize();
   }
   function updateFsButton() {
     if (fullscreenButton) fullscreenButton.textContent = isFullscreen ? "\u2715" : "\u26F6";
   }
-  document.addEventListener("fullscreenchange", () => { isFullscreen = !!document.fullscreenElement; updateFsButton(); });
-  document.addEventListener("webkitfullscreenchange", () => { isFullscreen = !!document.webkitFullscreenElement; updateFsButton(); });
+  document.addEventListener("fullscreenchange", () => { isFullscreen = !!document.fullscreenElement; updateFsButton(); requestAnimationFrame(() => updateCanvasSize()); });
+  document.addEventListener("webkitfullscreenchange", () => { isFullscreen = !!document.webkitFullscreenElement; updateFsButton(); requestAnimationFrame(() => updateCanvasSize()); });
   if (fullscreenButton) fullscreenButton.addEventListener("click", toggleFullscreen);
 
   /* ================================================================== */
@@ -1293,6 +1326,14 @@
   }
 
   function render() {
+    /* Clear at native resolution */
+    ctx2d.setTransform(1, 0, 0, 1, 0, 0);
+    ctx2d.clearRect(0, 0, canvas.width, canvas.height);
+    /* Scale from game coords to canvas pixels */
+    const scaleX = canvas.width / CW;
+    const scaleY = canvas.height / CH;
+    ctx2d.setTransform(scaleX, 0, 0, scaleY, 0, 0);
+
     ctx2d.save();
 
     // Screen shake
@@ -1619,6 +1660,8 @@
     }
 
     ctx2d.restore();
+
+    ctx2d.setTransform(1, 0, 0, 1, 0, 0);
   }
 
   /* ================================================================== */
@@ -1712,9 +1755,10 @@
   }
 
   fitCanvasToScreen();
+  updateCanvasSize();
   let _resizeTimer;
-  window.addEventListener('resize', () => { clearTimeout(_resizeTimer); _resizeTimer = setTimeout(fitCanvasToScreen, 80); });
-  window.addEventListener('orientationchange', () => { setTimeout(fitCanvasToScreen, 200); });
+  window.addEventListener('resize', () => { clearTimeout(_resizeTimer); _resizeTimer = setTimeout(() => updateCanvasSize(), 80); });
+  window.addEventListener('orientationchange', () => { setTimeout(() => updateCanvasSize(), 200); });
 
   state.best = Number(localStorage.getItem("tetrisBest")) || 0;
   const savedMute = localStorage.getItem("tetrisMuted");
