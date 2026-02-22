@@ -639,6 +639,7 @@
     if (["Space","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.code)) e.preventDefault();
     if (e.code === "Space") handleAction();
     if (e.code === "Escape") handlePause();
+    if (e.code === "KeyF") toggleFullscreen();
   });
   document.addEventListener("keyup", (e) => { keys[e.code] = false; });
 
@@ -715,18 +716,57 @@
     document.getElementById("gameContainer").classList.add("pseudo-fullscreen");
     document.body.style.overflow = "hidden";
     updateFsButton();
+    requestAnimationFrame(() => updateCanvasSize());
   }
   function disablePseudoFs() {
     pseudoFullscreen = false; isFullscreen = false;
     document.getElementById("gameContainer").classList.remove("pseudo-fullscreen");
     document.body.style.overflow = "";
     updateFsButton();
+    requestAnimationFrame(() => updateCanvasSize());
   }
   function updateFsButton() {
     if (fullscreenBtn) fullscreenBtn.textContent = isFullscreen ? "\u2715" : "\u26F6";
   }
-  document.addEventListener("fullscreenchange", () => { isFullscreen = !!document.fullscreenElement; updateFsButton(); });
-  document.addEventListener("webkitfullscreenchange", () => { isFullscreen = !!document.webkitFullscreenElement; updateFsButton(); });
+  function updateCanvasSize() {
+    const dpr = window.devicePixelRatio || 1;
+    if (isFullscreen) {
+      const screenW = window.innerWidth;
+      const screenH = window.innerHeight - 52;
+      const aspect = CFG.W / CFG.H;
+      let cssW, cssH;
+      if (screenW / screenH > aspect) {
+        cssH = screenH;
+        cssW = Math.floor(cssH * aspect);
+      } else {
+        cssW = screenW;
+        cssH = Math.floor(cssW / aspect);
+      }
+      canvas.style.width = cssW + 'px';
+      canvas.style.height = cssH + 'px';
+      canvas.width = Math.round(cssW * dpr);
+      canvas.height = Math.round(cssH * dpr);
+    } else {
+      if (typeof fitCanvasToScreen === 'function') fitCanvasToScreen();
+      else { canvas.style.width = ''; canvas.style.height = ''; }
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        canvas.width = Math.round(rect.width * dpr);
+        canvas.height = Math.round(rect.height * dpr);
+      }
+    }
+  }
+
+  document.addEventListener("fullscreenchange", () => {
+    isFullscreen = !!document.fullscreenElement;
+    updateFsButton();
+    requestAnimationFrame(() => updateCanvasSize());
+  });
+  document.addEventListener("webkitfullscreenchange", () => {
+    isFullscreen = !!document.webkitFullscreenElement;
+    updateFsButton();
+    requestAnimationFrame(() => updateCanvasSize());
+  });
   fullscreenBtn.addEventListener("click", toggleFullscreen);
 
   // Theme & Skin
@@ -1001,7 +1041,13 @@
       lctx.fillStyle = cg; lctx.fillRect(0,0,CFG.W,CFG.H);
     }
 
-    ctx.clearRect(0, 0, CFG.W, CFG.H);
+    /* DPI scaling: clear at native res, then scale */
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const scaleX = canvas.width / CFG.W;
+    const scaleY = canvas.height / CFG.H;
+    ctx.setTransform(scaleX, 0, 0, scaleY, 0, 0);
+
     ctx.save();
     if (shakeTimer > 0) ctx.translate(shakeX, shakeY);
     ctx.drawImage(sceneCanvas, 0, 0);
@@ -1020,6 +1066,8 @@
     if (state === STATE.PLAYING) drawLightMeter(ctx, pal);
     if (state === STATE.PLAYING) drawPowerUpIndicators(ctx, pal);
     if (state === STATE.PLAYING && isMobile) drawTouchGuide(ctx, pal);
+
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
 
   // ── Sub-Renderers ─────────────────────────────────────────
@@ -1397,9 +1445,10 @@
   }
 
   fitCanvasToScreen();
+  updateCanvasSize();
   let _resizeTimer;
-  window.addEventListener('resize', () => { clearTimeout(_resizeTimer); _resizeTimer = setTimeout(fitCanvasToScreen, 80); });
-  window.addEventListener('orientationchange', () => { setTimeout(fitCanvasToScreen, 200); });
+  window.addEventListener('resize', () => { clearTimeout(_resizeTimer); _resizeTimer = setTimeout(() => updateCanvasSize(), 80); });
+  window.addEventListener('orientationchange', () => { setTimeout(() => updateCanvasSize(), 200); });
 
   init();
 

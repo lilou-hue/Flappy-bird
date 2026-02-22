@@ -549,25 +549,20 @@ canvas {
   justify-content: center;
   width: 100%;
   max-width: 100%;
-  padding: 8px;
+  padding: 0;
   border: none;
   border-radius: 0;
   background: transparent;
   box-shadow: none;
-  gap: 8px;
+  gap: 0;
 }
 
 .game:fullscreen canvas,
 .game:-webkit-full-screen canvas,
 .game.pseudo-fullscreen canvas {
-  flex: 1;
-  width: 100%;
-  max-width: 100vw;
-  max-height: calc(100vh - 48px);
-  max-height: calc(100dvh - 48px);
-  object-fit: contain;
   border-radius: 0;
   border: none;
+  box-shadow: 0 0 80px rgba(160, 120, 255, 0.15), 0 0 160px rgba(160, 120, 255, 0.06);
 }
 
 .game:fullscreen .game__hud,
@@ -576,6 +571,42 @@ canvas {
   width: 100%;
   max-width: 600px;
   padding: 4px 12px;
+  background: rgba(4, 3, 10, 0.55);
+  backdrop-filter: blur(6px);
+  border-radius: 10px;
+  margin-top: 4px;
+}
+
+.game:fullscreen .hud__score,
+.game:-webkit-full-screen .hud__score,
+.game.pseudo-fullscreen .hud__score {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.game:fullscreen .hud__score strong,
+.game:-webkit-full-screen .hud__score strong,
+.game.pseudo-fullscreen .hud__score strong {
+  color: #ffffff;
+}
+
+.game:fullscreen .hud__button,
+.game:-webkit-full-screen .hud__button,
+.game.pseudo-fullscreen .hud__button {
+  background: rgba(255, 255, 255, 0.13);
+  backdrop-filter: blur(6px);
+  box-shadow: none;
+}
+
+.game:fullscreen .hud__mute,
+.game:-webkit-full-screen .hud__mute,
+.game.pseudo-fullscreen .hud__mute {
+  color: #ffffff;
+}
+
+.game:fullscreen .lb-toggle-btn,
+.game:-webkit-full-screen .lb-toggle-btn,
+.game.pseudo-fullscreen .lb-toggle-btn {
+  display: none;
 }
 
 .game:fullscreen #leaderboardPanel,
