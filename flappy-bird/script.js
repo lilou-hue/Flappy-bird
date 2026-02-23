@@ -25,9 +25,11 @@ const FB_ACHIEVEMENTS = [
   { id: 'score_50',      icon: '\uD83D\uDC51', title: 'Sky King',       desc: 'Score 50 in one game',     check: s => s.bestScore >= 50 },
   { id: 'flap_500',      icon: '\uD83D\uDCAA', title: 'Flap Master',    desc: 'Flap 500 times total',     check: s => s.totalFlaps >= 500 },
   { id: 'games_10',      icon: '\uD83C\uDFAE', title: 'Dedicated',      desc: 'Play 10 games',            check: s => s.gamesPlayed >= 10 },
+  { id: 'night_owl',     icon: '\uD83E\uDD89', title: 'Night Owl',      desc: 'Reach score 40+',          check: s => s.bestScore >= 40 },
+  { id: 'zen_master',    icon: '\uD83E\uDDD8', title: 'Zen Master',     desc: 'Survive 2 min in zen mode', check: s => s.zenMaster === true },
 ];
 
-let fbAchStats = { bestScore: 0, totalFlaps: 0, gamesPlayed: 0 };
+let fbAchStats = { bestScore: 0, totalFlaps: 0, gamesPlayed: 0, zenMaster: false };
 let fbUnlocked = new Set();
 let fbAchQueue = [];
 let fbAchTimer = 0;
@@ -95,6 +97,8 @@ const gameState = {
   shakeIntensity: 0,
   scorePop: 0,
   lastScore: 0,
+  zenMode: false,
+  zenModeStartTime: 0,
 };
 
 const bird = {
@@ -117,6 +121,7 @@ let grassBlades = [];
 let feathersSpawned = false;
 let flowers = [];
 let butterflies = [];
+let stars = [];
 
 /* --- Drip state for top-pipe water drops --- */
 let dripState = {
@@ -200,6 +205,21 @@ function initButterflies() {
   }
 }
 
+/* --- Init stars for night sky --- */
+function initStars() {
+  stars = [];
+  const count = 30 + Math.floor(Math.random() * 21);
+  for (let i = 0; i < count; i++) {
+    stars.push({
+      x: Math.random() * GAME_W,
+      y: Math.random() * (GAME_H * 0.6),
+      brightness: 0.4 + Math.random() * 0.6,
+      twinklePhase: Math.random() * Math.PI * 2,
+      size: 1 + Math.random() * 1.5,
+    });
+  }
+}
+
 /* --- Init leaf particles --- */
 function initLeaves() {
   leafParticles = [];
@@ -269,7 +289,21 @@ const resetGame = () => {
   gameState.lastScore = 0;
   gameState._lbSubmitted = false;
   gameState._achCounted = false;
+  gameState.zenModeStartTime = 0;
+  /* Apply zen mode settings */
+  if (gameState.zenMode) {
+    gameState.speed = 120;
+    gameState.gap = 220;
+  } else {
+    gameState.speed = 190;
+    gameState.gap = 150;
+  }
   scoreLabel.textContent = gameState.score;
+  if (gameState.zenMode) {
+    scoreLabel.parentElement.style.visibility = "hidden";
+  } else {
+    scoreLabel.parentElement.style.visibility = "visible";
+  }
   initClouds();
   initHills();
   initTrees();
@@ -277,6 +311,7 @@ const resetGame = () => {
   initLeaves();
   initFlowers();
   initButterflies();
+  initStars();
   Audio.stopDrone();
   draw();
 };
@@ -344,14 +379,50 @@ function lerpColor(a, b, t) {
   return `rgb(${rr}, ${rg}, ${rb})`;
 }
 
-const drawBackground = () => {
-  /* Sky color shifts with score: bright blue -> golden warm */
-  const scoreProgress = Math.min(gameState.score / 30, 1); /* fully warm by score 30 */
+/* --- Determine sky phase from score --- */
+function getSkyPhase(score) {
+  if (score < 10) {
+    return { phase: "dawn", t: score / 10 };
+  } else if (score < 25) {
+    return { phase: "day", t: (score - 10) / 15 };
+  } else if (score < 40) {
+    return { phase: "sunset", t: (score - 25) / 15 };
+  } else {
+    return { phase: "night", t: Math.min((score - 40) / 10, 1) };
+  }
+}
 
-  const skyTop = lerpColor("#5cb8ff", "#ff9944", scoreProgress);
-  const skyMid = lerpColor("#a8e0ff", "#ffc577", scoreProgress);
-  const skyLow = lerpColor("#d4f0d4", "#ffe0a0", scoreProgress);
-  const skyBot = lerpColor("#7be495", "#7be495", scoreProgress * 0.3);
+const drawBackground = () => {
+  const { phase, t } = getSkyPhase(gameState.score);
+  const isNight = phase === "night";
+
+  let skyTop, skyMid, skyLow, skyBot;
+
+  if (phase === "dawn") {
+    /* Dawn (score 0-10): blue sky -> warm orange sunrise */
+    skyTop = lerpColor("#5cb8ff", "#ff8844", t);
+    skyMid = lerpColor("#a8e0ff", "#ffaa66", t);
+    skyLow = lerpColor("#d4f0d4", "#ffcc88", t);
+    skyBot = lerpColor("#7be495", "#7be495", t * 0.3);
+  } else if (phase === "day") {
+    /* Day (score 10-25): warm orange -> bright blue */
+    skyTop = lerpColor("#ff8844", "#4ab0ff", t);
+    skyMid = lerpColor("#ffaa66", "#8dd4ff", t);
+    skyLow = lerpColor("#ffcc88", "#c4edcc", t);
+    skyBot = lerpColor("#7be495", "#7be495", 0);
+  } else if (phase === "sunset") {
+    /* Sunset (score 25-40): bright blue -> golden/orange */
+    skyTop = lerpColor("#4ab0ff", "#cc5522", t);
+    skyMid = lerpColor("#8dd4ff", "#ee8833", t);
+    skyLow = lerpColor("#c4edcc", "#ffbb66", t);
+    skyBot = lerpColor("#7be495", "#5a9e60", t);
+  } else {
+    /* Night (score 40+): golden/orange -> dark blue/purple */
+    skyTop = lerpColor("#cc5522", "#0a0e2a", t);
+    skyMid = lerpColor("#ee8833", "#1a1a4a", t);
+    skyLow = lerpColor("#ffbb66", "#1a1a3a", t);
+    skyBot = lerpColor("#5a9e60", "#0d2818", t);
+  }
 
   /* Sky gradient */
   const skyGrad = context.createLinearGradient(0, 0, 0, GAME_H);
@@ -362,26 +433,69 @@ const drawBackground = () => {
   context.fillStyle = skyGrad;
   context.fillRect(0, 0, GAME_W, GAME_H);
 
-  /* Sun glow in top-left */
+  /* Stars during night phase */
+  if (isNight && stars.length > 0) {
+    const now = performance.now() / 1000;
+    for (const star of stars) {
+      const twinkle = 0.5 + 0.5 * Math.sin(now * 2.5 + star.twinklePhase);
+      const alpha = star.brightness * twinkle * t;
+      context.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+      context.beginPath();
+      context.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+      context.fill();
+    }
+  }
+
   const sunX = 60;
   const sunY = 50;
-  const haloGrad = context.createRadialGradient(sunX, sunY, 8, sunX, sunY, 70);
-  const haloAlpha = 0.12 + scoreProgress * 0.1;
-  haloGrad.addColorStop(0, `rgba(255, 240, 180, ${0.6 + scoreProgress * 0.3})`);
-  haloGrad.addColorStop(0.3, `rgba(255, 220, 120, ${haloAlpha})`);
-  haloGrad.addColorStop(1, "rgba(255, 220, 120, 0)");
-  context.fillStyle = haloGrad;
-  context.fillRect(0, 0, 160, 140);
 
-  /* Sun circle */
-  context.fillStyle = `rgba(255, 240, 200, ${0.7 + scoreProgress * 0.2})`;
-  context.beginPath();
-  context.arc(sunX, sunY, 16, 0, Math.PI * 2);
-  context.fill();
+  if (isNight) {
+    /* Moon (crescent) replaces sun during night */
+    const moonAlpha = 0.5 + t * 0.5;
+    /* Moon glow */
+    const moonGlow = context.createRadialGradient(sunX, sunY, 6, sunX, sunY, 50);
+    moonGlow.addColorStop(0, `rgba(200, 210, 255, ${0.3 * moonAlpha})`);
+    moonGlow.addColorStop(1, "rgba(200, 210, 255, 0)");
+    context.fillStyle = moonGlow;
+    context.fillRect(0, 0, 140, 120);
 
-  /* Parallax clouds */
+    /* Full moon circle */
+    context.fillStyle = `rgba(230, 235, 255, ${moonAlpha})`;
+    context.beginPath();
+    context.arc(sunX, sunY, 16, 0, Math.PI * 2);
+    context.fill();
+
+    /* Dark circle to create crescent effect */
+    context.fillStyle = skyTop;
+    context.beginPath();
+    context.arc(sunX + 7, sunY - 3, 13, 0, Math.PI * 2);
+    context.fill();
+  } else {
+    /* Sun glow in top-left */
+    const sunAlpha = phase === "night" ? 0 : 1;
+    const haloGrad = context.createRadialGradient(sunX, sunY, 8, sunX, sunY, 70);
+    const scoreProgress = phase === "dawn" ? t : (phase === "sunset" ? t : 0);
+    const haloAlpha = 0.12 + scoreProgress * 0.1;
+    haloGrad.addColorStop(0, `rgba(255, 240, 180, ${(0.6 + scoreProgress * 0.3) * sunAlpha})`);
+    haloGrad.addColorStop(0.3, `rgba(255, 220, 120, ${haloAlpha * sunAlpha})`);
+    haloGrad.addColorStop(1, "rgba(255, 220, 120, 0)");
+    context.fillStyle = haloGrad;
+    context.fillRect(0, 0, 160, 140);
+
+    /* Sun circle */
+    context.fillStyle = `rgba(255, 240, 200, ${(0.7 + scoreProgress * 0.2) * sunAlpha})`;
+    context.beginPath();
+    context.arc(sunX, sunY, 16, 0, Math.PI * 2);
+    context.fill();
+  }
+
+  /* Parallax clouds — darken during night */
   for (const cloud of clouds) {
-    context.fillStyle = `rgba(255, 255, 255, ${cloud.alpha})`;
+    const cloudR = isNight ? Math.round(100 + 155 * (1 - t)) : 255;
+    const cloudG = isNight ? Math.round(100 + 155 * (1 - t)) : 255;
+    const cloudB = isNight ? Math.round(120 + 135 * (1 - t)) : 255;
+    const cloudA = isNight ? cloud.alpha * 0.5 : cloud.alpha;
+    context.fillStyle = `rgba(${cloudR}, ${cloudG}, ${cloudB}, ${cloudA})`;
     context.beginPath();
     context.ellipse(cloud.x, cloud.y, cloud.width / 2, cloud.height / 2, 0, 0, Math.PI * 2);
     context.fill();
@@ -393,10 +507,14 @@ const drawBackground = () => {
     context.fill();
   }
 
-  /* Distant rolling hills layer */
+  /* Distant rolling hills layer — darken during night */
   const groundTop = GAME_H - 90;
+  const nightDim = isNight ? (1 - t * 0.7) : 1;
   if (hills.length > 1) {
-    context.fillStyle = "rgba(80, 160, 100, 0.25)";
+    const hillR = Math.round(80 * nightDim);
+    const hillG = Math.round(160 * nightDim);
+    const hillB = Math.round(100 * nightDim);
+    context.fillStyle = `rgba(${hillR}, ${hillG}, ${hillB}, 0.25)`;
     context.beginPath();
     context.moveTo(0, groundTop);
     for (const h of hills) {
@@ -407,7 +525,10 @@ const drawBackground = () => {
     context.fill();
 
     /* Second, slightly different hill layer for depth */
-    context.fillStyle = "rgba(60, 140, 80, 0.15)";
+    const hill2R = Math.round(60 * nightDim);
+    const hill2G = Math.round(140 * nightDim);
+    const hill2B = Math.round(80 * nightDim);
+    context.fillStyle = `rgba(${hill2R}, ${hill2G}, ${hill2B}, 0.15)`;
     context.beginPath();
     context.moveTo(0, groundTop);
     for (let i = 0; i < hills.length; i++) {
@@ -420,7 +541,8 @@ const drawBackground = () => {
 
   /* Tree silhouettes along ground edge */
   for (const tree of trees) {
-    context.fillStyle = "rgba(40, 100, 50, 0.3)";
+    const treeAlpha = isNight ? 0.5 : 0.3;
+    context.fillStyle = `rgba(${Math.round(40 * nightDim)}, ${Math.round(100 * nightDim)}, ${Math.round(50 * nightDim)}, ${treeAlpha})`;
     /* Trunk */
     context.fillRect(tree.x - 1.5, groundTop - tree.height * 0.4, 3, tree.height * 0.4);
     /* Canopy - triangle */
@@ -437,7 +559,7 @@ const drawBackground = () => {
     context.save();
     context.translate(leaf.x, leaf.y);
     context.rotate(leaf.rot);
-    context.globalAlpha = leaf.alpha;
+    context.globalAlpha = leaf.alpha * nightDim;
     context.fillStyle = "#5eaa5e";
     context.beginPath();
     /* Simple leaf shape: two arcs */
@@ -449,18 +571,25 @@ const drawBackground = () => {
     context.restore();
   }
 
-  /* Ground layers */
-  context.fillStyle = "rgba(123, 228, 149, 0.5)";
+  /* Ground layers — darken during night */
+  const groundR1 = Math.round(123 * nightDim);
+  const groundG1 = Math.round(228 * nightDim);
+  const groundB1 = Math.round(149 * nightDim);
+  context.fillStyle = `rgba(${groundR1}, ${groundG1}, ${groundB1}, 0.5)`;
   context.fillRect(0, groundTop, GAME_W, 90);
 
+  const gTopColor = lerpColor("#6cd47e", "#1a3a22", isNight ? t : 0);
+  const gBotColor = lerpColor("#4fb866", "#0f2a18", isNight ? t : 0);
   const groundGrad = context.createLinearGradient(0, GAME_H - 35, 0, GAME_H);
-  groundGrad.addColorStop(0, "#6cd47e");
-  groundGrad.addColorStop(1, "#4fb866");
+  groundGrad.addColorStop(0, gTopColor);
+  groundGrad.addColorStop(1, gBotColor);
   context.fillStyle = groundGrad;
   context.fillRect(0, GAME_H - 35, GAME_W, 35);
 
-  /* Grass blade tufts along ground top edge */
-  context.strokeStyle = "#3aad55";
+  /* Grass blade tufts along ground top edge — darken during night */
+  const grassColor1 = lerpColor("#3aad55", "#1a4a28", isNight ? t : 0);
+  const grassColor2 = lerpColor("#5cc86e", "#2a5a35", isNight ? t : 0);
+  context.strokeStyle = grassColor1;
   context.lineWidth = 1.2;
   for (const g of grassBlades) {
     context.beginPath();
@@ -469,7 +598,7 @@ const drawBackground = () => {
     context.stroke();
   }
   /* Second layer of grass (slightly different color, offset) */
-  context.strokeStyle = "#5cc86e";
+  context.strokeStyle = grassColor2;
   context.lineWidth = 1;
   for (let i = 0; i < grassBlades.length; i += 2) {
     const g = grassBlades[i];
@@ -483,7 +612,7 @@ const drawBackground = () => {
   for (const fl of flowers) {
     if (fl.type === "flower") {
       /* Stem */
-      context.strokeStyle = "#3aad55";
+      context.strokeStyle = grassColor1;
       context.lineWidth = 1.5;
       context.beginPath();
       context.moveTo(fl.x, fl.y);
@@ -532,7 +661,7 @@ const drawBackground = () => {
     const wingFlap = Math.sin(bf.wingPhase) * 0.6;
     /* Left wing */
     context.fillStyle = bf.color1;
-    context.globalAlpha = 0.7;
+    context.globalAlpha = 0.7 * nightDim;
     context.beginPath();
     context.ellipse(-bf.size * 0.6, 0, bf.size, bf.size * 0.6 * (0.4 + Math.abs(wingFlap)), 0.3 + wingFlap, 0, Math.PI * 2);
     context.fill();
@@ -697,39 +826,146 @@ const drawBird = () => {
   context.restore();
 };
 
+/* --- Pipe skin based on score --- */
+function getPipeSkin(score) {
+  if (score < 15) {
+    /* Wooden: brown/tan colors */
+    return {
+      type: "wooden",
+      bodyLeft: "#8B6914",
+      bodyMidL: "#A07828",
+      bodyMidR: "#967020",
+      bodyRight: "#7A5A10",
+      capLeft: "#8B6914",
+      capMidL: "#B08830",
+      capMidR: "#A07828",
+      capRight: "#7A5A10",
+      highlight: "rgba(255, 230, 180, 0.15)",
+      crackColor: "rgba(60, 35, 5, 0.2)",
+      vineColor: "rgba(80, 60, 20, 0.2)",
+      shadowColor: "rgba(50, 30, 5, 0.12)",
+    };
+  } else if (score < 30) {
+    /* Metal: silver/gray metallic */
+    return {
+      type: "metal",
+      bodyLeft: "#808890",
+      bodyMidL: "#a0a8b0",
+      bodyMidR: "#909aa4",
+      bodyRight: "#707880",
+      capLeft: "#808890",
+      capMidL: "#b0b8c0",
+      capMidR: "#a0a8b0",
+      capRight: "#707880",
+      highlight: "rgba(255, 255, 255, 0.2)",
+      crackColor: "rgba(40, 40, 50, 0.15)",
+      vineColor: "rgba(60, 60, 70, 0.15)",
+      shadowColor: "rgba(0, 0, 0, 0.12)",
+    };
+  } else {
+    /* Neon: bright magenta/cyan with glow */
+    return {
+      type: "neon",
+      bodyLeft: "#aa1188",
+      bodyMidL: "#dd22aa",
+      bodyMidR: "#cc1199",
+      bodyRight: "#880066",
+      capLeft: "#00bbcc",
+      capMidL: "#00eeff",
+      capMidR: "#00ddee",
+      capRight: "#009aaa",
+      highlight: "rgba(255, 100, 255, 0.25)",
+      crackColor: "rgba(0, 255, 255, 0.2)",
+      vineColor: "rgba(255, 0, 255, 0.2)",
+      shadowColor: "rgba(0, 0, 0, 0.15)",
+    };
+  }
+}
+
 const drawPipes = () => {
+  const skin = getPipeSkin(gameState.score);
+
   pipes.forEach((pipe, pipeIdx) => {
     /* Pipe cap dimensions */
     const capW = gameState.pipeWidth + 10;
     const capH = 18;
     const capX = pipe.x - 5;
 
+    /* Neon glow aura (before pipe body so it appears behind) */
+    if (skin.type === "neon") {
+      context.save();
+      context.shadowColor = "#ff00ff";
+      context.shadowBlur = 18;
+      context.fillStyle = "rgba(255, 0, 255, 0.08)";
+      context.fillRect(pipe.x - 4, 0, gameState.pipeWidth + 8, pipe.top - capH);
+      context.restore();
+    }
+
     /* Top pipe body */
     const topGrad = context.createLinearGradient(pipe.x, 0, pipe.x + gameState.pipeWidth, 0);
-    topGrad.addColorStop(0, "#2d8a5e");
-    topGrad.addColorStop(0.3, "#3da870");
-    topGrad.addColorStop(0.7, "#35966a");
-    topGrad.addColorStop(1, "#28774e");
+    topGrad.addColorStop(0, skin.bodyLeft);
+    topGrad.addColorStop(0.3, skin.bodyMidL);
+    topGrad.addColorStop(0.7, skin.bodyMidR);
+    topGrad.addColorStop(1, skin.bodyRight);
     context.fillStyle = topGrad;
     context.fillRect(pipe.x, 0, gameState.pipeWidth, pipe.top - capH);
 
+    /* Wood grain texture for wooden pipes */
+    if (skin.type === "wooden") {
+      context.strokeStyle = "rgba(100, 60, 10, 0.12)";
+      context.lineWidth = 0.8;
+      for (let gy = 8; gy < pipe.top - capH; gy += 12) {
+        context.beginPath();
+        context.moveTo(pipe.x, gy);
+        context.bezierCurveTo(
+          pipe.x + gameState.pipeWidth * 0.3, gy + 2,
+          pipe.x + gameState.pipeWidth * 0.7, gy - 2,
+          pipe.x + gameState.pipeWidth, gy
+        );
+        context.stroke();
+      }
+    }
+
     /* Top cap */
     const capGrad = context.createLinearGradient(capX, 0, capX + capW, 0);
-    capGrad.addColorStop(0, "#2d8a5e");
-    capGrad.addColorStop(0.3, "#45b87a");
-    capGrad.addColorStop(0.7, "#3da870");
-    capGrad.addColorStop(1, "#28774e");
+    capGrad.addColorStop(0, skin.capLeft);
+    capGrad.addColorStop(0.3, skin.capMidL);
+    capGrad.addColorStop(0.7, skin.capMidR);
+    capGrad.addColorStop(1, skin.capRight);
+
+    if (skin.type === "neon") {
+      context.save();
+      context.shadowColor = "#00ffff";
+      context.shadowBlur = 14;
+    }
     context.fillStyle = capGrad;
     context.beginPath();
     context.roundRect(capX, pipe.top - capH, capW, capH, [4, 4, 0, 0]);
     context.fill();
+    if (skin.type === "neon") {
+      context.restore();
+    }
+
+    /* Metal rivets on cap */
+    if (skin.type === "metal") {
+      context.fillStyle = "rgba(200, 210, 220, 0.6)";
+      context.strokeStyle = "rgba(50, 55, 60, 0.4)";
+      context.lineWidth = 0.5;
+      const rivetY = pipe.top - capH / 2;
+      for (let rx = capX + 8; rx < capX + capW - 4; rx += 14) {
+        context.beginPath();
+        context.arc(rx, rivetY, 2.5, 0, Math.PI * 2);
+        context.fill();
+        context.stroke();
+      }
+    }
 
     /* Highlight stripe on top pipe */
-    context.fillStyle = "rgba(255, 255, 255, 0.12)";
+    context.fillStyle = skin.highlight;
     context.fillRect(pipe.x + 8, 0, 6, pipe.top - capH);
 
     /* Crack/texture lines on top pipe surface */
-    context.strokeStyle = "rgba(20, 60, 30, 0.15)";
+    context.strokeStyle = skin.crackColor;
     context.lineWidth = 0.8;
     for (const crack of pipe.cracks) {
       const crackY = crack.yStart * (pipe.top - capH);
@@ -743,7 +979,7 @@ const drawPipes = () => {
     }
 
     /* Vine/moss lines climbing up top pipe */
-    context.strokeStyle = "rgba(30, 120, 50, 0.25)";
+    context.strokeStyle = skin.vineColor;
     context.lineWidth = 1.2;
     for (const vine of pipe.vines) {
       context.beginPath();
@@ -783,22 +1019,70 @@ const drawPipes = () => {
     context.fillStyle = botGapShadow;
     context.fillRect(pipe.x - 5, bottomY - gapShadowH + 2, capW, gapShadowH);
 
+    /* Neon glow aura for bottom pipe */
+    if (skin.type === "neon") {
+      context.save();
+      context.shadowColor = "#ff00ff";
+      context.shadowBlur = 18;
+      context.fillStyle = "rgba(255, 0, 255, 0.08)";
+      context.fillRect(pipe.x - 4, bottomY + capH, gameState.pipeWidth + 8, GAME_H - bottomY - capH);
+      context.restore();
+    }
+
     /* Bottom pipe body */
     context.fillStyle = topGrad;
     context.fillRect(pipe.x, bottomY + capH, gameState.pipeWidth, GAME_H - bottomY - capH);
 
+    /* Wood grain texture for wooden bottom pipe */
+    if (skin.type === "wooden") {
+      context.strokeStyle = "rgba(100, 60, 10, 0.12)";
+      context.lineWidth = 0.8;
+      for (let gy = bottomY + capH + 8; gy < GAME_H; gy += 12) {
+        context.beginPath();
+        context.moveTo(pipe.x, gy);
+        context.bezierCurveTo(
+          pipe.x + gameState.pipeWidth * 0.3, gy + 2,
+          pipe.x + gameState.pipeWidth * 0.7, gy - 2,
+          pipe.x + gameState.pipeWidth, gy
+        );
+        context.stroke();
+      }
+    }
+
     /* Bottom cap */
+    if (skin.type === "neon") {
+      context.save();
+      context.shadowColor = "#00ffff";
+      context.shadowBlur = 14;
+    }
     context.fillStyle = capGrad;
     context.beginPath();
     context.roundRect(capX, bottomY, capW, capH, [0, 0, 4, 4]);
     context.fill();
+    if (skin.type === "neon") {
+      context.restore();
+    }
+
+    /* Metal rivets on bottom cap */
+    if (skin.type === "metal") {
+      context.fillStyle = "rgba(200, 210, 220, 0.6)";
+      context.strokeStyle = "rgba(50, 55, 60, 0.4)";
+      context.lineWidth = 0.5;
+      const rivetY = bottomY + capH / 2;
+      for (let rx = capX + 8; rx < capX + capW - 4; rx += 14) {
+        context.beginPath();
+        context.arc(rx, rivetY, 2.5, 0, Math.PI * 2);
+        context.fill();
+        context.stroke();
+      }
+    }
 
     /* Highlight stripe on bottom pipe */
-    context.fillStyle = "rgba(255, 255, 255, 0.12)";
+    context.fillStyle = skin.highlight;
     context.fillRect(pipe.x + 8, bottomY + capH, 6, GAME_H - bottomY - capH);
 
     /* Crack/texture lines on bottom pipe */
-    context.strokeStyle = "rgba(20, 60, 30, 0.15)";
+    context.strokeStyle = skin.crackColor;
     context.lineWidth = 0.8;
     for (const crack of pipe.cracks) {
       const bpHeight = GAME_H - bottomY - capH;
@@ -813,7 +1097,7 @@ const drawPipes = () => {
     }
 
     /* Vine/moss lines climbing up bottom pipe */
-    context.strokeStyle = "rgba(30, 120, 50, 0.25)";
+    context.strokeStyle = skin.vineColor;
     context.lineWidth = 1.2;
     for (const vine of pipe.vines) {
       context.beginPath();
@@ -826,7 +1110,7 @@ const drawPipes = () => {
     }
 
     /* Pipe shadow (inner edge) */
-    context.fillStyle = "rgba(0, 0, 0, 0.1)";
+    context.fillStyle = skin.shadowColor;
     context.fillRect(pipe.x + gameState.pipeWidth - 8, 0, 8, pipe.top - capH);
     context.fillRect(pipe.x + gameState.pipeWidth - 8, bottomY + capH, 8, GAME_H - bottomY - capH);
   });
@@ -918,7 +1202,9 @@ const updateScore = () => {
     if (!pipe.passed && pipe.x + gameState.pipeWidth < bird.x) {
       pipe.passed = true;
       gameState.score += 1;
-      scoreLabel.textContent = gameState.score;
+      if (!gameState.zenMode) {
+        scoreLabel.textContent = gameState.score;
+      }
       gameState.scorePop = 1;
       Audio.score();
       fbAchStats.bestScore = Math.max(fbAchStats.bestScore, gameState.score);
@@ -974,7 +1260,7 @@ const update = (deltaSeconds) => {
 
   pipes = pipes.filter((pipe) => pipe.x + gameState.pipeWidth > -10);
 
-  if (pipes.some(detectCollision)) {
+  if (pipes.some(detectCollision) && !gameState.zenMode) {
     gameState.isGameOver = true;
     gameState.shakeTimer = 12;
     gameState.shakeIntensity = 6;
@@ -1007,6 +1293,18 @@ const update = (deltaSeconds) => {
 
   updateScore();
 
+  /* Zen mode timer tracking */
+  if (gameState.zenMode && gameState.isRunning && !gameState.isGameOver) {
+    if (gameState.zenModeStartTime === 0) {
+      gameState.zenModeStartTime = performance.now();
+    }
+    const elapsed = (performance.now() - gameState.zenModeStartTime) / 1000;
+    if (elapsed >= 120 && !fbAchStats.zenMaster) {
+      fbAchStats.zenMaster = true;
+      checkFbAch(); showFbAchPopup(); saveFbAch();
+    }
+  }
+
   /* Update clouds */
   for (const cloud of clouds) {
     cloud.x -= cloud.speed * deltaSeconds * 60;
@@ -1032,6 +1330,11 @@ const update = (deltaSeconds) => {
       leaf.x = GAME_W + 10;
       leaf.y = 60 + Math.random() * (GAME_H - 160);
     }
+  }
+
+  /* Update star twinkle phases */
+  for (const star of stars) {
+    star.twinklePhase += deltaSeconds * (1.5 + star.brightness);
   }
 
   /* Update butterflies */
@@ -1200,6 +1503,20 @@ if (muteButton) {
     updateMuteLabel();
   });
   updateMuteLabel();
+}
+
+/* --- Zen mode toggle --- */
+const zenModeButton = document.getElementById("zenModeButton");
+if (zenModeButton) {
+  const updateZenLabel = () => {
+    zenModeButton.textContent = gameState.zenMode ? "Zen: ON" : "Zen";
+  };
+  zenModeButton.addEventListener("click", () => {
+    gameState.zenMode = !gameState.zenMode;
+    updateZenLabel();
+    resetGame();
+  });
+  updateZenLabel();
 }
 
 /* ── Fullscreen ──────────────────────────────────────────── */
