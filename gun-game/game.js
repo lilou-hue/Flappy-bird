@@ -25,9 +25,10 @@ const GG_ACHIEVEMENTS = [
   { id: 'demolition',      icon: '\uD83E\uDDE8', get title() { return I18N.t('ggAchDemolition'); },      get desc() { return I18N.t('ggAchDemolitionDesc'); },      check: s => s.totalDestroyed >= 50 },
   { id: 'sharpshooter',    icon: '\uD83C\uDFAF', get title() { return I18N.t('ggAchSharpShooter'); },    get desc() { return I18N.t('ggAchSharpShooterDesc'); },    check: s => s.bestScore >= 20 },
   { id: 'dedicated',       icon: '\uD83C\uDFAE', get title() { return I18N.t('ggAchDedicated'); },       get desc() { return I18N.t('ggAchDedicatedDesc'); },       check: s => s.gamesPlayed >= 10 },
+  { id: 'ricochet_kill',   icon: '\uD83C\uDFD3', title: 'Ricochet Kill', desc: 'Destroy a pipe with a bounced bullet', check: s => s.ricochetKills >= 1 },
 ];
 
-let ggAchStats = { totalDestroyed: 0, highestTier: 1, wins: 0, bestScore: 0, gamesPlayed: 0 };
+let ggAchStats = { totalDestroyed: 0, highestTier: 1, wins: 0, bestScore: 0, gamesPlayed: 0, ricochetKills: 0 };
 let ggUnlocked = new Set();
 let ggAchQueue = [];
 let ggAchTimer = 0;
@@ -113,6 +114,11 @@ const gunState = {
   screenFlash: 0,
   demotionMsg: '',
   demotionTimer: 0,
+  pipesDestroyed: 0,
+  boss: null,
+  upgradeChoice: null,
+  weaponUpgrades: [],
+  ricochetKills: 0,
 };
 
 const weaponDefs = [
@@ -301,6 +307,11 @@ function fullGunReset() {
   gunState.screenFlash = 0;
   gunState.demotionMsg = '';
   gunState.demotionTimer = 0;
+  gunState.pipesDestroyed = 0;
+  gunState.boss = null;
+  gunState.upgradeChoice = null;
+  gunState.weaponUpgrades = [];
+  gunState.ricochetKills = 0;
 }
 
 const resetGame = () => {
@@ -330,6 +341,11 @@ const resetGame = () => {
   gunState.screenFlash = 0;
   gunState.victoryTriggered = false;
   gunState.demotionTimer = 0;
+  gunState.pipesDestroyed = 0;
+  gunState.boss = null;
+  gunState.upgradeChoice = null;
+  gunState.weaponUpgrades = [];
+  gunState.ricochetKills = 0;
   applyGunDifficulty();
   initClouds();
   initHills();
@@ -415,14 +431,27 @@ function lerpColor(a, b, t) {
 /* --- Gun Game: shoot --- */
 function shoot() {
   if (!gameState.isRunning || gameState.isGameOver || gunState.victoryTriggered) return;
+  if (gunState.upgradeChoice) return;
   if (gunState.cooldown > 0) return;
 
   const wep = weaponDefs[gunState.tier - 1];
-  gunState.cooldown = wep.fireRate / 1000;
+  let fireRateMult = 1;
+  let damageMult = 1;
+  let projCountBonus = 0;
+  let piercingUpgrade = false;
+  for (const upg of gunState.weaponUpgrades) {
+    if (upg === 'rapid_fire') fireRateMult *= 0.5;
+    if (upg === 'heavy_shot') damageMult *= 2;
+    if (upg === 'spread_shot') projCountBonus += 2;
+    if (upg === 'piercing') piercingUpgrade = true;
+  }
+  gunState.cooldown = (wep.fireRate / 1000) * fireRateMult;
 
-  for (let i = 0; i < wep.projectileCount; i++) {
-    const spreadAngle = wep.projectileCount > 1
-      ? -wep.spread + (2 * wep.spread * i / (wep.projectileCount - 1))
+  const totalCount = wep.projectileCount + projCountBonus;
+  const totalSpread = projCountBonus > 0 ? Math.max(wep.spread, 0.3) : wep.spread;
+  for (let i = 0; i < totalCount; i++) {
+    const spreadAngle = totalCount > 1
+      ? -totalSpread + (2 * totalSpread * i / (totalCount - 1))
       : 0;
     const vx = Math.cos(spreadAngle) * wep.speed;
     const vy = Math.sin(spreadAngle) * wep.speed;
@@ -431,16 +460,17 @@ function shoot() {
       y: bird.y,
       vx: vx,
       vy: vy,
-      damage: wep.damage,
+      damage: Math.round(wep.damage * damageMult),
       radius: wep.radius,
       lifetime: wep.lifetime,
       tier: gunState.tier,
-      piercing: wep.piercing,
+      piercing: wep.piercing || piercingUpgrade,
       explosive: wep.explosive,
       explosionRadius: wep.explosionRadius,
       arcGravity: wep.arcGravity,
       age: 0,
       trail: [],
+      bounces: 0,
     });
   }
   Audio.gunShoot(gunState.tier);
@@ -475,17 +505,17 @@ function circleRectCollision(cx, cy, cr, rect) {
 }
 
 /* --- Damage and destroy pipes --- */
-function damagePipe(pipe, section, damage, projX, projY) {
+function damagePipe(pipe, section, damage, projX, projY, hasBounced) {
   const hpKey = section === 'top' ? 'topHP' : 'bottomHP';
   pipe[hpKey] -= damage;
   if (pipe[hpKey] <= 0) {
-    destroyPipeSection(pipe, section, projX, projY);
+    destroyPipeSection(pipe, section, projX, projY, hasBounced);
   } else {
     Audio.gunPipeHit();
   }
 }
 
-function destroyPipeSection(pipe, section, projX, projY) {
+function destroyPipeSection(pipe, section, projX, projY, hasBounced) {
   const destroyedKey = section === 'top' ? 'topDestroyed' : 'bottomDestroyed';
   pipe[destroyedKey] = true;
 
@@ -525,15 +555,26 @@ function destroyPipeSection(pipe, section, projX, projY) {
 
   gunState.totalDestroyed++;
   ggAchStats.totalDestroyed++;
+  if (hasBounced) {
+    gunState.ricochetKills++;
+    ggAchStats.ricochetKills++;
+  }
   saveGGAch();
   checkGGAch();
   Audio.gunPipeDestroy();
+
+  gunState.pipesDestroyed++;
 
   if (!gunState.victoryTriggered) {
     gunState.destroys++;
     if (gunState.destroys >= 3) {
       advanceTier();
     }
+  }
+
+  /* Boss wave: every 8 pipe destructions */
+  if (gunState.pipesDestroyed > 0 && gunState.pipesDestroyed % 8 === 0 && !gunState.boss) {
+    spawnBoss();
   }
 }
 
@@ -591,6 +632,124 @@ function advanceTier() {
   checkGGAch();
   applyGunDifficulty();
   Audio.gunTierUp();
+
+  /* Weapon upgrade choice at tiers 4 and 7 */
+  if (gunState.tier === 4) {
+    gunState.upgradeChoice = {
+      left: { id: 'rapid_fire', name: 'Rapid Fire', desc: '2x Fire Rate' },
+      right: { id: 'heavy_shot', name: 'Heavy Shot', desc: '2x Damage' },
+    };
+  } else if (gunState.tier === 7) {
+    gunState.upgradeChoice = {
+      left: { id: 'spread_shot', name: 'Spread Shot', desc: '3 Bullets Per Shot' },
+      right: { id: 'piercing', name: 'Piercing', desc: 'Bullets Go Through Pipes' },
+    };
+  }
+}
+
+/* --- Boss wave --- */
+function spawnBoss() {
+  gunState.boss = {
+    x: GAME_W + 10,
+    y: GAME_H / 2 - 40,
+    width: 100,
+    hp: 5,
+    maxHp: 5,
+    oscillatePhase: 0,
+    oscillateSpeed: 2,
+  };
+}
+
+function updateBoss(dt) {
+  const boss = gunState.boss;
+  if (!boss) return;
+  boss.oscillatePhase += boss.oscillateSpeed * dt;
+  boss.y = GAME_H / 2 - 40 + Math.sin(boss.oscillatePhase) * 120;
+  /* Drift boss into screen, then hold position */
+  if (boss.x > GAME_W - 140) {
+    boss.x -= 80 * dt;
+  }
+}
+
+function drawBoss() {
+  const boss = gunState.boss;
+  if (!boss) return;
+  const bh = boss.width * 0.8;
+  context.save();
+  /* Glowing edges */
+  context.shadowColor = '#ff4444';
+  context.shadowBlur = 12;
+  const grad = context.createLinearGradient(boss.x, boss.y, boss.x + boss.width, boss.y);
+  grad.addColorStop(0, '#8a2020');
+  grad.addColorStop(0.3, '#cc3333');
+  grad.addColorStop(0.7, '#aa2828');
+  grad.addColorStop(1, '#662020');
+  context.fillStyle = grad;
+  context.fillRect(boss.x, boss.y, boss.width, bh);
+  context.shadowBlur = 0;
+
+  /* Cap top */
+  context.fillStyle = '#dd4444';
+  context.beginPath();
+  context.roundRect(boss.x - 5, boss.y - 8, boss.width + 10, 12, [4, 4, 0, 0]);
+  context.fill();
+  /* Cap bottom */
+  context.beginPath();
+  context.roundRect(boss.x - 5, boss.y + bh - 4, boss.width + 10, 12, [0, 0, 4, 4]);
+  context.fill();
+
+  /* HP bar above boss */
+  const barW = boss.width;
+  const barH = 6;
+  const barX = boss.x;
+  const barY = boss.y - 20;
+  context.fillStyle = 'rgba(0, 0, 0, 0.5)';
+  context.fillRect(barX, barY, barW, barH);
+  const hpPct = boss.hp / boss.maxHp;
+  context.fillStyle = hpPct > 0.5 ? '#44ff44' : hpPct > 0.25 ? '#ffcc00' : '#ff4444';
+  context.fillRect(barX, barY, barW * hpPct, barH);
+  context.strokeStyle = 'rgba(255,255,255,0.5)';
+  context.lineWidth = 1;
+  context.strokeRect(barX, barY, barW, barH);
+
+  /* BOSS label */
+  context.fillStyle = '#FFD700';
+  context.font = "bold 10px 'Trebuchet MS'";
+  context.textAlign = 'center';
+  context.fillText('BOSS', boss.x + boss.width / 2, barY - 4);
+
+  context.restore();
+}
+
+function defeatBoss() {
+  const boss = gunState.boss;
+  /* Celebration particles */
+  for (let i = 0; i < 20; i++) {
+    const angle = (Math.PI * 2 * i) / 20;
+    gunState.pipeFragments.push({
+      x: boss.x + boss.width / 2,
+      y: boss.y + boss.width * 0.4,
+      vx: Math.cos(angle) * (80 + Math.random() * 120),
+      vy: Math.sin(angle) * (80 + Math.random() * 120),
+      w: 3 + Math.random() * 5,
+      h: 3 + Math.random() * 5,
+      rot: Math.random() * Math.PI * 2,
+      rotSpeed: (Math.random() - 0.5) * 10,
+      alpha: 1,
+      color: ['#FFD700', '#FF6600', '#FF4444', '#FFFF44'][Math.floor(Math.random() * 4)],
+    });
+  }
+  gunState.boss = null;
+  gameState.score += 500;
+  scoreLabel.textContent = gameState.score;
+  gunState.screenFlash = 0.3;
+  gameState.shakeTimer = 10;
+  gameState.shakeIntensity = 5;
+  /* Tier upgrade as bonus */
+  if (gunState.tier < 8) {
+    advanceTier();
+  }
+  Audio.gunPipeDestroy();
 }
 
 /* --- Tier demotion on death --- */
@@ -634,6 +793,19 @@ function updateProjectiles(dt) {
     proj.age += dt;
     proj.lifetime -= dt;
 
+    /* Ricochet bounce off top/bottom edges at tier 4+ */
+    if (gunState.tier >= 4 && (proj.bounces || 0) < 1) {
+      if (proj.y - proj.radius <= 0) {
+        proj.y = proj.radius;
+        proj.vy *= -1;
+        proj.bounces = (proj.bounces || 0) + 1;
+      } else if (proj.y + proj.radius >= GAME_H - 90) {
+        proj.y = GAME_H - 90 - proj.radius;
+        proj.vy *= -1;
+        proj.bounces = (proj.bounces || 0) + 1;
+      }
+    }
+
     if (proj.tier === 8) {
       proj.trail.push({ x: proj.x, y: proj.y, alpha: 0.8 });
       if (proj.trail.length > 12) proj.trail.shift();
@@ -656,7 +828,7 @@ function updateProjectiles(dt) {
         const botDist = Math.abs(bird.y - (nearestPipe.top + gameState.gap + (GAME_H - nearestPipe.top - gameState.gap) / 2));
         const section = (!nearestPipe.topDestroyed && topDist < botDist) ? 'top' : (!nearestPipe.bottomDestroyed ? 'bottom' : 'top');
         if ((section === 'top' && !nearestPipe.topDestroyed) || (section === 'bottom' && !nearestPipe.bottomDestroyed)) {
-          damagePipe(nearestPipe, section, proj.damage, nearestPipe.x + gameState.pipeWidth / 2, bird.y);
+          damagePipe(nearestPipe, section, proj.damage, nearestPipe.x + gameState.pipeWidth / 2, bird.y, (proj.bounces || 0) > 0);
         }
         proj.lifetime = 0.3;
         proj.piercing = false;
@@ -664,6 +836,23 @@ function updateProjectiles(dt) {
     }
 
     if (proj.tier !== 7) {
+      /* Check boss collision */
+      if (gunState.boss) {
+        const boss = gunState.boss;
+        if (circleRectCollision(proj.x, proj.y, proj.radius, { x: boss.x, y: boss.y, w: boss.width, h: boss.width * 0.8 })) {
+          boss.hp -= proj.damage;
+          if (boss.hp <= 0) {
+            defeatBoss();
+          } else {
+            Audio.gunPipeHit();
+          }
+          if (!proj.piercing) {
+            proj.lifetime = 0;
+            continue;
+          }
+        }
+      }
+
       for (const pipe of pipes) {
         if (pipe.topHP === undefined) continue;
         const section = projectileHitsPipe(proj, pipe);
@@ -671,7 +860,7 @@ function updateProjectiles(dt) {
           if (proj.explosive) {
             explosiveDamage(proj);
           } else {
-            damagePipe(pipe, section, proj.damage, proj.x, proj.y);
+            damagePipe(pipe, section, proj.damage, proj.x, proj.y, (proj.bounces || 0) > 0);
           }
           if (!proj.piercing) {
             proj.lifetime = 0;
@@ -1278,6 +1467,9 @@ const updateScore = () => {
 };
 
 const update = (deltaSeconds) => {
+  /* Pause update logic when upgrade choice is shown */
+  if (gunState.upgradeChoice) return;
+
   if (!gameState.isRunning || gameState.isGameOver) {
     if (gameState.isGameOver) {
       for (const fp of featherParticles) {
@@ -1331,6 +1523,17 @@ const update = (deltaSeconds) => {
     gameState.shakeIntensity = 6;
   }
 
+  /* Boss collision with bird */
+  if (!isInvincible && gunState.boss) {
+    const boss = gunState.boss;
+    const bh = boss.width * 0.8;
+    if (circleRectCollision(bird.x, bird.y, bird.radius, { x: boss.x, y: boss.y, w: boss.width, h: bh })) {
+      gameState.isGameOver = true;
+      gameState.shakeTimer = 12;
+      gameState.shakeIntensity = 6;
+    }
+  }
+
   if (gameState.isGameOver) {
     saveBestScore();
     if (!feathersSpawned) {
@@ -1358,6 +1561,7 @@ const update = (deltaSeconds) => {
     gunState.demotionTimer = Math.max(0, gunState.demotionTimer - deltaSeconds);
     updateProjectiles(deltaSeconds);
     updateFragments(deltaSeconds);
+    updateBoss(deltaSeconds);
   }
   if (gameState.isGameOver) {
     updateFragments(deltaSeconds);
@@ -1620,6 +1824,75 @@ function drawGunHUD() {
   }
 }
 
+/* --- Weapon upgrade choice overlay --- */
+function selectUpgrade(side) {
+  if (!gunState.upgradeChoice) return;
+  const chosen = side === 'left' ? gunState.upgradeChoice.left : gunState.upgradeChoice.right;
+  gunState.weaponUpgrades.push(chosen.id);
+  gunState.upgradeChoice = null;
+}
+
+function drawUpgradeChoice() {
+  if (!gunState.upgradeChoice) return;
+  const choice = gunState.upgradeChoice;
+
+  /* Dim overlay */
+  context.fillStyle = 'rgba(0, 0, 0, 0.7)';
+  context.fillRect(0, 0, GAME_W, GAME_H);
+
+  /* Title */
+  context.fillStyle = '#FFD700';
+  context.font = "bold 22px 'Trebuchet MS'";
+  context.textAlign = 'center';
+  context.fillText('Choose Upgrade', GAME_W / 2, GAME_H * 0.25);
+
+  /* Left option */
+  const boxW = GAME_W * 0.4;
+  const boxH = 120;
+  const leftX = GAME_W * 0.05;
+  const rightX = GAME_W * 0.55;
+  const boxY = GAME_H * 0.35;
+
+  /* Left box */
+  context.fillStyle = 'rgba(50, 120, 200, 0.6)';
+  context.beginPath();
+  context.roundRect(leftX, boxY, boxW, boxH, 8);
+  context.fill();
+  context.strokeStyle = '#6699FF';
+  context.lineWidth = 2;
+  context.stroke();
+
+  context.fillStyle = '#FFFFFF';
+  context.font = "bold 16px 'Trebuchet MS'";
+  context.fillText(choice.left.name, leftX + boxW / 2, boxY + 35);
+  context.font = "13px 'Trebuchet MS'";
+  context.fillStyle = '#AACCFF';
+  context.fillText(choice.left.desc, leftX + boxW / 2, boxY + 60);
+  context.fillStyle = 'rgba(255,255,255,0.5)';
+  context.font = "12px 'Trebuchet MS'";
+  context.fillText('Press 1 / Tap Left', leftX + boxW / 2, boxY + boxH - 15);
+
+  /* Right box */
+  context.fillStyle = 'rgba(200, 80, 50, 0.6)';
+  context.beginPath();
+  context.roundRect(rightX, boxY, boxW, boxH, 8);
+  context.fill();
+  context.strokeStyle = '#FF6644';
+  context.lineWidth = 2;
+  context.stroke();
+
+  context.fillStyle = '#FFFFFF';
+  context.font = "bold 16px 'Trebuchet MS'";
+  context.textAlign = 'center';
+  context.fillText(choice.right.name, rightX + boxW / 2, boxY + 35);
+  context.font = "13px 'Trebuchet MS'";
+  context.fillStyle = '#FFCCAA';
+  context.fillText(choice.right.desc, rightX + boxW / 2, boxY + 60);
+  context.fillStyle = 'rgba(255,255,255,0.5)';
+  context.font = "12px 'Trebuchet MS'";
+  context.fillText('Press 2 / Tap Right', rightX + boxW / 2, boxY + boxH - 15);
+}
+
 /* --- Weapon indicator on bird --- */
 function drawBirdWeapon() {
   if (!gameState.isRunning) return;
@@ -1750,6 +2023,7 @@ const draw = () => {
   drawBackground();
   drawWind();
   drawPipes();
+  drawBoss();
   drawPipeFragments();
   drawProjectiles();
   drawBird();
@@ -1785,6 +2059,10 @@ const draw = () => {
     drawVictory();
   }
 
+  if (gunState.upgradeChoice) {
+    drawUpgradeChoice();
+  }
+
   context.restore();
   context.setTransform(1, 0, 0, 1, 0, 0);
 };
@@ -1814,6 +2092,7 @@ let lastFlapTime = 0;
 const FLAP_COOLDOWN = 100;
 
 const flap = () => {
+  if (gunState.upgradeChoice) return;
   const now = performance.now();
   if (now - lastFlapTime < FLAP_COOLDOWN) return;
   lastFlapTime = now;
@@ -1848,6 +2127,11 @@ window.addEventListener("keydown", (event) => {
     event.preventDefault();
     shoot();
   }
+  if (gunState.upgradeChoice && (event.code === "Digit1" || event.code === "Digit2")) {
+    event.preventDefault();
+    selectUpgrade(event.code === "Digit1" ? 'left' : 'right');
+    return;
+  }
   if (event.code === "KeyF") {
     if (!event.ctrlKey && !event.metaKey) {
       event.preventDefault();
@@ -1862,6 +2146,14 @@ window.addEventListener("keydown", (event) => {
 
 canvas.addEventListener("pointerdown", (event) => {
   event.preventDefault();
+
+  /* Handle upgrade choice tap */
+  if (gunState.upgradeChoice) {
+    const rect = canvas.getBoundingClientRect();
+    const clickX = (event.clientX - rect.left) * (GAME_W / rect.width);
+    selectUpgrade(clickX < GAME_W / 2 ? 'left' : 'right');
+    return;
+  }
 
   if (gameState.isRunning && !gameState.isGameOver) {
     const rect = canvas.getBoundingClientRect();
