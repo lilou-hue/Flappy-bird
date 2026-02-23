@@ -388,6 +388,7 @@ function resetGame() {
 function startGame() {
   resetGame();
   state = STATE.PLAYING;
+  if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur();
   Audio.resume();
   Audio.startDrone();
 }
@@ -1577,6 +1578,13 @@ canvas.addEventListener('mousedown', (e) => {
 
 canvas.addEventListener('mouseup', () => {
   touchActive = false;
+});
+
+/* --- Prevent space/enter on focused buttons from interfering with gameplay --- */
+[restartBtn, muteBtn, fullscreenBtn, achievementsToggle, document.getElementById('leaderboardToggle')].forEach(btn => {
+  if (btn) btn.addEventListener('keydown', (e) => {
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); btn.blur(); }
+  });
 });
 
 /* --- Button handlers --- */
