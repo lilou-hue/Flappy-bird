@@ -39,9 +39,9 @@
     ROUND_TIME: 20,
     TOTAL_ROUNDS: 10,
     CLASSIFY_INTERVAL: 300,
-    GRID_SIZE: 28,
-    CONFIDENCE_THRESHOLD: 0.30,
-    STROKE_WIDTH: 8,
+    GRID_SIZE: 42,
+    CONFIDENCE_THRESHOLD: 0.20,
+    STROKE_WIDTH: 10,
     COUNTDOWN_SECS: 3,
   };
 
@@ -674,35 +674,52 @@
   /* Generate templates at init time — draw each canonical shape through the
      same pipeline (stroke → downsample → extractFeatures) so templates
      perfectly match what real drawings produce. */
+  function drawToGrid(tmpCanvas, tmpCtx, drawFn, scale) {
+    const S = CFG.DRAW_SIZE;
+    tmpCtx.clearRect(0, 0, S, S);
+    tmpCtx.save();
+    tmpCtx.strokeStyle = '#ffffff';
+    tmpCtx.fillStyle = '#ffffff';
+    tmpCtx.lineWidth = CFG.STROKE_WIDTH;
+    tmpCtx.lineCap = 'round';
+    tmpCtx.lineJoin = 'round';
+    // Draw at given scale, centered
+    const off = S * (1 - scale) / 2;
+    tmpCtx.translate(off, off);
+    tmpCtx.scale(scale, scale);
+    drawFn(tmpCtx, S);
+    tmpCtx.restore();
+
+    gridCtx.clearRect(0, 0, CFG.GRID_SIZE, CFG.GRID_SIZE);
+    gridCtx.drawImage(tmpCanvas, 0, 0, CFG.GRID_SIZE, CFG.GRID_SIZE);
+    const imgData = gridCtx.getImageData(0, 0, CFG.GRID_SIZE, CFG.GRID_SIZE);
+    const grid = [];
+    for (let y = 0; y < CFG.GRID_SIZE; y++) {
+      const row = [];
+      for (let x = 0; x < CFG.GRID_SIZE; x++) {
+        const idx = (y * CFG.GRID_SIZE + x) * 4;
+        row.push(imgData.data[idx + 3] > 80 ? 1 : 0);
+      }
+      grid.push(row);
+    }
+    return extractFeatures(grid);
+  }
+
   function generateTemplates() {
     const tmpCanvas = document.createElement('canvas');
     tmpCanvas.width = CFG.DRAW_SIZE;
     tmpCanvas.height = CFG.DRAW_SIZE;
     const tmpCtx = tmpCanvas.getContext('2d');
 
+    // Generate 3 size variants per shape for robust matching
+    const scales = [0.75, 1.0, 0.55];
     for (const [word, drawFn] of Object.entries(SHAPE_DRAWERS)) {
-      tmpCtx.clearRect(0, 0, CFG.DRAW_SIZE, CFG.DRAW_SIZE);
-      tmpCtx.strokeStyle = '#ffffff';
-      tmpCtx.fillStyle = '#ffffff';
-      tmpCtx.lineWidth = CFG.STROKE_WIDTH;
-      tmpCtx.lineCap = 'round';
-      tmpCtx.lineJoin = 'round';
-      drawFn(tmpCtx, CFG.DRAW_SIZE);
-
-      gridCtx.clearRect(0, 0, CFG.GRID_SIZE, CFG.GRID_SIZE);
-      gridCtx.drawImage(tmpCanvas, 0, 0, CFG.GRID_SIZE, CFG.GRID_SIZE);
-      const imgData = gridCtx.getImageData(0, 0, CFG.GRID_SIZE, CFG.GRID_SIZE);
-      const grid = [];
-      for (let y = 0; y < CFG.GRID_SIZE; y++) {
-        const row = [];
-        for (let x = 0; x < CFG.GRID_SIZE; x++) {
-          const idx = (y * CFG.GRID_SIZE + x) * 4;
-          row.push(imgData.data[idx + 3] > 80 ? 1 : 0);
-        }
-        grid.push(row);
+      const variants = [];
+      for (const sc of scales) {
+        const f = drawToGrid(tmpCanvas, tmpCtx, drawFn, sc);
+        if (f) variants.push(f);
       }
-      const features = extractFeatures(grid);
-      if (features) TEMPLATES[word] = features;
+      if (variants.length > 0) TEMPLATES[word] = variants;
     }
   }
   generateTemplates();
@@ -715,16 +732,28 @@
       return;
     }
 
+    // Only compare against words in the current tier (much fewer candidates = much more accurate)
+    const tier = getTierForRound(round);
+    const pool = TIERS[tier];
+
     const scores = [];
-    for (const [word, template] of Object.entries(TEMPLATES)) {
-      const sim = weightedCosineSimilarity(features, template);
-      scores.push({ word, confidence: sim });
+    for (const word of pool) {
+      const variants = TEMPLATES[word];
+      if (!variants) continue;
+      // Best similarity across size variants
+      let best = 0;
+      for (const tmpl of variants) {
+        const sim = weightedCosineSimilarity(features, tmpl);
+        if (sim > best) best = sim;
+      }
+      scores.push({ word, confidence: best });
     }
 
+    if (scores.length === 0) { guesses = []; return; }
+
     scores.sort((a, b) => b.confidence - a.confidence);
-    // Softmax normalization — gives meaningful confidence values.
-    // Temperature controls peakedness: lower = more confident when match is clear.
-    const T = 0.012;
+    // Softmax — with fewer candidates, sharper temperature works well
+    const T = 0.015;
     const maxRaw = scores[0].confidence;
     const exps = scores.map(s => Math.exp((s.confidence - maxRaw) / T));
     const sumExps = exps.reduce((a, b) => a + b, 0);
