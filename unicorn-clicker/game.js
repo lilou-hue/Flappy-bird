@@ -13,7 +13,7 @@
   window.addEventListener('langchange', () => { I18N.applyDOM(); });
 
   const UC_SKIN_I18N = { unicorn: 'ucSkinUnicorn', tuna: 'ucSkinTuna', volleyball: 'ucSkinVolleyball', spidermonkey: 'ucSkinSpidermonkey', chewbacca: 'ucSkinChewbacca' };
-  const UC_UPG_I18N = { beefyBeans: ['ucBeefyBeans','ucBeefyBeansDesc'], glitterGut: ['ucGlitterGut','ucGlitterGutDesc'], autoFairy: ['ucAutoFairy','ucAutoFairyDesc'], rainbowTurbo: ['ucRainbowTurbo','ucRainbowTurboDesc'], goldenHay: ['ucGoldenHay','ucGoldenHayDesc'], cloudCompressor: ['ucCloudCompressor','ucCloudCompressorDesc'], enchantedBurrito: ['ucEnchantedBurrito','ucEnchantedBurritoDesc'], quantumGas: ['ucQuantumGas','ucQuantumGasDesc'], megaMultiplier: ['ucMegaMultiplier','ucMegaMultiplierDesc'], criticalFart: ['ucCriticalFart','ucCriticalFartDesc'] };
+  const UC_UPG_I18N = { beefyBeans: ['ucBeefyBeans','ucBeefyBeansDesc'], glitterGut: ['ucGlitterGut','ucGlitterGutDesc'], autoFairy: ['ucAutoFairy','ucAutoFairyDesc'], rainbowTurbo: ['ucRainbowTurbo','ucRainbowTurboDesc'], goldenHay: ['ucGoldenHay','ucGoldenHayDesc'], cloudCompressor: ['ucCloudCompressor','ucCloudCompressorDesc'], enchantedBurrito: ['ucEnchantedBurrito','ucEnchantedBurritoDesc'], quantumGas: ['ucQuantumGas','ucQuantumGasDesc'], megaMultiplier: ['ucMegaMultiplier','ucMegaMultiplierDesc'], criticalFart: ['ucCriticalFart','ucCriticalFartDesc'], stellarCompost: ['ucStellarCompost','ucStellarCompostDesc'], luckyClover: ['ucLuckyClover','ucLuckyCloverDesc'], autoTapper: ['ucAutoTapper','ucAutoTapperDesc'], passiveDoubler: ['ucPassiveDoubler','ucPassiveDoublerDesc'], galacticHayBale: ['ucGalacticHayBale','ucGalacticHayBaleDesc'], cosmicCompressor: ['ucCosmicCompressor','ucCosmicCompressorDesc'], nebulaFlatulence: ['ucNebulaFlatulence','ucNebulaFlatulenceDesc'], omnifart: ['ucOmnifart','ucOmnifartDesc'] };
   const UC_EVO_I18N = ['ucEvoBaby','ucEvoSparkle','ucEvoMajestic','ucEvoCosmic','ucEvoFartGod','ucEvoNebulaBeast','ucEvoDimensionRipper','ucEvoOmnifarter'];
 
   /* ── Achievements ────────────────────────────────────────── */
@@ -56,7 +56,7 @@
       totalClicks: state.totalClicks,
       lifetimeSP: state.lifetimeSP,
       evolution: state.evolution,
-      allOneTime: !!(state.upgrades.cloudCompressor && state.upgrades.megaMultiplier && state.upgrades.criticalFart),
+      allOneTime: !!(state.upgrades.cloudCompressor && state.upgrades.megaMultiplier && state.upgrades.criticalFart && state.upgrades.luckyClover && state.upgrades.passiveDoubler && state.upgrades.cosmicCompressor && state.upgrades.omnifart),
       skinsUnlocked: state.unlockedSkins.length,
     };
   }
@@ -121,6 +121,8 @@
       beefyBeans: 0, glitterGut: 0, autoFairy: 0, rainbowTurbo: 0, goldenHay: 0,
       cloudCompressor: false, enchantedBurrito: 0, quantumGas: 0,
       megaMultiplier: false, criticalFart: false,
+      stellarCompost: 0, luckyClover: false, autoTapper: 0, passiveDoubler: false,
+      galacticHayBale: 0, cosmicCompressor: false, nebulaFlatulence: 0, omnifart: false,
     },
     totalClicks: 0,
     lastSave: Date.now(),
@@ -139,6 +141,14 @@
     { key: 'quantumGas',      name: 'Quantum Gas',        desc: '+100 SP/sec',         baseCost: 75000 },
     { key: 'megaMultiplier',  name: 'Mega Multiplier',    desc: 'All taps x3 (once)',  baseCost: 250000, oneTime: true },
     { key: 'criticalFart',    name: 'Critical Fart',      desc: '10% chance 10x tap',  baseCost: 500000, oneTime: true },
+    { key: 'stellarCompost',  name: 'Stellar Compost',    desc: '+500 SP/sec',         baseCost: 400000 },
+    { key: 'autoTapper',      name: 'Auto-Tapper',        desc: '+1 auto-tap/sec',     baseCost: 1000000 },
+    { key: 'luckyClover',     name: 'Lucky Clover',       desc: 'Crit chance 25%',     baseCost: 2000000, oneTime: true },
+    { key: 'passiveDoubler',  name: 'Passive Doubler',    desc: 'All passive x2',      baseCost: 5000000, oneTime: true },
+    { key: 'galacticHayBale', name: 'Galactic Hay Bale',  desc: '+2,500 SP/sec',       baseCost: 10000000 },
+    { key: 'cosmicCompressor',name: 'Cosmic Compressor',  desc: 'All taps x5 (once)',  baseCost: 50000000, oneTime: true },
+    { key: 'nebulaFlatulence', name: 'Nebula Flatulence', desc: '+10,000 SP/sec',      baseCost: 100000000 },
+    { key: 'omnifart',        name: 'Omnifart',           desc: 'All passive x5',      baseCost: 500000000, oneTime: true },
   ];
 
   function upgradeCost(u) {
@@ -150,7 +160,10 @@
     state.spPerSec =
       state.upgrades.autoFairy * 1 + state.upgrades.rainbowTurbo * 5 +
       state.upgrades.goldenHay * 20 + state.upgrades.enchantedBurrito * 50 +
-      state.upgrades.quantumGas * 100;
+      state.upgrades.quantumGas * 100 + state.upgrades.stellarCompost * 500 +
+      state.upgrades.galacticHayBale * 2500 + state.upgrades.nebulaFlatulence * 10000;
+    if (state.upgrades.passiveDoubler) state.spPerSec *= 2;
+    if (state.upgrades.omnifart) state.spPerSec *= 5;
   }
 
   function applyUpgrade(key) {
@@ -163,6 +176,7 @@
     let v = state.tapPower * state.tapMultiplier;
     if (state.upgrades.cloudCompressor) v *= 2;
     if (state.upgrades.megaMultiplier) v *= 3;
+    if (state.upgrades.cosmicCompressor) v *= 5;
     return Math.floor(v);
   }
 
@@ -280,6 +294,7 @@
   let lastTime = performance.now();
   let gameTime = 0;
   let saveTimer = 0;
+  let autoTapAcc = 0;
 
   /* ────────────────── Save / Load ────────────────── */
   function save() {
@@ -2950,6 +2965,19 @@
       state.lifetimeSP += earned;
     }
 
+    // Auto-tapper
+    if (state.upgrades.autoTapper > 0) {
+      autoTapAcc += dt;
+      const interval = 1 / state.upgrades.autoTapper;
+      while (autoTapAcc >= interval) {
+        autoTapAcc -= interval;
+        const tap = effectiveTap();
+        state.sp += tap;
+        state.lifetimeSP += tap;
+        state.totalClicks++;
+      }
+    }
+
     if (state.spPerSec > 0) {
       sparkleTimer += dt;
       if (sparkleTimer > 2 + Math.random()) { SFX.sparkle(); sparkleTimer = 0; }
@@ -3152,7 +3180,7 @@
       let earned = effectiveTap();
       let color = '#ffd700';
       // Critical fart check
-      if (state.upgrades.criticalFart && Math.random() < 0.1) {
+      if (state.upgrades.criticalFart && Math.random() < (state.upgrades.luckyClover ? 0.25 : 0.1)) {
         earned *= 10;
         color = '#ff4500';
         shakeAmount = 1.2;
