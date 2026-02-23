@@ -153,6 +153,11 @@ const ACH_I18N = {
   untouchable: { name: 'achUntouchable', desc: 'achUntouchableDesc' },
   density_master: { name: 'achDensityMaster', desc: 'achDensityMasterDesc' },
   near_miss_expert: { name: 'achNearMissExpert', desc: 'achNearMissExpertDesc' },
+  combo_adept: { name: 'achComboAdept', desc: 'achComboAdeptDesc' },
+  combo_master: { name: 'achComboMaster', desc: 'achComboMasterDesc' },
+  density_surfer: { name: 'achDensitySurfer', desc: 'achDensitySurferDesc' },
+  boss_slayer: { name: 'achBossSlayer', desc: 'achBossSlayerDesc' },
+  marathon: { name: 'achMarathon', desc: 'achMarathonDesc' },
 };
 
 window.addEventListener('langchange', () => {

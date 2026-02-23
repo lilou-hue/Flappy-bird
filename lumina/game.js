@@ -998,7 +998,6 @@
     if (shakeTimer > 0) { shakeTimer -= dt; shakeX = rand(-shakeTimer*8, shakeTimer*8); shakeY = rand(-shakeTimer*8, shakeTimer*8); } else { shakeX = 0; shakeY = 0; }
 
     updateParticles(adt);
-    checkLmAch(); showLmAchPopup();
   }
 
   function updateParticles(dt) {

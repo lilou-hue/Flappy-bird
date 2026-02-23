@@ -2971,22 +2971,22 @@
       });
     }
     for (const ss of shootingStars) {
-      ss.x += ss.vx;
-      ss.y += ss.vy;
+      ss.x += ss.vx * dt * 60;
+      ss.y += ss.vy * dt * 60;
       ss.life -= dt * 1.5;
     }
     shootingStars = shootingStars.filter(ss => ss.life > 0 && ss.x < W + 20);
 
     // Update particles
     for (const p of particles) {
-      p.x += p.vx;
-      p.y += p.vy + Math.sin(gameTime * p.wobbleSpeed + p.wobblePhase) * 0.5;
-      p.life -= p.decay;
+      p.x += p.vx * dt * 60;
+      p.y += (p.vy + Math.sin(gameTime * p.wobbleSpeed + p.wobblePhase) * 0.5) * dt * 60;
+      p.life -= p.decay * dt * 60;
       if (p.spin) p.angle += p.spin * dt;
     }
     particles = particles.filter(p => p.life > 0);
 
-    for (const ft of floatingTexts) { ft.y += ft.vy; ft.life -= dt * 1.2; }
+    for (const ft of floatingTexts) { ft.y += ft.vy * dt * 60; ft.life -= dt * 1.2; }
     floatingTexts = floatingTexts.filter(ft => ft.life > 0);
   }
 

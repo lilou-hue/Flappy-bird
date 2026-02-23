@@ -1015,7 +1015,7 @@ const drawBird = () => {
 };
 
 const drawPipes = () => {
-  pipes.forEach((pipe) => {
+  pipes.forEach((pipe, pipeIdx) => {
     const capW = gameState.pipeWidth + 10;
     const capH = 18;
     const capX = pipe.x - 5;
@@ -1084,7 +1084,7 @@ const drawPipes = () => {
         context.stroke();
       }
 
-      if (dripState.falling) {
+      if (dripState.falling && pipeIdx === 0) {
         const dripX = pipe.x + gameState.pipeWidth * 0.4;
         const dripY = pipe.top + dripState.y;
         context.fillStyle = `rgba(150, 210, 255, ${dripState.alpha})`;
@@ -1339,9 +1339,10 @@ const update = (deltaSeconds) => {
       demoteTier();
       Audio.crash();
       Audio.stopDrone();
-      if (typeof Leaderboard !== 'undefined') Leaderboard.submitScore('gun-game', gameState.score);
+      const totalScore = gameState.score + gunState.totalDestroyed * 2;
+      if (typeof Leaderboard !== 'undefined') Leaderboard.submitScore('gun-game', totalScore);
       ggAchStats.gamesPlayed++;
-      if (gameState.score > ggAchStats.bestScore) ggAchStats.bestScore = gameState.score;
+      if (totalScore > ggAchStats.bestScore) ggAchStats.bestScore = totalScore;
       saveGGAch();
       checkGGAch();
     }

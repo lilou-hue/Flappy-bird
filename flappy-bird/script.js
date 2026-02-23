@@ -698,7 +698,7 @@ const drawBird = () => {
 };
 
 const drawPipes = () => {
-  pipes.forEach((pipe) => {
+  pipes.forEach((pipe, pipeIdx) => {
     /* Pipe cap dimensions */
     const capW = gameState.pipeWidth + 10;
     const capH = 18;
@@ -755,8 +755,8 @@ const drawPipes = () => {
       context.stroke();
     }
 
-    /* Water drip at bottom of top pipe cap */
-    if (dripState.falling) {
+    /* Water drip at bottom of top pipe cap (only on first pipe) */
+    if (dripState.falling && pipeIdx === 0) {
       const dripX = pipe.x + gameState.pipeWidth * 0.4;
       const dripY = pipe.top + dripState.y;
       context.fillStyle = `rgba(150, 210, 255, ${dripState.alpha})`;

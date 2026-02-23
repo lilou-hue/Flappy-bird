@@ -433,7 +433,7 @@ function showSnAchPopup() {
   snAchPopupTimer = 3;
   setTimeout(() => {
     popup.classList.remove("show");
-    setTimeout(() => { snAchPopupTimer = 0; }, 500);
+    setTimeout(() => { snAchPopupTimer = 0; showSnAchPopup(); }, 500);
   }, 3000);
 }
 

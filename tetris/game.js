@@ -1141,6 +1141,14 @@
     }
   });
 
+  touchControlsEl.addEventListener("pointercancel", () => {
+    keysHeld.delete("down");
+    if (softDropInterval) {
+      clearInterval(softDropInterval);
+      softDropInterval = null;
+    }
+  });
+
   /* Mute & restart buttons */
   muteBtn.addEventListener("click", () => {
     Audio.init();
