@@ -1528,11 +1528,11 @@ function gameLoop(timestamp) {
 
 /* --- Input Handling --- */
 document.addEventListener('keydown', (e) => {
+  if (e.key === ' ' || e.key === 'Space') e.preventDefault();
   if (e.repeat) return;
   keys[e.key] = true;
 
   if (e.key === ' ' || e.key === 'Space') {
-    e.preventDefault();
     jumpPressed = true;
 
     if (state === STATE.MENU) startGame();
