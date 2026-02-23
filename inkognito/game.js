@@ -32,8 +32,8 @@
     TOTAL_ROUNDS: 10,
     CLASSIFY_INTERVAL: 300,
     GRID_SIZE: 28,
-    CONFIDENCE_THRESHOLD: 0.40,
-    STROKE_WIDTH: 4,
+    CONFIDENCE_THRESHOLD: 0.30,
+    STROKE_WIDTH: 8,
     COUNTDOWN_SECS: 3,
   };
 
@@ -298,9 +298,10 @@
       const row = [];
       for (let x = 0; x < CFG.GRID_SIZE; x++) {
         const idx = (y * CFG.GRID_SIZE + x) * 4;
-        // Any non-zero alpha or brightness means pixel is filled
-        const brightness = (imgData.data[idx] + imgData.data[idx + 1] + imgData.data[idx + 2]) / 3;
-        row.push(brightness > 30 ? 1 : 0);
+        // Use alpha channel — strokes are white-on-transparent, so alpha
+        // correctly represents coverage after anti-aliased downsampling
+        const alpha = imgData.data[idx + 3];
+        row.push(alpha > 80 ? 1 : 0);
       }
       grid.push(row);
     }
@@ -511,14 +512,16 @@
     }
 
     scores.sort((a, b) => b.confidence - a.confidence);
-    // Normalize top scores to create better spread
-    const maxConf = scores[0].confidence;
-    const minConf = scores[scores.length - 1].confidence;
-    const range = maxConf - minConf;
+    // Softmax normalization — gives meaningful confidence values.
+    // Temperature controls peakedness: lower = more confident when match is clear.
+    const T = 0.012;
+    const maxRaw = scores[0].confidence;
+    const exps = scores.map(s => Math.exp((s.confidence - maxRaw) / T));
+    const sumExps = exps.reduce((a, b) => a + b, 0);
 
-    guesses = scores.slice(0, 3).map(s => ({
+    guesses = scores.slice(0, 3).map((s, i) => ({
       word: s.word,
-      confidence: range > 0 ? (s.confidence - minConf) / range : 0.5,
+      confidence: exps[i] / sumExps,
     }));
 
     // Check for correct guess
