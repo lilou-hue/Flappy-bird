@@ -96,10 +96,17 @@ const haptic = (pattern) => {
 const audio = (() => {
   let actx = null;
   let muted = false;
+  let masterGain = null;
   const getCtx = () => {
-    if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+    if (!actx) {
+      try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (_) { return null; }
+      masterGain = actx.createGain();
+      masterGain.connect(actx.destination);
+    }
+    if (actx && actx.state === 'suspended') actx.resume();
     return actx;
   };
+  const getDest = () => { getCtx(); return masterGain || (actx && actx.destination); };
 
   const play = (fn) => {
     if (muted) return;
@@ -112,6 +119,7 @@ const audio = (() => {
   const startEngine = () => {
     if (muted || engineOsc) return;
     const ac = getCtx();
+    if (!ac) return;
     engineOsc = ac.createOscillator();
     engineGain = ac.createGain();
     const lp = ac.createBiquadFilter();
@@ -120,7 +128,7 @@ const audio = (() => {
     engineOsc.type = "sawtooth";
     engineOsc.frequency.value = 55;
     engineGain.gain.value = 0.07;
-    engineOsc.connect(lp).connect(engineGain).connect(ac.destination);
+    engineOsc.connect(lp).connect(engineGain).connect(getDest());
     engineOsc.start();
   };
 
@@ -146,7 +154,7 @@ const audio = (() => {
     o.frequency.exponentialRampToValueAtTime(1200, ac.currentTime + 0.08);
     g.gain.setValueAtTime(0.18, ac.currentTime);
     g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.18);
-    o.connect(g).connect(ac.destination);
+    o.connect(g).connect(getDest());
     o.start();
     o.stop(ac.currentTime + 0.18);
   });
@@ -159,7 +167,7 @@ const audio = (() => {
     o.frequency.setValueAtTime(1319, ac.currentTime + 0.06);
     g.gain.setValueAtTime(0.15, ac.currentTime);
     g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.15);
-    o.connect(g).connect(ac.destination);
+    o.connect(g).connect(getDest());
     o.start();
     o.stop(ac.currentTime + 0.15);
   });
@@ -172,7 +180,7 @@ const audio = (() => {
     o.frequency.exponentialRampToValueAtTime(660, ac.currentTime + 0.15);
     g.gain.setValueAtTime(0.12, ac.currentTime);
     g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.25);
-    o.connect(g).connect(ac.destination);
+    o.connect(g).connect(getDest());
     o.start();
     o.stop(ac.currentTime + 0.25);
   });
@@ -187,7 +195,7 @@ const audio = (() => {
     src.buffer = buf;
     g.gain.setValueAtTime(0.35, ac.currentTime);
     g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.4);
-    src.connect(g).connect(ac.destination);
+    src.connect(g).connect(getDest());
     src.start();
   });
 
@@ -199,7 +207,7 @@ const audio = (() => {
       o.frequency.value = [440, 554, 659, 880][i];
       g.gain.setValueAtTime(0.12, ac.currentTime + t);
       g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + t + 0.1);
-      o.connect(g).connect(ac.destination);
+      o.connect(g).connect(getDest());
       o.start(ac.currentTime + t);
       o.stop(ac.currentTime + t + 0.1);
     });
@@ -213,7 +221,7 @@ const audio = (() => {
     o.frequency.exponentialRampToValueAtTime(110, ac.currentTime + 0.3);
     g.gain.setValueAtTime(0.2, ac.currentTime);
     g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.3);
-    o.connect(g).connect(ac.destination);
+    o.connect(g).connect(getDest());
     o.start();
     o.stop(ac.currentTime + 0.3);
   });
@@ -227,7 +235,7 @@ const audio = (() => {
     o.frequency.setValueAtTime(660, ac.currentTime + 0.3);
     g.gain.setValueAtTime(0.06, ac.currentTime);
     g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.45);
-    o.connect(g).connect(ac.destination);
+    o.connect(g).connect(getDest());
     o.start();
     o.stop(ac.currentTime + 0.45);
   });
@@ -240,7 +248,7 @@ const audio = (() => {
       o.frequency.value = [523, 659, 784, 988, 1047][i];
       g.gain.setValueAtTime(0.13, ac.currentTime + t);
       g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + t + 0.12);
-      o.connect(g).connect(ac.destination);
+      o.connect(g).connect(getDest());
       o.start(ac.currentTime + t);
       o.stop(ac.currentTime + t + 0.12);
     });
@@ -254,7 +262,7 @@ const audio = (() => {
     o.frequency.exponentialRampToValueAtTime(1760, ac.currentTime + 0.06);
     g.gain.setValueAtTime(0.1, ac.currentTime);
     g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.1);
-    o.connect(g).connect(ac.destination);
+    o.connect(g).connect(getDest());
     o.start();
     o.stop(ac.currentTime + 0.1);
   });
@@ -267,19 +275,34 @@ const audio = (() => {
       o.frequency.value = [523, 659, 784][i];
       g.gain.setValueAtTime(0.1, ac.currentTime + t);
       g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + t + 0.15);
-      o.connect(g).connect(ac.destination);
+      o.connect(g).connect(getDest());
       o.start(ac.currentTime + t);
       o.stop(ac.currentTime + t + 0.15);
     });
   });
 
-  const toggleMute = () => {
-    muted = !muted;
-    if (muted) stopEngine();
+  const loadMute = () => {
+    try { muted = localStorage.getItem('phantomRoadMuted') === '1'; } catch (_) {}
+    if (masterGain && actx) {
+      masterGain.gain.setValueAtTime(muted ? 0 : 1, actx.currentTime);
+    }
     muteBtn.textContent = muted ? "\u{1F507}" : "\u{1F50A}";
   };
 
-  return { startEngine, updateEngine, stopEngine, nearMiss, coinSound, nitroSound, crash, milestone, powerUp, shieldBreak, policeSiren, policeEvaded, comboUp, toggleMute, isMuted: () => muted };
+  const toggleMute = () => {
+    muted = !muted;
+    try { localStorage.setItem('phantomRoadMuted', muted ? '1' : '0'); } catch (_) {}
+    if (muted) stopEngine();
+    if (masterGain && actx) {
+      const t = actx.currentTime;
+      masterGain.gain.cancelScheduledValues(t);
+      masterGain.gain.setValueAtTime(masterGain.gain.value, t);
+      masterGain.gain.linearRampToValueAtTime(muted ? 0 : 1, t + 0.05);
+    }
+    muteBtn.textContent = muted ? "\u{1F507}" : "\u{1F50A}";
+  };
+
+  return { startEngine, updateEngine, stopEngine, nearMiss, coinSound, nitroSound, crash, milestone, powerUp, shieldBreak, policeSiren, policeEvaded, comboUp, toggleMute, loadMute, isMuted: () => muted };
 })();
 
 // ── Constants ────────────────────────────────────────────
@@ -545,11 +568,15 @@ document.addEventListener("visibilitychange", () => {
     for (const id in activeTouches) delete activeTouches[id];
     recalcTouchState();
     for (const k in keys) keys[k] = false;
+    audio.stopEngine();
+  } else if (state.phase === "playing" && !audio.isMuted()) {
+    audio.startEngine();
   }
 });
 
 restartBtn.addEventListener("click", restartGame);
 muteBtn.addEventListener("click", () => audio.toggleMute());
+audio.loadMute();
 
 // ── Fullscreen (mobile) ─────────────────────────────────
 let isFullscreen = false;

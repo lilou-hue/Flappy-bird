@@ -1253,6 +1253,12 @@ document.addEventListener("webkitfullscreenchange", () => {
 });
 if (fullscreenButton) fullscreenButton.addEventListener("click", toggleFullscreen);
 
+/* ── Tab Visibility ───────────────────────────────────────── */
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) { Audio.stopDrone(); }
+  else if (gameState === "playing" && !Audio.isMuted()) { Audio.startDrone(); }
+});
+
 /* ── Canvas sizing (DPI-aware) ──────────────────────────── */
 const gameHeader = document.querySelector('.game__header');
 const gamePanel = document.querySelector('.game__panel');

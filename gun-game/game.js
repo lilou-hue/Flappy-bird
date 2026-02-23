@@ -1969,6 +1969,12 @@ document.addEventListener("fullscreenchange", () => { isFullscreen = !!document.
 document.addEventListener("webkitfullscreenchange", () => { isFullscreen = !!document.webkitFullscreenElement; updateFsButton(); requestAnimationFrame(() => updateCanvasSize()); });
 if (fullscreenButton) fullscreenButton.addEventListener("click", toggleFullscreen);
 
+/* ── Tab Visibility ───────────────────────────────────────── */
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) { Audio.stopDrone(); }
+  else if (gameState === "playing" && !Audio.isMuted()) { Audio.startDrone(); }
+});
+
 /* --- Prevent scrolling / pull-to-refresh on mobile --- */
 document.addEventListener("touchmove", (e) => { e.preventDefault(); }, { passive: false });
 document.addEventListener("touchstart", (e) => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });

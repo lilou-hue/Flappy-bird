@@ -70,7 +70,12 @@ const Audio = (() => {
 
   function toggle() {
     muted = !muted;
-    if (masterGain) masterGain.gain.value = muted ? 0 : 1;
+    if (masterGain && ctx) {
+      const t = ctx.currentTime;
+      masterGain.gain.cancelScheduledValues(t);
+      masterGain.gain.setValueAtTime(masterGain.gain.value, t);
+      masterGain.gain.linearRampToValueAtTime(muted ? 0 : 1, t + 0.05);
+    }
     try { localStorage.setItem('methaneDriftMuted', String(muted)); } catch (e) { /* */ }
     return muted;
   }

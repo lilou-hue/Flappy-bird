@@ -407,6 +407,7 @@
   function sfxLightBomb() { playTone(400, 0.4, "sine", 0.15, 1600); playTone(800, 0.3, "triangle", 0.08, 1800); }
   function sfxDarkShard() { playTone(300, 0.3, "sawtooth", 0.12, 60); playNoise(0.15, 0.1); }
 
+  let ambientLfo = null;
   function startAmbient() {
     if (!audioCtx || ambientOsc) return;
     ambientOsc = audioCtx.createOscillator(); ambientGain = audioCtx.createGain();
@@ -417,6 +418,19 @@
     ambientGain.gain.value = 0.05;
     ambientOsc.connect(ambientGain).connect(masterGain);
     ambientOsc.start(); lfo.start();
+    ambientLfo = lfo;
+  }
+  function stopAmbient() {
+    if (!ambientOsc || !audioCtx) return;
+    try {
+      const t = audioCtx.currentTime;
+      ambientGain.gain.cancelScheduledValues(t);
+      ambientGain.gain.setValueAtTime(ambientGain.gain.value, t);
+      ambientGain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+      ambientOsc.stop(t + 0.6);
+      if (ambientLfo) ambientLfo.stop(t + 0.6);
+    } catch (_) {}
+    ambientOsc = null; ambientGain = null; ambientLfo = null;
   }
 
   function haptic(pattern) { try { navigator.vibrate(pattern); } catch (e) {} }
@@ -796,8 +810,8 @@
     if (state === STATE.PLAYING) doPulse();
   }
   function handlePause() {
-    if (state === STATE.PLAYING) { state = STATE.PAUSED; return; }
-    if (state === STATE.PAUSED) { state = STATE.PLAYING; lastTime = performance.now(); }
+    if (state === STATE.PLAYING) { state = STATE.PAUSED; stopAmbient(); return; }
+    if (state === STATE.PAUSED) { state = STATE.PLAYING; lastTime = performance.now(); startAmbient(); }
   }
 
   function doPulse() {
@@ -833,7 +847,7 @@
       dyingTimer -= dt; chromAb = Math.max(0, chromAb - dt * 8); shakeTimer = dyingTimer;
       updateParticles(dt * 0.3);
       if (dyingTimer <= 0) {
-        state = STATE.GAMEOVER;
+        state = STATE.GAMEOVER; stopAmbient();
         if (score > bestScore) { bestScore = score; saveBest(bestScore); bestEl.textContent = bestScore; }
         if (typeof Leaderboard !== 'undefined' && score > 0) {
           Leaderboard.submitScore('lumina', score).then(() => Leaderboard.refresh('lumina'));
@@ -1397,8 +1411,8 @@
   }
 
   document.addEventListener("visibilitychange", () => {
-    if (document.hidden && state === STATE.PLAYING) state = STATE.PAUSED;
-    if (!document.hidden) lastTime = performance.now();
+    if (document.hidden) { if (state === STATE.PLAYING) state = STATE.PAUSED; stopAmbient(); }
+    else { lastTime = performance.now(); if (state === STATE.PLAYING && !muted) startAmbient(); }
   });
 
   /* --- Prevent scrolling / pull-to-refresh on mobile --- */

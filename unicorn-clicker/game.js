@@ -3181,8 +3181,7 @@
     shopScroll = Math.max(0, Math.min(maxScroll, shopScroll + (e.deltaY > 0 ? 1 : -1)));
   }, { passive: false });
 
-  canvas.addEventListener('mousedown', handleTap);
-  canvas.addEventListener('touchstart', handleTap, { passive: false });
+  canvas.addEventListener('pointerdown', handleTap);
 
   /* --- Prevent scrolling / pull-to-refresh on mobile --- */
   document.addEventListener("touchmove", (e) => { e.preventDefault(); }, { passive: false });
@@ -3258,6 +3257,16 @@
       lbPanel.addEventListener('click', (e) => { if (e.target === lbPanel) lbPanel.classList.remove('lb-visible'); });
     }
   }
+  /* ── Mute ────────────────────────────────────────────────── */
+  const ucMuteBtn = document.getElementById("ucMuteBtn");
+  if (ucMuteBtn) {
+    ucMuteBtn.textContent = SFX.isMuted() ? "\uD83D\uDD07" : "\uD83D\uDD0A";
+    ucMuteBtn.addEventListener("click", () => {
+      const m = SFX.toggleMute();
+      ucMuteBtn.textContent = m ? "\uD83D\uDD07" : "\uD83D\uDD0A";
+    });
+  }
+
   /* ── Fullscreen ──────────────────────────────────────────── */
   const fullscreenButton = document.getElementById("fullscreenButton");
 

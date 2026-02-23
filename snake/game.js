@@ -742,11 +742,13 @@ function soundTick(ctx, dest) {
   const osc = ctx.createOscillator();
   const g = ctx.createGain();
   osc.type = "sine";
-  osc.frequency.setValueAtTime(800, t);
-  g.gain.setValueAtTime(0.06, t);
-  g.gain.exponentialRampToValueAtTime(0.001, t + 0.025);
+  // Vary pitch based on score + slight random wobble to reduce monotony
+  const baseFreq = 600 + Math.min(state.score, 40) * 8;
+  osc.frequency.setValueAtTime(baseFreq + (Math.random() - 0.5) * 80, t);
+  g.gain.setValueAtTime(0.04, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.02);
   osc.connect(g); g.connect(dest);
-  osc.start(t); osc.stop(t + 0.025);
+  osc.start(t); osc.stop(t + 0.02);
 }
 
 function soundDeath(ctx, dest) {
@@ -917,6 +919,12 @@ function updateCanvasSize() {
 document.addEventListener("fullscreenchange", () => { isFullscreen = !!document.fullscreenElement; updateFsButton(); requestAnimationFrame(() => updateCanvasSize()); });
 document.addEventListener("webkitfullscreenchange", () => { isFullscreen = !!document.webkitFullscreenElement; updateFsButton(); requestAnimationFrame(() => updateCanvasSize()); });
 fullscreenButton.addEventListener("click", toggleFullscreen);
+
+/* ── Tab Visibility ───────────────────────────────────────── */
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) { stopAmbientHum(); }
+  else if (state.phase === "playing" && !state.muted) { startAmbientHum(); }
+});
 
 /* ── Theme & Skin Switching ───────────────────────────────── */
 

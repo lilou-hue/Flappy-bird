@@ -678,7 +678,7 @@ function checkSkinUnlocks() {
 
 /* --- Input Actions --- */
 function pulse() {
-  Audio.resume();
+  Audio.init(); Audio.resume();
   if (world.state === STATE.GAMEOVER) {
     resetGame();
     world.state = STATE.PLAYING;
@@ -3682,6 +3682,7 @@ restartBtn.addEventListener('click', resetGame);
 
 if (muteBtn) {
   muteBtn.addEventListener('click', () => {
+    Audio.init();
     const muted = Audio.toggle();
     muteBtn.textContent = muted ? _t('soundOff') : _t('soundOn');
   });
@@ -3701,10 +3702,13 @@ if (fullscreenBtn) {
 
 /* Pause on visibility change */
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden && world.state === STATE.PLAYING) {
-    world.state = STATE.PAUSED;
-    lastTime = 0;
+  if (document.hidden) {
+    if (world.state === STATE.PLAYING) { world.state = STATE.PAUSED; lastTime = 0; }
     Audio.stopDrone();
+    Audio.stopMusic();
+  } else if (world.state === STATE.PLAYING && !Audio.isMuted()) {
+    Audio.startDrone();
+    Audio.startMusic();
   }
 });
 
@@ -3763,7 +3767,6 @@ let _resizeTimer;
 window.addEventListener('resize', () => { clearTimeout(_resizeTimer); _resizeTimer = setTimeout(fitCanvasToScreen, 80); });
 window.addEventListener('orientationchange', () => { setTimeout(fitCanvasToScreen, 200); });
 
-Audio.init();
 loadProgress();
 loadBestScore();
 try {

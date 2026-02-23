@@ -1225,6 +1225,12 @@
   document.addEventListener("webkitfullscreenchange", () => { isFullscreen = !!document.webkitFullscreenElement; updateFsButton(); requestAnimationFrame(() => updateCanvasSize()); });
   if (fullscreenButton) fullscreenButton.addEventListener("click", toggleFullscreen);
 
+  /* ── Tab Visibility ────────────────────────────────────────── */
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) { Audio.stopDrone(); }
+    else if (state.phase === "playing" && !state.muted) { Audio.startDrone(); }
+  });
+
   /* ================================================================== */
   /*  Game loop                                                          */
   /* ================================================================== */
