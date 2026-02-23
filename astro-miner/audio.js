@@ -245,11 +245,42 @@ const Audio = (() => {
     } catch (e) { /* */ }
   }
 
+  /** Celebratory chime for achievement unlock */
+  function achievement() {
+    if (!ctx || muted) return;
+    const now = ctx.currentTime;
+    const notes = [659.25, 880, 1174.66];
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.10, now + i * 0.09);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.09 + 0.45);
+      osc.connect(gain);
+      gain.connect(masterGain);
+      osc.start(now + i * 0.09);
+      osc.stop(now + i * 0.09 + 0.45);
+      /* Shimmer octave */
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = 'sine';
+      osc2.frequency.value = freq * 2;
+      gain2.gain.setValueAtTime(0.04, now + i * 0.09);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + i * 0.09 + 0.35);
+      osc2.connect(gain2);
+      gain2.connect(masterGain);
+      osc2.start(now + i * 0.09);
+      osc2.stop(now + i * 0.09 + 0.35);
+    });
+    haptic([10, 15, 10, 15, 20]);
+  }
+
   return {
     init, resume, toggle, isMuted,
     jump, jetpack, crystal, crash,
     laserBuzz, blackHoleRumble, gravityShift,
-    newHighScore, land,
+    newHighScore, land, achievement,
     startDrone, stopDrone,
   };
 })();

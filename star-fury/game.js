@@ -51,6 +51,7 @@ function checkAch() {
     if (!achUnlocked.has(a.id) && a.check(achStats)) {
       achUnlocked.add(a.id);
       achQueue.push(a);
+      Audio.achievement();
       saveAch();
     }
   }
@@ -305,6 +306,7 @@ function updatePlayer(dt) {
 }
 
 function fireBullet() {
+  Audio.shoot();
   if (player.spreadShot) {
     for (let angle = -0.2; angle <= 0.2; angle += 0.2) {
       bullets.push({
@@ -1076,6 +1078,7 @@ function updatePowerups(dt) {
     const dy = p.y - player.y;
     if (Math.abs(dx) < 20 && Math.abs(dy) < 20) {
       applyPowerup(p.type);
+      Audio.powerup();
       spawnExplosion(p.x, p.y, '#ffffff', 8);
       achStats.powerupsCollected++;
       powerups.splice(i, 1);
@@ -1228,6 +1231,7 @@ function drawPowerups() {
 function useBomb() {
   if (game.bombs <= 0) return;
   game.bombs--;
+  Audio.bomb();
 
   /* Kill all enemies on screen */
   for (const e of enemies) {
@@ -1263,8 +1267,10 @@ function checkCollisions() {
         /* Hit particles */
         spawnExplosion(b.x, b.y, '#00ffcc', 3);
 
+        if (e.hp > 0) Audio.enemyHit();
         if (e.hp <= 0) {
           /* Enemy killed */
+          if (e.type === 'boss') Audio.bossExplode(); else Audio.enemyExplode();
           addScore(e.points);
           updateCombo();
           spawnExplosion(e.x, e.y, e.type === 'boss' ? '#ff4444' : '#ffaa00', e.type === 'boss' ? 30 : 12);
@@ -1298,6 +1304,7 @@ function checkCollisions() {
         if (player.shielded) {
           player.shielded = false;
           player.powerTimer = 0;
+          Audio.shieldBreak();
           spawnExplosion(b.x, b.y, '#00ffcc', 8);
           enemyBullets.splice(i, 1);
         } else {
@@ -1316,6 +1323,7 @@ function checkCollisions() {
         if (player.shielded) {
           player.shielded = false;
           player.powerTimer = 0;
+          Audio.shieldBreak();
           spawnExplosion(player.x, player.y, '#00ffcc', 10);
         } else {
           hitPlayer();
@@ -1333,6 +1341,7 @@ function aabb(x1, y1, w1, h1, x2, y2, w2, h2) {
 }
 
 function hitPlayer() {
+  Audio.playerHit();
   game.lives--;
   game.waveHitsTaken++;
   game.shakeTimer = 0.4;
@@ -1361,6 +1370,7 @@ function updateCombo() {
   game.comboTimer = 2.0;  // 2 second decay
   game.comboMultiplier = Math.min(10, 1 + Math.floor(game.comboCount / 2));
   if (game.comboCount > achStats.bestCombo) achStats.bestCombo = game.comboCount;
+  Audio.comboUp(game.comboCount);
 }
 
 function updateComboTimer(dt) {
@@ -1383,6 +1393,7 @@ function startWave() {
   game.waveHitsTaken = 0;
 
   if (isBossWave) {
+    Audio.bossWarn();
     game.waveEnemiesTotal = 1;
     game.waveEnemiesSpawned = 0;
     game.waveEnemiesKilled = 0;
@@ -1428,6 +1439,7 @@ function updateWaveSystem(dt) {
   if (allCleared && game.waveEnemiesKilled > 0) {
     game.waveClearDelay += dt;
     if (game.waveClearDelay > 1.5) {
+      Audio.waveClear();
       /* Check flawless */
       if (game.waveHitsTaken === 0) {
         achStats.flawlessWaves++;
@@ -1445,6 +1457,7 @@ function updateWaveSystem(dt) {
    ══════════════════════════════════════════════════════════════════ */
 function gameOver() {
   game.state = 'gameover';
+  const isNewBest = game.score > game.best;
   saveBestScore();
   achStats.gamesPlayed++;
   if (game.score > achStats.bestScore) achStats.bestScore = game.score;
@@ -1452,6 +1465,9 @@ function gameOver() {
   saveAch();
   checkAch();
   showAchPopup();
+  Audio.gameOver();
+  Audio.stopDrone();
+  if (isNewBest && game.score > 0) setTimeout(() => Audio.newHighScore(), 1200);
   if (typeof Leaderboard !== 'undefined') Leaderboard.submitScore('star-fury', game.score);
 }
 
@@ -1494,6 +1510,8 @@ function resetGame() {
 function startGame() {
   resetGame();
   game.state = 'playing';
+  Audio.resume();
+  Audio.startDrone();
   startWave();
 }
 
@@ -2137,6 +2155,16 @@ window.addEventListener('orientationchange', () => { setTimeout(() => updateCanv
 /* ══════════════════════════════════════════════════════════════════
    INIT
    ══════════════════════════════════════════════════════════════════ */
+Audio.init();
+const muteBtn = document.getElementById('muteBtn');
+if (muteBtn) {
+  muteBtn.textContent = Audio.isMuted() ? '\uD83D\uDD07' : '\uD83D\uDD0A';
+  muteBtn.addEventListener('click', () => {
+    const m = Audio.toggle();
+    muteBtn.textContent = m ? '\uD83D\uDD07' : '\uD83D\uDD0A';
+  });
+}
+
 initStars();
 loadBestScore();
 updateCanvasSize();

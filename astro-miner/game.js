@@ -438,6 +438,7 @@ function checkAchievements() {
 }
 
 function showAchievementPopup(ach) {
+  Audio.achievement();
   achievementPopupIcon.textContent = ach.icon;
   achievementPopupTitle.textContent = t(ach.name, ach.name);
   achievementPopupDesc.textContent = t(ach.desc, ach.desc);
@@ -691,6 +692,7 @@ function update(dt) {
 
       if (d < h.pullRadius) {
         /* Gravitational pull */
+        if (!h.playerInRange) Audio.blackHoleRumble();
         const pullForce = CONFIG.blackHolePullStrength * (1 - d / h.pullRadius);
         const angle = Math.atan2(h.y - player.y, h.x - player.x);
         player.vx += Math.cos(angle) * pullForce * dt;

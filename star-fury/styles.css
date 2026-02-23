@@ -89,7 +89,7 @@ canvas {
 .game__hud {
   width: 100%;
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr auto auto auto;
+  grid-template-columns: 1fr 1fr 1fr auto auto auto auto;
   align-items: center;
   gap: 12px;
 }
