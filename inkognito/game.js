@@ -24,6 +24,14 @@
     };
   }
 
+  /* ── ellipse polyfill ── */
+  if (!CanvasRenderingContext2D.prototype.ellipse) {
+    CanvasRenderingContext2D.prototype.ellipse = function (cx, cy, rx, ry, rot, start, end, ccw) {
+      this.save(); this.translate(cx, cy); this.rotate(rot);
+      this.scale(rx, ry); this.arc(0, 0, 1, start, end, ccw); this.restore();
+    };
+  }
+
   /* ── Configuration ── */
   const CFG = {
     W: 480, H: 720,
@@ -77,60 +85,226 @@
   /* ── Feature Templates ── */
   // Each template: [q1, q2, q3, q4, balH, balV, centerDens, edgeDens, fillRatio, aspectRatio, circularity, convexity, symH, symV, strokeCount, holeCount, endpointRatio, centroidX, centroidY]
   // 19 features per template
-  const TEMPLATES = {
-    // [q1, q2, q3, q4, balH, balV, centerDens, edgeDens, fillRatio, aspectRatio, circularity, convexity, symH, symV, strokeCount/5, holeCount/5, endpointRatio, centroidX, centroidY]
-    'circle':      [0.25, 0.25, 0.25, 0.25, 0.50, 0.50, 0.15, 0.85, 0.28, 1.00, 1.00, 0.95, 0.95, 0.95, 0.20, 0.20, 0.00, 0.50, 0.50],
-    'square':      [0.25, 0.25, 0.25, 0.25, 0.50, 0.50, 0.10, 0.90, 0.30, 1.00, 0.78, 1.00, 0.95, 0.95, 0.20, 0.20, 0.00, 0.50, 0.50],
-    'triangle':    [0.35, 0.35, 0.15, 0.15, 0.50, 0.35, 0.20, 0.80, 0.20, 0.90, 0.60, 0.95, 0.85, 0.40, 0.20, 0.00, 0.05, 0.50, 0.40],
-    'star':        [0.25, 0.25, 0.25, 0.25, 0.50, 0.50, 0.30, 0.70, 0.22, 1.00, 0.50, 0.60, 0.90, 0.90, 0.20, 0.00, 0.10, 0.50, 0.50],
-    'line':        [0.30, 0.30, 0.20, 0.20, 0.50, 0.45, 0.40, 0.60, 0.05, 0.20, 0.00, 1.00, 0.40, 0.40, 0.20, 0.00, 1.00, 0.50, 0.45],
-    'cross':       [0.25, 0.25, 0.25, 0.25, 0.50, 0.50, 0.50, 0.50, 0.15, 1.00, 0.30, 0.70, 0.95, 0.95, 0.40, 0.00, 0.80, 0.50, 0.50],
-    'heart':       [0.30, 0.30, 0.20, 0.20, 0.50, 0.40, 0.25, 0.75, 0.25, 0.95, 0.65, 0.80, 0.90, 0.50, 0.20, 0.00, 0.05, 0.50, 0.45],
-    'diamond':     [0.25, 0.25, 0.25, 0.25, 0.50, 0.50, 0.35, 0.65, 0.18, 0.80, 0.65, 0.90, 0.95, 0.95, 0.20, 0.00, 0.00, 0.50, 0.50],
-    'sun':         [0.25, 0.25, 0.25, 0.25, 0.50, 0.50, 0.30, 0.70, 0.25, 1.00, 0.55, 0.60, 0.85, 0.85, 0.20, 0.20, 0.30, 0.50, 0.50],
-    'moon':        [0.35, 0.15, 0.35, 0.15, 0.35, 0.50, 0.20, 0.80, 0.18, 0.85, 0.70, 0.85, 0.30, 0.85, 0.20, 0.00, 0.00, 0.40, 0.50],
-    'house':       [0.30, 0.30, 0.20, 0.20, 0.50, 0.40, 0.20, 0.80, 0.22, 0.85, 0.35, 0.90, 0.85, 0.40, 0.40, 0.00, 0.10, 0.50, 0.45],
-    'tree':        [0.25, 0.25, 0.25, 0.25, 0.50, 0.40, 0.30, 0.70, 0.20, 0.65, 0.40, 0.75, 0.80, 0.35, 0.40, 0.00, 0.05, 0.50, 0.42],
-    'flower':      [0.25, 0.25, 0.25, 0.25, 0.50, 0.45, 0.30, 0.70, 0.22, 0.90, 0.55, 0.65, 0.85, 0.75, 0.40, 0.00, 0.10, 0.50, 0.48],
-    'car':         [0.25, 0.25, 0.25, 0.25, 0.50, 0.55, 0.20, 0.80, 0.25, 1.50, 0.40, 0.85, 0.75, 0.60, 0.40, 0.40, 0.05, 0.50, 0.55],
-    'boat':        [0.20, 0.20, 0.30, 0.30, 0.50, 0.60, 0.20, 0.80, 0.18, 1.40, 0.35, 0.85, 0.80, 0.50, 0.40, 0.00, 0.10, 0.50, 0.55],
-    'umbrella':    [0.30, 0.30, 0.20, 0.20, 0.50, 0.40, 0.25, 0.75, 0.18, 0.80, 0.50, 0.80, 0.85, 0.40, 0.40, 0.00, 0.15, 0.50, 0.45],
-    'cup':         [0.20, 0.20, 0.30, 0.30, 0.50, 0.55, 0.15, 0.85, 0.22, 0.80, 0.45, 0.90, 0.85, 0.50, 0.20, 0.00, 0.05, 0.50, 0.55],
-    'key':         [0.30, 0.20, 0.30, 0.20, 0.45, 0.50, 0.25, 0.75, 0.12, 0.50, 0.30, 0.70, 0.60, 0.50, 0.20, 0.20, 0.20, 0.45, 0.50],
-    'cat':         [0.28, 0.28, 0.22, 0.22, 0.50, 0.42, 0.25, 0.75, 0.22, 0.80, 0.50, 0.75, 0.80, 0.45, 0.40, 0.00, 0.15, 0.50, 0.45],
-    'fish':        [0.25, 0.25, 0.25, 0.25, 0.50, 0.50, 0.25, 0.75, 0.25, 1.50, 0.55, 0.85, 0.70, 0.80, 0.20, 0.00, 0.10, 0.50, 0.50],
-    'bird':        [0.30, 0.30, 0.20, 0.20, 0.50, 0.40, 0.20, 0.80, 0.15, 1.30, 0.40, 0.70, 0.70, 0.40, 0.40, 0.00, 0.20, 0.50, 0.42],
-    'snake':       [0.25, 0.25, 0.25, 0.25, 0.50, 0.50, 0.35, 0.65, 0.10, 0.40, 0.15, 0.50, 0.40, 0.40, 0.20, 0.00, 0.50, 0.50, 0.50],
-    'butterfly':   [0.25, 0.25, 0.25, 0.25, 0.50, 0.48, 0.25, 0.75, 0.22, 1.10, 0.50, 0.65, 0.90, 0.60, 0.40, 0.00, 0.10, 0.50, 0.48],
-    'spider':      [0.25, 0.25, 0.25, 0.25, 0.50, 0.50, 0.35, 0.65, 0.18, 1.00, 0.35, 0.50, 0.85, 0.80, 0.60, 0.00, 0.60, 0.50, 0.50],
-    'rabbit':      [0.28, 0.28, 0.22, 0.22, 0.50, 0.42, 0.25, 0.75, 0.20, 0.70, 0.45, 0.75, 0.80, 0.40, 0.40, 0.00, 0.15, 0.50, 0.42],
-    'lightning':   [0.30, 0.20, 0.20, 0.30, 0.45, 0.50, 0.35, 0.65, 0.10, 0.50, 0.10, 0.80, 0.30, 0.40, 0.20, 0.00, 0.80, 0.48, 0.50],
-    'spiral':      [0.25, 0.25, 0.25, 0.25, 0.50, 0.50, 0.40, 0.60, 0.15, 1.00, 0.80, 0.50, 0.70, 0.70, 0.20, 0.00, 0.30, 0.50, 0.50],
-    'mountain':    [0.30, 0.30, 0.20, 0.20, 0.50, 0.35, 0.25, 0.75, 0.18, 1.30, 0.25, 0.90, 0.75, 0.30, 0.20, 0.00, 0.10, 0.50, 0.40],
-    'cloud':       [0.25, 0.25, 0.25, 0.25, 0.50, 0.45, 0.20, 0.80, 0.25, 1.40, 0.70, 0.80, 0.80, 0.75, 0.20, 0.00, 0.00, 0.50, 0.47],
-    'eye':         [0.25, 0.25, 0.25, 0.25, 0.50, 0.50, 0.35, 0.65, 0.20, 1.60, 0.60, 0.85, 0.85, 0.85, 0.40, 0.20, 0.00, 0.50, 0.50],
-    'sword':       [0.25, 0.25, 0.25, 0.25, 0.50, 0.50, 0.30, 0.70, 0.10, 0.30, 0.10, 0.90, 0.80, 0.50, 0.40, 0.00, 0.30, 0.50, 0.50],
-    'skull':       [0.28, 0.28, 0.22, 0.22, 0.50, 0.45, 0.25, 0.75, 0.25, 0.85, 0.70, 0.80, 0.90, 0.55, 0.40, 0.40, 0.05, 0.50, 0.47],
-    'crown':       [0.30, 0.30, 0.20, 0.20, 0.50, 0.40, 0.22, 0.78, 0.20, 1.40, 0.35, 0.75, 0.85, 0.35, 0.20, 0.00, 0.15, 0.50, 0.42],
-    'rocket':      [0.28, 0.28, 0.22, 0.22, 0.50, 0.42, 0.30, 0.70, 0.15, 0.50, 0.35, 0.85, 0.85, 0.40, 0.40, 0.00, 0.10, 0.50, 0.45],
-    'music note':  [0.30, 0.20, 0.20, 0.30, 0.45, 0.48, 0.30, 0.70, 0.10, 0.60, 0.30, 0.70, 0.40, 0.40, 0.40, 0.20, 0.20, 0.47, 0.48],
-  };
-
   /* Feature weights for weighted cosine similarity */
   const FEATURE_WEIGHTS = [
     1.5, 1.5, 1.5, 1.5,  // quadrant densities
-    1.0, 1.0,              // balance H, V
+    1.2, 1.2,              // balance H, V
     1.5, 1.5,              // center density, edge density
-    3.0,                   // fill ratio
-    2.5,                   // aspect ratio
-    3.5,                   // circularity
+    2.5,                   // fill ratio
+    3.0,                   // aspect ratio
+    3.0,                   // circularity
     2.0,                   // convexity
     2.5, 2.5,              // symmetry H, V
-    3.0,                   // stroke count (now normalized 0-1)
-    3.0,                   // hole count (now normalized 0-1)
+    2.5,                   // stroke count (normalized 0-1)
+    2.5,                   // hole count (normalized 0-1)
     2.0,                   // endpoint ratio
     0.5, 0.5,              // centroid X, Y
   ];
+
+  /* ── Canonical shape drawing functions ── */
+  /* Each draws a recognisable outline on a ctx of size S×S */
+  const SHAPE_DRAWERS = {
+    'circle': (c, S) => {
+      c.beginPath(); c.arc(S/2, S/2, S*0.38, 0, Math.PI*2); c.stroke();
+    },
+    'square': (c, S) => {
+      const m = S*0.15; c.strokeRect(m, m, S-2*m, S-2*m);
+    },
+    'triangle': (c, S) => {
+      c.beginPath(); c.moveTo(S/2, S*0.1); c.lineTo(S*0.88, S*0.85);
+      c.lineTo(S*0.12, S*0.85); c.closePath(); c.stroke();
+    },
+    'star': (c, S) => {
+      const cx=S/2, cy=S/2, r1=S*0.4, r2=S*0.18;
+      c.beginPath();
+      for (let i=0;i<10;i++){const a=Math.PI*2*i/10-Math.PI/2,r=i%2===0?r1:r2;
+        i===0?c.moveTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r):c.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);}
+      c.closePath(); c.stroke();
+    },
+    'line': (c, S) => {
+      c.beginPath(); c.moveTo(S*0.12, S*0.15); c.lineTo(S*0.88, S*0.85); c.stroke();
+    },
+    'cross': (c, S) => {
+      c.beginPath(); c.moveTo(S/2,S*0.1); c.lineTo(S/2,S*0.9); c.stroke();
+      c.beginPath(); c.moveTo(S*0.1,S/2); c.lineTo(S*0.9,S/2); c.stroke();
+    },
+    'heart': (c, S) => {
+      c.beginPath(); c.moveTo(S/2, S*0.82);
+      c.bezierCurveTo(S*0.1, S*0.55, S*0.05, S*0.25, S*0.3, S*0.2);
+      c.bezierCurveTo(S*0.4, S*0.15, S/2, S*0.25, S/2, S*0.35);
+      c.bezierCurveTo(S/2, S*0.25, S*0.6, S*0.15, S*0.7, S*0.2);
+      c.bezierCurveTo(S*0.95, S*0.25, S*0.9, S*0.55, S/2, S*0.82);
+      c.stroke();
+    },
+    'diamond': (c, S) => {
+      c.beginPath(); c.moveTo(S/2,S*0.1); c.lineTo(S*0.85,S/2);
+      c.lineTo(S/2,S*0.9); c.lineTo(S*0.15,S/2); c.closePath(); c.stroke();
+    },
+    'sun': (c, S) => {
+      c.beginPath(); c.arc(S/2,S/2,S*0.2,0,Math.PI*2); c.stroke();
+      for(let i=0;i<8;i++){const a=Math.PI*2*i/8;
+        c.beginPath(); c.moveTo(S/2+Math.cos(a)*S*0.25,S/2+Math.sin(a)*S*0.25);
+        c.lineTo(S/2+Math.cos(a)*S*0.4,S/2+Math.sin(a)*S*0.4); c.stroke();}
+    },
+    'moon': (c, S) => {
+      c.beginPath(); c.arc(S*0.42,S/2,S*0.35,Math.PI*0.3,Math.PI*1.7); c.stroke();
+      c.beginPath(); c.arc(S*0.55,S/2,S*0.25,Math.PI*1.65,Math.PI*0.35,true); c.stroke();
+    },
+    'house': (c, S) => {
+      c.strokeRect(S*0.18,S*0.45,S*0.64,S*0.42);
+      c.beginPath(); c.moveTo(S*0.1,S*0.48); c.lineTo(S/2,S*0.12);
+      c.lineTo(S*0.9,S*0.48); c.stroke();
+    },
+    'tree': (c, S) => {
+      c.beginPath(); c.moveTo(S/2,S*0.88); c.lineTo(S/2,S*0.5); c.stroke();
+      c.beginPath(); c.arc(S/2,S*0.32,S*0.22,0,Math.PI*2); c.stroke();
+    },
+    'flower': (c, S) => {
+      c.beginPath(); c.arc(S/2,S/2,S*0.08,0,Math.PI*2); c.stroke();
+      for(let i=0;i<6;i++){const a=Math.PI*2*i/6;
+        c.beginPath(); c.arc(S/2+Math.cos(a)*S*0.2,S/2+Math.sin(a)*S*0.2,S*0.1,0,Math.PI*2); c.stroke();}
+      c.beginPath(); c.moveTo(S/2,S*0.62); c.lineTo(S/2,S*0.9); c.stroke();
+    },
+    'car': (c, S) => {
+      c.strokeRect(S*0.08,S*0.45,S*0.84,S*0.25);
+      c.beginPath(); c.moveTo(S*0.25,S*0.45); c.lineTo(S*0.32,S*0.25);
+      c.lineTo(S*0.68,S*0.25); c.lineTo(S*0.75,S*0.45); c.stroke();
+      c.beginPath(); c.arc(S*0.28,S*0.72,S*0.07,0,Math.PI*2); c.stroke();
+      c.beginPath(); c.arc(S*0.72,S*0.72,S*0.07,0,Math.PI*2); c.stroke();
+    },
+    'boat': (c, S) => {
+      c.beginPath(); c.moveTo(S*0.05,S*0.55); c.lineTo(S*0.2,S*0.78);
+      c.lineTo(S*0.8,S*0.78); c.lineTo(S*0.95,S*0.55); c.stroke();
+      c.beginPath(); c.moveTo(S*0.5,S*0.55); c.lineTo(S*0.5,S*0.18); c.stroke();
+      c.beginPath(); c.moveTo(S*0.5,S*0.2); c.lineTo(S*0.72,S*0.4);
+      c.lineTo(S*0.5,S*0.52); c.stroke();
+    },
+    'umbrella': (c, S) => {
+      c.beginPath(); c.arc(S/2,S*0.4,S*0.35,Math.PI,0); c.stroke();
+      c.beginPath(); c.moveTo(S/2,S*0.4); c.lineTo(S/2,S*0.82); c.stroke();
+      c.beginPath(); c.arc(S*0.55,S*0.82,S*0.05,0,Math.PI); c.stroke();
+    },
+    'cup': (c, S) => {
+      c.beginPath(); c.moveTo(S*0.25,S*0.25); c.lineTo(S*0.3,S*0.78);
+      c.lineTo(S*0.7,S*0.78); c.lineTo(S*0.75,S*0.25); c.stroke();
+      c.beginPath(); c.arc(S*0.82,S*0.42,S*0.1,Math.PI*1.5,Math.PI*0.5); c.stroke();
+    },
+    'key': (c, S) => {
+      c.beginPath(); c.arc(S*0.3,S/2,S*0.14,0,Math.PI*2); c.stroke();
+      c.beginPath(); c.moveTo(S*0.44,S/2); c.lineTo(S*0.88,S/2); c.stroke();
+      c.beginPath(); c.moveTo(S*0.78,S/2); c.lineTo(S*0.78,S*0.6); c.stroke();
+      c.beginPath(); c.moveTo(S*0.86,S/2); c.lineTo(S*0.86,S*0.58); c.stroke();
+    },
+    'cat': (c, S) => {
+      c.beginPath(); c.arc(S/2,S*0.45,S*0.2,0,Math.PI*2); c.stroke();
+      c.beginPath(); c.moveTo(S*0.32,S*0.3); c.lineTo(S*0.25,S*0.1);
+      c.lineTo(S*0.42,S*0.26); c.stroke();
+      c.beginPath(); c.moveTo(S*0.68,S*0.3); c.lineTo(S*0.75,S*0.1);
+      c.lineTo(S*0.58,S*0.26); c.stroke();
+      c.beginPath(); c.moveTo(S/2,S*0.65); c.lineTo(S/2,S*0.88); c.stroke();
+    },
+    'fish': (c, S) => {
+      c.beginPath(); c.ellipse(S*0.42,S/2,S*0.3,S*0.18,0,0,Math.PI*2); c.stroke();
+      c.beginPath(); c.moveTo(S*0.72,S*0.38); c.lineTo(S*0.9,S*0.25);
+      c.lineTo(S*0.9,S*0.75); c.lineTo(S*0.72,S*0.62); c.stroke();
+    },
+    'bird': (c, S) => {
+      c.beginPath(); c.arc(S*0.35,S*0.4,S*0.12,0,Math.PI*2); c.stroke();
+      c.beginPath(); c.ellipse(S*0.52,S*0.52,S*0.25,S*0.14,0.2,0,Math.PI*2); c.stroke();
+      c.beginPath(); c.moveTo(S*0.23,S*0.4); c.lineTo(S*0.1,S*0.38); c.stroke();
+    },
+    'snake': (c, S) => {
+      c.beginPath(); c.moveTo(S*0.15,S*0.3);
+      c.bezierCurveTo(S*0.4,S*0.1, S*0.3,S*0.6, S*0.55,S*0.4);
+      c.bezierCurveTo(S*0.75,S*0.25, S*0.7,S*0.8, S*0.88,S*0.7);
+      c.stroke();
+    },
+    'butterfly': (c, S) => {
+      c.beginPath(); c.moveTo(S/2,S*0.15); c.lineTo(S/2,S*0.85); c.stroke();
+      c.beginPath(); c.ellipse(S*0.3,S*0.38,S*0.18,S*0.15,-.3,0,Math.PI*2); c.stroke();
+      c.beginPath(); c.ellipse(S*0.7,S*0.38,S*0.18,S*0.15,.3,0,Math.PI*2); c.stroke();
+      c.beginPath(); c.ellipse(S*0.32,S*0.62,S*0.13,S*0.1,-.2,0,Math.PI*2); c.stroke();
+      c.beginPath(); c.ellipse(S*0.68,S*0.62,S*0.13,S*0.1,.2,0,Math.PI*2); c.stroke();
+    },
+    'spider': (c, S) => {
+      c.beginPath(); c.arc(S/2,S/2,S*0.12,0,Math.PI*2); c.stroke();
+      for(let i=0;i<8;i++){const a=Math.PI*2*i/8;
+        c.beginPath(); c.moveTo(S/2+Math.cos(a)*S*0.12,S/2+Math.sin(a)*S*0.12);
+        c.lineTo(S/2+Math.cos(a)*S*0.42,S/2+Math.sin(a+(i%2?0.2:-0.2))*S*0.42); c.stroke();}
+    },
+    'rabbit': (c, S) => {
+      c.beginPath(); c.arc(S/2,S*0.55,S*0.2,0,Math.PI*2); c.stroke();
+      c.beginPath(); c.ellipse(S*0.4,S*0.2,S*0.06,S*0.18,-.15,0,Math.PI*2); c.stroke();
+      c.beginPath(); c.ellipse(S*0.6,S*0.2,S*0.06,S*0.18,.15,0,Math.PI*2); c.stroke();
+    },
+    'lightning': (c, S) => {
+      c.beginPath(); c.moveTo(S*0.55,S*0.08); c.lineTo(S*0.35,S*0.45);
+      c.lineTo(S*0.55,S*0.45); c.lineTo(S*0.4,S*0.92); c.stroke();
+    },
+    'spiral': (c, S) => {
+      c.beginPath();
+      for(let a=0;a<Math.PI*6;a+=0.15){const r=S*0.04+a*S*0.05;
+        const x=S/2+Math.cos(a)*r, y=S/2+Math.sin(a)*r;
+        a===0?c.moveTo(x,y):c.lineTo(x,y);} c.stroke();
+    },
+    'mountain': (c, S) => {
+      c.beginPath(); c.moveTo(S*0.05,S*0.85); c.lineTo(S*0.35,S*0.2);
+      c.lineTo(S*0.55,S*0.5); c.lineTo(S*0.75,S*0.15); c.lineTo(S*0.95,S*0.85); c.stroke();
+    },
+    'cloud': (c, S) => {
+      c.beginPath();
+      c.arc(S*0.35,S*0.5,S*0.15,Math.PI*0.9,Math.PI*1.8);
+      c.arc(S*0.5,S*0.38,S*0.16,Math.PI*1.2,Math.PI*0.1);
+      c.arc(S*0.68,S*0.48,S*0.14,Math.PI*1.4,Math.PI*0.4);
+      c.arc(S*0.55,S*0.6,S*0.18,Math.PI*0.0,Math.PI*0.7);
+      c.arc(S*0.35,S*0.58,S*0.13,Math.PI*0.3,Math.PI*0.9);
+      c.stroke();
+    },
+    'eye': (c, S) => {
+      c.beginPath(); c.moveTo(S*0.08,S/2);
+      c.quadraticCurveTo(S/2,S*0.15,S*0.92,S/2);
+      c.quadraticCurveTo(S/2,S*0.85,S*0.08,S/2); c.stroke();
+      c.beginPath(); c.arc(S/2,S/2,S*0.1,0,Math.PI*2); c.stroke();
+    },
+    'sword': (c, S) => {
+      c.beginPath(); c.moveTo(S/2,S*0.08); c.lineTo(S/2,S*0.7); c.stroke();
+      c.beginPath(); c.moveTo(S*0.3,S*0.65); c.lineTo(S*0.7,S*0.65); c.stroke();
+      c.beginPath(); c.moveTo(S*0.42,S*0.7); c.lineTo(S*0.42,S*0.88);
+      c.lineTo(S*0.58,S*0.88); c.lineTo(S*0.58,S*0.7); c.stroke();
+    },
+    'skull': (c, S) => {
+      c.beginPath(); c.arc(S/2,S*0.38,S*0.25,0,Math.PI*2); c.stroke();
+      c.beginPath(); c.moveTo(S*0.35,S*0.63); c.lineTo(S*0.35,S*0.82);
+      c.lineTo(S*0.65,S*0.82); c.lineTo(S*0.65,S*0.63); c.stroke();
+      c.beginPath(); c.arc(S*0.4,S*0.35,S*0.06,0,Math.PI*2); c.stroke();
+      c.beginPath(); c.arc(S*0.6,S*0.35,S*0.06,0,Math.PI*2); c.stroke();
+    },
+    'crown': (c, S) => {
+      c.beginPath(); c.moveTo(S*0.12,S*0.75); c.lineTo(S*0.12,S*0.4);
+      c.lineTo(S*0.3,S*0.55); c.lineTo(S/2,S*0.25); c.lineTo(S*0.7,S*0.55);
+      c.lineTo(S*0.88,S*0.4); c.lineTo(S*0.88,S*0.75); c.closePath(); c.stroke();
+    },
+    'rocket': (c, S) => {
+      c.beginPath(); c.moveTo(S/2,S*0.08);
+      c.bezierCurveTo(S*0.65,S*0.2,S*0.65,S*0.55,S*0.6,S*0.7);
+      c.lineTo(S*0.4,S*0.7);
+      c.bezierCurveTo(S*0.35,S*0.55,S*0.35,S*0.2,S/2,S*0.08); c.stroke();
+      c.beginPath(); c.moveTo(S*0.4,S*0.62); c.lineTo(S*0.28,S*0.8);
+      c.lineTo(S*0.4,S*0.72); c.stroke();
+      c.beginPath(); c.moveTo(S*0.6,S*0.62); c.lineTo(S*0.72,S*0.8);
+      c.lineTo(S*0.6,S*0.72); c.stroke();
+    },
+    'music note': (c, S) => {
+      c.beginPath(); c.arc(S*0.35,S*0.7,S*0.1,0,Math.PI*2); c.stroke();
+      c.beginPath(); c.moveTo(S*0.45,S*0.7); c.lineTo(S*0.45,S*0.15); c.stroke();
+      c.beginPath(); c.moveTo(S*0.45,S*0.15);
+      c.quadraticCurveTo(S*0.7,S*0.18,S*0.65,S*0.32); c.stroke();
+    },
+  };
+
+  /* ── Generate templates by drawing canonical shapes through the pipeline ── */
+  /* This ensures templates match exactly what extractFeatures produces for outlines */
+  let TEMPLATES = {};
 
   /* ── Canvas & State ── */
   const canvas = document.getElementById('gameCanvas');
@@ -496,6 +670,42 @@
     if (normA === 0 || normB === 0) return 0;
     return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
   }
+
+  /* Generate templates at init time — draw each canonical shape through the
+     same pipeline (stroke → downsample → extractFeatures) so templates
+     perfectly match what real drawings produce. */
+  function generateTemplates() {
+    const tmpCanvas = document.createElement('canvas');
+    tmpCanvas.width = CFG.DRAW_SIZE;
+    tmpCanvas.height = CFG.DRAW_SIZE;
+    const tmpCtx = tmpCanvas.getContext('2d');
+
+    for (const [word, drawFn] of Object.entries(SHAPE_DRAWERS)) {
+      tmpCtx.clearRect(0, 0, CFG.DRAW_SIZE, CFG.DRAW_SIZE);
+      tmpCtx.strokeStyle = '#ffffff';
+      tmpCtx.fillStyle = '#ffffff';
+      tmpCtx.lineWidth = CFG.STROKE_WIDTH;
+      tmpCtx.lineCap = 'round';
+      tmpCtx.lineJoin = 'round';
+      drawFn(tmpCtx, CFG.DRAW_SIZE);
+
+      gridCtx.clearRect(0, 0, CFG.GRID_SIZE, CFG.GRID_SIZE);
+      gridCtx.drawImage(tmpCanvas, 0, 0, CFG.GRID_SIZE, CFG.GRID_SIZE);
+      const imgData = gridCtx.getImageData(0, 0, CFG.GRID_SIZE, CFG.GRID_SIZE);
+      const grid = [];
+      for (let y = 0; y < CFG.GRID_SIZE; y++) {
+        const row = [];
+        for (let x = 0; x < CFG.GRID_SIZE; x++) {
+          const idx = (y * CFG.GRID_SIZE + x) * 4;
+          row.push(imgData.data[idx + 3] > 80 ? 1 : 0);
+        }
+        grid.push(row);
+      }
+      const features = extractFeatures(grid);
+      if (features) TEMPLATES[word] = features;
+    }
+  }
+  generateTemplates();
 
   function classify() {
     const grid = downsampleToGrid();
