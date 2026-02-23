@@ -50,7 +50,7 @@ const THEMES = {
     foodGolden: { color: "#ffd700", glow: "rgba(255,215,0,0.7)" },
     foodSpeed: { inner: "#ff006e", outer: "#cc0058", glow: "rgba(255,0,110,0.5)" },
     foodPoison: { inner: "#8b00ff", outer: "#5c00a3", glow: "rgba(139,0,255,0.5)" },
-    foodMagnet: { inner: "#00e5ff", outer: "#0097a7", glow: "rgba(0,229,255,0.5)" },
+
     foodGhost: { inner: "#e0e0e0", outer: "#9e9e9e", glow: "rgba(224,224,224,0.4)" },
     foodFreeze: { inner: "#80d8ff", outer: "#4fc3f7", glow: "rgba(128,216,255,0.5)" },
     particleEat: "#ffbe0b",
@@ -77,7 +77,7 @@ const THEMES = {
     foodGolden: { color: "#ffd700", glow: "rgba(255,215,0,0.7)" },
     foodSpeed: { inner: "#00ffff", outer: "#00b3b3", glow: "rgba(0,255,255,0.5)" },
     foodPoison: { inner: "#ff1744", outer: "#b71c1c", glow: "rgba(255,23,68,0.5)" },
-    foodMagnet: { inner: "#e040fb", outer: "#aa00ff", glow: "rgba(224,64,251,0.5)" },
+
     foodGhost: { inner: "#b0bec5", outer: "#78909c", glow: "rgba(176,190,197,0.4)" },
     foodFreeze: { inner: "#82b1ff", outer: "#448aff", glow: "rgba(130,177,255,0.5)" },
     particleEat: "#ff6ec7",
@@ -104,7 +104,7 @@ const THEMES = {
     foodGolden: { color: "#ffd700", glow: "rgba(255,215,0,0.7)" },
     foodSpeed: { inner: "#ff6b6b", outer: "#cc4444", glow: "rgba(255,107,107,0.5)" },
     foodPoison: { inner: "#6c5ce7", outer: "#4834d4", glow: "rgba(108,92,231,0.5)" },
-    foodMagnet: { inner: "#00cec9", outer: "#009688", glow: "rgba(0,206,201,0.5)" },
+
     foodGhost: { inner: "#dfe6e9", outer: "#b2bec3", glow: "rgba(223,230,233,0.4)" },
     foodFreeze: { inner: "#74b9ff", outer: "#0984e3", glow: "rgba(116,185,255,0.5)" },
     particleEat: "#ffd166",
@@ -131,7 +131,7 @@ const THEMES = {
     foodGolden: { color: "#ffd700", glow: "rgba(255,215,0,0.7)" },
     foodSpeed: { inner: "#a8dadc", outer: "#457b9d", glow: "rgba(168,218,220,0.5)" },
     foodPoison: { inner: "#7209b7", outer: "#560bad", glow: "rgba(114,9,183,0.5)" },
-    foodMagnet: { inner: "#f72585", outer: "#b5179e", glow: "rgba(247,37,133,0.5)" },
+
     foodGhost: { inner: "#f8f9fa", outer: "#ced4da", glow: "rgba(248,249,250,0.4)" },
     foodFreeze: { inner: "#48cae4", outer: "#0096c7", glow: "rgba(72,202,228,0.5)" },
     particleEat: "#ffbe0b",
@@ -158,7 +158,7 @@ const THEMES = {
     foodGolden: { color: "#ffff00", glow: "rgba(255,255,0,0.7)" },
     foodSpeed: { inner: "#ff00ff", outer: "#cc00cc", glow: "rgba(255,0,255,0.5)" },
     foodPoison: { inner: "#8800ff", outer: "#6600cc", glow: "rgba(136,0,255,0.5)" },
-    foodMagnet: { inner: "#00ffff", outer: "#00cccc", glow: "rgba(0,255,255,0.5)" },
+
     foodGhost: { inner: "#ffffff", outer: "#cccccc", glow: "rgba(255,255,255,0.4)" },
     foodFreeze: { inner: "#0088ff", outer: "#0066cc", glow: "rgba(0,136,255,0.5)" },
     particleEat: "#ff0000",
@@ -349,7 +349,7 @@ const SNAKE_ACH_I18N = {
   survivor: ['snakeAchSurvivor', 'snakeAchSurvivorDesc'],
   claustrophobe: ['snakeAchClaustrophobe', 'snakeAchClaustrophobeDesc'],
   poisoned: ['snakeAchPoisoned', 'snakeAchPoisonedDesc'],
-  magnet_lover: ['snakeAchMagnetic', 'snakeAchMagneticDesc'],
+
   ghost_hunter: ['snakeAchGhostHunter', 'snakeAchGhostHunterDesc'],
   frozen: ['snakeAchBrainFreeze', 'snakeAchBrainFreezeDesc'],
   long_snake: ['snakeAchLongSnake', 'snakeAchLongSnakeDesc'],
@@ -370,7 +370,7 @@ const SN_ACHIEVEMENTS = [
   { id: "survivor",       icon: "\uD83D\uDEE1\uFE0F",  get title() { return _t('snakeAchSurvivor'); },get desc() { return _t('snakeAchSurvivorDesc'); },            check: (s) => s.wallShrinks >= 1 },
   { id: "claustrophobe",  icon: "\uD83E\uDDF1", get title() { return _t('snakeAchClaustrophobe'); },   get desc() { return _t('snakeAchClaustrophobeDesc'); },       check: (s) => s.wallShrinks >= 3 },
   { id: "poisoned",       icon: "\u2620\uFE0F",  get title() { return _t('snakeAchPoisoned'); },       get desc() { return _t('snakeAchPoisonedDesc'); },            check: (s) => s.poisonEaten >= 1 },
-  { id: "magnet_lover",   icon: "\uD83E\uDDF2", get title() { return _t('snakeAchMagnetic'); },        get desc() { return _t('snakeAchMagneticDesc'); },            check: (s) => s.magnetEaten >= 1 },
+
   { id: "ghost_hunter",   icon: "\uD83D\uDC7B", get title() { return _t('snakeAchGhostHunter'); },     get desc() { return _t('snakeAchGhostHunterDesc'); },         check: (s) => s.ghostEaten >= 1 },
   { id: "frozen",         icon: "\u2744\uFE0F",  get title() { return _t('snakeAchBrainFreeze'); },    get desc() { return _t('snakeAchBrainFreezeDesc'); },          check: (s) => s.freezeEaten >= 1 },
   { id: "long_snake",     icon: "\uD83D\uDC0D", get title() { return _t('snakeAchLongSnake'); },       get desc() { return _t('snakeAchLongSnakeDesc'); },           check: (s) => s.maxLength >= 20 },
@@ -386,7 +386,7 @@ let snAchStats = {
   goldenEaten: 0,
   wallShrinks: 0,
   poisonEaten: 0,
-  magnetEaten: 0,
+
   ghostEaten: 0,
   freezeEaten: 0,
   maxLength: 1,
@@ -547,7 +547,7 @@ const state = {
   crackleParticles: [],
   // New power-up states
   ghostModeEnd: 0,       // timestamp when ghost mode expires
-  magnetModeEnd: 0,      // timestamp when magnet mode expires
+
   freezeModeEnd: 0,      // timestamp when freeze mode expires
   poisonFlash: 0,        // visual flash for poison
 };
@@ -707,20 +707,7 @@ function soundPoison(ctx, dest) {
   osc.start(t); osc.stop(t + 0.3);
 }
 
-function soundMagnet(ctx, dest) {
-  soundEat(ctx, dest);
-  const t = ctx.currentTime;
-  const osc = ctx.createOscillator();
-  const g = ctx.createGain();
-  osc.type = "sine";
-  osc.frequency.setValueAtTime(800, t);
-  osc.frequency.exponentialRampToValueAtTime(1200, t + 0.15);
-  osc.frequency.exponentialRampToValueAtTime(800, t + 0.3);
-  g.gain.setValueAtTime(0.12, t);
-  g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
-  osc.connect(g); g.connect(dest);
-  osc.start(t); osc.stop(t + 0.35);
-}
+
 
 function soundGhost(ctx, dest) {
   soundEat(ctx, dest);
@@ -1027,8 +1014,7 @@ function spawnFood() {
   const roll = Math.random();
   if (roll < 0.04) food.type = "ghost";
   else if (roll < 0.08) food.type = "freeze";
-  else if (roll < 0.13) food.type = "magnet";
-  else if (roll < 0.20) food.type = "poison";
+  else if (roll < 0.15) food.type = "poison";
   else if (roll < 0.28) food.type = "speed";
   else if (roll < 0.40) food.type = "golden";
   else food.type = "normal";
@@ -1070,7 +1056,6 @@ function resetGame() {
   state.undulationTime = 0;
   state.headEnlargeTimer = 0;
   state.ghostModeEnd = 0;
-  state.magnetModeEnd = 0;
   state.freezeModeEnd = 0;
   state.poisonFlash = 0;
 
@@ -1080,7 +1065,7 @@ function resetGame() {
   snAchStats.goldenEaten = 0;
   snAchStats.wallShrinks = 0;
   snAchStats.poisonEaten = 0;
-  snAchStats.magnetEaten = 0;
+
   snAchStats.ghostEaten = 0;
   snAchStats.freezeEaten = 0;
 
@@ -1131,20 +1116,6 @@ function tick(now) {
 
   const head = snake.segments[0];
   let newHead = { x: head.x + snake.direction.x, y: head.y + snake.direction.y };
-
-  // Magnet: attract food toward snake head
-  if (now < state.magnetModeEnd) {
-    const dx = head.x - food.x;
-    const dy = head.y - food.y;
-    const dist = Math.abs(dx) + Math.abs(dy);
-    if (dist > 0 && dist <= 5) {
-      food.x += Math.sign(dx);
-      food.y += Math.sign(dy);
-      // Clamp food to arena
-      food.x = Math.max(state.arenaMin, Math.min(state.arenaMax, food.x));
-      food.y = Math.max(state.arenaMin, Math.min(state.arenaMax, food.y));
-    }
-  }
 
   // Ghost mode: wrap around walls
   const isGhost = now < state.ghostModeEnd;
@@ -1265,18 +1236,6 @@ function eatFood(now) {
       snake.segments.pop();
     }
     spawnParticles(px, py, 15, currentTheme.foodPoison.inner, 2, 5, 0.3, 0.7, 50, 130);
-
-  } else if (food.type === "magnet") {
-    state.score += 2;
-    snake.growPending += 1;
-    playSound(soundMagnet);
-    haptics.eat();
-    state.eatFlash = 0.2;
-    state.eatFlashColor = "0,229,255";
-    state.scorePopValue = "+2 MAGNET!";
-    state.magnetModeEnd = now + 8000;
-    snAchStats.magnetEaten++;
-    spawnParticles(px, py, 14, currentTheme.foodMagnet.inner, 2, 4, 0.3, 0.6, 60, 150);
 
   } else if (food.type === "ghost") {
     state.score += 2;
@@ -1728,26 +1687,6 @@ function drawFood(dt) {
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
     ctx.fillText("\u2620", cx, cy);
 
-  } else if (type === "magnet") {
-    const pulse = 10 + Math.sin(food.pulsePhase * 4) * 5;
-    const r = 7 * ease;
-    ctx.shadowBlur = pulse;
-    ctx.shadowColor = themeFood.glow;
-    const grad = ctx.createRadialGradient(cx - 1, cy - 1, 1, cx, cy, r);
-    grad.addColorStop(0, themeFood.inner); grad.addColorStop(1, themeFood.outer);
-    ctx.fillStyle = grad;
-    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
-    // Magnetic field lines
-    ctx.strokeStyle = `${themeFood.inner}80`;
-    ctx.lineWidth = 1;
-    for (let i = 0; i < 4; i++) {
-      const a = food.pulsePhase * 2 + i * Math.PI / 2;
-      const outerR = 12 + Math.sin(food.pulsePhase * 3 + i) * 3;
-      ctx.beginPath();
-      ctx.arc(cx + Math.cos(a) * 2, cy + Math.sin(a) * 2, outerR, a - 0.5, a + 0.5);
-      ctx.stroke();
-    }
-
   } else if (type === "ghost") {
     const pulse = 8 + Math.sin(food.pulsePhase * 2) * 4;
     const r = 7 * ease;
@@ -1855,7 +1794,6 @@ function drawPowerUpIndicators() {
   if (now < state.speedBoostEnd) indicators.push({ label: _t('puSpeed'), color: currentTheme.foodSpeed.inner, remaining: (state.speedBoostEnd - now) / 5000 });
   if (now < state.slowMoEnd) indicators.push({ label: _t('puSlowMo'), color: currentTheme.foodGolden.color, remaining: (state.slowMoEnd - now) / 3000 });
   if (now < state.ghostModeEnd) indicators.push({ label: _t('puGhost'), color: currentTheme.foodGhost.inner, remaining: (state.ghostModeEnd - now) / 6000 });
-  if (now < state.magnetModeEnd) indicators.push({ label: _t('puMagnet'), color: currentTheme.foodMagnet.inner, remaining: (state.magnetModeEnd - now) / 8000 });
   if (now < state.freezeModeEnd) indicators.push({ label: _t('puFreeze'), color: currentTheme.foodFreeze.inner, remaining: (state.freezeModeEnd - now) / 5000 });
 
   for (let i = 0; i < indicators.length; i++) {
