@@ -539,6 +539,33 @@ const I18N = (() => {
       sfAchVeteran: 'Veteran',
       sfAchVeteranDesc: 'Play 10 games',
 
+      // Inkognito - Hub
+      inkTitle: 'Inkognito',
+      inkDesc: 'Draw on canvas and let the AI guess what you\'re drawing in real-time. 10 rounds of creative chaos!',
+      creative: 'Creative',
+
+      // Inkognito - In-game
+      inkInstructions: 'Draw what the AI asks \u2014 it guesses in real-time. 10 rounds, 20 seconds each.',
+      inkTip: 'Tip: Draw big, clear shapes \u2014 the AI likes bold strokes!',
+
+      // Inkognito - Achievements
+      inkAchFirstDraw: 'First Stroke',
+      inkAchFirstDrawDesc: 'Complete your first round',
+      inkAchSharpEye: 'Sharp Eye',
+      inkAchSharpEyeDesc: 'AI guesses correctly in under 5 seconds',
+      inkAchPerfectRound: 'Perfect Round',
+      inkAchPerfectRoundDesc: 'Get a perfect score on a round',
+      inkAchArtist: 'Artist',
+      inkAchArtistDesc: 'Score 500 points',
+      inkAchMasterArtist: 'Master Artist',
+      inkAchMasterArtistDesc: 'Score 1000 points',
+      inkAchSpeedDemon: 'Speed Demon',
+      inkAchSpeedDemonDesc: 'Guess correct in under 3 seconds',
+      inkAchPerfectGame: 'Perfect Game',
+      inkAchPerfectGameDesc: 'Get all 10 rounds correct',
+      inkAchDedicated: 'Dedicated Player',
+      inkAchDedicatedDesc: 'Play 10 games',
+
       // Leaderboard
       leaderboard: 'Leaderboard',
       enterNickname: 'Enter your nickname',

@@ -244,6 +244,7 @@
       .game-card:nth-child(8) { animation-delay: 0.4s; }
       .game-card:nth-child(9) { animation-delay: 0.45s; }
       .game-card:nth-child(10) { animation-delay: 0.5s; }
+      .game-card:nth-child(11) { animation-delay: 0.55s; }
       @keyframes cardReveal {
         to { opacity: 1; transform: translateY(0); }
       }
@@ -278,6 +279,8 @@
       .game-card:nth-child(7)::after { box-shadow: inset 0 0 0 1px rgba(0,210,255,0.4), 0 0 30px rgba(0,210,255,0.08); }
       .game-card:nth-child(8)::after { box-shadow: inset 0 0 0 1px rgba(255,107,53,0.4), 0 0 30px rgba(255,107,53,0.08); }
       .game-card:nth-child(9)::after { box-shadow: inset 0 0 0 1px rgba(0,229,255,0.4), 0 0 30px rgba(0,229,255,0.08); }
+      .game-card:nth-child(10)::after { box-shadow: inset 0 0 0 1px rgba(0,229,255,0.4), 0 0 30px rgba(0,229,255,0.08); }
+      .game-card:nth-child(11)::after { box-shadow: inset 0 0 0 1px rgba(168,85,247,0.4), 0 0 30px rgba(168,85,247,0.08); }
       .game-card:nth-child(10)::after { box-shadow: inset 0 0 0 1px rgba(0,204,255,0.4), 0 0 30px rgba(0,204,255,0.08); }
 
       .game-card:hover .card-preview canvas { filter: brightness(1.12) saturate(1.1); }
@@ -336,6 +339,7 @@
       .gun-game-preview  { background: linear-gradient(180deg, #1a2540, #2c3e50 50%, #1a252f 85%, #0f1820 100%); }
       .star-fury-preview { background: linear-gradient(180deg, #050510, #0a0a20 55%, #080818 85%, #020208 100%); }
       .astro-miner-preview { background: linear-gradient(180deg, #1a0a3a, #0f0625, #0a0520); }
+      .inkognito-preview   { background: linear-gradient(180deg, #1a0835, #0c0620, #06041a); }
 
       .flappy-tag    { background: rgba(123,228,149,0.12); color: #7be495; border: 1px solid rgba(123,228,149,0.2); }
       .methane-tag   { background: rgba(23,205,211,0.12); color: #17cdd3; border: 1px solid rgba(23,205,211,0.2); }
@@ -347,6 +351,7 @@
       .gun-game-tag  { background: rgba(255,107,53,0.12); color: #ff6b35; border: 1px solid rgba(255,107,53,0.2); }
       .star-fury-tag { background: rgba(0,204,255,0.12); color: #00ccff; border: 1px solid rgba(0,204,255,0.2); }
       .astro-miner-tag { background: rgba(0,229,255,0.12); color: #00e5ff; border: 1px solid rgba(0,229,255,0.2); }
+      .inkognito-tag   { background: rgba(168,85,247,0.12); color: #a855f7; border: 1px solid rgba(168,85,247,0.2); }
 
       .card-best {
         position: absolute;
@@ -568,6 +573,17 @@
           <h2 data-i18n="starFuryTitle">Star Fury</h2>
           <p data-i18n="starFuryDesc">Blast through waves of enemies in this vertical space shooter. Chain combos, grab power-ups, defeat bosses!</p>
           <span class="card-tag star-fury-tag" data-i18n="shooter">Shooter</span>
+        </div>
+      </a>
+
+      <a href="/inkognito/" class="game-card">
+        <div class="card-preview inkognito-preview">
+          <canvas id="inkognitoCanvas" width="360" height="200"></canvas>
+        </div>
+        <div class="card-body">
+          <h2 data-i18n="inkTitle">Inkognito</h2>
+          <p data-i18n="inkDesc">Draw on canvas and let the AI guess what you're drawing in real-time. 10 rounds of creative chaos!</p>
+          <span class="card-tag inkognito-tag" data-i18n="creative">Creative</span>
         </div>
       </a>
     </div>
@@ -1613,6 +1629,139 @@
         }
         requestAnimationFrame(draw);
       })();
+      /* ─ Inkognito Preview ─ */
+      (function() {
+        const c = document.getElementById('inkognitoCanvas');
+        if (!c) return;
+        const x = c.getContext('2d');
+        let t = 0;
+        const strokePts = [];
+        const shapes = [
+          // Star shape
+          () => {
+            const pts = [];
+            for (let i = 0; i < 10; i++) {
+              const a = (i / 10) * Math.PI * 2 - Math.PI / 2;
+              const r = i % 2 === 0 ? 35 : 15;
+              pts.push({ x: W * 0.35 + Math.cos(a) * r, y: H * 0.5 + Math.sin(a) * r });
+            }
+            pts.push(pts[0]);
+            return pts;
+          },
+          // Circle
+          () => {
+            const pts = [];
+            for (let i = 0; i <= 20; i++) {
+              const a = (i / 20) * Math.PI * 2;
+              pts.push({ x: W * 0.35 + Math.cos(a) * 30, y: H * 0.5 + Math.sin(a) * 30 });
+            }
+            return pts;
+          },
+          // Heart
+          () => {
+            const pts = [];
+            for (let i = 0; i <= 30; i++) {
+              const a = (i / 30) * Math.PI * 2;
+              const r = 25;
+              const hx = r * 16 * Math.pow(Math.sin(a), 3) / 16;
+              const hy = -r * (13 * Math.cos(a) - 5 * Math.cos(2 * a) - 2 * Math.cos(3 * a) - Math.cos(4 * a)) / 16;
+              pts.push({ x: W * 0.35 + hx, y: H * 0.5 + hy });
+            }
+            return pts;
+          },
+        ];
+        let shapeIdx = 0;
+        let drawProgress = 0;
+        let currentShape = shapes[0]();
+
+        function draw() {
+          t += 0.016;
+          const bg = x.createLinearGradient(0, 0, 0, H);
+          bg.addColorStop(0, '#1a0835'); bg.addColorStop(0.5, '#0c0620'); bg.addColorStop(1, '#06041a');
+          x.fillStyle = bg; x.fillRect(0, 0, W, H);
+
+          // Draw area background
+          x.fillStyle = 'rgba(18, 16, 58, 0.8)';
+          x.fillRect(W * 0.1, H * 0.15, W * 0.5, H * 0.7);
+          x.strokeStyle = 'rgba(168, 85, 247, 0.3)';
+          x.lineWidth = 1;
+          x.strokeRect(W * 0.1, H * 0.15, W * 0.5, H * 0.7);
+
+          // Animated drawing
+          drawProgress += 0.008;
+          if (drawProgress > 1.5) {
+            drawProgress = 0;
+            shapeIdx = (shapeIdx + 1) % shapes.length;
+            currentShape = shapes[shapeIdx]();
+          }
+
+          const pts = currentShape;
+          const drawEnd = Math.min(pts.length - 1, Math.floor(Math.min(1, drawProgress) * (pts.length - 1)));
+
+          if (drawEnd > 0) {
+            x.strokeStyle = '#ffffff';
+            x.lineWidth = 2.5;
+            x.lineCap = 'round';
+            x.lineJoin = 'round';
+            x.beginPath();
+            x.moveTo(pts[0].x, pts[0].y);
+            for (let i = 1; i <= drawEnd; i++) {
+              x.lineTo(pts[i].x, pts[i].y);
+            }
+            x.stroke();
+
+            // Pen cursor
+            if (drawProgress < 1) {
+              const cp = pts[drawEnd];
+              x.fillStyle = '#a855f7';
+              x.beginPath(); x.arc(cp.x, cp.y, 3, 0, Math.PI * 2); x.fill();
+              x.fillStyle = 'rgba(168, 85, 247, 0.2)';
+              x.beginPath(); x.arc(cp.x, cp.y, 8, 0, Math.PI * 2); x.fill();
+            }
+          }
+
+          // AI guess bars on the right
+          const barX = W * 0.65, barW = W * 0.3;
+          const guessWords = ['star', 'diamond', 'cross'];
+          const guessConf = [
+            0.3 + Math.min(0.65, drawProgress * 0.7),
+            0.15 + Math.sin(t * 2) * 0.1,
+            0.08 + Math.cos(t * 1.5) * 0.05,
+          ];
+
+          x.font = 'bold 9px "Segoe UI", system-ui, sans-serif';
+          x.textBaseline = 'middle';
+          for (let i = 0; i < 3; i++) {
+            const by = H * 0.3 + i * 28;
+            x.fillStyle = 'rgba(255,255,255,0.06)';
+            x.fillRect(barX, by, barW, 18);
+            const fillColor = i === 0 ? '#a855f7' : 'rgba(168,85,247,0.3)';
+            x.fillStyle = fillColor;
+            x.fillRect(barX, by, barW * Math.min(1, guessConf[i]), 18);
+            x.fillStyle = '#e8e0ff';
+            x.textAlign = 'left';
+            x.fillText(guessWords[i], barX + 4, by + 10);
+            x.textAlign = 'right';
+            x.fillStyle = 'rgba(200,208,247,0.5)';
+            x.fillText(Math.round(guessConf[i] * 100) + '%', barX + barW - 4, by + 10);
+          }
+
+          // Title hint
+          x.font = 'bold 11px "Segoe UI", system-ui, sans-serif';
+          x.fillStyle = 'rgba(168, 85, 247, 0.7)';
+          x.textAlign = 'center';
+          x.fillText('Draw a STAR', W * 0.35, H * 0.12);
+
+          // "AI" label
+          x.fillStyle = 'rgba(0, 220, 160, 0.6)';
+          x.textAlign = 'left';
+          x.fillText('AI Guesses', barX, H * 0.24);
+
+          requestAnimationFrame(draw);
+        }
+        requestAnimationFrame(draw);
+      })();
+
     })();
     </script>
     <script src="i18n.js"></script>
@@ -1625,7 +1774,7 @@
       (function() {
         const bestKeys = [
           'flappyBest', 'methaneDriftBest', 'snakeBest', 'luminaBest',
-          'phantomRoadBest', null, 'tetrisBest', 'gunGameBest', 'astroMinerBest', 'starFuryBest'
+          'phantomRoadBest', null, 'tetrisBest', 'gunGameBest', 'astroMinerBest', 'starFuryBest', 'inkognitoBest'
         ];
         const cards = document.querySelectorAll('.game-card');
         cards.forEach((card, i) => {
@@ -1669,9 +1818,10 @@
           { key: 'gunGameAch', total: 0 },
           { key: 'astroMinerAch', total: 0 },
           { key: 'starFuryAch', total: 0 },
+          { key: 'inkognitoAch', total: 0 },
         ];
 
-        const gameNames = ['Flappy Bird', 'Methane Drift', 'Snake', 'Lumina', 'Phantom Road', 'Unicorn Clicker', 'Tetris', 'Gun Game', 'Astro Miner', 'Star Fury'];
+        const gameNames = ['Flappy Bird', 'Methane Drift', 'Snake', 'Lumina', 'Phantom Road', 'Unicorn Clicker', 'Tetris', 'Gun Game', 'Astro Miner', 'Star Fury', 'Inkognito'];
 
         let totalAch = 0;
         let maxPlayed = 0;
@@ -1690,7 +1840,7 @@
           } catch(e) {}
         }
 
-        const bestKeys = ['flappyBest', 'methaneDriftBest', 'snakeBest', 'luminaBest', 'phantomRoadBest', 'tetrisBest', 'gunGameBest', 'astroMinerBest', 'starFuryBest'];
+        const bestKeys = ['flappyBest', 'methaneDriftBest', 'snakeBest', 'luminaBest', 'phantomRoadBest', 'tetrisBest', 'gunGameBest', 'astroMinerBest', 'starFuryBest', 'inkognitoBest'];
         let combinedBest = 0;
         for (const key of bestKeys) {
           combinedBest += Number(localStorage.getItem(key)) || 0;
