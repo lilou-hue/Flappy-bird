@@ -87,6 +87,7 @@ const ACHIEVEMENTS = [
   { id: 'density_surfer', name: 'Wave Rider', desc: 'Ride the air change 5 times in one run', check: (s) => s.densitySurfsThisRun >= 5 },
   { id: 'boss_slayer', name: 'Boss Slayer', desc: 'Defeat 3 bosses in one run', check: (s) => s.bossesDefeatedThisRun >= 3 },
   { id: 'marathon', name: 'Marathon Runner', desc: 'Stay alive for 2 minutes in one run', check: (s) => s.longestTimeAlive >= 120 },
+  { id: 'nitro_collector', icon: '\uD83D\uDCA8', title: 'Nitro Collector', desc: 'Collect 10 nitro pickups total', check: (s) => s.totalNitro >= 10 },
 ];
 
 /* --- DOM --- */
@@ -158,6 +159,7 @@ const ACH_I18N = {
   density_surfer: { name: 'achDensitySurfer', desc: 'achDensitySurferDesc' },
   boss_slayer: { name: 'achBossSlayer', desc: 'achBossSlayerDesc' },
   marathon: { name: 'achMarathon', desc: 'achMarathonDesc' },
+  nitro_collector: { name: 'achNitroCollector', desc: 'achNitroCollectorDesc' },
 };
 
 window.addEventListener('langchange', () => {
@@ -222,6 +224,7 @@ const defaultProgress = {
   nearMissesThisRun: 0,
   densitySurfsThisRun: 0,
   bossesDefeatedThisRun: 0,
+  totalNitro: 0,
 };
 
 let progress = { ...defaultProgress };
@@ -295,9 +298,15 @@ const world = {
   boss: null,
   bossesDefeated: 0,
   edgeWarnings: [],
+  showGhost: true,
   ghostTrail: [],
   bestGhostTrail: [],
   ghostTrailTimer: 0,
+  nitroPickups: [],
+  nitroBoostEnd: 0,
+  nitroCollected: 0,
+  nitroSpawnTimer: 0,
+  dominantHazards: [],
   runStats: {
     obstaclesDodged: 0,
     symbiosisUses: 0,
@@ -602,8 +611,16 @@ function resetGame() {
   world.boss = null;
   world.bossesDefeated = 0;
   world.edgeWarnings = [];
+  world.showGhost = true;
   world.ghostTrail = [];
   world.ghostTrailTimer = 0;
+  world.nitroPickups = [];
+  world.nitroBoostEnd = 0;
+  world.nitroCollected = 0;
+  world.nitroSpawnTimer = 8 + Math.random() * 7;
+  /* Pick 2 random dominant hazards for this run */
+  const shuffled = hazardTypes.slice().sort(() => Math.random() - 0.5);
+  world.dominantHazards = [shuffled[0], shuffled[1]];
   world.runStats = {
     obstaclesDodged: 0, symbiosisUses: 0, nearMisses: 0, crushingPhases: 0,
     timeAlive: 0, usedSymbiosis: false, densitySurfs: 0, bossesDefeated: 0,
@@ -921,6 +938,34 @@ function spawnCorridor() {
   });
 }
 
+/* --- Dominant Hazard Spawning --- */
+function spawnDominantObstacle() {
+  if (world.dominantHazards.length === 0) return;
+  const type = world.dominantHazards[Math.floor(Math.random() * world.dominantHazards.length)];
+  const maxDrift = getDifficulty('obstacleDrift');
+  let gapY, drift;
+  let passable = false;
+  for (let attempt = 0; attempt < 8; attempt++) {
+    gapY = 80 + Math.random() * (world.height - 160);
+    drift = (Math.random() - 0.5) * maxDrift * 2;
+    if (isPassable(world.width + 120, gapY, type, null)) {
+      passable = true;
+      break;
+    }
+  }
+  if (!passable) {
+    gapY = findMostOpenY(world.width + 120);
+    drift = (Math.random() - 0.5) * maxDrift;
+  }
+  const oscillate = type === 'geyser' && world.score >= 50 && Math.random() < 0.4;
+  const eruptPhase = type === 'geyser' ? Math.random() * CONFIG.geyserEruptCycle : 0;
+  world.obstacles.push({
+    type, x: world.width + 120, y: gapY, drift, age: 0, scored: false,
+    pulse: Math.random() * Math.PI * 2, oscillate, oscPhase: Math.random() * Math.PI * 2,
+    eruptPhase, erupting: true, scatterTimer: 0, scattered: false,
+  });
+}
+
 /* --- Collision --- */
 /* effectiveY accounts for the visual wobble so hitbox matches what the player sees */
 function obstacleVisualY(obstacle) {
@@ -1027,7 +1072,7 @@ function updateBoss(dt) {
       if (boss.health <= 0) {
         defeatBoss();
       }
-    } else if (glider.symbiosisTimer <= 0) {
+    } else if (glider.symbiosisTimer <= 0 && !(performance.now() < world.nitroBoostEnd)) {
       crash();
     }
   }
@@ -1121,6 +1166,7 @@ function finishCrash() {
   progress.nearMissesThisRun = world.runStats.nearMisses;
   progress.densitySurfsThisRun = world.runStats.densitySurfs;
   progress.bossesDefeatedThisRun = world.runStats.bossesDefeated;
+  progress.totalNitro = (progress.totalNitro || 0) + world.nitroCollected;
 
   checkSkinUnlocks();
   checkAchievements();
@@ -1293,8 +1339,13 @@ function update(dt, rawDt) {
   updateZone();
 
   /* Obstacle spawning with difficulty ramp */
+  /* Dominant hazards get an extra spawn chance (effectively 2x) */
   if (Math.random() < getDifficulty('spawnRate') * dt) {
     spawnObstacle();
+    /* Extra spawn for dominant hazards */
+    if (world.dominantHazards.length > 0 && Math.random() < getDifficulty('spawnRate') * dt) {
+      spawnDominantObstacle();
+    }
     /* Pair spawn after score 15 */
     if (world.score >= 15 && Math.random() < 0.3) {
       const paired = world.obstacles[world.obstacles.length - 1];
@@ -1388,7 +1439,8 @@ function update(dt, rawDt) {
   }
 
   /* Obstacles */
-  const scrollSpeed = getDifficulty('scrollSpeed');
+  const nitroActive = performance.now() < world.nitroBoostEnd;
+  const scrollSpeed = getDifficulty('scrollSpeed') * (nitroActive ? 1.5 : 1);
   world.edgeWarnings = [];
   world.obstacles.forEach((obstacle) => {
     obstacle.x -= (scrollSpeed + (1 - world.density) * 72) * dt;
@@ -1521,7 +1573,7 @@ function update(dt, rawDt) {
     }
 
     /* Collision (geysers don't hit during pause phase, scattered schools don't hit) */
-    if (glider.symbiosisTimer <= 0) {
+    if (glider.symbiosisTimer <= 0 && !nitroActive) {
       if (obstacle.type === 'geyser' && !obstacle.erupting) {
         /* Geyser is paused — no collision */
       } else if (obstacle.type === 'school' && obstacle.scattered) {
@@ -1538,7 +1590,50 @@ function update(dt, rawDt) {
   world.ghostTrailTimer += rawDt;
   if (world.ghostTrailTimer >= 0.1) {
     world.ghostTrailTimer = 0;
-    world.ghostTrail.push({ y: glider.y, score: world.score });
+    world.ghostTrail.push({ x: glider.x, y: glider.y, score: world.score });
+  }
+
+  /* --- Nitro Boost Pickups --- */
+  /* Spawn timer */
+  world.nitroSpawnTimer -= rawDt;
+  if (world.nitroSpawnTimer <= 0) {
+    world.nitroSpawnTimer = 8 + Math.random() * 7; /* 8-15 seconds */
+    const ny = 60 + Math.random() * (world.height - 120);
+    world.nitroPickups.push({ x: world.width + 40, y: ny, collected: false, age: 0 });
+  }
+  /* Update nitro pickups */
+  const nitroScrollSpeed = getDifficulty('scrollSpeed');
+  for (const np of world.nitroPickups) {
+    if (np.collected) continue;
+    np.x -= nitroScrollSpeed * dt;
+    np.age += dt;
+    /* Collection check */
+    const ndx = glider.x - np.x;
+    const ndy = glider.y - np.y;
+    if (ndx * ndx + ndy * ndy < 30 * 30) {
+      np.collected = true;
+      world.nitroBoostEnd = performance.now() + 2000; /* 2-second boost */
+      world.nitroCollected++;
+      /* Trail particle burst */
+      for (let i = 0; i < 20; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        spawnParticle(np.x, np.y, Math.cos(angle) * 100, Math.sin(angle) * 100, 0.6, 40 + Math.random() * 30, 2.5);
+      }
+      if (!reducedMotion) { world.shakeTimer = 0.15; world.shakeIntensity = 4; }
+      world.atmosphereAnnounce = { text: 'NITRO BOOST!', timer: 1.5 };
+    }
+  }
+  world.nitroPickups = world.nitroPickups.filter(np => np.x > -60 && !np.collected);
+
+  /* Nitro boost trail particles */
+  if (performance.now() < world.nitroBoostEnd && !reducedMotion) {
+    for (let i = 0; i < 2; i++) {
+      spawnParticle(
+        glider.x - 20 + Math.random() * 10, glider.y + (Math.random() - 0.5) * 16,
+        -80 - Math.random() * 60, (Math.random() - 0.5) * 40,
+        0.4 + Math.random() * 0.3, 30 + Math.random() * 40, 1.5 + Math.random() * 1.5
+      );
+    }
   }
 
   /* Boss encounter at zone boundaries */
@@ -2987,22 +3082,92 @@ function drawDensityForecast() {
 
 /* --- Ghost Trail --- */
 function drawGhostTrail() {
+  if (!world.showGhost) return;
   if (world.bestGhostTrail.length === 0 || world.state !== STATE.PLAYING) return;
   /* Find ghost position matching current score */
   const idx = world.ghostTrail.length;
   if (idx >= world.bestGhostTrail.length) return;
   const ghost = world.bestGhostTrail[idx];
   if (!ghost) return;
-  const alpha = 0.12;
-  ctx.fillStyle = `rgba(160, 200, 255, ${alpha})`;
+  const gx = ghost.x || glider.x; /* use stored x if available, fallback to glider x */
+  const gy = ghost.y;
+  const alpha = 0.15;
+  /* Draw as translucent glider/triangle shape */
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = 'rgba(160, 200, 255, 0.8)';
   ctx.beginPath();
-  ctx.arc(glider.x, ghost.y, 10, 0, Math.PI * 2);
+  ctx.moveTo(gx + 14, gy);          /* nose */
+  ctx.lineTo(gx - 10, gy - 9);      /* top-left wing */
+  ctx.lineTo(gx - 6, gy);           /* tail notch */
+  ctx.lineTo(gx - 10, gy + 9);      /* bottom-left wing */
+  ctx.closePath();
   ctx.fill();
-  ctx.strokeStyle = `rgba(160, 200, 255, ${alpha * 0.5})`;
+  ctx.strokeStyle = 'rgba(160, 200, 255, 0.5)';
   ctx.lineWidth = 1;
   ctx.setLineDash([4, 4]);
   ctx.stroke();
   ctx.setLineDash([]);
+  ctx.restore();
+}
+
+/* --- Nitro Pickup Drawing --- */
+function drawNitroPickups() {
+  if (world.state !== STATE.PLAYING) return;
+  const now = performance.now();
+  for (const np of world.nitroPickups) {
+    if (np.collected) continue;
+    const px = np.x;
+    const py = np.y;
+    const pulse = Math.sin(now * 0.005 + np.age * 2) * 0.3;
+    const baseR = 14 + pulse * 4;
+    /* Outer glow with shadowBlur */
+    ctx.save();
+    ctx.shadowBlur = 20 + pulse * 10;
+    ctx.shadowColor = 'rgba(255, 200, 50, 0.7)';
+    /* Pulsing glowing circle */
+    const grad = ctx.createRadialGradient(px, py, 0, px, py, baseR);
+    grad.addColorStop(0, `rgba(255, 240, 150, ${0.9 + pulse * 0.1})`);
+    grad.addColorStop(0.4, `rgba(255, 200, 50, ${0.7 + pulse * 0.1})`);
+    grad.addColorStop(0.7, `rgba(255, 160, 20, ${0.4 + pulse * 0.1})`);
+    grad.addColorStop(1, 'rgba(255, 120, 0, 0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(px, py, baseR, 0, Math.PI * 2);
+    ctx.fill();
+    /* Inner bright core */
+    ctx.fillStyle = `rgba(255, 255, 220, ${0.8 + pulse * 0.2})`;
+    ctx.beginPath();
+    ctx.arc(px, py, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.restore();
+  }
+
+  /* Nitro boost active indicator */
+  if (performance.now() < world.nitroBoostEnd) {
+    const remaining = (world.nitroBoostEnd - performance.now()) / 1000;
+    const alpha = Math.min(1, remaining);
+    ctx.save();
+    ctx.fillStyle = `rgba(255, 220, 80, ${alpha * 0.8})`;
+    ctx.font = '700 14px Inter, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(`NITRO ${remaining.toFixed(1)}s`, 20, 110);
+    ctx.restore();
+  }
+}
+
+/* --- Dominant Hazards HUD --- */
+function drawDominantHazardsHUD() {
+  if (world.state !== STATE.PLAYING || world.dominantHazards.length === 0) return;
+  ctx.save();
+  ctx.textAlign = 'left';
+  ctx.font = '500 10px Inter, sans-serif';
+  ctx.fillStyle = 'rgba(200, 180, 140, 0.5)';
+  const hazardIcons = { spire: '\u2666', school: '\uD83D\uDC1F', geyser: '\u2668', storm: '\u26C8' };
+  const labels = world.dominantHazards.map(h => (hazardIcons[h] || '') + ' ' + h).join('  ');
+  ctx.fillText('Dominant: ' + labels, 20, world.height - 10);
+  ctx.restore();
 }
 
 /* --- Boss Drawing --- */
@@ -3593,6 +3758,7 @@ function gameLoop(timestamp) {
   drawBackground();
   drawMotes();
   drawGhostTrail();
+  drawNitroPickups();
   drawObstacles();
   drawBoss();
   drawParticles();
@@ -3601,6 +3767,7 @@ function gameLoop(timestamp) {
   drawEdgeWarnings();
   drawDensityForecast();
   drawCanvasHUD();
+  drawDominantHazardsHUD();
   drawWhiteFlash();
   drawAnnouncements(dt);
   drawLore(dt);
@@ -3690,6 +3857,15 @@ if (muteBtn) {
     Audio.init();
     const muted = Audio.toggle();
     muteBtn.textContent = muted ? _t('soundOff') : _t('soundOn');
+  });
+}
+
+/* Ghost toggle button */
+const ghostToggleBtn = document.getElementById('ghostToggleButton');
+if (ghostToggleBtn) {
+  ghostToggleBtn.addEventListener('click', () => {
+    world.showGhost = !world.showGhost;
+    ghostToggleBtn.textContent = world.showGhost ? 'Ghost: ON' : 'Ghost: OFF';
   });
 }
 
