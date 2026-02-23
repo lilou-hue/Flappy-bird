@@ -242,9 +242,11 @@
     { id: "depth_50",    icon: "\uD83D\uDC51", title: "Depth Master",     desc: "Reach depth 50",   check: s => s.bestDepth >= 50 },
     { id: "depth_100",   icon: "\u2B50",       title: "Abyss Lord",       desc: "Reach depth 100",  check: s => s.bestDepth >= 100 },
     { id: "dedicated",   icon: "\uD83C\uDFAE", title: "Dedicated",        desc: "Play 10 games",    check: s => s.gamesPlayed >= 10 },
+    { id: 'accessibility', icon: '♿', title: 'Accessibility', desc: 'Play with colorblind mode enabled', check: s => s.colorblindPlayed === true },
+    { id: 'chain_master', icon: '⛓️', title: 'Chain Master', desc: 'Reach a 5x chain', check: s => s.maxChain >= 5 },
   ];
 
-  let lmAchStats = { bestDepth: 0, gamesPlayed: 0 };
+  let lmAchStats = { bestDepth: 0, gamesPlayed: 0, colorblindPlayed: false, maxChain: 0 };
   let lmAchUnlocked = new Set();
   let lmAchQueue = [];
   let lmAchTimer = 0;
@@ -482,6 +484,10 @@
   let waterDrops, waterDropTimer;
   let shieldActive, shieldTimer;
 
+  let colorblindMode = false;
+  let bonusRound = false, bonusTimer = 0, bonusScore = 0, bonusShardCount = 0;
+  let chainTimer = 0, chainCount = 0, chainMultiplier = 1;
+
   let touchMoveDir = 0, touchActive = false, touchStartX = 0, touchStartY = 0, touchStartTime = 0;
   let isMobile = false;
   let bgCrystals;
@@ -547,6 +553,8 @@
     timeDilation = 1;
     waterDrops = []; waterDropTimer = 0;
     shieldActive = false; shieldTimer = 0;
+    bonusRound = false; bonusTimer = 0; bonusScore = 0; bonusShardCount = 0;
+    chainTimer = 0; chainCount = 0; chainMultiplier = 1;
     seedNoise(); generateBgCrystals();
     scoreEl.textContent = "0";
     generateAhead(CFG.H * 2);
@@ -575,9 +583,10 @@
     const worldBottom = cameraY + generateToY;
     const difficultyMult = Math.min(score / 80, 1);
 
-    // Shards
+    // Shards (3x spawn rate during bonus round)
+    const shardIntervalMult = bonusRound ? 1/3 : 1;
     while (lastShardY < worldBottom) {
-      lastShardY += CFG.SHARD_INTERVAL + score * CFG.SHARD_SPREAD_SCALE + rand(-20, 20);
+      lastShardY += (CFG.SHARD_INTERVAL + score * CFG.SHARD_SPREAD_SCALE + rand(-20, 20)) * shardIntervalMult;
       const walls = caveWalls(lastShardY);
       shards.push({ x: rand(walls.left + 30, walls.right - 30), y: lastShardY, collected: false, bobPhase: rand(0, Math.PI * 2), rot: 0 });
     }
@@ -705,6 +714,19 @@
 
   restartBtn.addEventListener("click", () => { initAudio(); resumeAudio(); resetGame(); state = STATE.PLAYING; startAmbient(); });
   muteBtn.addEventListener("click", () => { muted = !muted; muteBtn.textContent = muted ? "\u{1F507}" : "\u{1F50A}"; if (masterGain) masterGain.gain.value = muted ? 0 : 0.35; saveMute(muted); });
+
+  // Colorblind toggle
+  const colorblindBtn = document.getElementById("colorblindButton");
+  if (colorblindBtn) {
+    colorblindBtn.addEventListener("click", () => {
+      colorblindMode = !colorblindMode;
+      colorblindBtn.textContent = colorblindMode ? "Colorblind: ON" : "Colorblind";
+      if (colorblindMode) {
+        lmAchStats.colorblindPlayed = true;
+        saveLmAch(); checkLmAch(); showLmAchPopup();
+      }
+    });
+  }
 
   // Fullscreen
   let isFullscreen = false;
@@ -905,15 +927,50 @@
 
     // Zone check
     const zi = zoneIndex();
-    if (zi !== prevZone && prevZone < zi) { zoneAnnounceTmr = 2.5; zoneAnnounceName = ZONES[zi].name; sfxZone(); haptic([30,20,30,20,30,20,30]); prevZone = zi; }
+    if (zi !== prevZone && prevZone < zi) {
+      zoneAnnounceTmr = 2.5; zoneAnnounceName = ZONES[zi].name; sfxZone(); haptic([30,20,30,20,30,20,30]); prevZone = zi;
+      // Trigger bonus round on zone transition
+      bonusRound = true; bonusTimer = 10; bonusScore = 0; bonusShardCount = 0;
+    }
     if (zoneAnnounceTmr > 0) zoneAnnounceTmr -= dt;
+
+    // Bonus round timer
+    if (bonusRound) {
+      bonusTimer -= dt;
+      if (bonusTimer <= 0) {
+        bonusRound = false; bonusTimer = 0;
+        const bonus = bonusShardCount * 50;
+        bonusScore = bonus;
+        score += bonus; scoreEl.textContent = score;
+      }
+    }
+
+    // Chain timer decay
+    chainTimer += dt;
+    if (chainTimer >= 0.5 && chainCount > 0) { chainCount = 0; chainMultiplier = 1; }
 
     // Shard collection
     for (const s of shards) {
       if (s.collected) continue;
       if (Math.abs(s.y - cameraY - CFG.H/2) > CFG.H) continue;
       if (dist(player.x, player.y, s.x, s.y) < CFG.PLAYER_R + 10) {
-        s.collected = true; score++; scoreEl.textContent = score;
+        s.collected = true;
+        // Chain reaction tracking
+        if (chainTimer < 0.5) {
+          chainCount++;
+        } else {
+          chainCount = 1;
+        }
+        chainTimer = 0;
+        if (chainCount >= 5) chainMultiplier = 3;
+        else if (chainCount >= 4) chainMultiplier = 2;
+        else if (chainCount >= 3) chainMultiplier = 1.5;
+        else chainMultiplier = 1;
+        lmAchStats.maxChain = Math.max(lmAchStats.maxChain, chainCount);
+        const shardScore = Math.round(1 * chainMultiplier);
+        score += shardScore; scoreEl.textContent = score;
+        // Bonus round shard tracking
+        if (bonusRound) bonusShardCount++;
         lmAchStats.bestDepth = Math.max(lmAchStats.bestDepth, score);
         checkLmAch(); showLmAchPopup();
         lightRadius = Math.min(CFG.LIGHT_MAX, lightRadius + CFG.LIGHT_RESTORE);
@@ -1076,8 +1133,11 @@
     if (state === STATE.PAUSED) drawPaused(ctx);
     if (state === STATE.GAMEOVER) drawGameOver(ctx, pal);
     if (state === STATE.PLAYING && zoneAnnounceTmr > 0) drawZoneAnnounce(ctx, pal);
+    if (state === STATE.PLAYING && bonusRound) drawBonusRoundOverlay(ctx, pal);
+    if (state === STATE.PLAYING && chainCount >= 2) drawChainCounter(ctx, pal);
     if (state === STATE.PLAYING) drawLightMeter(ctx, pal);
     if (state === STATE.PLAYING) drawPowerUpIndicators(ctx, pal);
+    if (state === STATE.PLAYING && colorblindMode) drawZoneColorblindIndicator(ctx, pal);
     if (state === STATE.PLAYING && isMobile) drawTouchGuide(ctx, pal);
 
     ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -1161,6 +1221,58 @@
     c.beginPath(); c.moveTo(x, y-size); c.lineTo(x-size*0.5, y-size*0.2); c.stroke();
   }
 
+  function drawColorblindPattern(c, x, y, w, h, zone) {
+    c.save();
+    c.strokeStyle = "rgba(255,255,255,0.7)";
+    c.fillStyle = "rgba(255,255,255,0.7)";
+    c.lineWidth = 1;
+    c.beginPath();
+    c.rect(x, y, w, h);
+    c.clip();
+    const zi = zone % 5;
+    if (zi === 0) {
+      // Zone 1: dots pattern (small circles)
+      for (let dx = 0; dx < w; dx += 6) {
+        for (let dy = 0; dy < h; dy += 6) {
+          c.beginPath(); c.arc(x + dx + 3, y + dy + 3, 1.5, 0, Math.PI * 2); c.fill();
+        }
+      }
+    } else if (zi === 1) {
+      // Zone 2: horizontal stripes
+      for (let dy = 0; dy < h; dy += 5) {
+        c.beginPath(); c.moveTo(x, y + dy); c.lineTo(x + w, y + dy); c.stroke();
+      }
+    } else if (zi === 2) {
+      // Zone 3: crosshatch pattern (X marks)
+      for (let dx = 0; dx < w; dx += 8) {
+        for (let dy = 0; dy < h; dy += 8) {
+          c.beginPath();
+          c.moveTo(x + dx, y + dy); c.lineTo(x + dx + 6, y + dy + 6);
+          c.moveTo(x + dx + 6, y + dy); c.lineTo(x + dx, y + dy + 6);
+          c.stroke();
+        }
+      }
+    } else if (zi === 3) {
+      // Zone 4: diamonds
+      for (let dx = 0; dx < w; dx += 10) {
+        for (let dy = 0; dy < h; dy += 10) {
+          const cx = x + dx + 5, cy = y + dy + 5;
+          c.beginPath();
+          c.moveTo(cx, cy - 4); c.lineTo(cx + 4, cy); c.lineTo(cx, cy + 4); c.lineTo(cx - 4, cy);
+          c.closePath(); c.stroke();
+        }
+      }
+    } else {
+      // Zone 5: circles
+      for (let dx = 0; dx < w; dx += 10) {
+        for (let dy = 0; dy < h; dy += 10) {
+          c.beginPath(); c.arc(x + dx + 5, y + dy + 5, 3.5, 0, Math.PI * 2); c.stroke();
+        }
+      }
+    }
+    c.restore();
+  }
+
   function drawSpikes(c, pal) {
     for (const sp of spikes) {
       const sy = sp.y-cameraY, tipSY = sp.tipY-cameraY;
@@ -1172,6 +1284,11 @@
       c.fillStyle = sg; c.fill();
       c.strokeStyle = rgb(pal.crystal, 0.3); c.lineWidth = 1; c.beginPath(); c.moveTo(sp.x+px,sy+py); c.lineTo(sp.tipX,tipSY); c.stroke();
       c.beginPath(); c.arc(sp.tipX,tipSY,3,0,Math.PI*2); c.fillStyle = rgb(pal.crystal,0.5); c.fill();
+      if (colorblindMode) {
+        const minX = Math.min(sp.x, sp.tipX) - 6, minY = Math.min(sy, tipSY) - 6;
+        const maxX = Math.max(sp.x, sp.tipX) + 6, maxY = Math.max(sy, tipSY) + 6;
+        drawColorblindPattern(c, minX, minY, maxX - minX, maxY - minY, zoneIndex());
+      }
     }
   }
 
@@ -1190,6 +1307,7 @@
       c.strokeStyle = rgb([255,255,255],0.25); c.lineWidth = 0.5; c.beginPath(); c.moveTo(0,-9); c.lineTo(0,9); c.moveTo(-6,0); c.lineTo(6,0); c.stroke();
       c.strokeStyle = `hsl(${(t*60)%360},80%,70%)`; c.lineWidth = 1.5;
       c.beginPath(); c.moveTo(0,-9); c.lineTo(6,0); c.lineTo(0,9); c.lineTo(-6,0); c.closePath(); c.stroke();
+      if (colorblindMode) drawColorblindPattern(c, -6, -9, 12, 18, zoneIndex());
       c.restore();
     }
   }
@@ -1261,6 +1379,7 @@
         c.fillStyle = eg; c.fillRect(sh.x+ex-6,eyeY-6,12,12);
         c.beginPath(); c.arc(sh.x+ex+(dxP/dP)*1.5,eyeY+(dyP/dP)*1.5,2,0,Math.PI*2); c.fillStyle=rgb(eyeCol); c.fill();
       }
+      if (colorblindMode) drawColorblindPattern(c, sh.x - sh.r, sy - sh.r, sh.r * 2, sh.r * 2, zoneIndex());
     }
   }
 
@@ -1389,6 +1508,53 @@
     c.shadowColor = rgb(pal.crystal, 0.6); c.shadowBlur = 15;
     c.font = "bold 22px 'Trebuchet MS', sans-serif"; c.fillStyle = rgb(pal.crystal, 0.9);
     c.fillText(tzn(zoneAnnounceName), CFG.W/2, CFG.H*0.15); c.shadowBlur = 0; c.globalAlpha = 1; c.restore();
+  }
+
+  function drawBonusRoundOverlay(c, pal) {
+    c.save();
+    c.textAlign = "center"; c.textBaseline = "middle";
+    const alpha = Math.min(1, bonusTimer * 0.5);
+    c.globalAlpha = alpha;
+    c.shadowColor = rgb(pal.crystal, 0.8); c.shadowBlur = 20;
+    c.font = "bold 28px 'Trebuchet MS', sans-serif";
+    c.fillStyle = rgb([255, 255, 100], 0.95);
+    c.fillText("BONUS ROUND!", CFG.W / 2, CFG.H * 0.08);
+    c.shadowBlur = 0;
+    c.font = "bold 18px 'Trebuchet MS', sans-serif";
+    c.fillStyle = rgb([255, 255, 200], 0.8);
+    c.fillText(Math.ceil(bonusTimer) + "s", CFG.W / 2, CFG.H * 0.12);
+    c.globalAlpha = 1;
+    c.restore();
+  }
+
+  function drawChainCounter(c, pal) {
+    const screenY = player.y - cameraY;
+    c.save();
+    c.textAlign = "center"; c.textBaseline = "middle";
+    c.font = "bold 14px 'Trebuchet MS', sans-serif";
+    const chainAlpha = Math.min(1, (0.5 - chainTimer) * 4);
+    c.globalAlpha = clamp(chainAlpha, 0.3, 1);
+    c.shadowColor = rgb(pal.crystal, 0.6); c.shadowBlur = 8;
+    c.fillStyle = chainMultiplier >= 3 ? "rgba(255,100,100,0.95)" : chainMultiplier >= 2 ? "rgba(255,200,100,0.95)" : "rgba(255,255,200,0.9)";
+    c.fillText("x" + chainCount + " CHAIN!", player.x, screenY - 28);
+    if (chainMultiplier > 1) {
+      c.font = "bold 11px 'Trebuchet MS', sans-serif";
+      c.fillText(chainMultiplier + "x multiplier", player.x, screenY - 16);
+    }
+    c.shadowBlur = 0; c.globalAlpha = 1;
+    c.restore();
+  }
+
+  function drawZoneColorblindIndicator(c, pal) {
+    c.save();
+    const zi = zoneIndex();
+    const boxX = CFG.W - 30, boxY = 10, boxS = 20;
+    c.fillStyle = rgb(pal.crystal, 0.5);
+    c.fillRect(boxX, boxY, boxS, boxS);
+    c.strokeStyle = "rgba(255,255,255,0.6)"; c.lineWidth = 1;
+    c.strokeRect(boxX, boxY, boxS, boxS);
+    drawColorblindPattern(c, boxX, boxY, boxS, boxS, zi);
+    c.restore();
   }
 
   function drawTouchGuide(c, pal) {
