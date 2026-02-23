@@ -243,6 +243,7 @@
       .game-card:nth-child(7) { animation-delay: 0.35s; }
       .game-card:nth-child(8) { animation-delay: 0.4s; }
       .game-card:nth-child(9) { animation-delay: 0.45s; }
+      .game-card:nth-child(10) { animation-delay: 0.5s; }
       @keyframes cardReveal {
         to { opacity: 1; transform: translateY(0); }
       }
@@ -277,6 +278,7 @@
       .game-card:nth-child(7)::after { box-shadow: inset 0 0 0 1px rgba(0,210,255,0.4), 0 0 30px rgba(0,210,255,0.08); }
       .game-card:nth-child(8)::after { box-shadow: inset 0 0 0 1px rgba(255,107,53,0.4), 0 0 30px rgba(255,107,53,0.08); }
       .game-card:nth-child(9)::after { box-shadow: inset 0 0 0 1px rgba(0,229,255,0.4), 0 0 30px rgba(0,229,255,0.08); }
+      .game-card:nth-child(10)::after { box-shadow: inset 0 0 0 1px rgba(0,204,255,0.4), 0 0 30px rgba(0,204,255,0.08); }
 
       .game-card:hover .card-preview canvas { filter: brightness(1.12) saturate(1.1); }
 
@@ -332,6 +334,7 @@
       .unicorn-preview   { background: linear-gradient(180deg, #2d1b69, #1a0f40, #0f0a2a); }
       .tetris-preview    { background: linear-gradient(180deg, #0a1230, #060918, #030510); }
       .gun-game-preview  { background: linear-gradient(180deg, #1a2540, #2c3e50 50%, #1a252f 85%, #0f1820 100%); }
+      .star-fury-preview { background: linear-gradient(180deg, #050510, #0a0a20 55%, #080818 85%, #020208 100%); }
       .astro-miner-preview { background: linear-gradient(180deg, #1a0a3a, #0f0625, #0a0520); }
 
       .flappy-tag    { background: rgba(123,228,149,0.12); color: #7be495; border: 1px solid rgba(123,228,149,0.2); }
@@ -342,6 +345,7 @@
       .unicorn-tag   { background: rgba(255,105,180,0.12); color: #ff69b4; border: 1px solid rgba(255,105,180,0.2); }
       .tetris-tag    { background: rgba(0,210,255,0.12); color: #00d4ff; border: 1px solid rgba(0,210,255,0.2); }
       .gun-game-tag  { background: rgba(255,107,53,0.12); color: #ff6b35; border: 1px solid rgba(255,107,53,0.2); }
+      .star-fury-tag { background: rgba(0,204,255,0.12); color: #00ccff; border: 1px solid rgba(0,204,255,0.2); }
       .astro-miner-tag { background: rgba(0,229,255,0.12); color: #00e5ff; border: 1px solid rgba(0,229,255,0.2); }
 
       .card-best {
@@ -553,6 +557,17 @@
           <h2 data-i18n="astroMinerTitle">Astro Miner</h2>
           <p data-i18n="astroMinerDesc">Jump between asteroids, collect crystals, and dodge hazards in deep space. Use your jetpack wisely!</p>
           <span class="card-tag astro-miner-tag" data-i18n="platformer">Platformer</span>
+        </div>
+      </a>
+
+      <a href="/star-fury/" class="game-card">
+        <div class="card-preview star-fury-preview">
+          <canvas id="starFuryCanvas" width="360" height="200"></canvas>
+        </div>
+        <div class="card-body">
+          <h2 data-i18n="starFuryTitle">Star Fury</h2>
+          <p data-i18n="starFuryDesc">Blast through waves of enemies in this vertical space shooter. Chain combos, grab power-ups, defeat bosses!</p>
+          <span class="card-tag star-fury-tag" data-i18n="shooter">Shooter</span>
         </div>
       </a>
     </div>
@@ -1529,6 +1544,75 @@
         }
         requestAnimationFrame(draw);
       })();
+
+      /* ─ Star Fury Preview ─ */
+      (function() {
+        const c = document.getElementById('starFuryCanvas');
+        if (!c) return;
+        const x = c.getContext('2d');
+        let t = 0;
+        const pvStars = Array.from({length:40}, () => ({x:Math.random()*W, y:Math.random()*H, s:0.5+Math.random(), a:0.3+Math.random()*0.7}));
+        const pvEnemies = [{x:120,y:-20,s:0},{x:240,y:-40,s:0.3},{x:180,y:-60,s:0.6}];
+        let pvBullets = [];
+        let pvFireTimer = 0;
+
+        function draw() {
+          t += 0.016;
+          x.fillStyle = '#050510'; x.fillRect(0,0,W,H);
+
+          for (const s of pvStars) {
+            s.y += (20 + s.s*30) * 0.016;
+            if (s.y > H) { s.y = 0; s.x = Math.random()*W; }
+            x.fillStyle = `rgba(180,220,255,${s.a})`;
+            x.fillRect(s.x, s.y, s.s, s.s);
+          }
+
+          /* Player ship */
+          const px = W/2 + Math.sin(t*1.5)*40;
+          const py = H*0.78;
+          x.save();
+          x.shadowBlur = 10; x.shadowColor = '#00ccff';
+          x.fillStyle = '#00ccff';
+          x.beginPath();
+          x.moveTo(px, py-12); x.lineTo(px-10, py+10); x.lineTo(px-3, py+6);
+          x.lineTo(px, py+9); x.lineTo(px+3, py+6); x.lineTo(px+10, py+10);
+          x.closePath(); x.fill();
+          /* Engine glow */
+          x.fillStyle = 'rgba(0,200,255,0.4)';
+          x.beginPath(); x.arc(px, py+11, 4, 0, Math.PI*2); x.fill();
+          x.restore();
+
+          /* Auto-fire bullets */
+          pvFireTimer -= 0.016;
+          if (pvFireTimer <= 0) {
+            pvFireTimer = 0.15;
+            pvBullets.push({x:px, y:py-14});
+          }
+          for (let i=pvBullets.length-1; i>=0; i--) {
+            pvBullets[i].y -= 6;
+            if (pvBullets[i].y < -10) { pvBullets.splice(i,1); continue; }
+            x.fillStyle = '#00ffcc';
+            x.fillRect(pvBullets[i].x-1, pvBullets[i].y-4, 2, 8);
+          }
+
+          /* Enemies descending */
+          for (const e of pvEnemies) {
+            e.y += 1.2;
+            if (e.y > H+20) e.y = -20 - Math.random()*40;
+            const ex = e.x + Math.sin(t*2+e.s*6)*25;
+            x.save();
+            x.shadowBlur = 6; x.shadowColor = '#44ff44';
+            x.fillStyle = '#44ff44';
+            x.beginPath();
+            x.moveTo(ex, e.y-8); x.lineTo(ex-8, e.y+8); x.lineTo(ex+8, e.y+8);
+            x.closePath(); x.fill();
+            x.restore();
+          }
+
+          requestAnimationFrame(draw);
+        }
+        requestAnimationFrame(draw);
+      })();
     })();
     </script>
     <script src="i18n.js"></script>
@@ -1541,7 +1625,7 @@
       (function() {
         const bestKeys = [
           'flappyBest', 'methaneDriftBest', 'snakeBest', 'luminaBest',
-          'phantomRoadBest', null, 'tetrisBest', 'gunGameBest', 'astroMinerBest'
+          'phantomRoadBest', null, 'tetrisBest', 'gunGameBest', 'astroMinerBest', 'starFuryBest'
         ];
         const cards = document.querySelectorAll('.game-card');
         cards.forEach((card, i) => {
@@ -1584,9 +1668,10 @@
           { key: 'tetrisAch', total: 0 },
           { key: 'gunGameAch', total: 0 },
           { key: 'astroMinerAch', total: 0 },
+          { key: 'starFuryAch', total: 0 },
         ];
 
-        const gameNames = ['Flappy Bird', 'Methane Drift', 'Snake', 'Lumina', 'Phantom Road', 'Unicorn Clicker', 'Tetris', 'Gun Game', 'Astro Miner'];
+        const gameNames = ['Flappy Bird', 'Methane Drift', 'Snake', 'Lumina', 'Phantom Road', 'Unicorn Clicker', 'Tetris', 'Gun Game', 'Astro Miner', 'Star Fury'];
 
         let totalAch = 0;
         let maxPlayed = 0;
@@ -1605,7 +1690,7 @@
           } catch(e) {}
         }
 
-        const bestKeys = ['flappyBest', 'methaneDriftBest', 'snakeBest', 'luminaBest', 'phantomRoadBest', 'tetrisBest', 'gunGameBest', 'astroMinerBest'];
+        const bestKeys = ['flappyBest', 'methaneDriftBest', 'snakeBest', 'luminaBest', 'phantomRoadBest', 'tetrisBest', 'gunGameBest', 'astroMinerBest', 'starFuryBest'];
         let combinedBest = 0;
         for (const key of bestKeys) {
           combinedBest += Number(localStorage.getItem(key)) || 0;
