@@ -13,6 +13,7 @@ const muteButton = document.getElementById("muteButton");
 const fullscreenButton = document.getElementById("fullscreenButton");
 const themeSelect = document.getElementById("themeSelect");
 const skinSelect = document.getElementById("skinSelect");
+const shrinkModeButton = document.getElementById("shrinkModeButton");
 
 const GAME_W = 480;
 const GAME_H = 480;
@@ -354,6 +355,7 @@ const SNAKE_ACH_I18N = {
   frozen: ['snakeAchBrainFreeze', 'snakeAchBrainFreezeDesc'],
   long_snake: ['snakeAchLongSnake', 'snakeAchLongSnakeDesc'],
   games_10: ['snakeAchDedicated', 'snakeAchDedicatedDesc'],
+  combo_king: ['snakeAchComboKing', 'snakeAchComboKingDesc'],
 };
 
 const SN_ACHIEVEMENTS = [
@@ -375,6 +377,7 @@ const SN_ACHIEVEMENTS = [
   { id: "frozen",         icon: "\u2744\uFE0F",  get title() { return _t('snakeAchBrainFreeze'); },    get desc() { return _t('snakeAchBrainFreezeDesc'); },          check: (s) => s.freezeEaten >= 1 },
   { id: "long_snake",     icon: "\uD83D\uDC0D", get title() { return _t('snakeAchLongSnake'); },       get desc() { return _t('snakeAchLongSnakeDesc'); },           check: (s) => s.maxLength >= 20 },
   { id: "games_10",       icon: "\uD83C\uDFAE", get title() { return _t('snakeAchDedicated'); },       get desc() { return _t('snakeAchDedicatedDesc'); },           check: (s) => s.gamesPlayed >= 10 },
+  { id: "combo_king",     icon: "\uD83D\uDD25", get title() { return _t('snakeAchComboKing'); },      get desc() { return _t('snakeAchComboKingDesc'); },          check: (s) => s.comboAchieved >= 1 },
 ];
 
 let snAchStats = {
@@ -391,6 +394,7 @@ let snAchStats = {
   freezeEaten: 0,
   maxLength: 1,
   gamesPlayed: 0,
+  comboAchieved: 0,
 };
 
 let snAchUnlocked = new Set();
@@ -550,6 +554,17 @@ const state = {
 
   freezeModeEnd: 0,      // timestamp when freeze mode expires
   poisonFlash: 0,        // visual flash for poison
+
+  // Multi-Fruit Combo tracking
+  comboType: null,       // last food type eaten
+  comboCount: 0,         // consecutive same-type foods eaten
+  comboMultiplier: 1,    // current multiplier
+  comboTextTimer: 0,     // display timer for combo text
+
+  // Enhanced Shrink Mode
+  shrinkMode: false,
+  shrinkTimer: 0,
+  shrinkInterval: 8,     // seconds between shrinks
 };
 
 const snake = {
@@ -735,6 +750,22 @@ function soundFreeze(ctx, dest) {
   g.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
   osc.connect(g); g.connect(dest);
   osc.start(t); osc.stop(t + 0.4);
+}
+
+function soundCombo(ctx, dest) {
+  const t = ctx.currentTime;
+  // Triumphant ascending arpeggio: C5-E5-G5
+  [523.25, 659.25, 783.99].forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(freq, t + i * 0.08);
+    g.gain.setValueAtTime(0, t);
+    g.gain.setValueAtTime(0.22, t + i * 0.08);
+    g.gain.exponentialRampToValueAtTime(0.001, t + i * 0.08 + 0.3);
+    osc.connect(g); g.connect(dest);
+    osc.start(t + i * 0.08); osc.stop(t + i * 0.08 + 0.3);
+  });
 }
 
 function soundTick(ctx, dest) {
@@ -1067,6 +1098,16 @@ function resetGame() {
   state.freezeModeEnd = 0;
   state.poisonFlash = 0;
 
+  // Reset combo state
+  state.comboType = null;
+  state.comboCount = 0;
+  state.comboMultiplier = 1;
+  state.comboTextTimer = 0;
+
+  // Reset shrink mode timer (keep shrinkMode toggle as-is)
+  state.shrinkTimer = 0;
+  state.shrinkInterval = 8;
+
   // Reset per-game achievement stats
   snAchStats.eatenThisGame = 0;
   snAchStats.speedEaten = 0;
@@ -1277,6 +1318,24 @@ function eatFood(now) {
     spawnParticles(px, py, 16, currentTheme.foodFreeze.inner, 2, 5, 0.4, 0.7, 40, 120);
   }
 
+  // Multi-Fruit Combo tracking
+  if (food.type === state.comboType) {
+    state.comboCount++;
+  } else {
+    state.comboType = food.type;
+    state.comboCount = 1;
+  }
+  if (state.comboCount >= 3) {
+    state.comboMultiplier = 3;
+    state.score += (state.comboMultiplier - 1) * 1; // bonus x3 on top (2 extra points)
+    state.comboTextTimer = 2.0;
+    snAchStats.comboAchieved = 1;
+    playSound(soundCombo);
+    spawnParticles(px, py, 20, "#ffcc00", 3, 6, 0.5, 0.9, 80, 200);
+  } else {
+    state.comboMultiplier = 1;
+  }
+
   state.scorePop = 1.0;
   state.headEnlargeTimer = 0.2;
   scoreLabel.textContent = state.score;
@@ -1433,6 +1492,18 @@ function drawArenaWalls() {
     ctx.shadowColor = currentTheme.dangerGlow;
     ctx.strokeStyle = "rgba(255,68,68,0.15)";
     ctx.lineWidth = 1;
+    ctx.strokeRect(amin, amin, size, size);
+    ctx.restore();
+  }
+
+  // Shrink mode: pulsing danger effect on walls
+  if (state.shrinkMode && state.phase === "playing") {
+    const pulseAlpha = 0.1 + Math.sin(performance.now() / 300) * 0.1;
+    ctx.save();
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = "rgba(255,50,50,0.6)";
+    ctx.strokeStyle = `rgba(255,50,50,${pulseAlpha})`;
+    ctx.lineWidth = 3;
     ctx.strokeRect(amin, amin, size, size);
     ctx.restore();
   }
@@ -1832,6 +1903,23 @@ function drawPowerUpIndicators() {
   }
 }
 
+function drawComboText() {
+  if (state.comboTextTimer <= 0) return;
+  const alpha = Math.min(1, state.comboTextTimer);
+  const scale = 1 + (2.0 - state.comboTextTimer) * 0.3;
+  ctx.save();
+  ctx.translate(GAME_W / 2, GAME_H / 2 - 60);
+  ctx.scale(scale, scale);
+  ctx.globalAlpha = alpha;
+  ctx.font = "bold 28px 'Trebuchet MS'";
+  ctx.textAlign = "center";
+  ctx.shadowBlur = 12;
+  ctx.shadowColor = "rgba(255,200,0,0.8)";
+  ctx.fillStyle = "#ffcc00";
+  ctx.fillText("COMBO x3!", 0, 0);
+  ctx.restore();
+}
+
 function drawOverlay(title, subtitle, extra) {
   const vg = ctx.createRadialGradient(
     GAME_W / 2, GAME_H / 2, GAME_H * 0.1,
@@ -1900,7 +1988,38 @@ function gameLoop(timestamp) {
     if (state.deathRingAlpha < 0) state.deathRingAlpha = 0;
   }
 
+  // Decay combo text timer
+  if (state.comboTextTimer > 0) {
+    state.comboTextTimer -= dt;
+    if (state.comboTextTimer < 0) state.comboTextTimer = 0;
+  }
+
   if (state.phase === "playing") {
+    // Enhanced Shrink Mode timer
+    if (state.shrinkMode) {
+      state.shrinkTimer += dt;
+      if (state.shrinkTimer >= state.shrinkInterval) {
+        state.shrinkTimer = 0;
+        if (state.arenaMin < 6) {
+          state.arenaMin += 1;
+          state.arenaMax -= 1;
+          state.arenaFlash = 1.0;
+          snAchStats.wallShrinks++;
+          spawnCrackleParticles();
+          playSound(soundWallWarning);
+          haptics.wallShrink();
+          state.shrinkInterval = Math.max(2, state.shrinkInterval - 0.5);
+
+          for (const seg of snake.segments) {
+            if (seg.x < state.arenaMin) seg.x = state.arenaMin;
+            if (seg.x > state.arenaMax) seg.x = state.arenaMax;
+            if (seg.y < state.arenaMin) seg.y = state.arenaMin;
+            if (seg.y > state.arenaMax) seg.y = state.arenaMax;
+          }
+        }
+      }
+    }
+
     state.tickAccumulator += rawDelta;
     while (state.tickAccumulator >= state.tickInterval) {
       state.tickAccumulator -= state.tickInterval;
@@ -1936,6 +2055,7 @@ function gameLoop(timestamp) {
   drawScorePop();
   drawEatFlash();
   drawPowerUpIndicators();
+  drawComboText();
 
   if (state.phase === "idle") {
     drawOverlay(_t('snakeTitle'), _t('snakeIdleSubtitle'));
@@ -2101,6 +2221,13 @@ function endJoystick() {
 /* Buttons */
 restartButton.addEventListener("click", () => { resetGame(); });
 muteButton.addEventListener("click", () => { toggleMute(); });
+if (shrinkModeButton) {
+  shrinkModeButton.addEventListener("click", () => {
+    state.shrinkMode = !state.shrinkMode;
+    shrinkModeButton.textContent = state.shrinkMode ? "Shrink: ON" : "Shrink";
+    resetGame();
+  });
+}
 
 /* ── Init ──────────────────────────────────────────────────── */
 
