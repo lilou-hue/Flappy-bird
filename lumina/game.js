@@ -916,7 +916,7 @@
       if (dist(player.x, player.y, sp.x, sp.y) < CFG.PLAYER_R + 12) {
         sp.collected = true;
         if (sp.type === "shield") { shieldActive = true; shieldTimer = 8; sfxShield(); haptic([40,20,40]); for(let i=0;i<12;i++){const a=(Math.PI*2*i)/12;spawnParticle("burst",sp.x,sp.y,Math.cos(a)*80,Math.sin(a)*80,0.5,3,[100,180,255],0.8);} }
-        else if (sp.type === "teleport") { player.y += 150; cameraY += 100; sfxTeleport(); haptic([60,30,60]); for(let i=0;i<20;i++){spawnParticle("nova",player.x,player.y,rand(-100,100),rand(-100,100),rand(0.3,0.6),rand(2,4),[200,150,255],0.7);} }
+        else if (sp.type === "teleport") { player.y += 150; cameraY += 150; sfxTeleport(); haptic([60,30,60]); for(let i=0;i<20;i++){spawnParticle("nova",player.x,player.y,rand(-100,100),rand(-100,100),rand(0.3,0.6),rand(2,4),[200,150,255],0.7);} }
         else if (sp.type === "lightbomb") { lightRadius = CFG.LIGHT_MAX; sfxLightBomb(); haptic([30,15,30,15,80]); for(let i=0;i<30;i++){const a=(Math.PI*2*i)/30;spawnParticle("nova",player.x,player.y,Math.cos(a)*150,Math.sin(a)*150,rand(0.4,0.8),rand(3,6),[255,255,180],1);} }
         else if (sp.type === "dark") { lightRadius = Math.max(CFG.LIGHT_MIN, lightRadius - 50); sfxDarkShard(); haptic([100,50,100]); shakeTimer = 0.3; for(let i=0;i<15;i++){spawnParticle("wisp",sp.x+rand(-10,10),sp.y+rand(-10,10),rand(-30,30),rand(-30,30),rand(0.5,1),rand(3,7),[30,0,50],0.6);} }
         checkLmAch(); showLmAchPopup();

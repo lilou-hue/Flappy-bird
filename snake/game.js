@@ -1150,6 +1150,13 @@ function tick(now) {
     // Arena may have shrunk — clamp newHead to new bounds
     newHead.x = Math.max(state.arenaMin, Math.min(state.arenaMax, newHead.x));
     newHead.y = Math.max(state.arenaMin, Math.min(state.arenaMax, newHead.y));
+    // Remove tail segments that were clamped onto the same cell as newHead
+    // (arena shrink can pile multiple segments on the wall)
+    for (let i = snake.segments.length - 1; i >= 0; i--) {
+      if (snake.segments[i].x === newHead.x && snake.segments[i].y === newHead.y) {
+        snake.segments.splice(i, 1);
+      }
+    }
   }
 
   // Move
@@ -1268,8 +1275,10 @@ function eatFood(now) {
   snAchStats.score = Math.max(snAchStats.score, state.score);
   snAchStats.bestScore = Math.max(snAchStats.bestScore, state.score);
 
-  // Arena shrink check
-  if (state.score > 0 && state.score % 15 === 0 && state.score !== state.lastShrinkScore) {
+  // Arena shrink check — use threshold-crossing so multi-point food can't skip
+  const prevTier = Math.floor(state.lastShrinkScore / 15);
+  const currTier = Math.floor(state.score / 15);
+  if (state.score > 0 && currTier > prevTier) {
     if (state.arenaMin < 6) {
       state.arenaMin += 1;
       state.arenaMax -= 1;

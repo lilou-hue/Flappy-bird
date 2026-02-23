@@ -1143,7 +1143,6 @@ function update(dt) {
       state.policeEvaded++;
       state.nextPoliceAt = state.distance + 300 + Math.random() * 200;
       const bonus = 50 * state.multiplier;
-      state.score += bonus;
       state.distance += bonus;
       state.nitro = 1;
       state.combo += 5;
