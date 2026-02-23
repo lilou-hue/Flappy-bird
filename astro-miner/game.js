@@ -2,6 +2,18 @@
    Astro Miner — Space Platformer Game
    ================================================================ */
 
+/* ellipse polyfill for older browsers */
+if (!CanvasRenderingContext2D.prototype.ellipse) {
+  CanvasRenderingContext2D.prototype.ellipse = function (cx, cy, rx, ry, rot, start, end, ccw) {
+    this.save();
+    this.translate(cx, cy);
+    this.rotate(rot);
+    this.scale(rx, ry);
+    this.arc(0, 0, 1, start, end, ccw);
+    this.restore();
+  };
+}
+
 const CONFIG = {
   width: 960,
   height: 540,
@@ -1598,7 +1610,7 @@ function initLeaderboard() {
     const lbPanel = document.getElementById('leaderboardPanel');
     if (lbPanel) lbPanel.appendChild(Leaderboard.createPanel('astro-miner'));
     const lbToggleBtn = document.getElementById('leaderboardToggle');
-    if (lbToggleBtn) {
+    if (lbToggleBtn && lbPanel) {
       lbToggleBtn.addEventListener('click', () => { lbPanel.classList.toggle('lb-visible'); });
       lbPanel.addEventListener('click', (e) => { if (e.target === lbPanel) lbPanel.classList.remove('lb-visible'); });
     }
