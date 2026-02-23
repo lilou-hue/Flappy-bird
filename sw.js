@@ -38,6 +38,10 @@ const PRECACHE_URLS = [
   '/unicorn-clicker/',
   '/unicorn-clicker/game.js',
   '/unicorn-clicker/styles.css',
+  '/astro-miner/',
+  '/astro-miner/game.js',
+  '/astro-miner/audio.js',
+  '/astro-miner/styles.css',
 ];
 
 const NETWORK_FIRST_HOSTS = [

@@ -242,6 +242,7 @@
       .game-card:nth-child(6) { animation-delay: 0.3s; }
       .game-card:nth-child(7) { animation-delay: 0.35s; }
       .game-card:nth-child(8) { animation-delay: 0.4s; }
+      .game-card:nth-child(9) { animation-delay: 0.45s; }
       @keyframes cardReveal {
         to { opacity: 1; transform: translateY(0); }
       }
@@ -275,6 +276,7 @@
       .game-card:nth-child(6)::after { box-shadow: inset 0 0 0 1px rgba(255,105,180,0.4), 0 0 30px rgba(255,105,180,0.08); }
       .game-card:nth-child(7)::after { box-shadow: inset 0 0 0 1px rgba(0,210,255,0.4), 0 0 30px rgba(0,210,255,0.08); }
       .game-card:nth-child(8)::after { box-shadow: inset 0 0 0 1px rgba(255,107,53,0.4), 0 0 30px rgba(255,107,53,0.08); }
+      .game-card:nth-child(9)::after { box-shadow: inset 0 0 0 1px rgba(0,229,255,0.4), 0 0 30px rgba(0,229,255,0.08); }
 
       .game-card:hover .card-preview canvas { filter: brightness(1.12) saturate(1.1); }
 
@@ -330,6 +332,7 @@
       .unicorn-preview   { background: linear-gradient(180deg, #2d1b69, #1a0f40, #0f0a2a); }
       .tetris-preview    { background: linear-gradient(180deg, #0a1230, #060918, #030510); }
       .gun-game-preview  { background: linear-gradient(180deg, #1a2540, #2c3e50 50%, #1a252f 85%, #0f1820 100%); }
+      .astro-miner-preview { background: linear-gradient(180deg, #1a0a3a, #0f0625, #0a0520); }
 
       .flappy-tag    { background: rgba(123,228,149,0.12); color: #7be495; border: 1px solid rgba(123,228,149,0.2); }
       .methane-tag   { background: rgba(23,205,211,0.12); color: #17cdd3; border: 1px solid rgba(23,205,211,0.2); }
@@ -339,6 +342,7 @@
       .unicorn-tag   { background: rgba(255,105,180,0.12); color: #ff69b4; border: 1px solid rgba(255,105,180,0.2); }
       .tetris-tag    { background: rgba(0,210,255,0.12); color: #00d4ff; border: 1px solid rgba(0,210,255,0.2); }
       .gun-game-tag  { background: rgba(255,107,53,0.12); color: #ff6b35; border: 1px solid rgba(255,107,53,0.2); }
+      .astro-miner-tag { background: rgba(0,229,255,0.12); color: #00e5ff; border: 1px solid rgba(0,229,255,0.2); }
 
       .card-best {
         position: absolute;
@@ -538,6 +542,17 @@
           <h2 data-i18n="gunGameTitle">Gun Game</h2>
           <p data-i18n="gunGameDesc">Flap and shoot! Destroy pipes with 8 weapon tiers. Advance by destroying 3 per tier to win!</p>
           <span class="card-tag gun-game-tag" data-i18n="action">Action</span>
+        </div>
+      </a>
+
+      <a href="/astro-miner/" class="game-card">
+        <div class="card-preview astro-miner-preview">
+          <canvas id="astroMinerCanvas" width="360" height="200"></canvas>
+        </div>
+        <div class="card-body">
+          <h2 data-i18n="astroMinerTitle">Astro Miner</h2>
+          <p data-i18n="astroMinerDesc">Jump between asteroids, collect crystals, and dodge hazards in deep space. Use your jetpack wisely!</p>
+          <span class="card-tag astro-miner-tag" data-i18n="platformer">Platformer</span>
         </div>
       </a>
     </div>
@@ -1317,6 +1332,90 @@
         requestAnimationFrame(draw);
       })();
 
+      /* ─ Astro Miner Preview ─ */
+      (function() {
+        const c = document.getElementById('astroMinerCanvas');
+        if (!c) return;
+        const x = c.getContext('2d');
+        let t = 0;
+        const previewStars = Array.from({length:35}, () => ({x:Math.random()*W, y:Math.random()*H, s:0.5+Math.random(), tw:Math.random()*6.28}));
+        const asteroidData = [
+          {cx:80, cy:140, w:70, h:18, grav:'normal'},
+          {cx:180, cy:110, w:55, h:15, grav:'low'},
+          {cx:280, cy:130, w:65, h:20, grav:'high'},
+        ];
+
+        function draw() {
+          t += 0.016;
+          const bg = x.createLinearGradient(0,0,0,H);
+          bg.addColorStop(0,'#0a0520'); bg.addColorStop(0.5,'#0f0625'); bg.addColorStop(1,'#1a0a3a');
+          x.fillStyle = bg; x.fillRect(0,0,W,H);
+
+          for (const s of previewStars) {
+            const a = 0.3 + Math.sin(s.tw+t*2)*0.25;
+            x.fillStyle = `rgba(200,220,255,${a})`;
+            x.fillRect(s.x, s.y, s.s, s.s);
+          }
+
+          for (const a of asteroidData) {
+            const ay = a.cy + Math.sin(t*0.8+a.cx*0.01)*5;
+            const glowColor = a.grav==='low'?'rgba(79,195,247,0.2)':a.grav==='high'?'rgba(239,83,80,0.2)':'rgba(200,200,200,0.1)';
+            const bodyColor = a.grav==='low'?'#4fc3f7':a.grav==='high'?'#ef5350':'#888';
+            const glow = x.createRadialGradient(a.cx,ay,a.w*0.15,a.cx,ay,a.w*0.6);
+            glow.addColorStop(0,glowColor); glow.addColorStop(1,'transparent');
+            x.fillStyle = glow; x.beginPath(); x.arc(a.cx,ay,a.w*0.6,0,Math.PI*2); x.fill();
+            x.fillStyle = bodyColor;
+            x.beginPath();
+            x.ellipse(a.cx,ay,a.w/2,a.h/2,0,0,Math.PI*2);
+            x.fill();
+            x.strokeStyle = 'rgba(255,255,255,0.2)'; x.lineWidth = 1; x.stroke();
+          }
+
+          /* Crystals */
+          for (let i = 0; i < 3; i++) {
+            const cx = 120 + i*80, cy = 70 + Math.sin(t*3+i)*8;
+            x.save(); x.translate(cx,cy); x.rotate(t*2+i);
+            x.fillStyle = '#00e5ff';
+            x.beginPath(); x.moveTo(0,-6); x.lineTo(4,0); x.lineTo(0,6); x.lineTo(-4,0); x.closePath(); x.fill();
+            x.shadowColor='#00e5ff'; x.shadowBlur=6; x.stroke(); x.shadowBlur=0;
+            x.restore();
+          }
+
+          /* Astronaut bouncing between asteroids */
+          const astIdx = Math.floor((t * 0.5) % 3);
+          const nextIdx = (astIdx + 1) % 3;
+          const prog = (t * 0.5) % 1;
+          const a1 = asteroidData[astIdx], a2 = asteroidData[nextIdx];
+          const px = a1.cx + (a2.cx - a1.cx) * prog;
+          const jumpArc = -Math.sin(prog * Math.PI) * 45;
+          const py = (a1.cy + (a2.cy - a1.cy) * prog) + jumpArc - 20;
+
+          x.save(); x.translate(px, py);
+          /* Body */
+          x.fillStyle = '#c0c0c0';
+          x.beginPath();
+          if (x.roundRect) x.roundRect(-7,-10,14,20,3);
+          else x.rect(-7,-10,14,20);
+          x.fill();
+          /* Visor */
+          x.fillStyle = '#00e5ff';
+          x.beginPath();
+          if (x.roundRect) x.roundRect(-5,-9,10,7,2);
+          else x.rect(-5,-9,10,7);
+          x.fill();
+          /* Jetpack flame when going up */
+          if (jumpArc < -10) {
+            const fl = 4 + Math.sin(t*20)*2;
+            x.fillStyle = `rgba(255,100,0,${0.7+Math.sin(t*15)*0.3})`;
+            x.beginPath(); x.moveTo(-3,10); x.lineTo(3,10); x.lineTo(0,10+fl); x.closePath(); x.fill();
+          }
+          x.restore();
+
+          requestAnimationFrame(draw);
+        }
+        requestAnimationFrame(draw);
+      })();
+
       /* ─ Phantom Road Preview ─ */
       (function() {
         const c = document.getElementById('phantomCanvas');
@@ -1442,7 +1541,7 @@
       (function() {
         const bestKeys = [
           'flappyBest', 'methaneDriftBest', 'snakeBest', 'luminaBest',
-          'phantomRoadBest', null, 'tetrisBest', 'gunGameBest'
+          'phantomRoadBest', null, 'tetrisBest', 'gunGameBest', 'astroMinerBest'
         ];
         const cards = document.querySelectorAll('.game-card');
         cards.forEach((card, i) => {
@@ -1484,9 +1583,10 @@
           { key: 'unicornAch', total: 0 },
           { key: 'tetrisAch', total: 0 },
           { key: 'gunGameAch', total: 0 },
+          { key: 'astroMinerAch', total: 0 },
         ];
 
-        const gameNames = ['Flappy Bird', 'Methane Drift', 'Snake', 'Lumina', 'Phantom Road', 'Unicorn Clicker', 'Tetris', 'Gun Game'];
+        const gameNames = ['Flappy Bird', 'Methane Drift', 'Snake', 'Lumina', 'Phantom Road', 'Unicorn Clicker', 'Tetris', 'Gun Game', 'Astro Miner'];
 
         let totalAch = 0;
         let maxPlayed = 0;
@@ -1505,7 +1605,7 @@
           } catch(e) {}
         }
 
-        const bestKeys = ['flappyBest', 'methaneDriftBest', 'snakeBest', 'luminaBest', 'phantomRoadBest', 'tetrisBest', 'gunGameBest'];
+        const bestKeys = ['flappyBest', 'methaneDriftBest', 'snakeBest', 'luminaBest', 'phantomRoadBest', 'tetrisBest', 'gunGameBest', 'astroMinerBest'];
         let combinedBest = 0;
         for (const key of bestKeys) {
           combinedBest += Number(localStorage.getItem(key)) || 0;

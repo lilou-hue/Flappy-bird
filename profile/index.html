@@ -167,6 +167,10 @@
       .accent-gungame .score-icon { background: rgba(255,107,53,0.15); color: #ff6b35; }
       .accent-gungame .score-best { color: #ff6b35; }
 
+      .accent-astrominer { border-left: 3px solid #00e5ff; }
+      .accent-astrominer .score-icon { background: rgba(0,229,255,0.15); color: #00e5ff; }
+      .accent-astrominer .score-best { color: #00e5ff; }
+
       /* Entrance animation */
       .score-card {
         opacity: 0;
@@ -181,6 +185,7 @@
       .score-card:nth-child(6) { animation-delay: 0.3s; }
       .score-card:nth-child(7) { animation-delay: 0.35s; }
       .score-card:nth-child(8) { animation-delay: 0.4s; }
+      .score-card:nth-child(9) { animation-delay: 0.45s; }
 
       @keyframes cardIn {
         to { opacity: 1; transform: translateY(0); }
@@ -299,6 +304,7 @@
         { id: 'methane', key: 'methaneDriftBest',  title: 'Methane Drift',        icon: '\uD83D\uDE80', accent: 'methane', label: 'Best Score' },
         { id: 'unicorn', key: null,                title: 'Unicorn Fart Clicker', icon: '\uD83E\uDD84', accent: 'unicorn', label: 'Lifetime SP', saveKey: 'unicornClickerSave', field: 'lifetimeSP' },
         { id: 'gungame', key: 'gunGameBest',       title: 'Gun Game',             icon: '\uD83D\uDD2B', accent: 'gungame', label: 'Best Score' },
+        { id: 'astrominer', key: 'astroMinerBest', title: 'Astro Miner',          icon: '\u26CF\uFE0F', accent: 'astrominer', label: 'Best Score' },
       ];
 
       // Read nickname
@@ -340,7 +346,7 @@
       }
 
       document.getElementById('totalScore').textContent = totalScore.toLocaleString();
-      document.getElementById('gamesPlayed').textContent = gamesWithScore + '/8';
+      document.getElementById('gamesPlayed').textContent = gamesWithScore + '/9';
 
       // Total runs from methane drift progress
       let totalRuns = 0;
@@ -363,6 +369,7 @@
         { title: 'Methane Drift',        icon: '\uD83D\uDE80', key: 'methaneDriftProgress', total: 6, nested: 'achievements' },
         { title: 'Gun Game',             icon: '\uD83D\uDD2B', key: 'gunGameAch',         total: 8 },
         { title: 'Unicorn Fart Clicker', icon: '\uD83E\uDD84', key: 'unicornAch',         total: 9 },
+        { title: 'Astro Miner',          icon: '\u26CF\uFE0F', key: 'astroMinerAch',      total: 9 },
       ];
       let totalUnlocked = 0;
       let totalAvailable = 0;
