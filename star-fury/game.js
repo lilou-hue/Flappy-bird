@@ -565,7 +565,7 @@ function spawnEnemy(type, x) {
     h: type === 'boss' ? 50 : 24,
     hp: type === 'basic' ? 1 : type === 'zigzag' ? 2 : type === 'swooper' ? 2 : 30 + game.wave * 5,
     maxHp: 0,
-    speed: type === 'basic' ? 80 : type === 'zigzag' ? 70 : type === 'swooper' ? 60 : 30,
+    speed: type === 'basic' ? 100 : type === 'zigzag' ? 85 : type === 'swooper' ? 70 : 35,
     points: type === 'basic' ? 10 : type === 'zigzag' ? 20 : type === 'swooper' ? 30 : 200,
     phase: Math.random() * Math.PI * 2,
     swoopState: 'glide',  // for swooper: glide -> dive
@@ -1399,7 +1399,7 @@ function startWave() {
     game.waveEnemiesKilled = 0;
     game.waveSpawnTimer = 1.0;
   } else {
-    game.waveEnemiesTotal = 5 + game.wave * 2;
+    game.waveEnemiesTotal = 8 + game.wave * 3;
     game.waveEnemiesSpawned = 0;
     game.waveEnemiesKilled = 0;
     game.waveSpawnTimer = 0;
@@ -1421,14 +1421,14 @@ function updateWaveSystem(dt) {
         /* Pick enemy type based on wave */
         const roll = Math.random();
         let type = 'basic';
-        if (game.wave >= 3 && roll < 0.3) type = 'zigzag';
-        if (game.wave >= 5 && roll < 0.15) type = 'swooper';
-        if (game.wave >= 7 && roll < 0.25) type = 'swooper';
+        if (game.wave >= 2 && roll < 0.3) type = 'zigzag';
+        if (game.wave >= 3 && roll < 0.15) type = 'swooper';
+        if (game.wave >= 5 && roll < 0.25) type = 'swooper';
         spawnEnemy(type);
       }
       game.waveEnemiesSpawned++;
       /* Spawn interval decreases with wave */
-      game.waveSpawnTimer = Math.max(0.3, 1.2 - game.wave * 0.05);
+      game.waveSpawnTimer = Math.max(0.25, 0.85 - game.wave * 0.04);
     }
   }
 
