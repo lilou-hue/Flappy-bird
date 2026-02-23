@@ -399,10 +399,12 @@ function killPlayer() {
   emitParticles(player.x, player.y, '#ff6633', 20, 100);
 }
 
+let isNewBest = false;
+
 function endGame() {
   state = STATE.GAMEOVER;
   Audio.stopDrone();
-  let isNewBest = false;
+  isNewBest = false;
   if (score > bestScore) {
     bestScore = score;
     bestNode.textContent = bestScore;
@@ -418,7 +420,7 @@ function endGame() {
 
   /* Submit leaderboard score */
   if (typeof Leaderboard !== 'undefined') {
-    Leaderboard.submitIfReady('astro-miner', score);
+    Leaderboard.submitScore('astro-miner', score).then(() => Leaderboard.refresh('astro-miner'));
   }
 }
 
@@ -555,8 +557,8 @@ function update(dt) {
 
   /* Move asteroids */
   player.onGround = false;
-  player.currentGravity = 'normal';
   let prevGravity = player.currentGravity;
+  player.currentGravity = 'normal';
 
   for (let i = asteroids.length - 1; i >= 0; i--) {
     const a = asteroids[i];
@@ -632,8 +634,8 @@ function update(dt) {
     if (c.x < -30) crystals.splice(i, 1);
   }
 
-  /* --- Hazard spawning --- */
-  if (score > 5 && Math.random() < diff.hazardRate) {
+  /* --- Hazard spawning (rate is per-second, convert via dt) --- */
+  if (score > 5 && Math.random() < diff.hazardRate * dt * 60) {
     const r = Math.random();
     if (r < 0.5) spawnDebris();
     else if (r < 0.8) spawnLaser();
@@ -979,8 +981,15 @@ function render() {
   /* Particles */
   for (const p of particles) {
     const alpha = p.life / p.maxLife;
-    ctx.fillStyle = p.color.replace(')', `,${alpha})`).replace('rgb', 'rgba');
     ctx.globalAlpha = alpha;
+    if (p.color.startsWith('#')) {
+      const r = parseInt(p.color.slice(1, 3), 16);
+      const g = parseInt(p.color.slice(3, 5), 16);
+      const b = parseInt(p.color.slice(5, 7), 16);
+      ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
+    } else {
+      ctx.fillStyle = p.color.replace(')', `,${alpha})`).replace('rgb', 'rgba');
+    }
     ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
   }
   ctx.globalAlpha = 1;
@@ -1041,7 +1050,7 @@ function renderGameOver() {
 
   ctx.textAlign = 'center';
 
-  if (score >= bestScore && score > 0) {
+  if (isNewBest && score > 0) {
     ctx.fillStyle = '#ffd700';
     ctx.font = 'bold 20px "Segoe UI", system-ui, sans-serif';
     ctx.fillText(t('newRecord', 'NEW RECORD'), W / 2, H * 0.28);
@@ -1158,7 +1167,8 @@ muteBtn.addEventListener('click', () => {
 
 fullscreenBtn.addEventListener('click', () => {
   if (!document.fullscreenElement) {
-    canvas.requestFullscreen().catch(() => {});
+    const el = document.documentElement;
+    (el.requestFullscreen || el.webkitRequestFullscreen).call(el).catch(() => {});
   } else {
     document.exitFullscreen();
   }
@@ -1179,8 +1189,13 @@ function applyI18n() {
 /* --- Leaderboard integration --- */
 function initLeaderboard() {
   if (typeof Leaderboard !== 'undefined') {
-    const toggle = document.getElementById('leaderboardToggle');
-    Leaderboard.init('astro-miner', toggle, document.getElementById('leaderboardPanel'));
+    const lbPanel = document.getElementById('leaderboardPanel');
+    if (lbPanel) lbPanel.appendChild(Leaderboard.createPanel('astro-miner'));
+    const lbToggleBtn = document.getElementById('leaderboardToggle');
+    if (lbToggleBtn) {
+      lbToggleBtn.addEventListener('click', () => { lbPanel.classList.toggle('lb-visible'); });
+      lbPanel.addEventListener('click', (e) => { if (e.target === lbPanel) lbPanel.classList.remove('lb-visible'); });
+    }
   }
 }
 
