@@ -1257,8 +1257,8 @@ function update(dt) {
       }
       const dx = c.x - state.carX;
       const dy = c.y - state.carY;
-      const collectRadius = state.activeMagnet ? 1200 : 600;
-      if (dx * dx + dy * dy < collectRadius) {
+      const collectDist = state.activeMagnet ? 35 : 25;
+      if (dx * dx + dy * dy < collectDist * collectDist) {
         c.collected = true;
         state.totalCoins++;
         prAchStats.totalCoins++;
