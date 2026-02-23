@@ -27,6 +27,8 @@
     { id: 'fully_loaded',     icon: '\uD83D\uDEE0\uFE0F', get title() { return _t('ucAchFullyLoaded'); },get desc() { return _t('ucAchFullyLoadedDesc'); },     check: s => s.allOneTime },
     { id: 'fashionista',      icon: '\uD83D\uDC57', get title() { return _t('ucAchFashionista'); },      get desc() { return _t('ucAchFashionistaDesc'); },      check: s => s.skinsUnlocked >= 5 },
     { id: 'tap_master',       icon: '\uD83D\uDC4B', get title() { return _t('ucAchTapMaster'); },        get desc() { return _t('ucAchTapMasterDesc'); },        check: s => s.totalClicks >= 1000 },
+    { id: 'ascended',         icon: '\u2728',       title: 'Ascended',       desc: 'Prestige once',            check: s => s.ascensionCount >= 1 },
+    { id: 'frenzy_master',    icon: '\u26A1',       title: 'Frenzy Master',  desc: 'Complete 5 tap frenzies',  check: s => s.frenzyCompleted >= 5 },
   ];
 
   let ucUnlocked = new Set();
@@ -58,6 +60,8 @@
       evolution: state.evolution,
       allOneTime: !!(state.upgrades.cloudCompressor && state.upgrades.megaMultiplier && state.upgrades.criticalFart && state.upgrades.luckyClover && state.upgrades.passiveDoubler && state.upgrades.cosmicCompressor && state.upgrades.omnifart),
       skinsUnlocked: state.unlockedSkins.length,
+      ascensionCount: state.ascensionCount,
+      frenzyCompleted: state.frenzyCompleted,
     };
   }
   function checkUCAch() {
@@ -126,6 +130,12 @@
     },
     totalClicks: 0,
     lastSave: Date.now(),
+    ascensionCount: 0,
+    ascensionMultiplier: 1,
+    frenzyCompleted: 0,
+    equippedHat: null,
+    equippedTrail: null,
+    equippedAura: null,
   });
   let state = defaultState();
 
@@ -151,6 +161,28 @@
     { key: 'omnifart',        name: 'Omnifart',           desc: 'All passive x5',      baseCost: 500000000, oneTime: true },
   ];
 
+  /* ────────────────── Cosmetics ────────────────── */
+  const COSMETICS = {
+    hats: [
+      { id: 'crown', name: 'Crown', unlock: () => state.evolution >= 3 },
+      { id: 'wizard', name: 'Wizard Hat', unlock: () => state.evolution >= 5 },
+      { id: 'galaxy', name: 'Galaxy Crown', unlock: () => state.evolution >= 7 },
+    ],
+    trails: [
+      { id: 'sparkle', name: 'Sparkle', unlock: () => state.totalClicks >= 1000 },
+      { id: 'rainbow', name: 'Rainbow', unlock: () => state.totalClicks >= 10000 },
+      { id: 'fire', name: 'Fire', unlock: () => state.totalClicks >= 100000 },
+    ],
+    auras: [
+      { id: 'glow', name: 'Glow', unlock: () => state.ascensionCount >= 1 },
+      { id: 'pulse', name: 'Pulse', unlock: () => state.ascensionCount >= 3 },
+      { id: 'cosmic', name: 'Cosmic', unlock: () => state.ascensionCount >= 5 },
+    ],
+  };
+
+  let cosmeticsOpen = false;
+  let trailParticles = [];
+
   function upgradeCost(u) {
     if (u.oneTime) return u.baseCost;
     return Math.floor(u.baseCost * Math.pow(1.15, state.upgrades[u.key]));
@@ -164,6 +196,7 @@
       state.upgrades.galacticHayBale * 2500 + state.upgrades.nebulaFlatulence * 10000;
     if (state.upgrades.passiveDoubler) state.spPerSec *= 2;
     if (state.upgrades.omnifart) state.spPerSec *= 5;
+    state.spPerSec *= state.ascensionMultiplier;
   }
 
   function applyUpgrade(key) {
@@ -177,6 +210,8 @@
     if (state.upgrades.cloudCompressor) v *= 2;
     if (state.upgrades.megaMultiplier) v *= 3;
     if (state.upgrades.cosmicCompressor) v *= 5;
+    v *= state.ascensionMultiplier;
+    if (frenzyActive) v *= 5;
     return Math.floor(v);
   }
 
@@ -236,8 +271,50 @@
   let isFullscreen = false;
   let pseudoFullscreen = false;
 
+  /* ────────────────── Frenzy state ────────────────── */
+  let frenzyTimer = 60;
+  let frenzyActive = false;
+  let frenzyTimeLeft = 0;
+
+  /* ────────────────── Ascension ────────────────── */
+  function performAscension() {
+    if (state.evolution < 5) return;
+    state.ascensionCount++;
+    state.ascensionMultiplier *= 1.5;
+    const savedAscensionCount = state.ascensionCount;
+    const savedAscensionMultiplier = state.ascensionMultiplier;
+    const savedFrenzyCompleted = state.frenzyCompleted;
+    const savedEquippedHat = state.equippedHat;
+    const savedEquippedTrail = state.equippedTrail;
+    const savedEquippedAura = state.equippedAura;
+    state = defaultState();
+    state.ascensionCount = savedAscensionCount;
+    state.ascensionMultiplier = savedAscensionMultiplier;
+    state.frenzyCompleted = savedFrenzyCompleted;
+    state.equippedHat = savedEquippedHat;
+    state.equippedTrail = savedEquippedTrail;
+    state.equippedAura = savedEquippedAura;
+    particles = [];
+    floatingTexts = [];
+    shootingStars = [];
+    squash = 0;
+    shakeAmount = 0;
+    shopOpen = false;
+    skinsOpen = false;
+    cosmeticsOpen = false;
+    shopScroll = 0;
+    frenzyTimer = 60;
+    frenzyActive = false;
+    frenzyTimeLeft = 0;
+    spawnFloatingText(W / 2, H * 0.3, 'ASCENDED! x' + state.ascensionMultiplier.toFixed(1), '#ff69b4');
+    shakeAmount = 2;
+    save();
+    checkUCAch();
+  }
+
   /* ────────────────── Restart confirm state ────────────────── */
   let confirmRestart = false;
+  let confirmAscend = false;
 
   /* ────────────────── Unicorn animation ────────────────── */
   let squash = 0; // 0 = idle, positive = squashing
@@ -317,6 +394,13 @@
         else if (k === 'unlockedSkins') state.unlockedSkins = s.unlockedSkins || ['unicorn'];
         else if (s[k] !== undefined) state[k] = s[k];
       }
+      // Ensure ascension fields are loaded (backwards compat)
+      if (s.ascensionCount !== undefined) state.ascensionCount = s.ascensionCount;
+      if (s.ascensionMultiplier !== undefined) state.ascensionMultiplier = s.ascensionMultiplier;
+      if (s.frenzyCompleted !== undefined) state.frenzyCompleted = s.frenzyCompleted;
+      if (s.equippedHat !== undefined) state.equippedHat = s.equippedHat;
+      if (s.equippedTrail !== undefined) state.equippedTrail = s.equippedTrail;
+      if (s.equippedAura !== undefined) state.equippedAura = s.equippedAura;
       recalcPassive();
       if (s.lastSave) {
         const elapsed = Math.min((Date.now() - s.lastSave) / 1000, 8 * 3600);
@@ -2534,6 +2618,159 @@
     chewbacca: drawSkinChewbacca,
   };
 
+  /* ── Cosmetic drawing helpers ── */
+  function drawCosmeticHat(evo) {
+    const S = 1 + evo * 0.1;
+    const headY = -18 * S;
+    const headR = 30 * S;
+    if (state.equippedHat === 'crown') {
+      // Yellow crown with zigzag
+      ctx.fillStyle = '#ffd700';
+      ctx.beginPath();
+      ctx.moveTo(-14 * S, headY - headR * 0.75);
+      ctx.lineTo(-12 * S, headY - headR * 0.75 - 14 * S);
+      ctx.lineTo(-5 * S, headY - headR * 0.75 - 6 * S);
+      ctx.lineTo(0, headY - headR * 0.75 - 16 * S);
+      ctx.lineTo(5 * S, headY - headR * 0.75 - 6 * S);
+      ctx.lineTo(12 * S, headY - headR * 0.75 - 14 * S);
+      ctx.lineTo(14 * S, headY - headR * 0.75);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = '#b8860b';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      // Gems
+      ctx.fillStyle = '#ff4444';
+      ctx.beginPath(); ctx.arc(0, headY - headR * 0.75 - 4 * S, 2 * S, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#44ff44';
+      ctx.beginPath(); ctx.arc(-8 * S, headY - headR * 0.75 - 3 * S, 1.5 * S, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#4444ff';
+      ctx.beginPath(); ctx.arc(8 * S, headY - headR * 0.75 - 3 * S, 1.5 * S, 0, Math.PI * 2); ctx.fill();
+    } else if (state.equippedHat === 'wizard') {
+      // Purple cone wizard hat with stars
+      const hatBase = headY - headR * 0.65;
+      ctx.fillStyle = '#6a0dad';
+      ctx.beginPath();
+      ctx.moveTo(-16 * S, hatBase);
+      ctx.lineTo(0, hatBase - 35 * S);
+      ctx.lineTo(16 * S, hatBase);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = '#4a0080';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      // Brim
+      ctx.fillStyle = '#6a0dad';
+      ctx.beginPath();
+      ctx.ellipse(0, hatBase, 20 * S, 4 * S, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#4a0080';
+      ctx.stroke();
+      // Stars on hat
+      ctx.fillStyle = '#ffd700';
+      drawStar4(-4 * S, hatBase - 18 * S, 3 * S, gameTime);
+      drawStar4(5 * S, hatBase - 10 * S, 2 * S, gameTime * 1.5);
+    } else if (state.equippedHat === 'galaxy') {
+      // Swirling blue/purple galaxy crown
+      const hatBase = headY - headR * 0.7;
+      for (let i = 0; i < 8; i++) {
+        const angle = (i / 8) * Math.PI * 2 + gameTime * 0.8;
+        const r = 12 * S + Math.sin(gameTime * 2 + i) * 3 * S;
+        const px = Math.cos(angle) * r;
+        const py = hatBase - 8 * S + Math.sin(angle) * 4 * S;
+        const hue = (gameTime * 30 + i * 45) % 360;
+        ctx.fillStyle = `hsla(${220 + (hue % 60)}, 80%, 60%, 0.7)`;
+        ctx.beginPath();
+        ctx.arc(px, py, 4 * S + Math.sin(gameTime * 3 + i) * S, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      // Central glow
+      const cg = ctx.createRadialGradient(0, hatBase - 8 * S, 0, 0, hatBase - 8 * S, 15 * S);
+      cg.addColorStop(0, 'rgba(100,150,255,0.3)');
+      cg.addColorStop(1, 'transparent');
+      ctx.fillStyle = cg;
+      ctx.beginPath();
+      ctx.arc(0, hatBase - 8 * S, 15 * S, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  function drawCosmeticAura(evo) {
+    const S = 1 + evo * 0.1;
+    if (state.equippedAura === 'glow') {
+      const ag = ctx.createRadialGradient(0, 0, 20 * S, 0, 0, 80 * S);
+      ag.addColorStop(0, 'rgba(255,215,0,0.15)');
+      ag.addColorStop(1, 'transparent');
+      ctx.fillStyle = ag;
+      ctx.beginPath();
+      ctx.arc(0, 0, 80 * S, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (state.equippedAura === 'pulse') {
+      const pulseR = 60 * S + Math.sin(gameTime * 3) * 15 * S;
+      const pulseA = 0.1 + Math.sin(gameTime * 3) * 0.08;
+      ctx.strokeStyle = `rgba(255,255,255,${pulseA})`;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(0, 0, pulseR, 0, Math.PI * 2);
+      ctx.stroke();
+      // Inner pulse
+      ctx.strokeStyle = `rgba(255,255,255,${pulseA * 0.6})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(0, 0, pulseR * 0.7, 0, Math.PI * 2);
+      ctx.stroke();
+    } else if (state.equippedAura === 'cosmic') {
+      const ag = ctx.createRadialGradient(0, 0, 15 * S, 0, 0, 75 * S);
+      ag.addColorStop(0, 'rgba(128,0,255,0.12)');
+      ag.addColorStop(0.6, 'rgba(80,0,200,0.06)');
+      ag.addColorStop(1, 'transparent');
+      ctx.fillStyle = ag;
+      ctx.beginPath();
+      ctx.arc(0, 0, 75 * S, 0, Math.PI * 2);
+      ctx.fill();
+      // Stars in aura
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2 + gameTime * 0.5;
+        const r = 50 * S + Math.sin(gameTime + i * 2) * 10 * S;
+        ctx.fillStyle = `rgba(200,180,255,${0.4 + Math.sin(gameTime * 2 + i) * 0.3})`;
+        drawStar4(Math.cos(a) * r, Math.sin(a) * r, 3 * S, gameTime * 2 + i);
+      }
+    }
+  }
+
+  function spawnTrailParticle(x, y) {
+    if (!state.equippedTrail) return;
+    const colors = {
+      sparkle: ['#ffffff', '#ffffcc', '#eeeeff'],
+      rainbow: ['#ff0000', '#ff8800', '#ffff00', '#00ff00', '#0088ff', '#8800ff'],
+      fire: ['#ff4500', '#ff6600', '#ff8c00', '#ff2200', '#ffaa00'],
+    };
+    const palette = colors[state.equippedTrail] || colors.sparkle;
+    for (let i = 0; i < 3; i++) {
+      trailParticles.push({
+        x: x + (Math.random() - 0.5) * 20,
+        y: y + (Math.random() - 0.5) * 20,
+        vx: (Math.random() - 0.5) * 2,
+        vy: -1 - Math.random() * 2,
+        size: 2 + Math.random() * 3,
+        color: palette[Math.floor(Math.random() * palette.length)],
+        life: 1,
+        decay: 0.02 + Math.random() * 0.02,
+      });
+    }
+  }
+
+  function drawTrailParticles() {
+    for (const tp of trailParticles) {
+      ctx.globalAlpha = tp.life * 0.8;
+      ctx.fillStyle = tp.color;
+      ctx.beginPath();
+      ctx.arc(tp.x, tp.y, tp.size * tp.life, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
   function drawCharacter() {
     const evo = state.evolution;
     const cx = CHAR_X;
@@ -2546,8 +2783,15 @@
 
     const bs = 1 + evo * 0.08;
 
+    // Draw equipped aura (behind character)
+    if (state.equippedAura) drawCosmeticAura(evo);
+
     drawEvoPreEffects(evo, bs);
     (skinDrawFns[state.skin] || skinDrawFns.unicorn)(bs, evo);
+
+    // Draw equipped hat (on character)
+    if (state.equippedHat) drawCosmeticHat(evo);
+
     drawEvoPostEffects(evo, bs, state.skin);
 
     ctx.restore();
@@ -2666,34 +2910,64 @@
     ctx.stroke();
     ctx.globalAlpha = 1;
 
+    // Ascension multiplier display
+    if (state.ascensionCount > 0) {
+      ctx.font = '12px "Segoe UI", system-ui, sans-serif';
+      ctx.fillStyle = '#ff69b4';
+      ctx.textAlign = 'center';
+      ctx.fillText('Ascension ' + state.ascensionMultiplier.toFixed(1) + 'x (' + state.ascensionCount + ')', W/2, 100);
+    }
+
     // ── Bottom Buttons ──
-    const btnY = H - 55, btnH = 40, btnR = 12, btnW = 110;
+    const btnY = H - 55, btnH = 40, btnR = 12;
+    const smallBtnW = 85;
 
     // Shop button
-    const shopX = W*0.18 - btnW/2;
-    drawButton(shopX, btnY, btnW, btnH, btnR, _t('ucShop'), '#ff69b4', shopOpen);
+    const shopX = W*0.12 - smallBtnW/2;
+    drawButton(shopX, btnY, smallBtnW, btnH, btnR, _t('ucShop'), '#ff69b4', shopOpen);
 
     // Skins button
-    const skinsX = W*0.5 - btnW/2;
-    drawButton(skinsX, btnY, btnW, btnH, btnR, _t('ucSkins'), '#c084fc', skinsOpen);
+    const skinsX = W*0.34 - smallBtnW/2;
+    drawButton(skinsX, btnY, smallBtnW, btnH, btnR, _t('ucSkins'), '#c084fc', skinsOpen);
+
+    // Cosmetics button
+    const cosX = W*0.56 - smallBtnW/2;
+    drawButton(cosX, btnY, smallBtnW, btnH, btnR, 'Cosmetic', '#ffa500', cosmeticsOpen);
 
     // Evolve button
     if (canEvolve()) {
-      const evoX = W*0.82 - btnW/2;
+      const evoX = W*0.78 - smallBtnW/2;
       const pulse = 0.7 + Math.sin(gameTime*4)*0.3;
       ctx.fillStyle = `rgba(255,215,0,${0.2+pulse*0.15})`;
       ctx.beginPath();
-      if (ctx.roundRect) ctx.roundRect(evoX, btnY, btnW, btnH, btnR);
-      else ctx.rect(evoX, btnY, btnW, btnH);
+      if (ctx.roundRect) ctx.roundRect(evoX, btnY, smallBtnW, btnH, btnR);
+      else ctx.rect(evoX, btnY, smallBtnW, btnH);
       ctx.fill();
       ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 1.5; ctx.stroke();
       ctx.fillStyle = '#ffd700';
-      ctx.font = 'bold 15px "Segoe UI", system-ui, sans-serif';
+      ctx.font = 'bold 13px "Segoe UI", system-ui, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(_t('ucEvolve'), evoX + btnW/2, btnY + 26);
+      ctx.fillText(_t('ucEvolve'), evoX + smallBtnW/2, btnY + 26);
       ctx.font = '10px "Segoe UI", system-ui, sans-serif';
       ctx.fillStyle = '#c4b5fd';
-      ctx.fillText(formatNum(EVOLUTIONS[state.evolution].cost) + ' ' + _t('ucSP'), evoX + btnW/2, btnY - 5);
+      ctx.fillText(formatNum(EVOLUTIONS[state.evolution].cost) + ' ' + _t('ucSP'), evoX + smallBtnW/2, btnY - 5);
+    }
+
+    // Ascend button (only visible at evolution >= 5)
+    if (state.evolution >= 5) {
+      const ascX = W*0.78 - smallBtnW/2;
+      const ascY = btnY - 48;
+      const ascPulse = 0.6 + Math.sin(gameTime*3)*0.4;
+      ctx.fillStyle = `rgba(255,105,180,${0.15+ascPulse*0.1})`;
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(ascX, ascY, smallBtnW, btnH, btnR);
+      else ctx.rect(ascX, ascY, smallBtnW, btnH);
+      ctx.fill();
+      ctx.strokeStyle = '#ff69b4'; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.fillStyle = '#ff69b4';
+      ctx.font = 'bold 13px "Segoe UI", system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Ascend', ascX + smallBtnW/2, ascY + 26);
     }
   }
 
@@ -2953,6 +3227,155 @@
     ctx.fillText(_t('ucCancel'), nBtnX + nBtnW / 2, nBtnY + 25);
   }
 
+  /* ── Cosmetics panel ── */
+  function drawCosmeticsPanel() {
+    if (!cosmeticsOpen) return;
+    ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(0,0,W,H);
+    const p = SHOP_PANEL;
+    ctx.fillStyle = 'rgba(20,10,50,0.95)';
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(p.x,p.y,p.w,p.h,16); else ctx.rect(p.x,p.y,p.w,p.h);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,200,100,0.4)'; ctx.lineWidth = 2; ctx.stroke();
+
+    ctx.fillStyle = '#ffd700'; ctx.font = 'bold 22px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'center'; ctx.fillText('Cosmetics', W/2, p.y+32);
+    ctx.fillStyle = '#ffd700'; ctx.font = 'bold 20px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'right'; ctx.fillText('X', p.x+p.w-16, p.y+28);
+
+    let cy = p.y + 50;
+    const categories = [
+      { label: 'Hats', items: COSMETICS.hats, type: 'equippedHat' },
+      { label: 'Trails', items: COSMETICS.trails, type: 'equippedTrail' },
+      { label: 'Auras', items: COSMETICS.auras, type: 'equippedAura' },
+    ];
+
+    for (const cat of categories) {
+      ctx.fillStyle = '#c4b5fd'; ctx.font = 'bold 16px "Segoe UI", system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(cat.label, p.x + 16, cy + 4);
+      cy += 10;
+
+      for (const item of cat.items) {
+        const unlocked = item.unlock();
+        const equipped = state[cat.type] === item.id;
+        const rowY = cy;
+        const rowH = 34;
+
+        ctx.fillStyle = equipped ? 'rgba(255,215,0,0.15)' : 'rgba(255,255,255,0.03)';
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(p.x+8, rowY, p.w-16, rowH-2, 6);
+        else ctx.rect(p.x+8, rowY, p.w-16, rowH-2);
+        ctx.fill();
+        if (equipped) { ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 1; ctx.stroke(); }
+
+        ctx.textAlign = 'left';
+        ctx.fillStyle = unlocked ? '#fff' : '#555';
+        ctx.font = '14px "Segoe UI", system-ui, sans-serif';
+        ctx.fillText(unlocked ? item.name : '???', p.x + 20, rowY + 22);
+
+        ctx.textAlign = 'right';
+        if (equipped) {
+          ctx.fillStyle = '#ffd700'; ctx.font = 'bold 12px "Segoe UI", system-ui, sans-serif';
+          ctx.fillText('Equipped', p.x + p.w - 18, rowY + 22);
+        } else if (unlocked) {
+          ctx.fillStyle = '#98fb98'; ctx.font = 'bold 12px "Segoe UI", system-ui, sans-serif';
+          ctx.fillText('Equip', p.x + p.w - 18, rowY + 22);
+        } else {
+          ctx.fillStyle = '#666'; ctx.font = '12px "Segoe UI", system-ui, sans-serif';
+          ctx.fillText('Locked', p.x + p.w - 18, rowY + 22);
+        }
+
+        cy += rowH;
+      }
+      cy += 8;
+    }
+  }
+
+  /* ── Frenzy overlay ── */
+  function drawFrenzyOverlay() {
+    if (!frenzyActive) return;
+    // Flashing border
+    const flashAlpha = 0.15 + Math.sin(gameTime * 8) * 0.1;
+    ctx.strokeStyle = `rgba(255,215,0,${flashAlpha})`;
+    ctx.lineWidth = 6;
+    ctx.strokeRect(3, 3, W - 6, H - 6);
+
+    // TAP FRENZY text
+    ctx.save();
+    ctx.font = 'bold 36px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    const textPulse = 1 + Math.sin(gameTime * 6) * 0.1;
+    ctx.translate(W / 2, 130);
+    ctx.scale(textPulse, textPulse);
+    ctx.shadowColor = '#ffd700';
+    ctx.shadowBlur = 15;
+    ctx.fillStyle = '#ffd700';
+    ctx.fillText('TAP FRENZY!', 0, 0);
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 20px "Segoe UI", system-ui, sans-serif';
+    ctx.fillText(Math.ceil(frenzyTimeLeft).toFixed(0) + 's  (5x taps!)', 0, 30);
+    ctx.restore();
+  }
+
+  /* ── Ascend confirm dialog ── */
+  function drawConfirmAscend() {
+    if (!confirmAscend) return;
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillRect(0, 0, W, H);
+
+    const dw = 320, dh = 210;
+    const dx = (W - dw) / 2, dy = (H - dh) / 2;
+    ctx.fillStyle = 'rgba(20,10,50,0.97)';
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(dx, dy, dw, dh, 16);
+    else ctx.rect(dx, dy, dw, dh);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,105,180,0.5)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.fillStyle = '#ff69b4';
+    ctx.font = 'bold 20px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Ascend?', W / 2, dy + 35);
+
+    ctx.fillStyle = '#ccc';
+    ctx.font = '13px "Segoe UI", system-ui, sans-serif';
+    ctx.fillText('Reset SP, upgrades & evolution', W / 2, dy + 60);
+    ctx.fillText('Gain permanent 1.5x multiplier', W / 2, dy + 80);
+    ctx.fillStyle = '#ffd700';
+    ctx.font = 'bold 14px "Segoe UI", system-ui, sans-serif';
+    ctx.fillText('Current: ' + state.ascensionMultiplier.toFixed(1) + 'x -> ' + (state.ascensionMultiplier * 1.5).toFixed(1) + 'x', W / 2, dy + 105);
+    ctx.fillStyle = '#aaa';
+    ctx.font = '12px "Segoe UI", system-ui, sans-serif';
+    ctx.fillText('Ascensions: ' + state.ascensionCount, W / 2, dy + 125);
+
+    // Yes button
+    const yBtnX = dx + 30, yBtnY = dy + dh - 60, yBtnW = 110, yBtnH = 38;
+    ctx.fillStyle = 'rgba(255,105,180,0.25)';
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(yBtnX, yBtnY, yBtnW, yBtnH, 10);
+    else ctx.rect(yBtnX, yBtnY, yBtnW, yBtnH);
+    ctx.fill();
+    ctx.strokeStyle = '#ff69b4'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = '#ff69b4'; ctx.font = 'bold 16px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Ascend!', yBtnX + yBtnW / 2, yBtnY + 25);
+
+    // No button
+    const nBtnX = dx + dw - 140, nBtnY = yBtnY, nBtnW = 110, nBtnH = 38;
+    ctx.fillStyle = 'rgba(100,200,100,0.25)';
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(nBtnX, nBtnY, nBtnW, nBtnH, 10);
+    else ctx.rect(nBtnX, nBtnY, nBtnW, nBtnH);
+    ctx.fill();
+    ctx.strokeStyle = '#6bd66b'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = '#6bd66b'; ctx.font = 'bold 16px "Segoe UI", system-ui, sans-serif';
+    ctx.fillText('Cancel', nBtnX + nBtnW / 2, nBtnY + 25);
+  }
+
   /* ────────────────── Update ────────────────── */
   function update(dt) {
     gameTime += dt;
@@ -2982,6 +3405,36 @@
       sparkleTimer += dt;
       if (sparkleTimer > 2 + Math.random()) { SFX.sparkle(); sparkleTimer = 0; }
     }
+
+    // Frenzy timer
+    if (frenzyActive) {
+      frenzyTimeLeft -= dt;
+      if (frenzyTimeLeft <= 0) {
+        frenzyActive = false;
+        frenzyTimeLeft = 0;
+        frenzyTimer = 60;
+        state.frenzyCompleted++;
+        spawnFloatingText(W / 2, H * 0.35, 'Frenzy Complete!', '#ffd700');
+        checkUCAch();
+      }
+    } else {
+      frenzyTimer -= dt;
+      if (frenzyTimer <= 0) {
+        frenzyActive = true;
+        frenzyTimeLeft = 5;
+        frenzyTimer = 60;
+        spawnFloatingText(W / 2, H * 0.3, 'TAP FRENZY!', '#ff4500');
+        shakeAmount = 1;
+      }
+    }
+
+    // Trail particles
+    for (const tp of trailParticles) {
+      tp.x += tp.vx * dt * 60;
+      tp.y += tp.vy * dt * 60;
+      tp.life -= tp.decay * dt * 60;
+    }
+    trailParticles = trailParticles.filter(tp => tp.life > 0);
 
     if (squash > 0) { squash -= dt * 6; if (squash < 0) squash = 0; }
     if (shakeAmount > 0) { shakeAmount -= dt * 15; if (shakeAmount < 0) shakeAmount = 0; }
@@ -3035,14 +3488,18 @@
     }
     drawBackground();
     drawGround();
+    drawTrailParticles();
     drawParticles();
     drawCharacter();
     drawFloatingTexts();
     drawUI();
+    drawFrenzyOverlay();
     ctx.restore();
     drawShop();
     drawSkinsPanel();
+    drawCosmeticsPanel();
     drawConfirmRestart();
+    drawConfirmAscend();
     showUCAchPopup();
 
     ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -3063,6 +3520,28 @@
     e.preventDefault();
     const pos = getCanvasPos(e);
     const p = SHOP_PANEL;
+
+    // Confirm ascend dialog
+    if (confirmAscend) {
+      const dw = 320, dh = 210;
+      const dx = (W - dw) / 2, dy = (H - dh) / 2;
+      const yBtnX = dx + 30, yBtnY = dy + dh - 60, yBtnW = 110, yBtnH = 38;
+      const nBtnX = dx + dw - 140, nBtnY = yBtnY, nBtnW = 110, nBtnH = 38;
+
+      if (pos.x >= yBtnX && pos.x <= yBtnX + yBtnW && pos.y >= yBtnY && pos.y <= yBtnY + yBtnH) {
+        confirmAscend = false;
+        performAscension();
+        return;
+      }
+      if (pos.x >= nBtnX && pos.x <= nBtnX + nBtnW && pos.y >= nBtnY && pos.y <= nBtnY + nBtnH) {
+        confirmAscend = false;
+        return;
+      }
+      if (pos.x < dx || pos.x > dx + dw || pos.y < dy || pos.y > dy + dh) {
+        confirmAscend = false;
+      }
+      return;
+    }
 
     // Confirm restart dialog — handle first (blocks all other input)
     if (confirmRestart) {
@@ -3115,6 +3594,43 @@
       return;
     }
 
+    // Cosmetics panel — handle clicks
+    if (cosmeticsOpen) {
+      // Close X button
+      if (pos.x > p.x+p.w-40 && pos.y > p.y && pos.y < p.y+40) { cosmeticsOpen = false; return; }
+      // Click outside panel
+      if (pos.x < p.x || pos.x > p.x+p.w || pos.y < p.y || pos.y > p.y+p.h) { cosmeticsOpen = false; return; }
+
+      // Determine which item was clicked
+      let cy = p.y + 50;
+      const categories = [
+        { items: COSMETICS.hats, type: 'equippedHat' },
+        { items: COSMETICS.trails, type: 'equippedTrail' },
+        { items: COSMETICS.auras, type: 'equippedAura' },
+      ];
+      for (const cat of categories) {
+        cy += 10; // label height
+        for (const item of cat.items) {
+          const rowY = cy;
+          const rowH = 34;
+          if (pos.y >= rowY && pos.y < rowY + rowH) {
+            if (item.unlock()) {
+              // Toggle equip/unequip
+              if (state[cat.type] === item.id) {
+                state[cat.type] = null;
+              } else {
+                state[cat.type] = item.id;
+              }
+            }
+            return;
+          }
+          cy += rowH;
+        }
+        cy += 8;
+      }
+      return;
+    }
+
     // Shop open — handle shop clicks
     if (shopOpen) {
       if (pos.x > p.x+p.w-40 && pos.y > p.y && pos.y < p.y+40) { shopOpen = false; return; }
@@ -3154,15 +3670,28 @@
     }
 
     // ── Bottom buttons ──
-    const btnY = H - 55, btnH = 40, btnW = 110;
-    const shopX = W*0.18 - btnW/2;
-    const skinsX = W*0.5 - btnW/2;
-    const evoX = W*0.82 - btnW/2;
+    const btnY = H - 55, btnH = 40;
+    const smallBtnW = 85;
+    const shopX = W*0.12 - smallBtnW/2;
+    const skinsX = W*0.34 - smallBtnW/2;
+    const cosX = W*0.56 - smallBtnW/2;
+    const evoX = W*0.78 - smallBtnW/2;
+
+    // Ascend button (above evolve area)
+    if (state.evolution >= 5) {
+      const ascX = W*0.78 - smallBtnW/2;
+      const ascY = btnY - 48;
+      if (pos.x >= ascX && pos.x <= ascX + smallBtnW && pos.y >= ascY && pos.y <= ascY + btnH) {
+        confirmAscend = true;
+        return;
+      }
+    }
 
     if (pos.y >= btnY && pos.y <= btnY + btnH) {
-      if (pos.x >= shopX && pos.x <= shopX + btnW) { shopOpen = true; return; }
-      if (pos.x >= skinsX && pos.x <= skinsX + btnW) { skinsOpen = true; return; }
-      if (canEvolve() && pos.x >= evoX && pos.x <= evoX + btnW) {
+      if (pos.x >= shopX && pos.x <= shopX + smallBtnW) { shopOpen = true; return; }
+      if (pos.x >= skinsX && pos.x <= skinsX + smallBtnW) { skinsOpen = true; return; }
+      if (pos.x >= cosX && pos.x <= cosX + smallBtnW) { cosmeticsOpen = true; return; }
+      if (canEvolve() && pos.x >= evoX && pos.x <= evoX + smallBtnW) {
         state.sp -= EVOLUTIONS[state.evolution].cost;
         state.evolution++;
         SFX.evolve();
@@ -3195,6 +3724,7 @@
       const count = 5 + Math.floor(Math.random() * 6) + state.evolution * 2;
       spawnFartParticles(CHAR_X + sk.fartDx, CHAR_Y + sk.fartDy, count);
       spawnFloatingText(pos.x + (Math.random()-0.5)*30, pos.y - 20, '+' + formatNum(earned), color);
+      if (state.equippedTrail) spawnTrailParticle(pos.x, pos.y);
       checkUCAch();
     }
   }
