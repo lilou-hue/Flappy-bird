@@ -18,9 +18,10 @@
     { id: 'score_10k',     icon: '\uD83D\uDC51', title: 'Score 10000',       desc: 'Score 10000 in one game',     check: s => s.bestScore >= 10000 },
     { id: 'level_10',      icon: '\uD83D\uDCC8', title: 'Level 10',          desc: 'Reach level 10',              check: s => s.bestLevel >= 10 },
     { id: 'games_10',      icon: '\uD83C\uDFAE', title: 'Dedicated',         desc: 'Play 10 games',               check: s => s.gamesPlayed >= 10 },
+    { id: 'garbage_warrior', icon: '\uD83D\uDDD1\uFE0F', title: 'Garbage Warrior', desc: 'Clear 10 garbage rows in challenge mode', check: s => s.garbageRowsCleared >= 10 },
   ];
 
-  let tetAchStats = { totalLines: 0, bestScore: 0, bestLevel: 0, gamesPlayed: 0 };
+  let tetAchStats = { totalLines: 0, bestScore: 0, bestLevel: 0, gamesPlayed: 0, garbageRowsCleared: 0 };
   let tetUnlocked = new Set();
   let tetAchQueue = [];
   let tetAchTimer = 0;
@@ -78,40 +79,40 @@
       bg: '#08091a', field: '#060816',
       gridColor: 'rgba(0,210,255,0.06)', borderColor: 'rgba(0,210,255,0.35)',
       textColor: '#c0d8ff', accentColor: '#00d4ff',
-      colors: { I: '#00d4ff', O: '#ffdd00', T: '#b44dff', S: '#44ff44', Z: '#ff4444', J: '#4488ff', L: '#ff8833' },
-      glows:  { I: 'rgba(0,212,255,0.5)', O: 'rgba(255,221,0,0.5)', T: 'rgba(180,77,255,0.5)', S: 'rgba(68,255,68,0.5)', Z: 'rgba(255,68,68,0.5)', J: 'rgba(68,136,255,0.5)', L: 'rgba(255,136,51,0.5)' },
+      colors: { I: '#00d4ff', O: '#ffdd00', T: '#b44dff', S: '#44ff44', Z: '#ff4444', J: '#4488ff', L: '#ff8833', G: '#666666' },
+      glows:  { I: 'rgba(0,212,255,0.5)', O: 'rgba(255,221,0,0.5)', T: 'rgba(180,77,255,0.5)', S: 'rgba(68,255,68,0.5)', Z: 'rgba(255,68,68,0.5)', J: 'rgba(68,136,255,0.5)', L: 'rgba(255,136,51,0.5)', G: 'rgba(102,102,102,0.3)' },
     },
     neon: {
       name: () => I18N.t('tetThemeNeon'),
       bg: '#0a0014', field: '#08000f',
       gridColor: 'rgba(255,0,200,0.06)', borderColor: 'rgba(255,0,200,0.35)',
       textColor: '#ffc0e8', accentColor: '#ff00c8',
-      colors: { I: '#00ffff', O: '#ffff00', T: '#ff00ff', S: '#00ff66', Z: '#ff0066', J: '#6666ff', L: '#ff8800' },
-      glows:  { I: 'rgba(0,255,255,0.5)', O: 'rgba(255,255,0,0.5)', T: 'rgba(255,0,255,0.5)', S: 'rgba(0,255,102,0.5)', Z: 'rgba(255,0,102,0.5)', J: 'rgba(102,102,255,0.5)', L: 'rgba(255,136,0,0.5)' },
+      colors: { I: '#00ffff', O: '#ffff00', T: '#ff00ff', S: '#00ff66', Z: '#ff0066', J: '#6666ff', L: '#ff8800', G: '#666666' },
+      glows:  { I: 'rgba(0,255,255,0.5)', O: 'rgba(255,255,0,0.5)', T: 'rgba(255,0,255,0.5)', S: 'rgba(0,255,102,0.5)', Z: 'rgba(255,0,102,0.5)', J: 'rgba(102,102,255,0.5)', L: 'rgba(255,136,0,0.5)', G: 'rgba(102,102,102,0.3)' },
     },
     retro: {
       name: () => I18N.t('tetThemeRetro'),
       bg: '#1a1408', field: '#16120a',
       gridColor: 'rgba(200,160,80,0.06)', borderColor: 'rgba(200,160,80,0.3)',
       textColor: '#d4c8a0', accentColor: '#c8a050',
-      colors: { I: '#6bb5c0', O: '#d4a840', T: '#a070a0', S: '#6aaa60', Z: '#c06050', J: '#5080a0', L: '#c08040' },
-      glows:  { I: 'rgba(107,181,192,0.4)', O: 'rgba(212,168,64,0.4)', T: 'rgba(160,112,160,0.4)', S: 'rgba(106,170,96,0.4)', Z: 'rgba(192,96,80,0.4)', J: 'rgba(80,128,160,0.4)', L: 'rgba(192,128,64,0.4)' },
+      colors: { I: '#6bb5c0', O: '#d4a840', T: '#a070a0', S: '#6aaa60', Z: '#c06050', J: '#5080a0', L: '#c08040', G: '#666666' },
+      glows:  { I: 'rgba(107,181,192,0.4)', O: 'rgba(212,168,64,0.4)', T: 'rgba(160,112,160,0.4)', S: 'rgba(106,170,96,0.4)', Z: 'rgba(192,96,80,0.4)', J: 'rgba(80,128,160,0.4)', L: 'rgba(192,128,64,0.4)', G: 'rgba(102,102,102,0.3)' },
     },
     pastel: {
       name: () => I18N.t('tetThemePastel'),
       bg: '#f0f0f8', field: '#e8e8f0',
       gridColor: 'rgba(100,100,140,0.08)', borderColor: 'rgba(100,100,140,0.2)',
       textColor: '#505070', accentColor: '#8080c0',
-      colors: { I: '#88ccdd', O: '#eedd88', T: '#cc99cc', S: '#88cc88', Z: '#dd8888', J: '#8899cc', L: '#ddaa77' },
-      glows:  { I: 'rgba(136,204,221,0.3)', O: 'rgba(238,221,136,0.3)', T: 'rgba(204,153,204,0.3)', S: 'rgba(136,204,136,0.3)', Z: 'rgba(221,136,136,0.3)', J: 'rgba(136,153,204,0.3)', L: 'rgba(221,170,119,0.3)' },
+      colors: { I: '#88ccdd', O: '#eedd88', T: '#cc99cc', S: '#88cc88', Z: '#dd8888', J: '#8899cc', L: '#ddaa77', G: '#666666' },
+      glows:  { I: 'rgba(136,204,221,0.3)', O: 'rgba(238,221,136,0.3)', T: 'rgba(204,153,204,0.3)', S: 'rgba(136,204,136,0.3)', Z: 'rgba(221,136,136,0.3)', J: 'rgba(136,153,204,0.3)', L: 'rgba(221,170,119,0.3)', G: 'rgba(102,102,102,0.3)' },
     },
     midnight: {
       name: () => I18N.t('tetThemeMidnight'),
       bg: '#040408', field: '#030306',
       gridColor: 'rgba(60,60,100,0.08)', borderColor: 'rgba(60,60,100,0.25)',
       textColor: '#8080a0', accentColor: '#5050a0',
-      colors: { I: '#3388aa', O: '#aa8833', T: '#7744aa', S: '#338844', Z: '#aa3344', J: '#3355aa', L: '#aa6633' },
-      glows:  { I: 'rgba(51,136,170,0.4)', O: 'rgba(170,136,51,0.4)', T: 'rgba(119,68,170,0.4)', S: 'rgba(51,136,68,0.4)', Z: 'rgba(170,51,68,0.4)', J: 'rgba(51,85,170,0.4)', L: 'rgba(170,102,51,0.4)' },
+      colors: { I: '#3388aa', O: '#aa8833', T: '#7744aa', S: '#338844', Z: '#aa3344', J: '#3355aa', L: '#aa6633', G: '#666666' },
+      glows:  { I: 'rgba(51,136,170,0.4)', O: 'rgba(170,136,51,0.4)', T: 'rgba(119,68,170,0.4)', S: 'rgba(51,136,68,0.4)', Z: 'rgba(170,51,68,0.4)', J: 'rgba(51,85,170,0.4)', L: 'rgba(170,102,51,0.4)', G: 'rgba(102,102,102,0.3)' },
     },
   };
 
@@ -417,6 +418,11 @@
     gameOverAnim: 0,
     gameOverRow: 0,
     muted: false,
+    challengeMode: false,
+    garbageTimer: 0,
+    garbageInterval: 8,
+    garbageRowsCleared: 0,
+    garbageWarning: 0,
   };
 
   // DAS state
@@ -630,6 +636,13 @@
     }
 
     if (fullRows.length > 0) {
+      // Track garbage rows cleared in challenge mode
+      if (state.challengeMode) {
+        state.garbageRowsCleared += fullRows.length;
+        tetAchStats.garbageRowsCleared += fullRows.length;
+        checkTetAch(); showTetAchPopup(); saveTetAch();
+      }
+
       state.lineClearRows = fullRows;
       state.lineClearTimer = 0.3;
       state.current = null;
@@ -727,6 +740,28 @@
       state.dropAccumulator = 0;
     }
     state.holdUsed = true;
+  }
+
+  /* ================================================================== */
+  /*  Garbage rows (Challenge Mode)                                      */
+  /* ================================================================== */
+  function pushGarbageRow() {
+    var garbageRow = new Array(COLS).fill('G');
+    var gapCol = Math.floor(Math.random() * COLS);
+    garbageRow[gapCol] = null;
+    state.board.shift();
+    state.board.push(garbageRow);
+    // Check if top visible row (row 4) has any non-null cell after push
+    for (var c = 0; c < COLS; c++) {
+      if (state.board[4][c] !== null) {
+        triggerGameOver();
+        return;
+      }
+    }
+    state.garbageInterval = Math.max(3, state.garbageInterval - 0.3);
+    if (state.garbageInterval < 2) {
+      state.garbageWarning = 1.0;
+    }
   }
 
   /* ================================================================== */
@@ -843,6 +878,10 @@
     state.lockFlashCells = [];
     state.levelUpFlash = 0;
     state.gameOverAnim = 0;
+    state.garbageTimer = 0;
+    state.garbageInterval = 8;
+    state.garbageRowsCleared = 0;
+    state.garbageWarning = 0;
     state.phase = "idle";
     das.direction = 0;
     das.timer = 0;
@@ -1163,6 +1202,19 @@
     resetGame();
   });
 
+  /* Challenge Mode toggle */
+  const challengeModeBtn = document.getElementById("challengeModeButton");
+  if (challengeModeBtn) {
+    challengeModeBtn.addEventListener("click", () => {
+      Audio.init();
+      Audio.resume();
+      state.challengeMode = !state.challengeMode;
+      challengeModeBtn.style.background = state.challengeMode ? '#ff4444' : '';
+      challengeModeBtn.style.color = state.challengeMode ? '#fff' : '';
+      resetGame();
+    });
+  }
+
   /* ── Fullscreen ──────────────────────────────────────────── */
   const fullscreenButton = document.getElementById("fullscreenButton");
   let isFullscreen = false;
@@ -1253,6 +1305,20 @@
     }
 
     if (state.phase !== "playing" || !state.current) return;
+
+    // Garbage rows (Challenge Mode)
+    if (state.challengeMode) {
+      state.garbageTimer += dt;
+      if (state.garbageTimer >= state.garbageInterval) {
+        state.garbageTimer = 0;
+        pushGarbageRow();
+        if (state.phase !== "playing") return;
+      }
+      if (state.garbageWarning > 0) {
+        state.garbageWarning -= dt;
+        if (state.garbageWarning < 0) state.garbageWarning = 0;
+      }
+    }
 
     // DAS
     if (das.direction !== 0) {
@@ -1384,6 +1450,15 @@
     }
 
     // Playfield border
+    if (state.garbageWarning > 0) {
+      ctx2d.save();
+      ctx2d.shadowBlur = 16;
+      ctx2d.shadowColor = 'rgba(255,0,0,' + Math.min(state.garbageWarning, 1) + ')';
+      ctx2d.strokeStyle = 'rgba(255,0,0,' + Math.min(state.garbageWarning, 1) + ')';
+      ctx2d.lineWidth = 3;
+      ctx2d.strokeRect(FIELD_X - 2, FIELD_Y - 2, FIELD_W + 4, FIELD_H + 4);
+      ctx2d.restore();
+    }
     ctx2d.strokeStyle = currentTheme.borderColor;
     ctx2d.lineWidth = 2;
     ctx2d.strokeRect(FIELD_X - 1, FIELD_Y - 1, FIELD_W + 2, FIELD_H + 2);
@@ -1566,6 +1641,26 @@
       ctx2d.fillStyle = dimText;
       ctx2d.font = '700 10px "Trebuchet MS", system-ui, sans-serif';
       ctx2d.fillText("COMBO x" + state.combo, nextBoxX + 4, bestY + 44);
+    }
+
+    // Garbage timer indicator (Challenge Mode)
+    if (state.challengeMode && state.phase === "playing") {
+      var garbageY = bestY + 60;
+      ctx2d.fillStyle = dimText;
+      ctx2d.font = '700 10px "Trebuchet MS", system-ui, sans-serif';
+      ctx2d.fillText("GARBAGE", nextBoxX + 4, garbageY);
+      var barW = nextBoxW - 8;
+      var barH = 6;
+      var barX = nextBoxX + 4;
+      var barY = garbageY + 6;
+      var progress = Math.min(state.garbageTimer / state.garbageInterval, 1);
+      ctx2d.fillStyle = 'rgba(255,255,255,0.1)';
+      ctx2d.fillRect(barX, barY, barW, barH);
+      ctx2d.fillStyle = progress > 0.75 ? '#ff4444' : '#ff8833';
+      ctx2d.fillRect(barX, barY, barW * progress, barH);
+      ctx2d.fillStyle = dimText;
+      ctx2d.font = '700 9px "Trebuchet MS", system-ui, sans-serif';
+      ctx2d.fillText(Math.max(0, state.garbageInterval - state.garbageTimer).toFixed(1) + "s", barX, barY + 18);
     }
 
     // Particles
