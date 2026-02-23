@@ -31,9 +31,10 @@ const PR_ACHIEVEMENTS = [
   { id: 'score_200',     icon: '👑', title: 'Phantom King',     desc: 'Score 200 in one game',        check: s => s.bestScore >= 200 },
   { id: 'coins_100',     icon: '💰', title: 'Coin Collector',   desc: 'Collect 100 coins total',      check: s => s.totalCoins >= 100 },
   { id: 'games_10',      icon: '🎮', title: 'Dedicated Driver', desc: 'Play 10 games',                check: s => s.gamesPlayed >= 10 },
+  { id: 'storm_chaser',  icon: '⛈️', title: 'Storm Chaser',     desc: 'Drive 500m in adverse weather', check: s => s.adverseWeatherDist >= 500 },
 ];
 
-let prAchStats = { bestScore: 0, totalCoins: 0, gamesPlayed: 0 };
+let prAchStats = { bestScore: 0, totalCoins: 0, gamesPlayed: 0, adverseWeatherDist: 0 };
 let prUnlocked = new Set();
 let prAchQueue = [];
 let prAchTimer = 0;
@@ -326,6 +327,32 @@ const POWERUP_TYPES = [
   { type: "slowmo", color: "#44ff88", glow: "#22dd66", get label() { return _t('prSlowmo'); }, duration: 4 },
 ];
 
+// ── Vehicle Skins ────────────────────────────────────────
+const VEHICLE_SKINS = [
+  { id: 'sedan', name: 'Sedan', color: '#3388ff', unlocked: () => true },
+  { id: 'sports', name: 'Sports', color: '#ff3344', unlocked: () => (localStorage.getItem('prBestScore') || 0) >= 100 },
+  { id: 'truck', name: 'Truck', color: '#33cc55', unlocked: () => (localStorage.getItem('prTotalCoins') || 0) >= 200 },
+  { id: 'neon', name: 'Neon', color: '#ff44ff', unlocked: () => (localStorage.getItem('prPoliceEvasions') || 0) >= 3 },
+];
+
+// ── Skin selector button ─────────────────────────────────
+const skinButton = document.getElementById("skinButton");
+if (skinButton) {
+  skinButton.addEventListener("click", () => {
+    if (!state) return;
+    let next = (state.currentSkin + 1) % VEHICLE_SKINS.length;
+    // Cycle through to find next unlocked, or wrap around to 0
+    let checked = 0;
+    while (!VEHICLE_SKINS[next].unlocked() && checked < VEHICLE_SKINS.length) {
+      next = (next + 1) % VEHICLE_SKINS.length;
+      checked++;
+    }
+    state.currentSkin = next;
+    try { localStorage.setItem('prCurrentSkin', next); } catch (_) {}
+    skinButton.textContent = VEHICLE_SKINS[state.currentSkin].name;
+  });
+}
+
 // ── State ────────────────────────────────────────────────
 let state;
 
@@ -457,6 +484,22 @@ function initState() {
 
     // Road reflector posts
     reflectorOffset: 0,
+
+    // Weather effects
+    weatherType: 'clear',
+    lightningFlash: 0,
+    lightningTimer: 3 + Math.random() * 5,
+    stormShakeTime: 0,
+    stormShakeIntensity: 0,
+    adverseWeatherDist: 0,
+
+    // Vehicle skin
+    currentSkin: parseInt(localStorage.getItem('prCurrentSkin') || '0', 10),
+
+    // Rearview ghost
+    ghostTrail: [],
+    ghostRecordTimer: 0,
+    bestGhostTrail: null,
   };
 
   // Initialize rain drops
@@ -468,6 +511,17 @@ function initState() {
       len: 6 + Math.random() * 10,
       alpha: 0.1 + Math.random() * 0.2,
     });
+  }
+
+  // Load best ghost trail
+  try {
+    const saved = localStorage.getItem('prGhostTrail');
+    if (saved) state.bestGhostTrail = JSON.parse(saved);
+  } catch (_) {}
+
+  // Update skin button label
+  if (skinButton) {
+    skinButton.textContent = VEHICLE_SKINS[state.currentSkin] ? VEHICLE_SKINS[state.currentSkin].name : 'Sedan';
   }
 
   bestEl.textContent = state.bestScore;
@@ -690,8 +744,17 @@ function gameOver() {
   if (state.score > state.bestScore) {
     state.bestScore = state.score;
     localStorage.setItem("phantomRoadBest", state.bestScore);
+    localStorage.setItem("prBestScore", state.bestScore);
     bestEl.textContent = state.bestScore;
+    // Save ghost trail for new best
+    try { localStorage.setItem('prGhostTrail', JSON.stringify(state.ghostTrail)); } catch (_) {}
   }
+
+  // Persist stats for skin unlocks
+  try {
+    localStorage.setItem('prTotalCoins', (parseInt(localStorage.getItem('prTotalCoins') || '0', 10) + state.totalCoins));
+    localStorage.setItem('prPoliceEvasions', Math.max(parseInt(localStorage.getItem('prPoliceEvasions') || '0', 10), state.policeEvaded));
+  } catch (_) {}
 
   if (typeof Leaderboard !== 'undefined' && state.score > 0) {
     Leaderboard.submitScore('phantom-road', state.score).then(() => Leaderboard.refresh('phantom-road'));
@@ -699,6 +762,7 @@ function gameOver() {
 
   prAchStats.gamesPlayed++;
   prAchStats.bestScore = Math.max(prAchStats.bestScore, state.score);
+  prAchStats.adverseWeatherDist = Math.max(prAchStats.adverseWeatherDist, state.adverseWeatherDist);
   checkPrAch(); showPrAchPopup(); savePrAch();
 }
 
@@ -859,6 +923,45 @@ function update(dt) {
   }
   if (state.distance < 3) state.zoneTextTimer = 2.5;
   if (state.zoneTextTimer > 0) state.zoneTextTimer -= dt;
+
+  // ── Weather tied to zones ──
+  const zoneName = zones[state.zoneIndex].name;
+  if (zoneName === 'Mountains') {
+    state.weatherType = 'fog';
+  } else if (zoneName === 'Void') {
+    state.weatherType = 'storm';
+  } else if (zoneName === 'Suburbs') {
+    // Suburbs alternates between clear and rain
+    state.weatherType = (Math.floor(state.distance / 100) % 2 === 0) ? 'clear' : 'rain';
+  } else {
+    state.weatherType = 'clear';
+  }
+
+  // Track adverse weather distance
+  if (state.weatherType === 'rain' || state.weatherType === 'fog' || state.weatherType === 'storm') {
+    state.adverseWeatherDist += state.scrollSpeed * dt * 0.12;
+    prAchStats.adverseWeatherDist = Math.max(prAchStats.adverseWeatherDist, state.adverseWeatherDist);
+  }
+
+  // ── Storm: lightning timer ──
+  if (state.weatherType === 'storm') {
+    state.lightningTimer -= dt;
+    if (state.lightningTimer <= 0) {
+      state.lightningFlash = 0.3;
+      state.stormShakeTime = 0.15;
+      state.stormShakeIntensity = 4;
+      state.lightningTimer = 3 + Math.random() * 5;
+    }
+    if (state.lightningFlash > 0) state.lightningFlash -= dt * 2;
+    if (state.stormShakeTime > 0) state.stormShakeTime -= dt;
+  }
+
+  // ── Ghost trail recording ──
+  state.ghostRecordTimer += dt;
+  if (state.ghostRecordTimer >= 0.1) {
+    state.ghostRecordTimer -= 0.1;
+    state.ghostTrail.push({ x: state.carX, distance: state.distance });
+  }
 
   // ── Combo / multiplier decay ──
   if (state.comboTimer > 0) {
@@ -1721,6 +1824,11 @@ function draw() {
     ctx.fillRect(0, 0, W, H);
   }
 
+  // ── Rearview ghost car ──
+  if (state.bestGhostTrail && state.bestGhostTrail.length > 0 && state.phase === "playing") {
+    drawGhostCar();
+  }
+
   // ── Player car (drawn ON TOP of darkness so it's always visible) ──
   if (state.phase !== "gameover") {
     drawPlayerCar();
@@ -1812,14 +1920,48 @@ function draw() {
     ctx.restore();
   }
 
-  // ── Rain ──
-  ctx.lineWidth = 1;
-  for (const drop of state.rain) {
-    ctx.strokeStyle = `rgba(180,200,255,${drop.alpha})`;
-    ctx.beginPath();
-    ctx.moveTo(drop.x, drop.y);
-    ctx.lineTo(drop.x - 0.5, drop.y + drop.len);
-    ctx.stroke();
+  // ── Rain (only in rain or storm weather) ──
+  if (state.weatherType === 'rain' || state.weatherType === 'storm') {
+    ctx.lineWidth = 1;
+    for (const drop of state.rain) {
+      ctx.strokeStyle = `rgba(180,200,255,${drop.alpha})`;
+      ctx.beginPath();
+      ctx.moveTo(drop.x, drop.y);
+      ctx.lineTo(drop.x - 0.5, drop.y + drop.len);
+      ctx.stroke();
+    }
+  }
+
+  // ── Fog overlay ──
+  if (state.weatherType === 'fog' && state.phase !== 'gameover') {
+    ctx.save();
+    ctx.globalCompositeOperation = 'source-over';
+    const fogGrad = ctx.createRadialGradient(
+      state.carX, state.carY, 60,
+      state.carX, state.carY, 320
+    );
+    fogGrad.addColorStop(0, 'rgba(100,100,120,0)');
+    fogGrad.addColorStop(0.4, 'rgba(100,100,120,0.2)');
+    fogGrad.addColorStop(0.7, 'rgba(100,100,120,0.5)');
+    fogGrad.addColorStop(1, 'rgba(100,100,120,0.7)');
+    ctx.fillStyle = fogGrad;
+    ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+  }
+
+  // ── Lightning flash (storm) ──
+  if (state.lightningFlash > 0 && state.weatherType === 'storm') {
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, state.lightningFlash * 3);
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+  }
+
+  // ── Storm screen shake ──
+  if (state.stormShakeTime > 0 && state.weatherType === 'storm') {
+    const s = state.stormShakeIntensity * (state.stormShakeTime / 0.15);
+    ctx.translate((Math.random() - 0.5) * s, (Math.random() - 0.5) * s);
   }
 
   // ── HUD elements on canvas ──
@@ -1945,13 +2087,26 @@ function draw() {
 }
 
 function drawPlayerCar() {
+  _drawCarBody(state.carX, state.carY, state.steerAngle, 1.0);
+}
+
+function _drawCarBody(cx, cy, angle, alpha) {
+  const skin = VEHICLE_SKINS[state.currentSkin] || VEHICLE_SKINS[0];
+  const skinColor = skin.color;
+  // Derive lighter and darker variants from skin color
+  const sc = parseInt(skinColor.slice(1), 16);
+  const sr = (sc >> 16) & 255, sg = (sc >> 8) & 255, sb = sc & 255;
+  const lighter = `rgb(${Math.min(255, sr + 60)},${Math.min(255, sg + 60)},${Math.min(255, sb + 60)})`;
+  const darker = `rgb(${Math.max(0, sr - 40)},${Math.max(0, sg - 40)},${Math.max(0, sb - 40)})`;
+
   ctx.save();
-  ctx.translate(state.carX, state.carY);
-  ctx.rotate(state.steerAngle);
+  ctx.globalAlpha = alpha;
+  ctx.translate(cx, cy);
+  ctx.rotate(angle);
 
   // Ambient glow underneath car (makes it pop against dark road)
-  ctx.fillStyle = "rgba(255,140,60,0.12)";
-  ctx.shadowColor = "rgba(255,120,40,0.4)";
+  ctx.fillStyle = `rgba(${sr},${Math.max(0,sg-40)},${Math.max(0,sb-80)},0.12)`;
+  ctx.shadowColor = `rgba(${sr},${Math.max(0,sg-20)},${Math.max(0,sb-40)},0.4)`;
   ctx.shadowBlur = 35;
   ctx.beginPath();
   ctx.ellipse(0, 0, CAR_W / 2 + 12, CAR_H / 2 + 8, 0, 0, Math.PI * 2);
@@ -1964,11 +2119,11 @@ function drawPlayerCar() {
   ctx.ellipse(3, 7, CAR_W / 2 + 2, CAR_H / 2 - 5, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Car body (brighter, more saturated)
+  // Car body using skin color
   const bodyGrad = ctx.createLinearGradient(0, -CAR_H / 2, 0, CAR_H / 2);
-  bodyGrad.addColorStop(0, "#ff8855");
-  bodyGrad.addColorStop(0.4, "#ff5533");
-  bodyGrad.addColorStop(1, "#dd2211");
+  bodyGrad.addColorStop(0, lighter);
+  bodyGrad.addColorStop(0.4, skinColor);
+  bodyGrad.addColorStop(1, darker);
   ctx.fillStyle = bodyGrad;
   ctx.beginPath();
   ctx.roundRect(-CAR_W / 2, -CAR_H / 2, CAR_W, CAR_H, [10, 10, 5, 5]);
@@ -2017,7 +2172,7 @@ function drawPlayerCar() {
   ctx.fillRect(-CAR_W / 2 + 7, -CAR_H / 2 + 8, CAR_W / 2 - 4, 6);
 
   // Side mirrors
-  ctx.fillStyle = "#dd3311";
+  ctx.fillStyle = darker;
   ctx.fillRect(-CAR_W / 2 - 4, -CAR_H / 2 + 10, 4, 5);
   ctx.fillRect(CAR_W / 2, -CAR_H / 2 + 10, 4, 5);
 
@@ -2063,6 +2218,26 @@ function drawPlayerCar() {
   }
 
   ctx.restore();
+}
+
+function drawGhostCar() {
+  const trail = state.bestGhostTrail;
+  if (!trail || trail.length === 0) return;
+  // Find closest ghost position by distance
+  const dist = state.distance;
+  let closest = null;
+  let minDiff = Infinity;
+  for (let i = 0; i < trail.length; i++) {
+    const diff = Math.abs(trail[i].distance - dist);
+    if (diff < minDiff) {
+      minDiff = diff;
+      closest = trail[i];
+    }
+  }
+  if (!closest || minDiff > 50) return;
+  // Draw ghost at the recorded x position, at the player's y with offset
+  const ghostY = state.carY - 30;
+  _drawCarBody(closest.x, ghostY, 0, 0.25);
 }
 
 function drawTrafficCar(t) {
