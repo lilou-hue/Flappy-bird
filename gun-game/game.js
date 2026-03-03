@@ -675,48 +675,222 @@ function drawBoss() {
   const boss = gunState.boss;
   if (!boss) return;
   const bh = boss.width * 0.8;
+  const bx = boss.x, by = boss.y, bw = boss.width;
+  const now = performance.now() / 1000;
   context.save();
-  /* Glowing edges */
+
+  /* --- Armor-plated body with 3D bevel --- */
   context.shadowColor = '#ff4444';
-  context.shadowBlur = 12;
-  const grad = context.createLinearGradient(boss.x, boss.y, boss.x + boss.width, boss.y);
-  grad.addColorStop(0, '#8a2020');
-  grad.addColorStop(0.3, '#cc3333');
-  grad.addColorStop(0.7, '#aa2828');
-  grad.addColorStop(1, '#662020');
-  context.fillStyle = grad;
-  context.fillRect(boss.x, boss.y, boss.width, bh);
+  context.shadowBlur = 18;
+  const bodyGrad = context.createLinearGradient(bx, by, bx + bw, by + bh);
+  bodyGrad.addColorStop(0, '#5a1515');
+  bodyGrad.addColorStop(0.15, '#aa2828');
+  bodyGrad.addColorStop(0.5, '#cc3333');
+  bodyGrad.addColorStop(0.85, '#aa2828');
+  bodyGrad.addColorStop(1, '#5a1515');
+  context.fillStyle = bodyGrad;
+  context.beginPath();
+  context.roundRect(bx, by, bw, bh, 4);
+  context.fill();
   context.shadowBlur = 0;
 
-  /* Cap top */
+  /* Highlight edge (top & left) */
+  context.strokeStyle = 'rgba(255,180,180,0.45)';
+  context.lineWidth = 2;
+  context.beginPath();
+  context.moveTo(bx + bw - 2, by + 2);
+  context.lineTo(bx + 2, by + 2);
+  context.lineTo(bx + 2, by + bh - 2);
+  context.stroke();
+  /* Shadow edge (bottom & right) */
+  context.strokeStyle = 'rgba(0,0,0,0.5)';
+  context.beginPath();
+  context.moveTo(bx + 2, by + bh - 2);
+  context.lineTo(bx + bw - 2, by + bh - 2);
+  context.lineTo(bx + bw - 2, by + 2);
+  context.stroke();
+
+  /* --- Panel dividers --- */
+  context.strokeStyle = 'rgba(0,0,0,0.3)';
+  context.lineWidth = 1;
+  context.beginPath();
+  context.moveTo(bx + bw * 0.33, by + 4);
+  context.lineTo(bx + bw * 0.33, by + bh - 4);
+  context.moveTo(bx + bw * 0.66, by + 4);
+  context.lineTo(bx + bw * 0.66, by + bh - 4);
+  context.moveTo(bx + 4, by + bh * 0.5);
+  context.lineTo(bx + bw - 4, by + bh * 0.5);
+  context.stroke();
+
+  /* --- Rivet rows at corners --- */
+  context.fillStyle = '#888';
+  const rivetR = 2;
+  const rivetInset = 7;
+  const rivetPositions = [
+    [bx + rivetInset, by + rivetInset],
+    [bx + bw - rivetInset, by + rivetInset],
+    [bx + rivetInset, by + bh - rivetInset],
+    [bx + bw - rivetInset, by + bh - rivetInset],
+    [bx + bw / 2, by + rivetInset],
+    [bx + bw / 2, by + bh - rivetInset],
+  ];
+  for (const [rx, ry] of rivetPositions) {
+    context.beginPath();
+    context.arc(rx, ry, rivetR, 0, Math.PI * 2);
+    context.fill();
+    context.strokeStyle = 'rgba(255,255,255,0.3)';
+    context.lineWidth = 0.5;
+    context.stroke();
+  }
+
+  /* --- Danger stripes (clipped to body) --- */
+  context.save();
+  context.beginPath();
+  context.roundRect(bx, by, bw, bh, 4);
+  context.clip();
+  context.globalAlpha = 0.18;
+  const stripeW = 8;
+  context.fillStyle = '#FFD700';
+  for (let sx = -bh; sx < bw + bh; sx += stripeW * 2) {
+    context.beginPath();
+    context.moveTo(bx + sx, by + bh);
+    context.lineTo(bx + sx + stripeW, by + bh);
+    context.lineTo(bx + sx + stripeW + bh, by);
+    context.lineTo(bx + sx + bh, by);
+    context.closePath();
+    context.fill();
+  }
+  context.globalAlpha = 1.0;
+  context.restore();
+
+  /* --- Cap top --- */
   context.fillStyle = '#dd4444';
   context.beginPath();
-  context.roundRect(boss.x - 5, boss.y - 8, boss.width + 10, 12, [4, 4, 0, 0]);
+  context.roundRect(bx - 5, by - 8, bw + 10, 12, [4, 4, 0, 0]);
   context.fill();
-  /* Cap bottom */
+  /* --- Cap bottom --- */
   context.beginPath();
-  context.roundRect(boss.x - 5, boss.y + bh - 4, boss.width + 10, 12, [0, 0, 4, 4]);
+  context.roundRect(bx - 5, by + bh - 4, bw + 10, 12, [0, 0, 4, 4]);
   context.fill();
 
-  /* HP bar above boss */
-  const barW = boss.width;
-  const barH = 6;
-  const barX = boss.x;
-  const barY = boss.y - 20;
-  context.fillStyle = 'rgba(0, 0, 0, 0.5)';
-  context.fillRect(barX, barY, barW, barH);
+  /* --- Glowing eyes --- */
+  const eyeY = by + bh * 0.28;
+  const eyeSpacing = bw * 0.22;
+  const eyeCX1 = bx + bw / 2 - eyeSpacing;
+  const eyeCX2 = bx + bw / 2 + eyeSpacing;
+  const eyeR = 7;
+  const eyePulse = 0.8 + 0.2 * Math.sin(now * 5);
+  for (const ex of [eyeCX1, eyeCX2]) {
+    /* Dark socket */
+    context.fillStyle = '#1a0505';
+    context.beginPath();
+    context.arc(ex, eyeY, eyeR + 2, 0, Math.PI * 2);
+    context.fill();
+    /* Pulsing iris */
+    const irisGrad = context.createRadialGradient(ex, eyeY, 0, ex, eyeY, eyeR);
+    irisGrad.addColorStop(0, `rgba(255,200,50,${eyePulse})`);
+    irisGrad.addColorStop(0.5, `rgba(255,100,20,${eyePulse * 0.9})`);
+    irisGrad.addColorStop(1, `rgba(180,30,10,${eyePulse * 0.5})`);
+    context.fillStyle = irisGrad;
+    context.beginPath();
+    context.arc(ex, eyeY, eyeR, 0, Math.PI * 2);
+    context.fill();
+    /* Bright pupil dot */
+    context.fillStyle = `rgba(255,255,200,${eyePulse * 0.8})`;
+    context.beginPath();
+    context.arc(ex - 1.5, eyeY - 1.5, 2, 0, Math.PI * 2);
+    context.fill();
+  }
+
+  /* --- Cannon ports (3 at bottom) --- */
+  const cannonY = by + bh - 10;
+  const cannonSpacing = bw / 4;
+  for (let ci = 1; ci <= 3; ci++) {
+    const cx = bx + cannonSpacing * ci;
+    /* Dark port opening */
+    context.fillStyle = '#0a0a0a';
+    context.beginPath();
+    context.ellipse(cx, cannonY, 6, 4, 0, 0, Math.PI * 2);
+    context.fill();
+    /* Muzzle glow */
+    const mGrad = context.createRadialGradient(cx, cannonY, 0, cx, cannonY, 8);
+    mGrad.addColorStop(0, 'rgba(255,140,40,0.5)');
+    mGrad.addColorStop(1, 'rgba(255,60,20,0)');
+    context.fillStyle = mGrad;
+    context.beginPath();
+    context.arc(cx, cannonY, 8, 0, Math.PI * 2);
+    context.fill();
+  }
+
+  /* --- Rotating reactor core (centre) --- */
+  const coreX = bx + bw / 2;
+  const coreY = by + bh * 0.55;
+  const coreRingR = 12;
+  const coreAngle = now * 2.5;
+  /* 6-dot spinning ring */
+  for (let di = 0; di < 6; di++) {
+    const a = coreAngle + (Math.PI * 2 * di) / 6;
+    const dx = coreX + Math.cos(a) * coreRingR;
+    const dy = coreY + Math.sin(a) * coreRingR;
+    context.fillStyle = `rgba(255,200,80,${0.6 + 0.3 * Math.sin(now * 4 + di)})`;
+    context.beginPath();
+    context.arc(dx, dy, 2.2, 0, Math.PI * 2);
+    context.fill();
+  }
+  /* Pulsing radial core */
+  const corePulse = 0.7 + 0.3 * Math.sin(now * 6);
+  const coreGrad = context.createRadialGradient(coreX, coreY, 0, coreX, coreY, 9);
+  coreGrad.addColorStop(0, `rgba(255,230,140,${corePulse})`);
+  coreGrad.addColorStop(0.5, `rgba(255,120,30,${corePulse * 0.6})`);
+  coreGrad.addColorStop(1, 'rgba(180,40,10,0)');
+  context.fillStyle = coreGrad;
+  context.beginPath();
+  context.arc(coreX, coreY, 9, 0, Math.PI * 2);
+  context.fill();
+
+  /* --- Improved HP bar above boss --- */
+  const barW = bw + 10;
+  const barH = 8;
+  const barX = bx - 5;
+  const barY = by - 22;
+  const barR = 4;
+  /* Background */
+  context.fillStyle = 'rgba(0, 0, 0, 0.6)';
+  context.beginPath();
+  context.roundRect(barX, barY, barW, barH, barR);
+  context.fill();
+  /* HP fill */
   const hpPct = boss.hp / boss.maxHp;
-  context.fillStyle = hpPct > 0.5 ? '#44ff44' : hpPct > 0.25 ? '#ffcc00' : '#ff4444';
-  context.fillRect(barX, barY, barW * hpPct, barH);
-  context.strokeStyle = 'rgba(255,255,255,0.5)';
-  context.lineWidth = 1;
-  context.strokeRect(barX, barY, barW, barH);
+  const hpFillW = Math.max(0, barW * hpPct);
+  if (hpFillW > 0) {
+    const hpGrad = context.createLinearGradient(barX, barY, barX, barY + barH);
+    if (hpPct > 0.5) {
+      hpGrad.addColorStop(0, '#66ff66');
+      hpGrad.addColorStop(1, '#22aa22');
+    } else if (hpPct > 0.25) {
+      hpGrad.addColorStop(0, '#ffdd44');
+      hpGrad.addColorStop(1, '#cc9900');
+    } else {
+      hpGrad.addColorStop(0, '#ff6644');
+      hpGrad.addColorStop(1, '#cc2200');
+    }
+    context.fillStyle = hpGrad;
+    context.beginPath();
+    context.roundRect(barX, barY, hpFillW, barH, barR);
+    context.fill();
+  }
+  /* Thin border */
+  context.strokeStyle = 'rgba(255,255,255,0.4)';
+  context.lineWidth = 0.8;
+  context.beginPath();
+  context.roundRect(barX, barY, barW, barH, barR);
+  context.stroke();
 
   /* BOSS label */
   context.fillStyle = '#FFD700';
   context.font = "bold 10px 'Trebuchet MS'";
   context.textAlign = 'center';
-  context.fillText('BOSS', boss.x + boss.width / 2, barY - 4);
+  context.fillText('BOSS', bx + bw / 2, barY - 4);
 
   context.restore();
 }
@@ -933,6 +1107,15 @@ const drawBackground = () => {
     context.beginPath();
     context.ellipse(cloud.x + cloud.width * 0.25, cloud.y + 3, cloud.width * 0.3, cloud.height * 0.35, 0, 0, Math.PI * 2);
     context.fill();
+    /* Bottom-shadow gradient for volumetric look */
+    context.fillStyle = `rgba(200, 210, 220, ${cloud.alpha * 0.4})`;
+    context.beginPath();
+    context.ellipse(cloud.x, cloud.y + cloud.height * 0.18, cloud.width * 0.45, cloud.height * 0.32, 0, 0, Math.PI * 2);
+    context.fill();
+    context.fillStyle = `rgba(180, 195, 210, ${cloud.alpha * 0.25})`;
+    context.beginPath();
+    context.ellipse(cloud.x - cloud.width * 0.15, cloud.y + cloud.height * 0.22, cloud.width * 0.3, cloud.height * 0.22, 0, 0, Math.PI * 2);
+    context.fill();
   }
 
   const groundTop = GAME_H - 90;
@@ -961,12 +1144,26 @@ const drawBackground = () => {
   for (const tree of trees) {
     context.fillStyle = "rgba(40, 100, 50, 0.3)";
     context.fillRect(tree.x - 1.5, groundTop - tree.height * 0.4, 3, tree.height * 0.4);
-    context.beginPath();
-    context.moveTo(tree.x, groundTop - tree.height);
-    context.lineTo(tree.x - tree.width / 2, groundTop - tree.height * 0.3);
-    context.lineTo(tree.x + tree.width / 2, groundTop - tree.height * 0.3);
-    context.closePath();
-    context.fill();
+    /* 3 stacked bezier ovals for a rounder canopy */
+    const tx = tree.x, tw = tree.width, th = tree.height;
+    const canopyBase = groundTop - th * 0.3;
+    const layers = [
+      { yOff: 0, w: tw * 0.55, h: th * 0.38 },
+      { yOff: -th * 0.18, w: tw * 0.45, h: th * 0.34 },
+      { yOff: -th * 0.34, w: tw * 0.3, h: th * 0.28 },
+    ];
+    for (const l of layers) {
+      const cy = canopyBase + l.yOff;
+      context.fillStyle = "rgba(40, 100, 50, 0.3)";
+      context.beginPath();
+      context.moveTo(tx - l.w / 2, cy);
+      context.quadraticCurveTo(tx - l.w / 2, cy - l.h, tx, cy - l.h);
+      context.quadraticCurveTo(tx + l.w / 2, cy - l.h, tx + l.w / 2, cy);
+      context.quadraticCurveTo(tx + l.w / 2, cy + l.h * 0.3, tx, cy + l.h * 0.15);
+      context.quadraticCurveTo(tx - l.w / 2, cy + l.h * 0.3, tx - l.w / 2, cy);
+      context.closePath();
+      context.fill();
+    }
   }
 
   for (const leaf of leafParticles) {
@@ -1125,20 +1322,35 @@ const drawBird = () => {
     context.stroke();
   }
 
-  context.strokeStyle = "#d48a20";
-  context.lineWidth = 1.5;
-  context.beginPath();
-  context.moveTo(-bird.radius + 2, -2);
-  context.lineTo(-bird.radius - 7, -5);
-  context.stroke();
-  context.beginPath();
-  context.moveTo(-bird.radius + 2, 0);
-  context.lineTo(-bird.radius - 8, 0);
-  context.stroke();
-  context.beginPath();
-  context.moveTo(-bird.radius + 2, 2);
-  context.lineTo(-bird.radius - 7, 4);
-  context.stroke();
+  /* Curved tail feathers with barb detail */
+  const tailBase = -bird.radius + 2;
+  const feathers = [
+    { sy: -2, cpx: -bird.radius - 4, cpy: -8, ex: -bird.radius - 10, ey: -9 },
+    { sy: 0, cpx: -bird.radius - 5, cpy: -1, ex: -bird.radius - 11, ey: 0 },
+    { sy: 2, cpx: -bird.radius - 4, cpy: 6, ex: -bird.radius - 10, ey: 8 },
+  ];
+  for (const f of feathers) {
+    /* Main feather curve */
+    context.strokeStyle = "#d48a20";
+    context.lineWidth = 1.8;
+    context.beginPath();
+    context.moveTo(tailBase, f.sy);
+    context.quadraticCurveTo(f.cpx, f.cpy, f.ex, f.ey);
+    context.stroke();
+    /* Small barb cross-lines along the feather */
+    for (let t = 0.3; t <= 0.85; t += 0.28) {
+      const mx = (1 - t) * (1 - t) * tailBase + 2 * (1 - t) * t * f.cpx + t * t * f.ex;
+      const my = (1 - t) * (1 - t) * f.sy + 2 * (1 - t) * t * f.cpy + t * t * f.ey;
+      const perpX = (f.ey - f.sy) * 0.12;
+      const perpY = -(f.ex - tailBase) * 0.12;
+      context.strokeStyle = "rgba(180,120,20,0.5)";
+      context.lineWidth = 0.7;
+      context.beginPath();
+      context.moveTo(mx - perpX, my - perpY);
+      context.lineTo(mx + perpX, my + perpY);
+      context.stroke();
+    }
+  }
 
   bird.wingAngle += (bird.velocity < -100 ? 0.35 : -0.15);
   bird.wingAngle = Math.max(-0.4, Math.min(0.5, bird.wingAngle));
