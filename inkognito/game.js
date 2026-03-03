@@ -399,18 +399,33 @@
     try { localStorage.setItem('inkognitoAch', JSON.stringify(achData)); } catch (e) {}
   }
 
+  const achPopupQueue = [];
+  let achPopupActive = false;
+
+  function showNextAchPopup() {
+    if (achPopupActive || achPopupQueue.length === 0) return;
+    achPopupActive = true;
+    const ach = achPopupQueue.shift();
+    Audio.achievement();
+    achPopupIcon.textContent = ach.icon;
+    achPopupTitle.textContent = ach.title;
+    achPopupDesc.textContent = ach.desc;
+    achPopup.classList.add('show');
+    setTimeout(() => {
+      achPopup.classList.remove('show');
+      achPopupActive = false;
+      setTimeout(showNextAchPopup, 400);
+    }, 3000);
+  }
+
   function unlockAchievement(id) {
     if (achData.unlocked.includes(id)) return;
     achData.unlocked.push(id);
     saveAch();
     const ach = ACHIEVEMENTS.find(a => a.id === id);
     if (!ach) return;
-    Audio.achievement();
-    achPopupIcon.textContent = ach.icon;
-    achPopupTitle.textContent = ach.title;
-    achPopupDesc.textContent = ach.desc;
-    achPopup.classList.add('show');
-    setTimeout(() => achPopup.classList.remove('show'), 3000);
+    achPopupQueue.push(ach);
+    showNextAchPopup();
     renderAchievements();
   }
 
@@ -428,15 +443,39 @@
   renderAchievements();
 
   /* ── Fullscreen ── */
+  let pseudoFs = false;
+
+  function updateFsBtn() {
+    const active = !!(document.fullscreenElement || document.webkitFullscreenElement || pseudoFs);
+    if (fsBtn) fsBtn.textContent = active ? '\u2715' : '\u26F6';
+  }
+
   fsBtn.addEventListener('click', () => {
-    if (document.fullscreenElement) {
-      document.exitFullscreen();
+    if (document.fullscreenElement || document.webkitFullscreenElement) {
+      (document.exitFullscreen || document.webkitExitFullscreen).call(document);
     } else if (container.requestFullscreen) {
       container.requestFullscreen();
     } else if (container.webkitRequestFullscreen) {
       container.webkitRequestFullscreen();
     } else {
-      container.classList.toggle('pseudo-fullscreen');
+      pseudoFs = !pseudoFs;
+      container.classList.toggle('pseudo-fullscreen', pseudoFs);
+      document.body.style.overflow = pseudoFs ? 'hidden' : '';
+      updateFsBtn();
+    }
+  });
+
+  document.addEventListener('fullscreenchange', updateFsBtn);
+  document.addEventListener('webkitfullscreenchange', updateFsBtn);
+
+  /* ── Pause when tab hidden ── */
+  let paused = false;
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      paused = true;
+    } else {
+      paused = false;
+      lastTime = 0; // reset dt so no huge jump
     }
   });
 
@@ -776,7 +815,7 @@
       unlockAchievement('firstDraw');
       if (CFG.ROUND_TIME - timeLeft < 5) unlockAchievement('sharpEye');
       if (CFG.ROUND_TIME - timeLeft < 3) unlockAchievement('speedDemon');
-      if (timeLeft >= CFG.ROUND_TIME - 1) unlockAchievement('perfectRound');
+      if (timeLeft >= CFG.ROUND_TIME * 0.75) unlockAchievement('perfectRound');
       roundStats.totalTime += (CFG.ROUND_TIME - timeLeft);
       if (timeLeft < roundStats.fastestRound) roundStats.fastestRound = timeLeft;
       roundStats.correctRounds++;
@@ -1456,8 +1495,10 @@
     const dt = Math.min(0.1, (timestamp - lastTime) / 1000);
     lastTime = timestamp;
 
-    update(dt);
-    render(dt);
+    if (!paused) {
+      update(dt);
+      render(dt);
+    }
 
     requestAnimationFrame(gameLoop);
   }

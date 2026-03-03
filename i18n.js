@@ -1234,6 +1234,33 @@ const I18N = (() => {
       sfAchVeteran: '베테랑',
       sfAchVeteranDesc: '10회 플레이',
 
+      // Inkognito - Hub
+      inkTitle: 'Inkognito',
+      inkDesc: '캔버스에 그림을 그리면 AI가 실시간으로 맞춰봅니다. 10라운드의 창의적인 혼돈!',
+      creative: '크리에이티브',
+
+      // Inkognito - In-game
+      inkInstructions: 'AI가 요청하는 것을 그리세요 — 실시간으로 맞춰봅니다. 10라운드, 각 20초.',
+      inkTip: '팁: 크고 선명한 도형을 그리세요 — AI는 굵은 선을 좋아합니다!',
+
+      // Inkognito - Achievements
+      inkAchFirstDraw: '첫 번째 획',
+      inkAchFirstDrawDesc: '첫 라운드를 완료하세요',
+      inkAchSharpEye: '날카로운 눈',
+      inkAchSharpEyeDesc: 'AI가 5초 이내에 맞춤',
+      inkAchPerfectRound: '퍼펙트 라운드',
+      inkAchPerfectRoundDesc: '라운드에서 만점 획득',
+      inkAchArtist: '아티스트',
+      inkAchArtistDesc: '500점 달성',
+      inkAchMasterArtist: '마스터 아티스트',
+      inkAchMasterArtistDesc: '1000점 달성',
+      inkAchSpeedDemon: '스피드 데몬',
+      inkAchSpeedDemonDesc: '3초 이내에 맞춤',
+      inkAchPerfectGame: '퍼펙트 게임',
+      inkAchPerfectGameDesc: '10라운드 모두 맞추기',
+      inkAchDedicated: '헌신적인 플레이어',
+      inkAchDedicatedDesc: '10회 플레이',
+
       // Leaderboard
       leaderboard: '리더보드',
       enterNickname: '닉네임을 입력하세요',
@@ -1860,6 +1887,33 @@ const I18N = (() => {
       sfAchVeteran: 'ベテラン',
       sfAchVeteranDesc: '10回プレイ',
 
+      // Inkognito - Hub
+      inkTitle: 'Inkognito',
+      inkDesc: 'キャンバスに描いて、AIがリアルタイムで当てます。10ラウンドのクリエイティブチャレンジ！',
+      creative: 'クリエイティブ',
+
+      // Inkognito - In-game
+      inkInstructions: 'AIが求めるものを描いてください — リアルタイムで推測します。10ラウンド、各20秒。',
+      inkTip: 'ヒント：大きくはっきりした形を描いてください — AIは太い線が好きです！',
+
+      // Inkognito - Achievements
+      inkAchFirstDraw: 'ファーストストローク',
+      inkAchFirstDrawDesc: '最初のラウンドをクリア',
+      inkAchSharpEye: 'シャープアイ',
+      inkAchSharpEyeDesc: 'AIが5秒以内に正解',
+      inkAchPerfectRound: 'パーフェクトラウンド',
+      inkAchPerfectRoundDesc: 'ラウンドで満点を獲得',
+      inkAchArtist: 'アーティスト',
+      inkAchArtistDesc: '500ポイント獲得',
+      inkAchMasterArtist: 'マスターアーティスト',
+      inkAchMasterArtistDesc: '1000ポイント獲得',
+      inkAchSpeedDemon: 'スピードデーモン',
+      inkAchSpeedDemonDesc: '3秒以内に正解',
+      inkAchPerfectGame: 'パーフェクトゲーム',
+      inkAchPerfectGameDesc: '全10ラウンド正解',
+      inkAchDedicated: '熱心なプレイヤー',
+      inkAchDedicatedDesc: '10回プレイ',
+
       // Leaderboard
       leaderboard: 'リーダーボード',
       enterNickname: 'ニックネームを入力',
@@ -2483,6 +2537,33 @@ const I18N = (() => {
       sfAchComboKingDesc: '10x kombo yap',
       sfAchVeteran: 'Veteran',
       sfAchVeteranDesc: '10 oyun oyna',
+
+      // Inkognito - Hub
+      inkTitle: 'Inkognito',
+      inkDesc: 'Tuvale çizin ve AI gerçek zamanlı tahmin etsin. 10 tur yaratıcı kaos!',
+      creative: 'Yaratıcı',
+
+      // Inkognito - In-game
+      inkInstructions: 'AI\'nin istediğini çizin — gerçek zamanlı tahmin eder. 10 tur, her biri 20 saniye.',
+      inkTip: 'İpucu: Büyük, net şekiller çizin — AI kalın çizgileri sever!',
+
+      // Inkognito - Achievements
+      inkAchFirstDraw: 'İlk Çizgi',
+      inkAchFirstDrawDesc: 'İlk turu tamamlayın',
+      inkAchSharpEye: 'Keskin Göz',
+      inkAchSharpEyeDesc: 'AI 5 saniye içinde doğru tahmin etsin',
+      inkAchPerfectRound: 'Mükemmel Tur',
+      inkAchPerfectRoundDesc: 'Bir turda tam puan alın',
+      inkAchArtist: 'Sanatçı',
+      inkAchArtistDesc: '500 puan kazanın',
+      inkAchMasterArtist: 'Usta Sanatçı',
+      inkAchMasterArtistDesc: '1000 puan kazanın',
+      inkAchSpeedDemon: 'Hız Canavarı',
+      inkAchSpeedDemonDesc: '3 saniye içinde doğru tahmin',
+      inkAchPerfectGame: 'Mükemmel Oyun',
+      inkAchPerfectGameDesc: '10 turun hepsini doğru yapın',
+      inkAchDedicated: 'Adanmış Oyuncu',
+      inkAchDedicatedDesc: '10 oyun oynayın',
 
       // Leaderboard
       leaderboard: 'Skor Tablosu',
@@ -3108,6 +3189,33 @@ const I18N = (() => {
       sfAchVeteran: 'Vétéran',
       sfAchVeteranDesc: 'Jouez 10 parties',
 
+      // Inkognito - Hub
+      inkTitle: 'Inkognito',
+      inkDesc: 'Dessinez sur le canevas et laissez l\'IA deviner en temps réel. 10 manches de chaos créatif !',
+      creative: 'Créatif',
+
+      // Inkognito - In-game
+      inkInstructions: 'Dessinez ce que l\'IA demande — elle devine en temps réel. 10 manches, 20 secondes chacune.',
+      inkTip: 'Astuce : Dessinez grand et clair — l\'IA aime les traits épais !',
+
+      // Inkognito - Achievements
+      inkAchFirstDraw: 'Premier Trait',
+      inkAchFirstDrawDesc: 'Terminez votre première manche',
+      inkAchSharpEye: 'Œil Vif',
+      inkAchSharpEyeDesc: 'L\'IA devine correctement en moins de 5 secondes',
+      inkAchPerfectRound: 'Manche Parfaite',
+      inkAchPerfectRoundDesc: 'Score parfait sur une manche',
+      inkAchArtist: 'Artiste',
+      inkAchArtistDesc: 'Marquez 500 points',
+      inkAchMasterArtist: 'Maître Artiste',
+      inkAchMasterArtistDesc: 'Marquez 1000 points',
+      inkAchSpeedDemon: 'Démon de Vitesse',
+      inkAchSpeedDemonDesc: 'Deviné correctement en moins de 3 secondes',
+      inkAchPerfectGame: 'Partie Parfaite',
+      inkAchPerfectGameDesc: 'Réussissez les 10 manches',
+      inkAchDedicated: 'Joueur Dévoué',
+      inkAchDedicatedDesc: 'Jouez 10 parties',
+
       // Leaderboard
       leaderboard: 'Classement',
       enterNickname: 'Entrez votre pseudo',
@@ -3732,6 +3840,33 @@ const I18N = (() => {
       sfAchVeteran: 'Veteran',
       sfAchVeteranDesc: 'Spela 10 spel',
 
+      // Inkognito - Hub
+      inkTitle: 'Inkognito',
+      inkDesc: 'Rita på duken och låt AI:n gissa i realtid. 10 rundor av kreativt kaos!',
+      creative: 'Kreativ',
+
+      // Inkognito - In-game
+      inkInstructions: 'Rita vad AI:n ber om — den gissar i realtid. 10 rundor, 20 sekunder var.',
+      inkTip: 'Tips: Rita stort och tydligt — AI:n gillar tjocka streck!',
+
+      // Inkognito - Achievements
+      inkAchFirstDraw: 'Första Strecket',
+      inkAchFirstDrawDesc: 'Slutför din första runda',
+      inkAchSharpEye: 'Skarpt Öga',
+      inkAchSharpEyeDesc: 'AI:n gissar rätt inom 5 sekunder',
+      inkAchPerfectRound: 'Perfekt Runda',
+      inkAchPerfectRoundDesc: 'Få full poäng på en runda',
+      inkAchArtist: 'Konstnär',
+      inkAchArtistDesc: 'Få 500 poäng',
+      inkAchMasterArtist: 'Mästerkonstnär',
+      inkAchMasterArtistDesc: 'Få 1000 poäng',
+      inkAchSpeedDemon: 'Snabbdemon',
+      inkAchSpeedDemonDesc: 'Rätt gissning inom 3 sekunder',
+      inkAchPerfectGame: 'Perfekt Spel',
+      inkAchPerfectGameDesc: 'Klara alla 10 rundor',
+      inkAchDedicated: 'Hängiven Spelare',
+      inkAchDedicatedDesc: 'Spela 10 spel',
+
       // Leaderboard
       leaderboard: 'Topplista',
       enterNickname: 'Ange ditt smeknamn',
@@ -4355,6 +4490,33 @@ const I18N = (() => {
       sfAchComboKingDesc: '达成10倍连击',
       sfAchVeteran: '老兵',
       sfAchVeteranDesc: '游玩10次',
+
+      // Inkognito - Hub
+      inkTitle: 'Inkognito',
+      inkDesc: '在画布上作画，AI实时猜测你在画什么。10轮创意挑战！',
+      creative: '创意',
+
+      // Inkognito - In-game
+      inkInstructions: '画出AI要求的东西 — 它会实时猜测。10轮，每轮20秒。',
+      inkTip: '提示：画大而清晰的图形 — AI喜欢粗线条！',
+
+      // Inkognito - Achievements
+      inkAchFirstDraw: '第一笔',
+      inkAchFirstDrawDesc: '完成你的第一轮',
+      inkAchSharpEye: '锐利之眼',
+      inkAchSharpEyeDesc: 'AI在5秒内猜对',
+      inkAchPerfectRound: '完美回合',
+      inkAchPerfectRoundDesc: '在一轮中获得满分',
+      inkAchArtist: '艺术家',
+      inkAchArtistDesc: '获得500分',
+      inkAchMasterArtist: '大师级艺术家',
+      inkAchMasterArtistDesc: '获得1000分',
+      inkAchSpeedDemon: '速度恶魔',
+      inkAchSpeedDemonDesc: '3秒内猜对',
+      inkAchPerfectGame: '完美游戏',
+      inkAchPerfectGameDesc: '全部10轮都猜对',
+      inkAchDedicated: '忠实玩家',
+      inkAchDedicatedDesc: '游玩10次',
 
       // Leaderboard
       leaderboard: '排行榜',
