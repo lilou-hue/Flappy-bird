@@ -584,90 +584,70 @@
     return { grid, aspectRatio };
   }
 
-  function extractFeatures(grid) {
+  function extractFeatures(grid, aspectRatio) {
     const S = CFG.GRID_SIZE;
     const half = S / 2;
-    let total = 0, q1 = 0, q2 = 0, q3 = 0, q4 = 0;
-    let sumX = 0, sumY = 0;
-    let minX = S, maxX = 0, minY = S, maxY = 0;
-    let centerCount = 0, edgeCount = 0;
 
+    // Count total filled pixels + bounding box (on normalized grid)
+    let total = 0;
+    let minX = S, maxX = 0, minY = S, maxY = 0;
     for (let y = 0; y < S; y++) {
       for (let x = 0; x < S; x++) {
         if (grid[y][x]) {
           total++;
-          sumX += x;
-          sumY += y;
           if (x < minX) minX = x;
           if (x > maxX) maxX = x;
           if (y < minY) minY = y;
           if (y > maxY) maxY = y;
-
-          if (y < half && x < half) q1++;
-          else if (y < half && x >= half) q2++;
-          else if (y >= half && x < half) q3++;
-          else q4++;
-
-          // Center vs edge (center = inner 50%)
-          const cx = Math.abs(x - half) / half;
-          const cy = Math.abs(y - half) / half;
-          if (cx < 0.5 && cy < 0.5) centerCount++;
-          else edgeCount++;
         }
       }
     }
-
     if (total === 0) return null;
 
-    const fillRatio = total / (S * S);
-    const centroidX = sumX / total / S;
-    const centroidY = sumY / total / S;
-    const balH = (q1 + q3) / total;
-    const balV = (q1 + q2) / total;
-    const centerDens = centerCount / total;
-    const edgeDens = edgeCount / total;
+    // 1. Zone histogram (ZONES x ZONES spatial density grid)
+    const zoneFeatures = [];
+    const zoneSize = S / ZONES;
+    for (let zy = 0; zy < ZONES; zy++) {
+      for (let zx = 0; zx < ZONES; zx++) {
+        let count = 0, zTotal = 0;
+        const y0 = Math.floor(zy * zoneSize);
+        const y1 = Math.floor((zy + 1) * zoneSize);
+        const x0 = Math.floor(zx * zoneSize);
+        const x1 = Math.floor((zx + 1) * zoneSize);
+        for (let y = y0; y < y1; y++) {
+          for (let x = x0; x < x1; x++) {
+            zTotal++;
+            if (grid[y][x]) count++;
+          }
+        }
+        zoneFeatures.push(zTotal > 0 ? count / zTotal : 0);
+      }
+    }
 
-    // Aspect ratio
-    const w = maxX - minX + 1;
-    const h = maxY - minY + 1;
-    const aspectRatio = h > 0 ? w / h : 1;
-
-    // Circularity: compare bounding box area usage
-    const bbArea = w * h;
-    const circularity = bbArea > 0 ? (total / bbArea) * (4 / Math.PI) : 0;
-
-    // Convexity: ratio of filled pixels to convex hull area (approximate)
-    const convexArea = w * h * 0.85; // rough approx
-    const convexity = convexArea > 0 ? Math.min(1, total / convexArea) : 0;
-
-    // Symmetry
-    let symH = 0, symHTotal = 0;
-    let symV = 0, symVTotal = 0;
+    // 2. Symmetry (much more meaningful after BB normalization)
+    let symH = 0, symHTotal = 0, symV = 0, symVTotal = 0;
     for (let y = 0; y < S; y++) {
       for (let x = 0; x < half; x++) {
-        const mirrorX = S - 1 - x;
         symHTotal++;
-        if (grid[y][x] === grid[y][mirrorX]) symH++;
+        if (grid[y][x] === grid[y][S - 1 - x]) symH++;
       }
     }
     for (let y = 0; y < half; y++) {
       for (let x = 0; x < S; x++) {
-        const mirrorY = S - 1 - y;
         symVTotal++;
-        if (grid[y][x] === grid[mirrorY][x]) symV++;
+        if (grid[y][x] === grid[S - 1 - y][x]) symV++;
       }
     }
     const symmetryH = symHTotal > 0 ? symH / symHTotal : 0;
     const symmetryV = symVTotal > 0 ? symV / symVTotal : 0;
 
-    // Stroke count (connected components via flood fill)
+    // 3. Stroke count (connected components, 8-connected)
     const visited = Array.from({ length: S }, () => new Uint8Array(S));
     let strokeCount = 0;
     for (let y = 0; y < S; y++) {
       for (let x = 0; x < S; x++) {
         if (grid[y][x] && !visited[y][x]) {
           strokeCount++;
-          // BFS flood fill
           const queue = [[x, y]];
           visited[y][x] = 1;
           while (queue.length) {
@@ -684,10 +664,9 @@
       }
     }
 
-    // Hole count (connected components of background inside bounding box)
+    // 4. Hole count (background components inside bounding box)
     const bgVisited = Array.from({ length: S }, () => new Uint8Array(S));
     let holeCount = 0;
-    // Mark border-connected background
     const borderQueue = [];
     for (let x = 0; x < S; x++) {
       if (!grid[0][x] && !bgVisited[0][x]) { bgVisited[0][x] = 1; borderQueue.push([x, 0]); }
@@ -707,7 +686,6 @@
         }
       }
     }
-    // Count remaining unvisited background pixels as holes
     for (let y = minY; y <= maxY; y++) {
       for (let x = minX; x <= maxX; x++) {
         if (!grid[y][x] && !bgVisited[y][x]) {
@@ -728,7 +706,13 @@
       }
     }
 
-    // Endpoint ratio: count pixels with exactly 1 neighbor
+    // 5. Circularity
+    const bw = maxX - minX + 1;
+    const bh = maxY - minY + 1;
+    const bbArea = bw * bh;
+    const circularity = bbArea > 0 ? (total / bbArea) * (4 / Math.PI) : 0;
+
+    // 6. Endpoint ratio
     let endpoints = 0;
     for (let y = 0; y < S; y++) {
       for (let x = 0; x < S; x++) {
@@ -742,22 +726,19 @@
         }
       }
     }
-    const endpointRatio = total > 0 ? endpoints / total : 0;
 
-    // Normalize quadrant densities
+    // 7. Fill ratio
+    const fillRatio = total / (S * S);
+
     return [
-      q1 / total, q2 / total, q3 / total, q4 / total,
-      balH, balV,
-      centerDens, edgeDens,
-      fillRatio,
-      Math.min(2, aspectRatio),
-      Math.min(1, circularity),
-      Math.min(1, convexity),
+      ...zoneFeatures,                               // 49 zone densities
+      Math.min(2, aspectRatio),                       // original BB aspect ratio
       symmetryH, symmetryV,
       Math.min(5, strokeCount) / 5,
       Math.min(5, holeCount) / 5,
-      Math.min(1, endpointRatio),
-      centroidX, centroidY,
+      Math.min(1, circularity),
+      Math.min(1, total > 0 ? endpoints / total : 0),
+      fillRatio,
     ];
   }
 
@@ -773,38 +754,31 @@
     return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
   }
 
-  /* Generate templates at init time — draw each canonical shape through the
-     same pipeline (stroke → downsample → extractFeatures) so templates
-     perfectly match what real drawings produce. */
-  function drawToGrid(tmpCanvas, tmpCtx, drawFn, scale) {
+  /* Generate templates at init time — draw each canonical shape through
+     normalizeCanvasToGrid -> extractFeatures so templates match the exact
+     pipeline that real drawings go through. Multiple scale + rotation
+     variants provide robustness to drawing style differences. */
+  function drawToGridNormalized(tmpCanvas, tmpCtx, drawFn, scale, rotation, strokeWidth) {
     const S = CFG.DRAW_SIZE;
     tmpCtx.clearRect(0, 0, S, S);
     tmpCtx.save();
     tmpCtx.strokeStyle = '#ffffff';
     tmpCtx.fillStyle = '#ffffff';
-    tmpCtx.lineWidth = CFG.STROKE_WIDTH;
+    tmpCtx.lineWidth = strokeWidth || CFG.STROKE_WIDTH;
     tmpCtx.lineCap = 'round';
     tmpCtx.lineJoin = 'round';
-    // Draw at given scale, centered
-    const off = S * (1 - scale) / 2;
-    tmpCtx.translate(off, off);
+    // Center -> rotate -> scale -> un-center
+    tmpCtx.translate(S / 2, S / 2);
+    if (rotation) tmpCtx.rotate(rotation);
     tmpCtx.scale(scale, scale);
+    tmpCtx.translate(-S / 2, -S / 2);
     drawFn(tmpCtx, S);
     tmpCtx.restore();
 
-    gridCtx.clearRect(0, 0, CFG.GRID_SIZE, CFG.GRID_SIZE);
-    gridCtx.drawImage(tmpCanvas, 0, 0, CFG.GRID_SIZE, CFG.GRID_SIZE);
-    const imgData = gridCtx.getImageData(0, 0, CFG.GRID_SIZE, CFG.GRID_SIZE);
-    const grid = [];
-    for (let y = 0; y < CFG.GRID_SIZE; y++) {
-      const row = [];
-      for (let x = 0; x < CFG.GRID_SIZE; x++) {
-        const idx = (y * CFG.GRID_SIZE + x) * 4;
-        row.push(imgData.data[idx + 3] > 80 ? 1 : 0);
-      }
-      grid.push(row);
-    }
-    return extractFeatures(grid);
+    // BB-normalize through the shared pipeline
+    const result = normalizeCanvasToGrid(tmpCanvas, S, S);
+    if (!result) return null;
+    return extractFeatures(result.grid, result.aspectRatio);
   }
 
   function generateTemplates() {
@@ -813,13 +787,23 @@
     tmpCanvas.height = CFG.DRAW_SIZE;
     const tmpCtx = tmpCanvas.getContext('2d');
 
-    // Generate 3 size variants per shape for robust matching
-    const scales = [0.75, 1.0, 0.55];
+    // Multiple variants per shape for robust matching:
+    // - 4 scales simulate different drawing sizes (stroke-width-to-shape ratio varies)
+    // - 3 rotations simulate imperfect orientation
+    // - 2 stroke widths simulate thin vs thick drawings
+    const scales = [0.5, 0.7, 0.85, 1.0];
+    const rotations = [-0.18, 0, 0.18]; // ~10 degrees
+    const strokeWidths = [8, 14];
+
     for (const [word, drawFn] of Object.entries(SHAPE_DRAWERS)) {
       const variants = [];
       for (const sc of scales) {
-        const f = drawToGrid(tmpCanvas, tmpCtx, drawFn, sc);
-        if (f) variants.push(f);
+        for (const rot of rotations) {
+          for (const sw of strokeWidths) {
+            const f = drawToGridNormalized(tmpCanvas, tmpCtx, drawFn, sc, rot, sw);
+            if (f) variants.push(f);
+          }
+        }
       }
       if (variants.length > 0) TEMPLATES[word] = variants;
     }
@@ -827,14 +811,19 @@
   generateTemplates();
 
   function classify() {
-    const grid = downsampleToGrid();
-    const features = extractFeatures(grid);
+    // BB-normalize the user's drawing
+    const result = normalizeCanvasToGrid(drawCanvas, CFG.DRAW_SIZE, CFG.DRAW_SIZE);
+    if (!result) {
+      guesses = [];
+      return;
+    }
+    const features = extractFeatures(result.grid, result.aspectRatio);
     if (!features) {
       guesses = [];
       return;
     }
 
-    // Only compare against words in the current tier (much fewer candidates = much more accurate)
+    // Only compare against words in the current tier
     const tier = getTierForRound(round);
     const pool = TIERS[tier];
 
@@ -842,7 +831,7 @@
     for (const word of pool) {
       const variants = TEMPLATES[word];
       if (!variants) continue;
-      // Best similarity across size variants
+      // Best similarity across all variants
       let best = 0;
       for (const tmpl of variants) {
         const sim = weightedCosineSimilarity(features, tmpl);
@@ -854,8 +843,8 @@
     if (scores.length === 0) { guesses = []; return; }
 
     scores.sort((a, b) => b.confidence - a.confidence);
-    // Softmax — with fewer candidates, sharper temperature works well
-    const T = 0.015;
+    // Softmax with sharp temperature -- zone histograms are very discriminative
+    const T = 0.012;
     const maxRaw = scores[0].confidence;
     const exps = scores.map(s => Math.exp((s.confidence - maxRaw) / T));
     const sumExps = exps.reduce((a, b) => a + b, 0);
