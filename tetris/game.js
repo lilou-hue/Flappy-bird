@@ -637,13 +637,13 @@
       if (r >= 4) {
         const px = FIELD_X + c * CELL + CELL / 2;
         const py = FIELD_Y + (r - 4) * CELL + CELL / 2;
-        for (let si = 0; si < 2; si++) {
+        for (let si = 0; si < 4; si++) {
           const angle = Math.random() * Math.PI * 2;
           const speed = 80 + Math.random() * 150;
           state.particles.push({
             x: px, y: py,
             vx: Math.cos(angle) * speed,
-            vy: Math.sin(angle) * speed,
+            vy: si < 2 ? Math.sin(angle) * speed : Math.abs(Math.sin(angle) * speed),
             life: 0.3 + Math.random() * 0.4,
             maxLife: 0.7,
             color: themedColor(type),
@@ -825,7 +825,7 @@
   /*  Particles                                                          */
   /* ================================================================== */
   function spawnLineClearParticles(x, y, color) {
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 10; i++) {
       const angle = Math.random() * Math.PI * 2;
       const speed = 80 + Math.random() * 150;
       state.particles.push({
@@ -1569,6 +1569,23 @@
         ctx2d.fillStyle = `rgba(255,255,255,${0.8 * (1 - progress)})`;
         ctx2d.fillRect(FIELD_X, y, FIELD_W, CELL);
       }
+      // Horizontal beam effect per cleared row
+      for (const row of state.lineClearRows) {
+        const progress = 1 - state.lineClearTimer / 0.3;
+        const y = FIELD_Y + (row - 4) * CELL;
+        const beamAlpha = state.lineClearTimer / 0.3;
+        ctx2d.save();
+        ctx2d.globalAlpha = beamAlpha * 0.6;
+        const beamGrad = ctx2d.createLinearGradient(FIELD_X - 20 * progress, y + CELL/2, FIELD_X + FIELD_W + 20 * progress, y + CELL/2);
+        beamGrad.addColorStop(0, 'transparent');
+        beamGrad.addColorStop(0.3, 'rgba(255,255,255,0.8)');
+        beamGrad.addColorStop(0.5, '#ffffff');
+        beamGrad.addColorStop(0.7, 'rgba(255,255,255,0.8)');
+        beamGrad.addColorStop(1, 'transparent');
+        ctx2d.fillStyle = beamGrad;
+        ctx2d.fillRect(FIELD_X - 20 * progress, y + CELL/2 - 2, FIELD_W + 40 * progress, 4);
+        ctx2d.restore();
+      }
     }
 
     // Lock flash
@@ -1653,6 +1670,14 @@
     const holdBoxH = 80;
     ctx2d.fillRect(holdBoxX, holdBoxY, holdBoxW, holdBoxH);
     ctx2d.strokeRect(holdBoxX, holdBoxY, holdBoxW, holdBoxH);
+    // Hold box glow border
+    ctx2d.save();
+    ctx2d.shadowBlur = 6;
+    ctx2d.shadowColor = currentTheme.accentColor;
+    ctx2d.strokeStyle = currentTheme.borderColor;
+    ctx2d.lineWidth = 1;
+    ctx2d.strokeRect(holdBoxX, holdBoxY, holdBoxW, holdBoxH);
+    ctx2d.restore();
     ctx2d.fillStyle = currentTheme.textColor;
     ctx2d.font = '700 10px "Trebuchet MS", system-ui, sans-serif';
     ctx2d.textAlign = "center";
@@ -1703,6 +1728,14 @@
     ctx2d.lineWidth = 1;
     ctx2d.fillRect(nextBoxX, nextBoxY, nextBoxW, nextBoxH);
     ctx2d.strokeRect(nextBoxX, nextBoxY, nextBoxW, nextBoxH);
+    // Next box glow border
+    ctx2d.save();
+    ctx2d.shadowBlur = 6;
+    ctx2d.shadowColor = currentTheme.accentColor;
+    ctx2d.strokeStyle = currentTheme.borderColor;
+    ctx2d.lineWidth = 1;
+    ctx2d.strokeRect(nextBoxX, nextBoxY, nextBoxW, nextBoxH);
+    ctx2d.restore();
     ctx2d.fillStyle = currentTheme.textColor;
     ctx2d.font = '700 10px "Trebuchet MS", system-ui, sans-serif';
     ctx2d.textAlign = "center";
@@ -1730,9 +1763,16 @@
 
     // Combo indicator
     if (state.combo > 0 && state.phase === "playing") {
+      ctx2d.save();
+      ctx2d.shadowBlur = 8;
+      ctx2d.shadowColor = currentTheme.accentColor;
+      const comboScale = 1 + Math.sin(performance.now() / 200) * 0.05;
+      ctx2d.translate(nextBoxX + 4, bestY + 44);
+      ctx2d.scale(comboScale, comboScale);
       ctx2d.fillStyle = dimText;
       ctx2d.font = '700 10px "Trebuchet MS", system-ui, sans-serif';
-      ctx2d.fillText("COMBO x" + state.combo, nextBoxX + 4, bestY + 44);
+      ctx2d.fillText("COMBO x" + state.combo, 0, 0);
+      ctx2d.restore();
     }
 
     // Garbage timer indicator (Challenge Mode)
@@ -1908,6 +1948,24 @@
       state.gameOverAnim += dt * 60;
       if (state.gameOverAnim >= 1) {
         state.gameOverAnim = 0;
+        // Spawn debris particles for occupied cells in the greyed-out row
+        for (let c = 0; c < COLS; c++) {
+          if (state.board[state.gameOverRow][c] !== null) {
+            const px = FIELD_X + c * CELL + CELL / 2;
+            const py = FIELD_Y + (state.gameOverRow - 4) * CELL + CELL / 2;
+            for (let di = 0; di < 3; di++) {
+              state.particles.push({
+                x: px, y: py,
+                vx: (Math.random() - 0.5) * 60,
+                vy: 50 + Math.random() * 100,
+                life: 0.5 + Math.random() * 0.5,
+                maxLife: 1.0,
+                color: themedColor(state.board[state.gameOverRow][c]),
+                size: 1.5 + Math.random() * 2,
+              });
+            }
+          }
+        }
         state.gameOverRow--;
       }
     }
