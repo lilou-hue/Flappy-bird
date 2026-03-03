@@ -602,16 +602,6 @@ body {
   background: rgba(255,215,0,0.05);
 }
 
-/* ── Watch Ad Button ── */
-.watch-ad-btn {
-  background: linear-gradient(135deg, #f39c12, #e67e22) !important;
-  color: #fff !important;
-  border-color: transparent !important;
-}
-.watch-ad-btn:hover {
-  box-shadow: 0 4px 12px rgba(243,156,18,0.3) !important;
-}
-
 /* ── Premium Modal ── */
 .premium-modal {
   text-align: center;

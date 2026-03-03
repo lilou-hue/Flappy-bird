@@ -71,7 +71,6 @@ const PREMIUM_COST = {
 /* ── Coins Economy ── */
 let coins = 0; // loaded after loadJSON is defined
 let unlockedPremium = [];
-let sessionUnlocks = new Set();
 
 let stats = loadJSON(STATS_KEY, {
   charsDressed: [],
@@ -107,7 +106,7 @@ function updateCoinsHUD() {
 
 function isItemUnlocked(itemId) {
   if (!PREMIUM_IDS.has(itemId)) return true;
-  return unlockedPremium.includes(itemId) || sessionUnlocks.has(itemId);
+  return unlockedPremium.includes(itemId);
 }
 
 function unlockItem(itemId) {
@@ -123,7 +122,6 @@ function showPremiumModal(item) {
   const titleEl = document.getElementById('premiumItemName');
   const costEl = document.getElementById('premiumCost');
   const buyBtn = document.getElementById('premiumBuyBtn');
-  const adBtn = document.getElementById('premiumAdBtn');
 
   titleEl.textContent = item.name;
   costEl.textContent = cost;
@@ -139,17 +137,6 @@ function showPremiumModal(item) {
       modal.classList.remove('visible');
       renderItemGrid();
       render();
-    }
-  };
-
-  adBtn.onclick = function () {
-    modal.classList.remove('visible');
-    if (typeof SlayAds !== 'undefined' && SlayAds.showRewardedAd) {
-      SlayAds.showRewardedAd(function () {
-        sessionUnlocks.add(item.id);
-        renderItemGrid();
-        render();
-      });
     }
   };
 
@@ -3053,18 +3040,6 @@ if (typeof I18N !== 'undefined') {
   if (typeof I18N.createSelector === 'function') {
     I18N.createSelector(document.querySelector('.game__header'));
   }
-}
-
-// Watch Ad button
-const watchAdBtn = document.getElementById('watchAdBtn');
-if (watchAdBtn) {
-  watchAdBtn.onclick = function () {
-    if (typeof SlayAds !== 'undefined' && SlayAds.showRewardedAd) {
-      SlayAds.showRewardedAd(function () {
-        addCoins(15);
-      });
-    }
-  };
 }
 
 // Premium modal close
