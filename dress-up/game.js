@@ -1229,120 +1229,389 @@ const BOTTOM_DEFS = [
   { id:'bell_bottoms', name:'Bell-bottoms',  tags:['retro','cool'],         colors:[['#8e44ad'],['#e67e22'],['#27ae60'],['#2c3e50']] },
 ];
 
-function _bottomHighlight(c, cx, bodyBot, bodyW) {
-  c.save();
-  c.globalAlpha = 0.1;
-  c.fillStyle = '#fff';
-  c.beginPath();
-  c.ellipse(cx, bodyBot + 4, bodyW*0.7, 3, 0, 0, Math.PI*2);
-  c.fill();
-  c.restore();
-}
-
 function drawBottom(style, c, char, x, y, w, h, color) {
   const { cx, bodyBot, bodyW, legBot } = M(x, y, w, h);
   const botGrad = c.createLinearGradient(cx, bodyBot, cx, legBot);
   botGrad.addColorStop(0, _lighten(color, 20));
-  botGrad.addColorStop(0.5, color);
-  botGrad.addColorStop(1, _darken(color, 25));
+  botGrad.addColorStop(1, _darken(color, 20));
   c.fillStyle = botGrad;
 
   switch(style) {
-    case 'jeans':
+    case 'jeans': {
+      // Left leg
       c.beginPath();
-      c.moveTo(cx-bodyW-1,bodyBot-3); c.lineTo(cx-14,legBot);
-      c.lineTo(cx-3,legBot); c.lineTo(cx,bodyBot+6);
-      c.lineTo(cx+3,legBot); c.lineTo(cx+14,legBot);
-      c.lineTo(cx+bodyW+1,bodyBot-3);
-      c.closePath(); c.fill();
-      c.strokeStyle='rgba(255,255,255,0.08)'; c.lineWidth=0.6;
-      c.beginPath(); c.moveTo(cx,bodyBot); c.lineTo(cx,bodyBot+6); c.stroke();
-      break;
-    case 'skirt':
+      c.moveTo(cx - bodyW - 1, bodyBot - 3);
+      c.quadraticCurveTo(cx - bodyW - 3, (bodyBot + legBot) / 2, cx - 14, legBot);
+      c.quadraticCurveTo(cx - 8, legBot + 2, cx - 3, legBot);
+      c.quadraticCurveTo(cx - 1, bodyBot + 8, cx, bodyBot + 6);
+      c.closePath();
+      c.fill();
+      // Right leg
       c.beginPath();
-      c.moveTo(cx-bodyW-1,bodyBot-3);
-      c.quadraticCurveTo(cx-bodyW-10,bodyBot+18,cx-bodyW+3,bodyBot+24);
-      c.lineTo(cx+bodyW-3,bodyBot+24);
-      c.quadraticCurveTo(cx+bodyW+10,bodyBot+18,cx+bodyW+1,bodyBot-3);
-      c.closePath(); c.fill();
-      break;
-    case 'shorts':
+      c.moveTo(cx, bodyBot + 6);
+      c.quadraticCurveTo(cx + 1, bodyBot + 8, cx + 3, legBot);
+      c.quadraticCurveTo(cx + 8, legBot + 2, cx + 14, legBot);
+      c.quadraticCurveTo(cx + bodyW + 3, (bodyBot + legBot) / 2, cx + bodyW + 1, bodyBot - 3);
+      c.closePath();
+      c.fill();
+      // Outline
+      c.strokeStyle = _darken(color, 35);
+      c.lineWidth = 1;
       c.beginPath();
-      c.moveTo(cx-bodyW-1,bodyBot-3); c.lineTo(cx-bodyW,bodyBot+10);
-      c.lineTo(cx-2,bodyBot+10); c.lineTo(cx,bodyBot+4);
-      c.lineTo(cx+2,bodyBot+10); c.lineTo(cx+bodyW,bodyBot+10);
-      c.lineTo(cx+bodyW+1,bodyBot-3);
-      c.closePath(); c.fill();
-      break;
-    case 'leggings':
+      c.moveTo(cx - bodyW - 1, bodyBot - 3);
+      c.quadraticCurveTo(cx - bodyW - 3, (bodyBot + legBot) / 2, cx - 14, legBot);
+      c.quadraticCurveTo(cx - 8, legBot + 2, cx - 3, legBot);
+      c.quadraticCurveTo(cx, bodyBot + 8, cx + 3, legBot);
+      c.quadraticCurveTo(cx + 8, legBot + 2, cx + 14, legBot);
+      c.quadraticCurveTo(cx + bodyW + 3, (bodyBot + legBot) / 2, cx + bodyW + 1, bodyBot - 3);
+      c.stroke();
+      // Center seam
+      c.strokeStyle = _darken(color, 15);
+      c.lineWidth = 0.6;
       c.beginPath();
-      c.moveTo(cx-bodyW,bodyBot-3); c.lineTo(cx-12,legBot+1);
-      c.lineTo(cx-5,legBot+1); c.lineTo(cx,bodyBot+6);
-      c.lineTo(cx+5,legBot+1); c.lineTo(cx+12,legBot+1);
-      c.lineTo(cx+bodyW,bodyBot-3);
-      c.closePath(); c.fill();
-      break;
-    case 'cargo_pants':
+      c.moveTo(cx, bodyBot);
+      c.quadraticCurveTo(cx, bodyBot + 3, cx, bodyBot + 6);
+      c.stroke();
+      // Highlight
+      c.fillStyle = 'rgba(255,255,255,0.10)';
       c.beginPath();
-      c.moveTo(cx-bodyW-2,bodyBot-3); c.lineTo(cx-15,legBot);
-      c.lineTo(cx-3,legBot); c.lineTo(cx,bodyBot+6);
-      c.lineTo(cx+3,legBot); c.lineTo(cx+15,legBot);
-      c.lineTo(cx+bodyW+2,bodyBot-3);
-      c.closePath(); c.fill();
-      c.strokeStyle='rgba(0,0,0,0.12)'; c.lineWidth=0.7;
-      c.strokeRect(cx-15,bodyBot+6,9,8); c.strokeRect(cx+6,bodyBot+6,9,8);
+      c.ellipse(cx - 6, bodyBot + 4, 4, 2, -0.1, 0, Math.PI * 2);
+      c.fill();
       break;
-    case 'flowing_skirt':
+    }
+    case 'skirt': {
       c.beginPath();
-      c.moveTo(cx-bodyW-1,bodyBot-3);
-      c.quadraticCurveTo(cx-bodyW-18,bodyBot+28,cx-bodyW+6,y+h*0.78);
-      c.lineTo(cx+bodyW-6,y+h*0.78);
-      c.quadraticCurveTo(cx+bodyW+18,bodyBot+28,cx+bodyW+1,bodyBot-3);
-      c.closePath(); c.fill();
-      c.strokeStyle='rgba(255,255,255,0.08)'; c.lineWidth=0.6;
-      for(let i=-2;i<=2;i++){c.beginPath();c.moveTo(cx+i*6,bodyBot);c.quadraticCurveTo(cx+i*7+2,bodyBot+16,cx+i*6.5,y+h*0.77);c.stroke();}
-      break;
-    case 'armor_greaves':
+      c.moveTo(cx - bodyW - 1, bodyBot - 3);
+      c.quadraticCurveTo(cx - bodyW - 10, bodyBot + 18, cx - bodyW + 3, bodyBot + 24);
+      c.quadraticCurveTo(cx, bodyBot + 26, cx + bodyW - 3, bodyBot + 24);
+      c.quadraticCurveTo(cx + bodyW + 10, bodyBot + 18, cx + bodyW + 1, bodyBot - 3);
+      c.closePath();
+      c.fill();
+      c.strokeStyle = _darken(color, 35);
+      c.lineWidth = 1;
       c.beginPath();
-      c.moveTo(cx-bodyW-2,bodyBot-3); c.lineTo(cx-15,legBot+1);
-      c.lineTo(cx-4,legBot+1); c.lineTo(cx,bodyBot+6);
-      c.lineTo(cx+4,legBot+1); c.lineTo(cx+15,legBot+1);
-      c.lineTo(cx+bodyW+2,bodyBot-3);
-      c.closePath(); c.fill();
-      c.strokeStyle='rgba(0,0,0,0.15)'; c.lineWidth=0.7;
-      c.beginPath(); c.moveTo(cx-14,(bodyBot+legBot)/2); c.lineTo(cx-4,(bodyBot+legBot)/2); c.stroke();
-      c.beginPath(); c.moveTo(cx+4,(bodyBot+legBot)/2); c.lineTo(cx+14,(bodyBot+legBot)/2); c.stroke();
-      break;
-    case 'sweatpants':
+      c.moveTo(cx - bodyW - 1, bodyBot - 3);
+      c.quadraticCurveTo(cx - bodyW - 10, bodyBot + 18, cx - bodyW + 3, bodyBot + 24);
+      c.quadraticCurveTo(cx, bodyBot + 26, cx + bodyW - 3, bodyBot + 24);
+      c.quadraticCurveTo(cx + bodyW + 10, bodyBot + 18, cx + bodyW + 1, bodyBot - 3);
+      c.stroke();
+      c.fillStyle = 'rgba(255,255,255,0.10)';
       c.beginPath();
-      c.moveTo(cx-bodyW,bodyBot-3); c.lineTo(cx-13,legBot);
-      c.lineTo(cx-4,legBot); c.lineTo(cx,bodyBot+6);
-      c.lineTo(cx+4,legBot); c.lineTo(cx+13,legBot);
-      c.lineTo(cx+bodyW,bodyBot-3);
-      c.closePath(); c.fill();
-      c.fillStyle='rgba(0,0,0,0.08)';
-      c.fillRect(cx-13,legBot-3,9,3); c.fillRect(cx+4,legBot-3,9,3);
+      c.ellipse(cx - 3, bodyBot + 4, bodyW * 0.5, 3, -0.1, 0, Math.PI * 2);
+      c.fill();
       break;
-    case 'pleated_skirt':
+    }
+    case 'shorts': {
+      // Left leg
       c.beginPath();
-      c.moveTo(cx-bodyW-1,bodyBot-3); c.lineTo(cx-bodyW-5,bodyBot+22);
-      c.lineTo(cx+bodyW+5,bodyBot+22); c.lineTo(cx+bodyW+1,bodyBot-3);
-      c.closePath(); c.fill();
-      c.strokeStyle='rgba(0,0,0,0.1)'; c.lineWidth=0.6;
-      for(let i=-2;i<=2;i++){c.beginPath();c.moveTo(cx+i*5,bodyBot);c.lineTo(cx+i*5.5,bodyBot+20);c.stroke();}
-      break;
-    case 'bell_bottoms':
+      c.moveTo(cx - bodyW - 1, bodyBot - 3);
+      c.quadraticCurveTo(cx - bodyW - 2, bodyBot + 6, cx - bodyW, bodyBot + 10);
+      c.quadraticCurveTo(cx - bodyW / 2, bodyBot + 12, cx - 2, bodyBot + 10);
+      c.quadraticCurveTo(cx - 1, bodyBot + 6, cx, bodyBot + 4);
+      c.closePath();
+      c.fill();
+      // Right leg
       c.beginPath();
-      c.moveTo(cx-bodyW,bodyBot-3); c.lineTo(cx-10,bodyBot+20);
-      c.quadraticCurveTo(cx-12,legBot+2,cx-20,legBot+2);
-      c.lineTo(cx-2,legBot+2); c.lineTo(cx,bodyBot+6);
-      c.lineTo(cx+2,legBot+2); c.lineTo(cx+20,legBot+2);
-      c.quadraticCurveTo(cx+12,legBot+2,cx+10,bodyBot+20);
-      c.lineTo(cx+bodyW,bodyBot-3);
-      c.closePath(); c.fill();
+      c.moveTo(cx, bodyBot + 4);
+      c.quadraticCurveTo(cx + 1, bodyBot + 6, cx + 2, bodyBot + 10);
+      c.quadraticCurveTo(cx + bodyW / 2, bodyBot + 12, cx + bodyW, bodyBot + 10);
+      c.quadraticCurveTo(cx + bodyW + 2, bodyBot + 6, cx + bodyW + 1, bodyBot - 3);
+      c.closePath();
+      c.fill();
+      // Outline
+      c.strokeStyle = _darken(color, 35);
+      c.lineWidth = 1;
+      c.beginPath();
+      c.moveTo(cx - bodyW - 1, bodyBot - 3);
+      c.quadraticCurveTo(cx - bodyW - 2, bodyBot + 6, cx - bodyW, bodyBot + 10);
+      c.quadraticCurveTo(cx - bodyW / 2, bodyBot + 12, cx - 2, bodyBot + 10);
+      c.quadraticCurveTo(cx, bodyBot + 6, cx + 2, bodyBot + 10);
+      c.quadraticCurveTo(cx + bodyW / 2, bodyBot + 12, cx + bodyW, bodyBot + 10);
+      c.quadraticCurveTo(cx + bodyW + 2, bodyBot + 6, cx + bodyW + 1, bodyBot - 3);
+      c.stroke();
+      // Highlight
+      c.fillStyle = 'rgba(255,255,255,0.10)';
+      c.beginPath();
+      c.ellipse(cx - 4, bodyBot + 2, 3, 2, 0, 0, Math.PI * 2);
+      c.fill();
       break;
+    }
+    case 'leggings': {
+      // Left leg
+      c.beginPath();
+      c.moveTo(cx - bodyW, bodyBot - 3);
+      c.quadraticCurveTo(cx - bodyW - 1, (bodyBot + legBot) / 2, cx - 12, legBot + 1);
+      c.quadraticCurveTo(cx - 8, legBot + 2, cx - 5, legBot + 1);
+      c.quadraticCurveTo(cx - 2, bodyBot + 8, cx, bodyBot + 6);
+      c.closePath();
+      c.fill();
+      // Right leg
+      c.beginPath();
+      c.moveTo(cx, bodyBot + 6);
+      c.quadraticCurveTo(cx + 2, bodyBot + 8, cx + 5, legBot + 1);
+      c.quadraticCurveTo(cx + 8, legBot + 2, cx + 12, legBot + 1);
+      c.quadraticCurveTo(cx + bodyW + 1, (bodyBot + legBot) / 2, cx + bodyW, bodyBot - 3);
+      c.closePath();
+      c.fill();
+      // Outline
+      c.strokeStyle = _darken(color, 35);
+      c.lineWidth = 1;
+      c.beginPath();
+      c.moveTo(cx - bodyW, bodyBot - 3);
+      c.quadraticCurveTo(cx - bodyW - 1, (bodyBot + legBot) / 2, cx - 12, legBot + 1);
+      c.quadraticCurveTo(cx - 8, legBot + 2, cx - 5, legBot + 1);
+      c.quadraticCurveTo(cx, bodyBot + 8, cx + 5, legBot + 1);
+      c.quadraticCurveTo(cx + 8, legBot + 2, cx + 12, legBot + 1);
+      c.quadraticCurveTo(cx + bodyW + 1, (bodyBot + legBot) / 2, cx + bodyW, bodyBot - 3);
+      c.stroke();
+      // Highlight
+      c.fillStyle = 'rgba(255,255,255,0.10)';
+      c.beginPath();
+      c.ellipse(cx - 6, bodyBot + 4, 3, 2, -0.1, 0, Math.PI * 2);
+      c.fill();
+      break;
+    }
+    case 'cargo_pants': {
+      // Left leg
+      c.beginPath();
+      c.moveTo(cx - bodyW - 2, bodyBot - 3);
+      c.quadraticCurveTo(cx - bodyW - 4, (bodyBot + legBot) / 2, cx - 15, legBot);
+      c.quadraticCurveTo(cx - 9, legBot + 2, cx - 3, legBot);
+      c.quadraticCurveTo(cx - 1, bodyBot + 8, cx, bodyBot + 6);
+      c.closePath();
+      c.fill();
+      // Right leg
+      c.beginPath();
+      c.moveTo(cx, bodyBot + 6);
+      c.quadraticCurveTo(cx + 1, bodyBot + 8, cx + 3, legBot);
+      c.quadraticCurveTo(cx + 9, legBot + 2, cx + 15, legBot);
+      c.quadraticCurveTo(cx + bodyW + 4, (bodyBot + legBot) / 2, cx + bodyW + 2, bodyBot - 3);
+      c.closePath();
+      c.fill();
+      // Outline
+      c.strokeStyle = _darken(color, 35);
+      c.lineWidth = 1;
+      c.beginPath();
+      c.moveTo(cx - bodyW - 2, bodyBot - 3);
+      c.quadraticCurveTo(cx - bodyW - 4, (bodyBot + legBot) / 2, cx - 15, legBot);
+      c.quadraticCurveTo(cx - 9, legBot + 2, cx - 3, legBot);
+      c.quadraticCurveTo(cx, bodyBot + 8, cx + 3, legBot);
+      c.quadraticCurveTo(cx + 9, legBot + 2, cx + 15, legBot);
+      c.quadraticCurveTo(cx + bodyW + 4, (bodyBot + legBot) / 2, cx + bodyW + 2, bodyBot - 3);
+      c.stroke();
+      // Pocket ellipses
+      c.strokeStyle = _darken(color, 20);
+      c.lineWidth = 0.7;
+      c.beginPath();
+      c.ellipse(cx - 10, bodyBot + 10, 5, 4, 0, 0, Math.PI * 2);
+      c.stroke();
+      c.beginPath();
+      c.ellipse(cx + 10, bodyBot + 10, 5, 4, 0, 0, Math.PI * 2);
+      c.stroke();
+      // Highlight
+      c.fillStyle = 'rgba(255,255,255,0.10)';
+      c.beginPath();
+      c.ellipse(cx - 6, bodyBot + 4, 4, 2, 0, 0, Math.PI * 2);
+      c.fill();
+      break;
+    }
+    case 'flowing_skirt': {
+      c.beginPath();
+      c.moveTo(cx - bodyW - 1, bodyBot - 3);
+      c.quadraticCurveTo(cx - bodyW - 18, bodyBot + 28, cx - bodyW + 6, y + h * 0.78);
+      c.quadraticCurveTo(cx, y + h * 0.80, cx + bodyW - 6, y + h * 0.78);
+      c.quadraticCurveTo(cx + bodyW + 18, bodyBot + 28, cx + bodyW + 1, bodyBot - 3);
+      c.closePath();
+      c.fill();
+      // Outline
+      c.strokeStyle = _darken(color, 35);
+      c.lineWidth = 1;
+      c.beginPath();
+      c.moveTo(cx - bodyW - 1, bodyBot - 3);
+      c.quadraticCurveTo(cx - bodyW - 18, bodyBot + 28, cx - bodyW + 6, y + h * 0.78);
+      c.quadraticCurveTo(cx, y + h * 0.80, cx + bodyW - 6, y + h * 0.78);
+      c.quadraticCurveTo(cx + bodyW + 18, bodyBot + 28, cx + bodyW + 1, bodyBot - 3);
+      c.stroke();
+      // Fold lines
+      c.strokeStyle = _darken(color, 15);
+      c.lineWidth = 0.5;
+      for (let i = -2; i <= 2; i++) {
+        c.beginPath();
+        c.moveTo(cx + i * 6, bodyBot);
+        c.quadraticCurveTo(cx + i * 7 + 2, bodyBot + 16, cx + i * 6.5, y + h * 0.77);
+        c.stroke();
+      }
+      // Highlight
+      c.fillStyle = 'rgba(255,255,255,0.10)';
+      c.beginPath();
+      c.ellipse(cx - 3, bodyBot + 6, bodyW * 0.5, 3, -0.1, 0, Math.PI * 2);
+      c.fill();
+      break;
+    }
+    case 'armor_greaves': {
+      // Left leg
+      c.beginPath();
+      c.moveTo(cx - bodyW - 2, bodyBot - 3);
+      c.quadraticCurveTo(cx - bodyW - 4, (bodyBot + legBot) / 2, cx - 15, legBot + 1);
+      c.quadraticCurveTo(cx - 9, legBot + 3, cx - 4, legBot + 1);
+      c.quadraticCurveTo(cx - 2, bodyBot + 8, cx, bodyBot + 6);
+      c.closePath();
+      c.fill();
+      // Right leg
+      c.beginPath();
+      c.moveTo(cx, bodyBot + 6);
+      c.quadraticCurveTo(cx + 2, bodyBot + 8, cx + 4, legBot + 1);
+      c.quadraticCurveTo(cx + 9, legBot + 3, cx + 15, legBot + 1);
+      c.quadraticCurveTo(cx + bodyW + 4, (bodyBot + legBot) / 2, cx + bodyW + 2, bodyBot - 3);
+      c.closePath();
+      c.fill();
+      // Outline
+      c.strokeStyle = _darken(color, 35);
+      c.lineWidth = 1;
+      c.beginPath();
+      c.moveTo(cx - bodyW - 2, bodyBot - 3);
+      c.quadraticCurveTo(cx - bodyW - 4, (bodyBot + legBot) / 2, cx - 15, legBot + 1);
+      c.quadraticCurveTo(cx - 9, legBot + 3, cx - 4, legBot + 1);
+      c.quadraticCurveTo(cx, bodyBot + 8, cx + 4, legBot + 1);
+      c.quadraticCurveTo(cx + 9, legBot + 3, cx + 15, legBot + 1);
+      c.quadraticCurveTo(cx + bodyW + 4, (bodyBot + legBot) / 2, cx + bodyW + 2, bodyBot - 3);
+      c.stroke();
+      // Horizontal bands
+      c.strokeStyle = _darken(color, 25);
+      c.lineWidth = 0.8;
+      const midY = (bodyBot + legBot) / 2;
+      c.beginPath();
+      c.moveTo(cx - 14, midY);
+      c.quadraticCurveTo(cx - 9, midY + 1, cx - 4, midY);
+      c.stroke();
+      c.beginPath();
+      c.moveTo(cx + 4, midY);
+      c.quadraticCurveTo(cx + 9, midY + 1, cx + 14, midY);
+      c.stroke();
+      // Highlight
+      c.fillStyle = 'rgba(255,255,255,0.12)';
+      c.beginPath();
+      c.ellipse(cx - 8, bodyBot + 4, 3, 2, 0, 0, Math.PI * 2);
+      c.fill();
+      break;
+    }
+    case 'sweatpants': {
+      // Left leg
+      c.beginPath();
+      c.moveTo(cx - bodyW, bodyBot - 3);
+      c.quadraticCurveTo(cx - bodyW - 2, (bodyBot + legBot) / 2, cx - 13, legBot);
+      c.quadraticCurveTo(cx - 8, legBot + 2, cx - 4, legBot);
+      c.quadraticCurveTo(cx - 2, bodyBot + 8, cx, bodyBot + 6);
+      c.closePath();
+      c.fill();
+      // Right leg
+      c.beginPath();
+      c.moveTo(cx, bodyBot + 6);
+      c.quadraticCurveTo(cx + 2, bodyBot + 8, cx + 4, legBot);
+      c.quadraticCurveTo(cx + 8, legBot + 2, cx + 13, legBot);
+      c.quadraticCurveTo(cx + bodyW + 2, (bodyBot + legBot) / 2, cx + bodyW, bodyBot - 3);
+      c.closePath();
+      c.fill();
+      // Outline
+      c.strokeStyle = _darken(color, 35);
+      c.lineWidth = 1;
+      c.beginPath();
+      c.moveTo(cx - bodyW, bodyBot - 3);
+      c.quadraticCurveTo(cx - bodyW - 2, (bodyBot + legBot) / 2, cx - 13, legBot);
+      c.quadraticCurveTo(cx - 8, legBot + 2, cx - 4, legBot);
+      c.quadraticCurveTo(cx, bodyBot + 8, cx + 4, legBot);
+      c.quadraticCurveTo(cx + 8, legBot + 2, cx + 13, legBot);
+      c.quadraticCurveTo(cx + bodyW + 2, (bodyBot + legBot) / 2, cx + bodyW, bodyBot - 3);
+      c.stroke();
+      // Cuff detail - small ellipses at ankles
+      c.strokeStyle = _darken(color, 20);
+      c.lineWidth = 0.7;
+      c.beginPath();
+      c.ellipse(cx - 8, legBot - 1, 5, 2, 0, 0, Math.PI * 2);
+      c.stroke();
+      c.beginPath();
+      c.ellipse(cx + 8, legBot - 1, 5, 2, 0, 0, Math.PI * 2);
+      c.stroke();
+      // Highlight
+      c.fillStyle = 'rgba(255,255,255,0.10)';
+      c.beginPath();
+      c.ellipse(cx - 5, bodyBot + 4, 3, 2, 0, 0, Math.PI * 2);
+      c.fill();
+      break;
+    }
+    case 'pleated_skirt': {
+      c.beginPath();
+      c.moveTo(cx - bodyW - 1, bodyBot - 3);
+      c.quadraticCurveTo(cx - bodyW - 4, bodyBot + 10, cx - bodyW - 5, bodyBot + 22);
+      c.quadraticCurveTo(cx, bodyBot + 24, cx + bodyW + 5, bodyBot + 22);
+      c.quadraticCurveTo(cx + bodyW + 4, bodyBot + 10, cx + bodyW + 1, bodyBot - 3);
+      c.closePath();
+      c.fill();
+      // Outline
+      c.strokeStyle = _darken(color, 35);
+      c.lineWidth = 1;
+      c.beginPath();
+      c.moveTo(cx - bodyW - 1, bodyBot - 3);
+      c.quadraticCurveTo(cx - bodyW - 4, bodyBot + 10, cx - bodyW - 5, bodyBot + 22);
+      c.quadraticCurveTo(cx, bodyBot + 24, cx + bodyW + 5, bodyBot + 22);
+      c.quadraticCurveTo(cx + bodyW + 4, bodyBot + 10, cx + bodyW + 1, bodyBot - 3);
+      c.stroke();
+      // Curved pleat lines
+      c.strokeStyle = _darken(color, 18);
+      c.lineWidth = 0.5;
+      for (let i = -2; i <= 2; i++) {
+        c.beginPath();
+        c.moveTo(cx + i * 5, bodyBot);
+        c.quadraticCurveTo(cx + i * 5.2, bodyBot + 10, cx + i * 5.5, bodyBot + 20);
+        c.stroke();
+      }
+      // Highlight
+      c.fillStyle = 'rgba(255,255,255,0.10)';
+      c.beginPath();
+      c.ellipse(cx - 3, bodyBot + 4, bodyW * 0.4, 2, 0, 0, Math.PI * 2);
+      c.fill();
+      break;
+    }
+    case 'bell_bottoms': {
+      // Left leg with flare
+      c.beginPath();
+      c.moveTo(cx - bodyW, bodyBot - 3);
+      c.quadraticCurveTo(cx - bodyW - 1, bodyBot + 10, cx - 10, bodyBot + 20);
+      c.quadraticCurveTo(cx - 16, legBot, cx - 20, legBot + 2);
+      c.quadraticCurveTo(cx - 10, legBot + 3, cx - 2, legBot + 2);
+      c.quadraticCurveTo(cx - 1, bodyBot + 8, cx, bodyBot + 6);
+      c.closePath();
+      c.fill();
+      // Right leg with flare
+      c.beginPath();
+      c.moveTo(cx, bodyBot + 6);
+      c.quadraticCurveTo(cx + 1, bodyBot + 8, cx + 2, legBot + 2);
+      c.quadraticCurveTo(cx + 10, legBot + 3, cx + 20, legBot + 2);
+      c.quadraticCurveTo(cx + 16, legBot, cx + 10, bodyBot + 20);
+      c.quadraticCurveTo(cx + bodyW + 1, bodyBot + 10, cx + bodyW, bodyBot - 3);
+      c.closePath();
+      c.fill();
+      // Outline
+      c.strokeStyle = _darken(color, 35);
+      c.lineWidth = 1;
+      c.beginPath();
+      c.moveTo(cx - bodyW, bodyBot - 3);
+      c.quadraticCurveTo(cx - bodyW - 1, bodyBot + 10, cx - 10, bodyBot + 20);
+      c.quadraticCurveTo(cx - 16, legBot, cx - 20, legBot + 2);
+      c.quadraticCurveTo(cx - 10, legBot + 3, cx - 2, legBot + 2);
+      c.quadraticCurveTo(cx, bodyBot + 8, cx + 2, legBot + 2);
+      c.quadraticCurveTo(cx + 10, legBot + 3, cx + 20, legBot + 2);
+      c.quadraticCurveTo(cx + 16, legBot, cx + 10, bodyBot + 20);
+      c.quadraticCurveTo(cx + bodyW + 1, bodyBot + 10, cx + bodyW, bodyBot - 3);
+      c.stroke();
+      // Highlight
+      c.fillStyle = 'rgba(255,255,255,0.10)';
+      c.beginPath();
+      c.ellipse(cx - 5, bodyBot + 4, 3, 2, 0, 0, Math.PI * 2);
+      c.fill();
+      break;
+    }
   }
-  _bottomHighlight(c, cx, bodyBot, bodyW);
 }
 
 BOTTOM_DEFS.forEach(d => {
@@ -1367,58 +1636,166 @@ const SHOE_DEFS = [
 function drawShoes(style, c, char, x, y, w, h, color) {
   const { cx, footY } = M(x, y, w, h);
   const shoeGrad = c.createLinearGradient(cx, footY - 15, cx, footY + 8);
-  shoeGrad.addColorStop(0, _lighten(color, 30));
-  shoeGrad.addColorStop(0.5, color);
-  shoeGrad.addColorStop(1, _darken(color, 25));
+  shoeGrad.addColorStop(0, _lighten(color, 25));
+  shoeGrad.addColorStop(1, _darken(color, 20));
   c.fillStyle = shoeGrad;
 
   switch(style) {
     case 'sneakers':
-      for(let s=-1;s<=1;s+=2){const fx=cx+s*10;
-        c.beginPath();c.ellipse(fx,footY,10,5,0,0,Math.PI*2);c.fill();
-        c.fillStyle='rgba(0,0,0,0.1)';c.beginPath();c.ellipse(fx,footY+2,10,2.5,0,0,Math.PI);c.fill();c.fillStyle=shoeGrad;}
+      for (let s = -1; s <= 1; s += 2) {
+        const fx = cx + s * 10;
+        c.fillStyle = shoeGrad;
+        c.beginPath(); c.ellipse(fx, footY, 10, 5, 0, 0, Math.PI * 2); c.fill();
+        c.strokeStyle = _darken(color, 35); c.lineWidth = 0.8;
+        c.beginPath(); c.ellipse(fx, footY, 10, 5, 0, 0, Math.PI * 2); c.stroke();
+        c.fillStyle = 'rgba(0,0,0,0.08)';
+        c.beginPath(); c.ellipse(fx, footY + 2, 10, 2.5, 0, 0, Math.PI); c.fill();
+        c.fillStyle = 'rgba(255,255,255,0.2)';
+        c.beginPath(); c.ellipse(fx - 2, footY - 2, 3, 1.5, -0.3, 0, Math.PI * 2); c.fill();
+      }
       break;
     case 'boots':
-      for(let s=-1;s<=1;s+=2){const fx=cx+s*10;
-        c.fillRect(fx-8,footY-14,16,19);
-        c.beginPath();c.ellipse(fx,footY+5,9,4,0,0,Math.PI*2);c.fill();
-        c.strokeStyle='rgba(0,0,0,0.15)';c.lineWidth=0.6;
-        c.beginPath();c.moveTo(fx-6,footY-8);c.lineTo(fx+6,footY-8);c.stroke();}
+      for (let s = -1; s <= 1; s += 2) {
+        const fx = cx + s * 10;
+        c.fillStyle = shoeGrad;
+        // Boot shaft - rounded
+        c.beginPath();
+        c.ellipse(fx, footY - 6, 9, 12, 0, 0, Math.PI * 2);
+        c.fill();
+        // Toe
+        c.beginPath(); c.ellipse(fx, footY + 5, 9, 4, 0, 0, Math.PI * 2); c.fill();
+        // Outline
+        c.strokeStyle = _darken(color, 35); c.lineWidth = 0.8;
+        c.beginPath(); c.ellipse(fx, footY - 6, 9, 12, 0, 0, Math.PI * 2); c.stroke();
+        // Band
+        c.strokeStyle = _darken(color, 20); c.lineWidth = 0.7;
+        c.beginPath();
+        c.moveTo(fx - 8, footY - 8);
+        c.quadraticCurveTo(fx, footY - 7, fx + 8, footY - 8);
+        c.stroke();
+        // Highlight
+        c.fillStyle = 'rgba(255,255,255,0.15)';
+        c.beginPath(); c.ellipse(fx - 2, footY - 10, 3, 2, -0.2, 0, Math.PI * 2); c.fill();
+      }
       break;
     case 'heels':
-      for(let s=-1;s<=1;s+=2){const fx=cx+s*10;
-        c.beginPath();c.ellipse(fx+s*2,footY,9,4,0,0,Math.PI*2);c.fill();
-        c.fillRect(fx-s*4-1,footY,3,8);}
+      for (let s = -1; s <= 1; s += 2) {
+        const fx = cx + s * 10;
+        c.fillStyle = shoeGrad;
+        c.beginPath(); c.ellipse(fx + s * 2, footY, 9, 4, 0, 0, Math.PI * 2); c.fill();
+        // Heel - rounded rect via ellipse
+        c.beginPath(); c.ellipse(fx - s * 4, footY + 5, 2, 4, 0, 0, Math.PI * 2); c.fill();
+        // Outline
+        c.strokeStyle = _darken(color, 35); c.lineWidth = 0.8;
+        c.beginPath(); c.ellipse(fx + s * 2, footY, 9, 4, 0, 0, Math.PI * 2); c.stroke();
+        // Highlight
+        c.fillStyle = 'rgba(255,255,255,0.2)';
+        c.beginPath(); c.ellipse(fx + s * 1, footY - 1, 3, 1.5, 0, 0, Math.PI * 2); c.fill();
+      }
       break;
     case 'sandals':
-      for(let s=-1;s<=1;s+=2){const fx=cx+s*10;
-        c.beginPath();c.ellipse(fx,footY+1,9,3.5,0,0,Math.PI*2);c.fill();
-        c.strokeStyle=color;c.lineWidth=1.5;
-        c.beginPath();c.moveTo(fx-4,footY-2);c.lineTo(fx,footY-5);c.lineTo(fx+4,footY-2);c.stroke();}
+      for (let s = -1; s <= 1; s += 2) {
+        const fx = cx + s * 10;
+        c.fillStyle = shoeGrad;
+        c.beginPath(); c.ellipse(fx, footY + 1, 9, 3.5, 0, 0, Math.PI * 2); c.fill();
+        c.strokeStyle = _darken(color, 35); c.lineWidth = 0.8;
+        c.beginPath(); c.ellipse(fx, footY + 1, 9, 3.5, 0, 0, Math.PI * 2); c.stroke();
+        // Straps - curved
+        c.strokeStyle = _darken(color, 15); c.lineWidth = 1.2;
+        c.beginPath();
+        c.moveTo(fx - 4, footY - 2);
+        c.quadraticCurveTo(fx, footY - 6, fx + 4, footY - 2);
+        c.stroke();
+        // Highlight
+        c.fillStyle = 'rgba(255,255,255,0.18)';
+        c.beginPath(); c.ellipse(fx - 2, footY, 3, 1.2, 0, 0, Math.PI * 2); c.fill();
+      }
       break;
     case 'armored_boots':
-      for(let s=-1;s<=1;s+=2){const fx=cx+s*10;
-        c.beginPath();c.moveTo(fx-9,footY-16);c.lineTo(fx-10,footY+4);c.lineTo(fx+10,footY+4);c.lineTo(fx+9,footY-16);c.closePath();c.fill();
-        c.strokeStyle='rgba(0,0,0,0.18)';c.lineWidth=0.7;
-        c.beginPath();c.moveTo(fx-9,footY-6);c.lineTo(fx+9,footY-6);c.stroke();}
+      for (let s = -1; s <= 1; s += 2) {
+        const fx = cx + s * 10;
+        c.fillStyle = shoeGrad;
+        // Rounded boot shape
+        c.beginPath();
+        c.moveTo(fx - 9, footY - 16);
+        c.quadraticCurveTo(fx - 10, footY, fx - 10, footY + 4);
+        c.quadraticCurveTo(fx, footY + 6, fx + 10, footY + 4);
+        c.quadraticCurveTo(fx + 10, footY, fx + 9, footY - 16);
+        c.closePath();
+        c.fill();
+        // Outline
+        c.strokeStyle = _darken(color, 35); c.lineWidth = 0.8;
+        c.beginPath();
+        c.moveTo(fx - 9, footY - 16);
+        c.quadraticCurveTo(fx - 10, footY, fx - 10, footY + 4);
+        c.quadraticCurveTo(fx, footY + 6, fx + 10, footY + 4);
+        c.quadraticCurveTo(fx + 10, footY, fx + 9, footY - 16);
+        c.closePath();
+        c.stroke();
+        // Band
+        c.strokeStyle = _darken(color, 25); c.lineWidth = 0.7;
+        c.beginPath();
+        c.moveTo(fx - 9, footY - 6);
+        c.quadraticCurveTo(fx, footY - 5, fx + 9, footY - 6);
+        c.stroke();
+        // Highlight
+        c.fillStyle = 'rgba(255,255,255,0.15)';
+        c.beginPath(); c.ellipse(fx - 2, footY - 10, 3, 2, -0.2, 0, Math.PI * 2); c.fill();
+      }
       break;
     case 'slippers':
-      for(let s=-1;s<=1;s+=2){const fx=cx+s*10;
-        c.beginPath();c.ellipse(fx,footY,10,5.5,0,0,Math.PI*2);c.fill();
-        c.fillStyle='rgba(255,255,255,0.25)';c.beginPath();c.ellipse(fx,footY-2,7,3,0,Math.PI,0);c.fill();c.fillStyle=color;}
+      for (let s = -1; s <= 1; s += 2) {
+        const fx = cx + s * 10;
+        c.fillStyle = shoeGrad;
+        c.beginPath(); c.ellipse(fx, footY, 10, 5.5, 0, 0, Math.PI * 2); c.fill();
+        c.strokeStyle = _darken(color, 35); c.lineWidth = 0.8;
+        c.beginPath(); c.ellipse(fx, footY, 10, 5.5, 0, 0, Math.PI * 2); c.stroke();
+        // Fluffy top
+        c.fillStyle = 'rgba(255,255,255,0.25)';
+        c.beginPath(); c.ellipse(fx, footY - 2, 7, 3, 0, Math.PI, 0); c.fill();
+        // Highlight
+        c.fillStyle = 'rgba(255,255,255,0.18)';
+        c.beginPath(); c.ellipse(fx - 2, footY - 1, 3, 1.5, -0.2, 0, Math.PI * 2); c.fill();
+      }
       break;
     case 'platforms':
-      for(let s=-1;s<=1;s+=2){const fx=cx+s*10;
-        c.fillRect(fx-9,footY-1,18,10);
-        c.beginPath();c.ellipse(fx,footY-1,9,4,0,0,Math.PI*2);c.fill();
-        c.fillStyle='rgba(255,255,255,0.08)';c.fillRect(fx-9,footY+4,18,2);c.fillStyle=color;}
+      for (let s = -1; s <= 1; s += 2) {
+        const fx = cx + s * 10;
+        c.fillStyle = shoeGrad;
+        // Platform sole - rounded
+        c.beginPath(); c.ellipse(fx, footY + 4, 10, 5, 0, 0, Math.PI * 2); c.fill();
+        // Top
+        c.beginPath(); c.ellipse(fx, footY - 1, 9, 4, 0, 0, Math.PI * 2); c.fill();
+        // Outline
+        c.strokeStyle = _darken(color, 35); c.lineWidth = 0.8;
+        c.beginPath(); c.ellipse(fx, footY + 4, 10, 5, 0, 0, Math.PI * 2); c.stroke();
+        c.beginPath(); c.ellipse(fx, footY - 1, 9, 4, 0, 0, Math.PI * 2); c.stroke();
+        // Stripe
+        c.fillStyle = 'rgba(255,255,255,0.1)';
+        c.beginPath(); c.ellipse(fx, footY + 4, 9, 1.5, 0, 0, Math.PI * 2); c.fill();
+        // Highlight
+        c.fillStyle = 'rgba(255,255,255,0.18)';
+        c.beginPath(); c.ellipse(fx - 2, footY - 2, 3, 1.5, 0, 0, Math.PI * 2); c.fill();
+      }
       break;
     case 'barefoot':
-      for(let s=-1;s<=1;s+=2){const fx=cx+s*10;
-        c.strokeStyle=color;c.lineWidth=1.5;
-        c.beginPath();c.ellipse(fx,footY,8,4,0,0,Math.PI*2);c.stroke();
-        c.beginPath();c.moveTo(fx,footY-4);c.lineTo(fx,footY-10);c.stroke();
-        c.beginPath();c.moveTo(fx-4,footY-6);c.lineTo(fx+4,footY-6);c.stroke();}
+      for (let s = -1; s <= 1; s += 2) {
+        const fx = cx + s * 10;
+        c.strokeStyle = shoeGrad; c.lineWidth = 1.5;
+        c.beginPath(); c.ellipse(fx, footY, 8, 4, 0, 0, Math.PI * 2); c.stroke();
+        // Wrap straps - curved
+        c.beginPath();
+        c.moveTo(fx, footY - 4);
+        c.quadraticCurveTo(fx + 1, footY - 7, fx, footY - 10);
+        c.stroke();
+        c.beginPath();
+        c.moveTo(fx - 4, footY - 6);
+        c.quadraticCurveTo(fx, footY - 7, fx + 4, footY - 6);
+        c.stroke();
+        // Outline
+        c.strokeStyle = _darken(color, 30); c.lineWidth = 0.6;
+        c.beginPath(); c.ellipse(fx, footY, 8, 4, 0, 0, Math.PI * 2); c.stroke();
+      }
       break;
   }
 }
