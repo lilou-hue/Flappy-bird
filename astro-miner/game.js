@@ -97,6 +97,13 @@ let crashTimer = 0;
 let lastTime = 0;
 let animFrame = 0;
 
+/* --- Nebula drift data (module-level) --- */
+const nebulaPatches = [
+  { cx: CONFIG.width * 0.2, cy: CONFIG.height * 0.3, r: 180, color: [100, 20, 140], vx: 8, vy: 3 },
+  { cx: CONFIG.width * 0.7, cy: CONFIG.height * 0.6, r: 200, color: [20, 80, 100], vx: -6, vy: 5 },
+  { cx: CONFIG.width * 0.5, cy: CONFIG.height * 0.15, r: 150, color: [120, 30, 80], vx: 10, vy: -4 },
+];
+
 /* --- Persistent Stats --- */
 let stats = {
   totalCrystals: 0,
@@ -187,6 +194,7 @@ function resetPlayer() {
     jetpackActive: false,
     flameTimer: 0,
     landedAsteroid: null,
+    bobPhase: 0,
   };
 }
 
@@ -532,6 +540,8 @@ function update(dt) {
     if (Math.random() < 0.3) Audio.jetpack();
   } else {
     player.flameTimer = 0;
+    /* Idle bobbing phase (accumulate when jetpack is off) */
+    player.bobPhase += dt * 2.5;
   }
 
   /* Fuel recharge on ground */
@@ -728,6 +738,14 @@ function update(dt) {
     }
   }
 
+  /* --- Update nebulae (drift + soft bounce) --- */
+  for (const nb of nebulaPatches) {
+    nb.cx += nb.vx * dt;
+    nb.cy += nb.vy * dt;
+    if (nb.cx - nb.r < 0 || nb.cx + nb.r > CONFIG.width) nb.vx = -nb.vx;
+    if (nb.cy - nb.r < 0 || nb.cy + nb.r > CONFIG.height) nb.vy = -nb.vy;
+  }
+
   /* --- Update stars --- */
   for (const s of stars) {
     s.x -= scrollDt * s.speed;
@@ -762,15 +780,10 @@ function render() {
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, W, H);
 
-  /* Nebula patches */
+  /* Nebula patches (drifting) */
   ctx.save();
   ctx.globalCompositeOperation = 'screen';
-  const nebulaData = [
-    { cx: W * 0.2, cy: H * 0.3, r: 180, color: [100, 20, 140] },
-    { cx: W * 0.7, cy: H * 0.6, r: 200, color: [20, 80, 100] },
-    { cx: W * 0.5, cy: H * 0.15, r: 150, color: [120, 30, 80] },
-  ];
-  for (const nb of nebulaData) {
+  for (const nb of nebulaPatches) {
     const ng = ctx.createRadialGradient(nb.cx, nb.cy, 0, nb.cx, nb.cy, nb.r);
     ng.addColorStop(0, `rgba(${nb.color[0]},${nb.color[1]},${nb.color[2]},0.06)`);
     ng.addColorStop(0.5, `rgba(${nb.color[0]},${nb.color[1]},${nb.color[2]},0.03)`);
@@ -1127,7 +1140,7 @@ function render() {
         ctx.stroke();
       }
 
-      /* Spiral arms */
+      /* Spiral arms (smooth bezier, 4 segments per arm) */
       ctx.save();
       ctx.rotate(h.rotation);
       for (let arm = 0; arm < 3; arm++) {
@@ -1135,17 +1148,48 @@ function render() {
         ctx.lineWidth = 1.5;
         ctx.beginPath();
         const armOffset = arm * (Math.PI * 2 / 3);
-        for (let t2 = 0; t2 < 40; t2++) {
-          const frac = t2 / 40;
-          const spiralR = h.radius * 0.8 + frac * h.pullRadius * 0.6;
-          const spiralAngle = armOffset + frac * Math.PI * 2.5;
-          const sx = Math.cos(spiralAngle) * spiralR;
-          const sy = Math.sin(spiralAngle) * spiralR;
-          if (t2 === 0) ctx.moveTo(sx, sy);
-          else ctx.lineTo(sx, sy);
+        const segs = 4;
+        const rStart = h.radius * 0.8;
+        const rEnd = rStart + h.pullRadius * 0.6;
+        const totalSweep = Math.PI * 2.5;
+        for (let si = 0; si < segs; si++) {
+          const f0 = si / segs;
+          const f1 = (si + 0.33) / segs;
+          const f2 = (si + 0.66) / segs;
+          const f3 = (si + 1) / segs;
+          const r0 = rStart + f0 * (rEnd - rStart);
+          const r1 = rStart + f1 * (rEnd - rStart);
+          const r2 = rStart + f2 * (rEnd - rStart);
+          const r3 = rStart + f3 * (rEnd - rStart);
+          const a0 = armOffset + f0 * totalSweep;
+          const a1 = armOffset + f1 * totalSweep;
+          const a2 = armOffset + f2 * totalSweep;
+          const a3 = armOffset + f3 * totalSweep;
+          const x0 = Math.cos(a0) * r0, y0 = Math.sin(a0) * r0;
+          const x1 = Math.cos(a1) * r1, y1 = Math.sin(a1) * r1;
+          const x2 = Math.cos(a2) * r2, y2 = Math.sin(a2) * r2;
+          const x3 = Math.cos(a3) * r3, y3 = Math.sin(a3) * r3;
+          if (si === 0) ctx.moveTo(x0, y0);
+          ctx.bezierCurveTo(x1, y1, x2, y2, x3, y3);
         }
         ctx.stroke();
       }
+      ctx.restore();
+
+      /* Heat shimmer ring at event horizon */
+      ctx.save();
+      ctx.globalCompositeOperation = 'screen';
+      const shimmerAlpha = 0.12 + Math.sin(runTime * 5) * 0.06;
+      const shimmerR = h.radius * 1.05 + Math.sin(runTime * 8) * 1.5;
+      const shimmerGrad = ctx.createRadialGradient(0, 0, h.radius * 0.85, 0, 0, shimmerR);
+      shimmerGrad.addColorStop(0, 'rgba(0,0,0,0)');
+      shimmerGrad.addColorStop(0.5, `rgba(200,120,255,${shimmerAlpha})`);
+      shimmerGrad.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = shimmerGrad;
+      ctx.beginPath();
+      ctx.arc(0, 0, shimmerR, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
       ctx.restore();
 
       /* Captured particles in accretion disk */
@@ -1194,7 +1238,9 @@ function render() {
   /* Player (astronaut) */
   if (state !== STATE.GAMEOVER) {
     ctx.save();
-    ctx.translate(player.x, player.y);
+    /* Idle bob offset when jetpack is off */
+    const bobOffset = !player.jetpackActive ? Math.sin(player.bobPhase) * 1.8 : 0;
+    ctx.translate(player.x, player.y + bobOffset);
 
     /* Jetpack flame */
     if (player.jetpackActive) {
@@ -1254,39 +1300,99 @@ function render() {
     ctx.lineWidth = 1;
     ctx.stroke();
 
+    /* Suit detail lines: horizontal chest stripe */
+    ctx.strokeStyle = 'rgba(60,120,200,0.5)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(-player.width / 2 + 2, -2);
+    ctx.lineTo(player.width / 2 - 2, -2);
+    ctx.stroke();
+
+    /* Suit detail lines: vertical center spine */
+    ctx.beginPath();
+    ctx.moveTo(0, -player.height / 2 + 14);
+    ctx.lineTo(0, player.height / 2 - 4);
+    ctx.stroke();
+
     /* Belt detail */
     ctx.fillStyle = 'rgba(80,80,80,0.6)';
     ctx.fillRect(-player.width / 2 + 1, 2, player.width - 2, 3);
 
-    /* Arms */
+    /* Arms (curved with rounded glove tips) */
     ctx.fillStyle = '#c0c0c0';
+    ctx.strokeStyle = '#999';
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    /* Left arm */
     ctx.save();
-    ctx.translate(-player.width / 2, -2);
-    ctx.rotate(-0.3);
-    ctx.fillRect(-7, -2, 7, 4);
+    ctx.beginPath();
+    ctx.moveTo(-player.width / 2, -2);
+    ctx.quadraticCurveTo(-player.width / 2 - 6, -6, -player.width / 2 - 9, -1);
+    ctx.stroke();
+    /* Left glove */
+    ctx.fillStyle = '#d0d0d0';
+    ctx.beginPath();
+    ctx.arc(-player.width / 2 - 9, -1, 2.5, 0, Math.PI * 2);
+    ctx.fill();
     ctx.restore();
+    /* Right arm */
     ctx.save();
-    ctx.translate(player.width / 2, -2);
-    ctx.rotate(0.3);
-    ctx.fillRect(0, -2, 7, 4);
+    ctx.beginPath();
+    ctx.moveTo(player.width / 2, -2);
+    ctx.quadraticCurveTo(player.width / 2 + 6, -6, player.width / 2 + 9, -1);
+    ctx.strokeStyle = '#999';
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+    /* Right glove */
+    ctx.fillStyle = '#d0d0d0';
+    ctx.beginPath();
+    ctx.arc(player.width / 2 + 9, -1, 2.5, 0, Math.PI * 2);
+    ctx.fill();
     ctx.restore();
 
-    /* Helmet visor */
-    ctx.fillStyle = '#00e5ff';
-    ctx.shadowColor = '#00e5ff';
-    ctx.shadowBlur = 8;
+    /* Domed circle helmet */
+    const helmetCX = 0;
+    const helmetCY = -player.height / 2 + 8;
+    const helmetR = 10;
+    /* 3D shading via radial gradient */
+    const helmetGrad = ctx.createRadialGradient(helmetCX - 3, helmetCY - 3, 1, helmetCX, helmetCY, helmetR);
+    helmetGrad.addColorStop(0, '#f0f0f0');
+    helmetGrad.addColorStop(0.6, '#c8c8c8');
+    helmetGrad.addColorStop(1, '#808080');
+    ctx.fillStyle = helmetGrad;
     ctx.beginPath();
-    if (ctx.roundRect) {
-      ctx.roundRect(-8, -player.height / 2 + 4, 16, 12, 4);
-    } else {
-      ctx.rect(-8, -player.height / 2 + 4, 16, 12);
-    }
+    ctx.arc(helmetCX, helmetCY, helmetR, 0, Math.PI * 2);
+    ctx.fill();
+
+    /* Helmet rim strip */
+    ctx.strokeStyle = '#666';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(helmetCX, helmetCY, helmetR, 0, Math.PI * 2);
+    ctx.stroke();
+
+    /* Elliptical visor inside dome */
+    ctx.save();
+    ctx.shadowColor = '#00e5ff';
+    ctx.shadowBlur = 10;
+    const visorGrad = ctx.createRadialGradient(helmetCX - 2, helmetCY - 1, 1, helmetCX, helmetCY, 7);
+    visorGrad.addColorStop(0, '#40f8ff');
+    visorGrad.addColorStop(0.7, '#00c8e0');
+    visorGrad.addColorStop(1, '#006880');
+    ctx.fillStyle = visorGrad;
+    ctx.beginPath();
+    ctx.ellipse(helmetCX, helmetCY, 7, 5.5, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.shadowBlur = 0;
 
-    /* Visor reflection */
-    ctx.fillStyle = 'rgba(255,255,255,0.3)';
-    ctx.fillRect(-6, -player.height / 2 + 5, 5, 4);
+    /* Visor glare streak highlight */
+    ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.ellipse(helmetCX - 2, helmetCY - 2, 4, 2.2, -0.3, 0, Math.PI);
+    ctx.stroke();
+    ctx.restore();
 
     /* Antenna on helmet */
     ctx.strokeStyle = '#ccc';
