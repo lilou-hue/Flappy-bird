@@ -632,9 +632,14 @@ restartBtn.addEventListener("click", restartGame);
 muteBtn.addEventListener("click", () => audio.toggleMute());
 audio.loadMute();
 
-// ── Fullscreen (mobile) ─────────────────────────────────
+// ── Fullscreen ───────────────────────────────────────────
+const fullscreenButton = document.getElementById('fullscreenButton');
 let isFullscreen = false;
 let pseudoFullscreen = false;
+
+function updateFsButton() {
+  if (fullscreenButton) fullscreenButton.textContent = isFullscreen ? '\u2715' : '\u26F6';
+}
 
 function toggleFullscreen() {
   if (isFullscreen) exitFs(); else enterFs();
@@ -655,16 +660,19 @@ function enablePseudoFs() {
   pseudoFullscreen = true; isFullscreen = true;
   document.body.classList.add("pseudo-fullscreen");
   document.body.style.overflow = "hidden";
+  updateFsButton();
   updateCanvasSize();
 }
 function disablePseudoFs() {
   pseudoFullscreen = false; isFullscreen = false;
   document.body.classList.remove("pseudo-fullscreen");
   document.body.style.overflow = "";
+  updateFsButton();
   updateCanvasSize();
 }
-document.addEventListener("fullscreenchange", () => { isFullscreen = !!document.fullscreenElement; updateCanvasSize(); });
-document.addEventListener("webkitfullscreenchange", () => { isFullscreen = !!document.webkitFullscreenElement; updateCanvasSize(); });
+document.addEventListener("fullscreenchange", () => { isFullscreen = !!document.fullscreenElement; updateFsButton(); updateCanvasSize(); });
+document.addEventListener("webkitfullscreenchange", () => { isFullscreen = !!document.webkitFullscreenElement; updateFsButton(); updateCanvasSize(); });
+if (fullscreenButton) fullscreenButton.addEventListener('click', toggleFullscreen);
 function canFullscreen() {
   return !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
 }

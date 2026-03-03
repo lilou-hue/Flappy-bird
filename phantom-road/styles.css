@@ -101,7 +101,7 @@ canvas {
 .game__hud {
   width: 100%;
   display: grid;
-  grid-template-columns: 1fr 1fr auto auto;
+  grid-template-columns: 1fr 1fr auto auto auto;
   align-items: center;
   gap: 12px;
 }
@@ -230,7 +230,7 @@ canvas {
   }
 
   .game__hud {
-    grid-template-columns: 1fr 1fr auto auto;
+    grid-template-columns: 1fr 1fr auto auto auto;
     gap: 8px;
     width: 100%;
   }
