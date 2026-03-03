@@ -385,6 +385,11 @@
   let animTime = 0;
   let lastTime = 0;
   let roundStats = { correctRounds: 0, totalTime: 0, fastestRound: Infinity, perfectGame: true };
+  let shakeTimer = 0; let shakeIntensity = 0;
+  let inkParticles = [];
+  let gameOverFlash = 0; let gameOverRingRadius = 0; let gameOverRingAlpha = 0;
+  let correctRingAlpha = 0; let correctRingRadius = 0; let correctFlash = 0;
+  let strokeSparkles = [];
 
   /* ── Drawing area position on game canvas ── */
   const DRAW_X = (CFG.W - CFG.DRAW_SIZE) / 2; // 40
@@ -857,6 +862,7 @@
     // Check for correct guess
     if (!roundCorrect && guesses.length > 0 && guesses[0].word === targetWord && guesses[0].confidence >= CFG.CONFIDENCE_THRESHOLD) {
       roundCorrect = true;
+      correctRingAlpha = 0.8; correctRingRadius = 0; correctFlash = 0.8;
       const timeLeft = timer;
       const tierMultiplier = getTierForRound(round) + 1;
       roundScore = Math.ceil(timeLeft * 10 * tierMultiplier);
@@ -1038,6 +1044,11 @@
     drawCtx.stroke();
     drawCtx.beginPath();
     drawCtx.moveTo(pos.x, pos.y);
+
+    // Stroke sparkles
+    if (Math.random() < 0.3 && strokeSparkles.length < 30) {
+      strokeSparkles.push({x: pos.x + DRAW_X, y: pos.y + DRAW_Y, alpha: 0.6, size: 2 + Math.random() * 2});
+    }
   }
 
   function onPointerUp(e) {
@@ -1118,6 +1129,7 @@
 
   function endGame() {
     state = STATES.GAME_OVER;
+    gameOverFlash = 1.0; gameOverRingRadius = 0; gameOverRingAlpha = 0.8;
     if (score > bestScore) {
       bestScore = score;
       localStorage.setItem('inkognitoBest', bestScore);
@@ -1162,6 +1174,12 @@
       ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(CFG.W, y); ctx.stroke();
     }
 
+    if (shakeTimer > 0) {
+      ctx.save();
+      ctx.translate((Math.random() - 0.5) * shakeIntensity, (Math.random() - 0.5) * shakeIntensity);
+      shakeTimer -= dt; shakeIntensity *= 0.85;
+    }
+
     switch (state) {
       case STATES.MENU: renderMenu(dt); break;
       case STATES.COUNTDOWN: renderCountdown(dt); break;
@@ -1169,6 +1187,8 @@
       case STATES.ROUND_RESULT: renderResult(dt); break;
       case STATES.GAME_OVER: renderGameOver(dt); break;
     }
+
+    if (shakeTimer > 0) ctx.restore();
 
     // Round transition wipe overlay
     if (wipeTimer > 0) {
@@ -1389,6 +1409,20 @@
     ctx.roundRect(DRAW_X, DRAW_Y, CFG.DRAW_SIZE, CFG.DRAW_SIZE, 12);
     ctx.stroke();
 
+    // Glow pulse on high AI confidence
+    if (guesses.length > 0 && guesses[0].confidence > 0.6) {
+      ctx.save();
+      const pulseAlpha = 0.4 + Math.sin(animTime * 4) * 0.3;
+      ctx.shadowBlur = 12;
+      ctx.shadowColor = `rgba(0,220,160,${pulseAlpha})`;
+      ctx.strokeStyle = PAL.accent2;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(DRAW_X, DRAW_Y, CFG.DRAW_SIZE, CFG.DRAW_SIZE, 12);
+      ctx.stroke();
+      ctx.restore();
+    }
+
     // Clip and draw the offscreen canvas
     ctx.save();
     ctx.beginPath();
@@ -1483,9 +1517,41 @@
     renderDrawCanvas();
     renderAIGuesses();
     scoreEl.textContent = score;
+
+    // Ambient ink particles
+    for (const p of inkParticles) {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(168,85,247,${Math.max(0, p.alpha)})`;
+      ctx.fill();
+    }
+
+    // Stroke sparkles
+    for (const s of strokeSparkles) {
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(0,220,160,${Math.max(0, s.alpha)})`;
+      ctx.fill();
+    }
   }
 
   function renderResult(dt) {
+    // Correct celebration flash + ring
+    if (correctFlash > 0) {
+      ctx.fillStyle = `rgba(0,220,160,${correctFlash * 0.25})`;
+      ctx.fillRect(0, 0, CFG.W, CFG.H);
+      correctFlash *= 0.93;
+    }
+    if (correctRingAlpha > 0.01) {
+      ctx.strokeStyle = `rgba(0,220,160,${correctRingAlpha})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(CFG.W / 2, DRAW_Y + CFG.DRAW_SIZE / 2, correctRingRadius, 0, Math.PI * 2);
+      ctx.stroke();
+      correctRingRadius += 5;
+      correctRingAlpha *= 0.92;
+    }
+
     renderHUD();
 
     // Draw canvas with result
@@ -1546,6 +1612,23 @@
   }
 
   function renderGameOver(dt) {
+    // Game over flash overlay
+    if (gameOverFlash > 0) {
+      ctx.fillStyle = `rgba(168,85,247,${gameOverFlash * 0.3})`;
+      ctx.fillRect(0, 0, CFG.W, CFG.H);
+      gameOverFlash *= 0.95;
+    }
+    // Expanding ring
+    if (gameOverRingAlpha > 0.01) {
+      ctx.strokeStyle = `rgba(168,85,247,${gameOverRingAlpha})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(CFG.W / 2, CFG.H / 2, gameOverRingRadius, 0, Math.PI * 2);
+      ctx.stroke();
+      gameOverRingRadius += 4;
+      gameOverRingAlpha *= 0.93;
+    }
+
     ctx.save();
     ctx.textAlign = 'center';
 
@@ -1619,6 +1702,26 @@
     shimmerX += 120 * dt;
     if (shimmerX > CFG.DRAW_SIZE + 60) shimmerX = -60;
 
+    // Shake decay
+    if (shakeTimer > 0) { shakeTimer -= dt; shakeIntensity *= 0.85; }
+
+    // Update ink particles
+    for (const p of inkParticles) {
+      p.y -= 15 * dt;
+      p.phase += dt * 2;
+      p.alpha = 0.15 + Math.sin(p.phase) * 0.15;
+      if (p.y < DRAW_Y - 10) {
+        p.y = DRAW_Y + CFG.DRAW_SIZE + 10;
+        p.x = DRAW_X + Math.random() * CFG.DRAW_SIZE;
+      }
+    }
+
+    // Update stroke sparkles
+    for (const s of strokeSparkles) {
+      s.alpha -= 1.5 * dt;
+    }
+    strokeSparkles = strokeSparkles.filter(s => s.alpha > 0);
+
     // Wipe timer decay
     if (wipeTimer > 0) {
       wipeTimer -= dt * 2;
@@ -1634,6 +1737,17 @@
         if (countdownTimer <= 0) {
           state = STATES.DRAWING;
           Audio.go();
+          // Initialize ambient ink particles
+          inkParticles = [];
+          for (let i = 0; i < 9; i++) {
+            inkParticles.push({
+              x: DRAW_X + Math.random() * CFG.DRAW_SIZE,
+              y: DRAW_Y + Math.random() * CFG.DRAW_SIZE,
+              alpha: 0.2 + Math.random() * 0.3,
+              phase: Math.random() * Math.PI * 2,
+              size: 2 + Math.random() * 3
+            });
+          }
         }
         break;
       }
@@ -1646,6 +1760,7 @@
             roundCorrect = false;
             roundStats.perfectGame = false;
             Audio.wrong();
+            shakeTimer = 0.3; shakeIntensity = 6;
             state = STATES.ROUND_RESULT;
             resultTimer = 2.5;
             wipeTimer = 1.0;
