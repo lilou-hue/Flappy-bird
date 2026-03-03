@@ -14,6 +14,7 @@
   <title>Dress-Up</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="../leaderboard.css" />
+  <link rel="stylesheet" href="../ads.css" />
 </head>
 <body>
   <main class="game" id="gameContainer">
@@ -30,6 +31,10 @@
         <strong id="scoreDisplay">0</strong>
       </div>
       <div class="hud__timer" id="hudTimer" style="display:none;">60</div>
+      <div class="hud__coins" id="hudCoinsWrap">
+        <span class="hud__coins-icon">&#x1F4B0;</span>
+        <strong id="hudCoins">0</strong>
+      </div>
       <div class="hud__spacer"></div>
       <button id="muteButton" class="hud__button" type="button" data-i18n="duMute">Mute</button>
       <button id="fullscreenButton" class="hud__button" type="button" aria-label="Toggle fullscreen">&#x26F6;</button>
@@ -71,6 +76,7 @@
           <button class="action-btn" id="clearBtn" data-i18n="duClear">Clear</button>
           <button class="action-btn primary" id="challengeBtn" data-i18n="duChallenge">Challenge</button>
           <button class="action-btn" id="screenshotBtn" data-i18n="duScreenshot">Screenshot</button>
+          <button class="action-btn watch-ad-btn" id="watchAdBtn">&#x1F3AC; Watch Ad (+15 coins)</button>
         </div>
       </div>
     </section>
@@ -104,6 +110,19 @@
     </div>
   </div>
 
+  <!-- Premium Unlock Modal -->
+  <div class="modal-overlay" id="premiumModal">
+    <div class="modal premium-modal">
+      <h3>&#x2B50; Premium Item</h3>
+      <p class="premium-modal__item" id="premiumItemName"></p>
+      <div class="premium-modal__actions">
+        <button class="action-btn primary" id="premiumBuyBtn">Unlock (<span id="premiumCost">0</span> coins)</button>
+        <button class="action-btn watch-ad-btn" id="premiumAdBtn">&#x1F3AC; Watch Ad (free session)</button>
+      </div>
+      <button class="modal-close" id="premiumModalClose">Close</button>
+    </div>
+  </div>
+
   <!-- Leaderboard -->
   <div id="leaderboardPanel"></div>
 
@@ -112,7 +131,9 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="../leaderboard.js"></script>
   <script src="../i18n.js"></script>
+  <script src="../ads.js"></script>
   <script src="audio.js"></script>
   <script src="game.js"></script>
+  <script>SlayAds.injectGameBanner();</script>
 </body>
 </html>

@@ -51,6 +51,27 @@ const CATEGORIES = ['hair','top','bottom','shoes','accessory','background'];
 const SAVE_KEY = 'dressUpOutfits';
 const ACHIEVE_KEY = 'dressUpAchievements';
 const STATS_KEY = 'dressUpStats';
+const COINS_KEY = 'dressUpCoins';
+const UNLOCKED_KEY = 'dressUpUnlocked';
+
+/* ── Premium Items (~30% per category) ── */
+const PREMIUM_IDS = new Set([
+  'hair_long_flowing','hair_braids','hair_curly',
+  'top_armor','top_wizard_robe','top_kimono','top_corset',
+  'bottom_flowing_skirt','bottom_armor_greaves','bottom_bell_bottoms',
+  'shoes_armored_boots','shoes_platforms','shoes_heels',
+  'acc_crown','acc_extra_wings','acc_cape',
+  'bg_space','bg_castle','bg_rainbow',
+]);
+
+const PREMIUM_COST = {
+  hair:25, top:30, bottom:25, shoes:25, accessory:30, background:35
+};
+
+/* ── Coins Economy ── */
+let coins = 0; // loaded after loadJSON is defined
+let unlockedPremium = [];
+let sessionUnlocks = new Set();
 
 let stats = loadJSON(STATS_KEY, {
   charsDressed: [],
@@ -65,6 +86,75 @@ function loadJSON(key, fallback) {
   catch { return fallback; }
 }
 function saveJSON(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+
+// Load coins & unlocked now that loadJSON is defined
+coins = loadJSON(COINS_KEY, 0);
+unlockedPremium = loadJSON(UNLOCKED_KEY, []);
+
+function saveCoins() { saveJSON(COINS_KEY, coins); }
+function saveUnlocked() { saveJSON(UNLOCKED_KEY, unlockedPremium); }
+
+function addCoins(amount) {
+  coins += amount;
+  saveCoins();
+  updateCoinsHUD();
+}
+
+function updateCoinsHUD() {
+  const el = document.getElementById('hudCoins');
+  if (el) el.textContent = coins;
+}
+
+function isItemUnlocked(itemId) {
+  if (!PREMIUM_IDS.has(itemId)) return true;
+  return unlockedPremium.includes(itemId) || sessionUnlocks.has(itemId);
+}
+
+function unlockItem(itemId) {
+  if (!unlockedPremium.includes(itemId)) {
+    unlockedPremium.push(itemId);
+    saveUnlocked();
+  }
+}
+
+function showPremiumModal(item) {
+  const cost = PREMIUM_COST[item.category] || 30;
+  const modal = document.getElementById('premiumModal');
+  const titleEl = document.getElementById('premiumItemName');
+  const costEl = document.getElementById('premiumCost');
+  const buyBtn = document.getElementById('premiumBuyBtn');
+  const adBtn = document.getElementById('premiumAdBtn');
+
+  titleEl.textContent = item.name;
+  costEl.textContent = cost;
+  buyBtn.disabled = coins < cost;
+  buyBtn.textContent = coins < cost
+    ? 'Not enough coins (' + cost + ')'
+    : 'Unlock (' + cost + ' coins)';
+
+  buyBtn.onclick = function () {
+    if (coins >= cost) {
+      addCoins(-cost);
+      unlockItem(item.id);
+      modal.classList.remove('visible');
+      renderItemGrid();
+      render();
+    }
+  };
+
+  adBtn.onclick = function () {
+    modal.classList.remove('visible');
+    if (typeof SlayAds !== 'undefined' && SlayAds.showRewardedAd) {
+      SlayAds.showRewardedAd(function () {
+        sessionUnlocks.add(item.id);
+        renderItemGrid();
+        render();
+      });
+    }
+  };
+
+  modal.classList.add('visible');
+}
 
 /* ================================================================
    CHARACTERS
@@ -447,7 +537,7 @@ function _darken(hex, amt) {
 const ITEMS = [];
 
 function defItem(id, name, category, tags, colors, drawFn) {
-  ITEMS.push({ id, name, category, tags, colors, draw: drawFn });
+  ITEMS.push({ id, name, category, tags, colors, draw: drawFn, premium: PREMIUM_IDS.has(id) });
 }
 
 /* ── Hair Styles ── */
@@ -458,9 +548,54 @@ const HAIR_COLORS = [
   ['#4a4a4a','#7f8c8d','#2c3e50','#9b59b6'],
 ];
 
+function _hairShine(c, cx, headY, headR) {
+  c.save();
+  c.globalAlpha = 0.15;
+  c.fillStyle = '#fff';
+  c.beginPath();
+  c.ellipse(cx - headR*0.15, headY - headR*0.55, headR*0.35, headR*0.15, -0.4, 0, Math.PI*2);
+  c.fill();
+  // Second smaller shine
+  c.globalAlpha = 0.08;
+  c.beginPath();
+  c.ellipse(cx + headR*0.2, headY - headR*0.4, headR*0.2, headR*0.1, 0.3, 0, Math.PI*2);
+  c.fill();
+  c.restore();
+}
+
+function _hairStrands(c, cx, headY, headR, color) {
+  c.save();
+  c.strokeStyle = _darken(color, 30);
+  c.lineWidth = 0.7;
+  c.globalAlpha = 0.2;
+  c.lineCap = 'round';
+  // Gentle curved strands following the cap shape
+  for (let i = -1; i <= 1; i++) {
+    c.beginPath();
+    c.arc(cx + i * headR*0.25, headY, headR*0.85, Math.PI + 0.6, -0.6);
+    c.stroke();
+  }
+  c.restore();
+}
+
+function _hairOutline(c, cx, headY, headR, color) {
+  c.save();
+  c.strokeStyle = _darken(color, 40);
+  c.lineWidth = 1;
+  c.globalAlpha = 0.3;
+  c.beginPath();
+  c.arc(cx, headY, headR * 1.06, Math.PI, 0);
+  c.stroke();
+  c.restore();
+}
+
 function hairDraw(style, c, char, x, y, w, h, color) {
   const { cx, headR, headY } = M(x, y, w, h);
-  c.fillStyle = color;
+  const hairGrad = c.createLinearGradient(cx, headY - headR * 1.5, cx, headY + headR * 0.5);
+  hairGrad.addColorStop(0, _lighten(color, 30));
+  hairGrad.addColorStop(0.4, color);
+  hairGrad.addColorStop(1, _darken(color, 20));
+  c.fillStyle = hairGrad;
   // Hair sits on TOP of the head, never covering the face below the eye line
   const topY = headY - headR;
 
@@ -476,6 +611,14 @@ function hairDraw(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx+headR*1.5, headY, cx+headR*0.7, headY+headR*2.2);
       c.quadraticCurveTo(cx+headR*0.4, headY+headR*1.8, cx+headR*0.3, headY+headR*0.5);
       c.fill();
+      // Ponytail outline
+      c.strokeStyle = _darken(color, 35);
+      c.lineWidth = 1;
+      c.globalAlpha = 0.3;
+      c.beginPath(); c.moveTo(cx+headR*0.3, topY+headR*0.5);
+      c.quadraticCurveTo(cx+headR*1.5, headY, cx+headR*0.7, headY+headR*2.2);
+      c.stroke();
+      c.globalAlpha = 1;
       // Hair tie
       c.fillStyle = '#e84393';
       c.beginPath(); c.arc(cx+headR*0.5, headY-headR*0.1, 3, 0, Math.PI*2); c.fill();
@@ -493,14 +636,29 @@ function hairDraw(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx+headR*1.15, headY+headR*0.5, cx+headR*0.8, headY+headR*0.7);
       c.lineTo(cx+headR*0.4, headY+headR*0.3);
       c.fill();
+      // Bob side outlines
+      c.strokeStyle = _darken(color, 35);
+      c.lineWidth = 1;
+      c.globalAlpha = 0.3;
+      c.beginPath();
+      c.moveTo(cx-headR*1.05, headY-headR*0.1);
+      c.quadraticCurveTo(cx-headR*1.15, headY+headR*0.5, cx-headR*0.8, headY+headR*0.7);
+      c.stroke();
+      c.beginPath();
+      c.moveTo(cx+headR*1.05, headY-headR*0.1);
+      c.quadraticCurveTo(cx+headR*1.15, headY+headR*0.5, cx+headR*0.8, headY+headR*0.7);
+      c.stroke();
+      c.globalAlpha = 1;
       break;
     case 'spiky':
       c.beginPath(); c.arc(cx, headY, headR*1.02, Math.PI, 0); c.fill();
       for (let i = -3; i <= 3; i++) {
         c.beginPath();
-        c.moveTo(cx+i*headR*0.22-4, headY-headR*0.5);
-        c.lineTo(cx+i*headR*0.18, headY-headR*1.4-Math.abs(i)*4);
-        c.lineTo(cx+i*headR*0.22+4, headY-headR*0.5);
+        const sx = cx + i * headR * 0.22;
+        const tipY = headY - headR * 1.4 - Math.abs(i) * 4;
+        c.moveTo(sx - 5, headY - headR * 0.5);
+        c.quadraticCurveTo(sx - 2, tipY + 4, sx, tipY);
+        c.quadraticCurveTo(sx + 2, tipY + 4, sx + 5, headY - headR * 0.5);
         c.fill();
       }
       break;
@@ -520,6 +678,19 @@ function hairDraw(style, c, char, x, y, w, h, color) {
       c.lineTo(cx+headR*0.3, headY+headR*2.5);
       c.quadraticCurveTo(cx+headR*0.8, headY+headR*1.2, cx+headR*0.75, headY+headR*0.2);
       c.fill();
+      // Long flowing side outlines
+      c.strokeStyle = _darken(color, 35);
+      c.lineWidth = 1;
+      c.globalAlpha = 0.3;
+      c.beginPath();
+      c.moveTo(cx-headR*1.06, headY-headR*0.15);
+      c.quadraticCurveTo(cx-headR*1.3, headY+headR*1.5, cx-headR*0.5, headY+headR*2.8);
+      c.stroke();
+      c.beginPath();
+      c.moveTo(cx+headR*1.06, headY-headR*0.15);
+      c.quadraticCurveTo(cx+headR*1.3, headY+headR*1.5, cx+headR*0.5, headY+headR*2.8);
+      c.stroke();
+      c.globalAlpha = 1;
       break;
     case 'braids':
       c.beginPath(); c.arc(cx, headY, headR*1.06, Math.PI+0.2, -0.2); c.fill();
@@ -533,16 +704,27 @@ function hairDraw(style, c, char, x, y, w, h, color) {
         // Hair tie at end
         c.fillStyle = '#e84393';
         c.beginPath(); c.arc(bx, headY+headR*0.3+5*headR*0.4, 3, 0, Math.PI*2); c.fill();
-        c.fillStyle = color;
+        c.fillStyle = hairGrad;
+        // Braid outline
+        c.strokeStyle = _darken(color, 35);
+        c.lineWidth = 1;
+        c.globalAlpha = 0.3;
+        c.beginPath();
+        c.moveTo(bx, headY+headR*0.3);
+        c.lineTo(bx, headY+headR*0.3+5*headR*0.4);
+        c.stroke();
+        c.globalAlpha = 1;
       }
       break;
     case 'mohawk':
       c.beginPath(); c.arc(cx, headY, headR*1.02, Math.PI+0.6, -0.6); c.fill();
       for (let i = -2; i <= 2; i++) {
         c.beginPath();
-        c.moveTo(cx+i*headR*0.14-4, headY-headR*0.6);
-        c.lineTo(cx+i*headR*0.1, headY-headR*1.7);
-        c.lineTo(cx+i*headR*0.14+4, headY-headR*0.6);
+        const sx = cx + i * headR * 0.14;
+        const tipY = headY - headR * 1.7;
+        c.moveTo(sx - 5, headY - headR * 0.6);
+        c.quadraticCurveTo(sx - 2, tipY + 5, sx, tipY);
+        c.quadraticCurveTo(sx + 2, tipY + 5, sx + 5, headY - headR * 0.6);
         c.fill();
       }
       break;
@@ -572,6 +754,9 @@ function hairDraw(style, c, char, x, y, w, h, color) {
       c.lineTo(cx+headR*0.5, headY-headR*0.85); c.stroke();
       break;
   }
+  _hairShine(c, cx, headY, headR);
+  _hairStrands(c, cx, headY, headR, color);
+  _hairOutline(c, cx, headY, headR, color);
 }
 
 const HAIR_STYLES = ['ponytail','bob','spiky','long_flowing','braids','mohawk','curly','bun'];
@@ -603,118 +788,423 @@ const TOP_DEFS = [
 
 function drawTop(style, c, char, x, y, w, h, color) {
   const { cx, headR, headY, bodyTop, bodyBot, bodyW } = M(x, y, w, h);
-  c.fillStyle = color;
-  const sl = bodyW + 3; // sleeve reach
+  const topGrad = c.createLinearGradient(cx, bodyTop, cx, bodyBot);
+  topGrad.addColorStop(0, _lighten(color, 20));
+  topGrad.addColorStop(1, _darken(color, 15));
+  c.fillStyle = topGrad;
 
   switch(style) {
-    case 'tshirt':
+    case 'tshirt': {
       c.beginPath();
-      c.moveTo(cx-sl, bodyTop+3); c.lineTo(cx-sl-10, bodyTop+14);
-      c.lineTo(cx-sl-6, bodyTop+22); c.lineTo(cx-bodyW, bodyTop+16);
-      c.lineTo(cx-bodyW, bodyBot-2); c.lineTo(cx+bodyW, bodyBot-2);
-      c.lineTo(cx+bodyW, bodyTop+16); c.lineTo(cx+sl+6, bodyTop+22);
-      c.lineTo(cx+sl+10, bodyTop+14); c.lineTo(cx+sl, bodyTop+3);
-      c.closePath(); c.fill();
-      c.strokeStyle='rgba(0,0,0,0.1)'; c.lineWidth=0.8;
-      c.beginPath(); c.arc(cx, bodyTop+1, 7, 0.2, Math.PI-0.2); c.stroke();
-      break;
-    case 'hoodie':
+      c.moveTo(cx - bodyW - 2, bodyTop + 6);
+      c.quadraticCurveTo(cx - bodyW - 3, bodyBot, cx - bodyW + 2, bodyBot);
+      c.quadraticCurveTo(cx, bodyBot + 3, cx + bodyW - 2, bodyBot);
+      c.quadraticCurveTo(cx + bodyW + 3, bodyBot, cx + bodyW + 2, bodyTop + 6);
+      c.closePath();
+      c.fill();
+      for (let s = -1; s <= 1; s += 2) {
+        c.beginPath();
+        c.ellipse(cx + s * (bodyW + 8), bodyTop + 14, 9, 7, s * 0.3, 0, Math.PI * 2);
+        c.fill();
+      }
+      c.strokeStyle = _darken(color, 35);
+      c.lineWidth = 1;
       c.beginPath();
-      c.moveTo(cx-sl-2, bodyTop+2); c.lineTo(cx-sl-14, bodyBot-6);
-      c.lineTo(cx-bodyW, bodyBot+2); c.lineTo(cx+bodyW, bodyBot+2);
-      c.lineTo(cx+sl+14, bodyBot-6); c.lineTo(cx+sl+2, bodyTop+2);
-      c.closePath(); c.fill();
-      c.beginPath(); c.arc(cx, bodyTop-1, 12, Math.PI, 0); c.fill();
-      c.strokeStyle='rgba(0,0,0,0.1)'; c.lineWidth=0.7;
-      c.strokeRect(cx-8, bodyBot-16, 16, 10);
-      break;
-    case 'tank_top':
+      c.moveTo(cx - bodyW - 2, bodyTop + 6);
+      c.quadraticCurveTo(cx - bodyW - 3, bodyBot, cx - bodyW + 2, bodyBot);
+      c.quadraticCurveTo(cx, bodyBot + 3, cx + bodyW - 2, bodyBot);
+      c.quadraticCurveTo(cx + bodyW + 3, bodyBot, cx + bodyW + 2, bodyTop + 6);
+      c.stroke();
+      c.strokeStyle = _darken(color, 20);
+      c.lineWidth = 0.8;
       c.beginPath();
-      c.moveTo(cx-bodyW+3, bodyTop+5); c.lineTo(cx-bodyW+2, bodyBot-2);
-      c.lineTo(cx+bodyW-2, bodyBot-2); c.lineTo(cx+bodyW-3, bodyTop+5);
-      c.closePath(); c.fill();
-      break;
-    case 'dress_shirt':
+      c.arc(cx, bodyTop + 2, 6, 0.3, Math.PI - 0.3);
+      c.stroke();
+      c.fillStyle = 'rgba(255,255,255,0.12)';
       c.beginPath();
-      c.moveTo(cx-sl, bodyTop+3); c.lineTo(cx-sl-14, bodyBot-8);
-      c.lineTo(cx-bodyW, bodyBot); c.lineTo(cx+bodyW, bodyBot);
-      c.lineTo(cx+sl+14, bodyBot-8); c.lineTo(cx+sl, bodyTop+3);
-      c.closePath(); c.fill();
-      c.fillStyle='#fff';
-      c.beginPath(); c.moveTo(cx-5,bodyTop+1); c.lineTo(cx-10,bodyTop+12); c.lineTo(cx,bodyTop+8); c.fill();
-      c.beginPath(); c.moveTo(cx+5,bodyTop+1); c.lineTo(cx+10,bodyTop+12); c.lineTo(cx,bodyTop+8); c.fill();
-      c.fillStyle='rgba(0,0,0,0.15)';
-      for(let i=0;i<3;i++){c.beginPath();c.arc(cx,bodyTop+12+i*10,1.5,0,Math.PI*2);c.fill();}
+      c.ellipse(cx - 3, bodyTop + 10, bodyW * 0.5, 4, -0.2, 0, Math.PI * 2);
+      c.fill();
       break;
-    case 'crop_top':
+    }
+    case 'hoodie': {
       c.beginPath();
-      c.moveTo(cx-bodyW+2,bodyTop+5); c.lineTo(cx-bodyW,(bodyTop+bodyBot)/2-6);
-      c.lineTo(cx+bodyW,(bodyTop+bodyBot)/2-6); c.lineTo(cx+bodyW-2,bodyTop+5);
-      c.closePath(); c.fill();
-      break;
-    case 'jacket':
+      c.moveTo(cx - bodyW - 4, bodyTop + 4);
+      c.quadraticCurveTo(cx - bodyW - 6, bodyBot, cx - bodyW + 2, bodyBot + 2);
+      c.quadraticCurveTo(cx, bodyBot + 4, cx + bodyW - 2, bodyBot + 2);
+      c.quadraticCurveTo(cx + bodyW + 6, bodyBot, cx + bodyW + 4, bodyTop + 4);
+      c.closePath();
+      c.fill();
+      for (let s = -1; s <= 1; s += 2) {
+        c.beginPath();
+        c.ellipse(cx + s * (bodyW + 10), bodyTop + 16, 11, 8, s * 0.25, 0, Math.PI * 2);
+        c.fill();
+      }
       c.beginPath();
-      c.moveTo(cx-sl-2,bodyTop+2); c.lineTo(cx-sl-14,bodyBot-3);
-      c.lineTo(cx-bodyW,bodyBot+1); c.lineTo(cx+bodyW,bodyBot+1);
-      c.lineTo(cx+sl+14,bodyBot-3); c.lineTo(cx+sl+2,bodyTop+2);
-      c.closePath(); c.fill();
-      c.strokeStyle='rgba(255,255,255,0.15)'; c.lineWidth=1;
-      c.beginPath(); c.moveTo(cx,bodyTop+3); c.lineTo(cx,bodyBot); c.stroke();
-      break;
-    case 'armor':
+      c.arc(cx, bodyTop, 12, Math.PI, 0);
+      c.fill();
+      c.strokeStyle = _darken(color, 30);
+      c.lineWidth = 0.8;
       c.beginPath();
-      c.moveTo(cx-sl-1,bodyTop+3); c.lineTo(cx-sl-6,bodyBot);
-      c.lineTo(cx+sl+6,bodyBot); c.lineTo(cx+sl+1,bodyTop+3);
-      c.closePath(); c.fill();
-      c.strokeStyle='rgba(0,0,0,0.15)'; c.lineWidth=0.8;
-      c.beginPath(); c.moveTo(cx-bodyW,(bodyTop+bodyBot)/2); c.lineTo(cx+bodyW,(bodyTop+bodyBot)/2); c.stroke();
-      c.beginPath(); c.ellipse(cx-sl-3,bodyTop+8,8,5,-0.3,0,Math.PI*2); c.fill();
-      c.beginPath(); c.ellipse(cx+sl+3,bodyTop+8,8,5,0.3,0,Math.PI*2); c.fill();
-      break;
-    case 'wizard_robe':
+      c.arc(cx, bodyTop, 12, Math.PI, 0);
+      c.stroke();
+      c.strokeStyle = _darken(color, 20);
+      c.lineWidth = 0.7;
       c.beginPath();
-      c.moveTo(cx-sl-4,bodyTop); c.lineTo(cx-sl-18,y+h*0.78);
-      c.lineTo(cx+sl+18,y+h*0.78); c.lineTo(cx+sl+4,bodyTop);
-      c.closePath(); c.fill();
-      c.fillStyle='rgba(255,215,0,0.35)'; c.font='8px sans-serif';
-      c.fillText('★',cx-6,bodyBot-12); c.fillText('★',cx+4,(bodyTop+bodyBot)/2);
-      break;
-    case 'kimono':
+      c.ellipse(cx, bodyBot - 10, 8, 5, 0, 0, Math.PI * 2);
+      c.stroke();
+      c.strokeStyle = _darken(color, 35);
+      c.lineWidth = 1;
       c.beginPath();
-      c.moveTo(cx-sl-6,bodyTop); c.lineTo(cx-sl-10,y+h*0.72);
-      c.lineTo(cx+sl+10,y+h*0.72); c.lineTo(cx+sl+6,bodyTop);
-      c.closePath(); c.fill();
-      c.fillStyle='rgba(0,0,0,0.15)';
-      c.fillRect(cx-bodyW-3,(bodyTop+bodyBot)/2-3,bodyW*2+6,8);
-      break;
-    case 'vest':
+      c.moveTo(cx - bodyW - 4, bodyTop + 4);
+      c.quadraticCurveTo(cx - bodyW - 6, bodyBot, cx - bodyW + 2, bodyBot + 2);
+      c.quadraticCurveTo(cx, bodyBot + 4, cx + bodyW - 2, bodyBot + 2);
+      c.quadraticCurveTo(cx + bodyW + 6, bodyBot, cx + bodyW + 4, bodyTop + 4);
+      c.stroke();
+      c.fillStyle = 'rgba(255,255,255,0.12)';
       c.beginPath();
-      c.moveTo(cx-bodyW+3,bodyTop+4); c.lineTo(cx-bodyW+1,bodyBot-3);
-      c.lineTo(cx+bodyW-1,bodyBot-3); c.lineTo(cx+bodyW-3,bodyTop+4);
-      c.closePath(); c.fill();
-      c.strokeStyle='rgba(0,0,0,0.1)'; c.lineWidth=0.7;
-      c.beginPath(); c.moveTo(cx,bodyTop+4); c.lineTo(cx,bodyBot-3); c.stroke();
+      c.ellipse(cx - 3, bodyTop + 10, bodyW * 0.5, 4, -0.2, 0, Math.PI * 2);
+      c.fill();
       break;
-    case 'sweater':
+    }
+    case 'tank_top': {
       c.beginPath();
-      c.moveTo(cx-sl-2,bodyTop+2); c.lineTo(cx-sl-12,bodyBot-3);
-      c.lineTo(cx-bodyW,bodyBot+1); c.lineTo(cx+bodyW,bodyBot+1);
-      c.lineTo(cx+sl+12,bodyBot-3); c.lineTo(cx+sl+2,bodyTop+2);
-      c.closePath(); c.fill();
-      c.strokeStyle='rgba(0,0,0,0.06)'; c.lineWidth=0.6;
-      for(let i=0;i<4;i++){const ly=bodyTop+6+i*7;c.beginPath();c.moveTo(cx-bodyW+3,ly);c.lineTo(cx+bodyW-3,ly);c.stroke();}
-      c.fillRect(cx-7,bodyTop-1,14,5);
-      break;
-    case 'corset':
+      c.moveTo(cx - bodyW + 1, bodyTop + 5);
+      c.quadraticCurveTo(cx - bodyW, bodyBot, cx - bodyW + 3, bodyBot);
+      c.quadraticCurveTo(cx, bodyBot + 2, cx + bodyW - 3, bodyBot);
+      c.quadraticCurveTo(cx + bodyW, bodyBot, cx + bodyW - 1, bodyTop + 5);
+      c.closePath();
+      c.fill();
+      c.strokeStyle = _darken(color, 35);
+      c.lineWidth = 1;
       c.beginPath();
-      c.moveTo(cx-bodyW+1,bodyTop+8); c.lineTo(cx-bodyW-1,bodyBot-4);
-      c.lineTo(cx+bodyW+1,bodyBot-4); c.lineTo(cx+bodyW-1,bodyTop+8);
-      c.closePath(); c.fill();
-      c.strokeStyle='rgba(255,255,255,0.25)'; c.lineWidth=0.8;
-      for(let i=0;i<4;i++){const ly=bodyTop+11+i*6;
-        c.beginPath();c.moveTo(cx-2,ly);c.lineTo(cx-7,ly+3);c.stroke();
-        c.beginPath();c.moveTo(cx+2,ly);c.lineTo(cx+7,ly+3);c.stroke();}
+      c.moveTo(cx - bodyW + 1, bodyTop + 5);
+      c.quadraticCurveTo(cx - bodyW, bodyBot, cx - bodyW + 3, bodyBot);
+      c.quadraticCurveTo(cx, bodyBot + 2, cx + bodyW - 3, bodyBot);
+      c.quadraticCurveTo(cx + bodyW, bodyBot, cx + bodyW - 1, bodyTop + 5);
+      c.stroke();
+      c.strokeStyle = _darken(color, 25);
+      c.lineWidth = 0.7;
+      for (let s = -1; s <= 1; s += 2) {
+        c.beginPath();
+        c.arc(cx + s * 3, bodyTop + 2, 4, 0.2 * s + Math.PI * 0.5, 0.2 * s + Math.PI * 1.5);
+        c.stroke();
+      }
+      c.fillStyle = 'rgba(255,255,255,0.12)';
+      c.beginPath();
+      c.ellipse(cx - 2, bodyTop + 10, bodyW * 0.4, 3, -0.2, 0, Math.PI * 2);
+      c.fill();
       break;
+    }
+    case 'dress_shirt': {
+      c.beginPath();
+      c.moveTo(cx - bodyW - 2, bodyTop + 4);
+      c.quadraticCurveTo(cx - bodyW - 3, bodyBot, cx - bodyW + 2, bodyBot);
+      c.quadraticCurveTo(cx, bodyBot + 3, cx + bodyW - 2, bodyBot);
+      c.quadraticCurveTo(cx + bodyW + 3, bodyBot, cx + bodyW + 2, bodyTop + 4);
+      c.closePath();
+      c.fill();
+      for (let s = -1; s <= 1; s += 2) {
+        c.beginPath();
+        c.ellipse(cx + s * (bodyW + 10), bodyTop + 16, 10, 7, s * 0.2, 0, Math.PI * 2);
+        c.fill();
+      }
+      c.strokeStyle = _darken(color, 35);
+      c.lineWidth = 1;
+      c.beginPath();
+      c.moveTo(cx - bodyW - 2, bodyTop + 4);
+      c.quadraticCurveTo(cx - bodyW - 3, bodyBot, cx - bodyW + 2, bodyBot);
+      c.quadraticCurveTo(cx, bodyBot + 3, cx + bodyW - 2, bodyBot);
+      c.quadraticCurveTo(cx + bodyW + 3, bodyBot, cx + bodyW + 2, bodyTop + 4);
+      c.stroke();
+      c.fillStyle = '#fff';
+      for (let s = -1; s <= 1; s += 2) {
+        c.beginPath();
+        c.moveTo(cx + s * 2, bodyTop + 2);
+        c.quadraticCurveTo(cx + s * 8, bodyTop + 4, cx + s * 7, bodyTop + 12);
+        c.quadraticCurveTo(cx + s * 4, bodyTop + 10, cx + s * 2, bodyTop + 8);
+        c.closePath();
+        c.fill();
+      }
+      c.fillStyle = _darken(color, 30);
+      for (let i = 0; i < 3; i++) {
+        c.beginPath();
+        c.arc(cx, bodyTop + 14 + i * 8, 1.3, 0, Math.PI * 2);
+        c.fill();
+      }
+      c.fillStyle = 'rgba(255,255,255,0.12)';
+      c.beginPath();
+      c.ellipse(cx - 3, bodyTop + 10, bodyW * 0.5, 4, -0.2, 0, Math.PI * 2);
+      c.fill();
+      break;
+    }
+    case 'crop_top': {
+      const cropBot = (bodyTop + bodyBot) / 2 - 4;
+      c.beginPath();
+      c.moveTo(cx - bodyW, bodyTop + 5);
+      c.quadraticCurveTo(cx - bodyW - 2, cropBot, cx - bodyW + 3, cropBot + 2);
+      c.quadraticCurveTo(cx, cropBot + 4, cx + bodyW - 3, cropBot + 2);
+      c.quadraticCurveTo(cx + bodyW + 2, cropBot, cx + bodyW, bodyTop + 5);
+      c.closePath();
+      c.fill();
+      c.strokeStyle = _darken(color, 35);
+      c.lineWidth = 1;
+      c.beginPath();
+      c.moveTo(cx - bodyW, bodyTop + 5);
+      c.quadraticCurveTo(cx - bodyW - 2, cropBot, cx - bodyW + 3, cropBot + 2);
+      c.quadraticCurveTo(cx, cropBot + 4, cx + bodyW - 3, cropBot + 2);
+      c.quadraticCurveTo(cx + bodyW + 2, cropBot, cx + bodyW, bodyTop + 5);
+      c.stroke();
+      c.strokeStyle = _darken(color, 20);
+      c.lineWidth = 0.7;
+      c.beginPath();
+      c.arc(cx, bodyTop + 2, 5, 0.4, Math.PI - 0.4);
+      c.stroke();
+      c.fillStyle = 'rgba(255,255,255,0.12)';
+      c.beginPath();
+      c.ellipse(cx - 2, bodyTop + 10, bodyW * 0.4, 3, -0.2, 0, Math.PI * 2);
+      c.fill();
+      break;
+    }
+    case 'jacket': {
+      c.beginPath();
+      c.moveTo(cx - bodyW - 4, bodyTop + 3);
+      c.quadraticCurveTo(cx - bodyW - 6, bodyBot, cx - bodyW + 2, bodyBot + 1);
+      c.quadraticCurveTo(cx, bodyBot + 3, cx + bodyW - 2, bodyBot + 1);
+      c.quadraticCurveTo(cx + bodyW + 6, bodyBot, cx + bodyW + 4, bodyTop + 3);
+      c.closePath();
+      c.fill();
+      for (let s = -1; s <= 1; s += 2) {
+        c.beginPath();
+        c.ellipse(cx + s * (bodyW + 10), bodyTop + 16, 12, 9, s * 0.25, 0, Math.PI * 2);
+        c.fill();
+      }
+      c.strokeStyle = _darken(color, 35);
+      c.lineWidth = 1;
+      c.beginPath();
+      c.moveTo(cx - bodyW - 4, bodyTop + 3);
+      c.quadraticCurveTo(cx - bodyW - 6, bodyBot, cx - bodyW + 2, bodyBot + 1);
+      c.quadraticCurveTo(cx, bodyBot + 3, cx + bodyW - 2, bodyBot + 1);
+      c.quadraticCurveTo(cx + bodyW + 6, bodyBot, cx + bodyW + 4, bodyTop + 3);
+      c.stroke();
+      c.strokeStyle = _darken(color, 20);
+      c.lineWidth = 0.8;
+      c.beginPath();
+      c.moveTo(cx, bodyTop + 5);
+      c.quadraticCurveTo(cx + 1, (bodyTop + bodyBot) / 2, cx, bodyBot);
+      c.stroke();
+      c.fillStyle = 'rgba(255,255,255,0.12)';
+      c.beginPath();
+      c.ellipse(cx - 4, bodyTop + 10, bodyW * 0.45, 4, -0.2, 0, Math.PI * 2);
+      c.fill();
+      break;
+    }
+    case 'armor': {
+      c.beginPath();
+      c.moveTo(cx - bodyW - 2, bodyTop + 4);
+      c.quadraticCurveTo(cx - bodyW - 5, (bodyTop + bodyBot) / 2, cx - bodyW - 3, bodyBot);
+      c.quadraticCurveTo(cx, bodyBot + 3, cx + bodyW + 3, bodyBot);
+      c.quadraticCurveTo(cx + bodyW + 5, (bodyTop + bodyBot) / 2, cx + bodyW + 2, bodyTop + 4);
+      c.closePath();
+      c.fill();
+      for (let s = -1; s <= 1; s += 2) {
+        c.beginPath();
+        c.ellipse(cx + s * (bodyW + 5), bodyTop + 8, 9, 6, s * 0.3, 0, Math.PI * 2);
+        c.fill();
+        c.strokeStyle = _darken(color, 30);
+        c.lineWidth = 0.8;
+        c.beginPath();
+        c.ellipse(cx + s * (bodyW + 5), bodyTop + 8, 9, 6, s * 0.3, 0, Math.PI * 2);
+        c.stroke();
+      }
+      c.strokeStyle = _darken(color, 25);
+      c.lineWidth = 1;
+      c.beginPath();
+      c.moveTo(cx - bodyW, (bodyTop + bodyBot) / 2);
+      c.quadraticCurveTo(cx, (bodyTop + bodyBot) / 2 + 2, cx + bodyW, (bodyTop + bodyBot) / 2);
+      c.stroke();
+      c.strokeStyle = _darken(color, 35);
+      c.lineWidth = 1;
+      c.beginPath();
+      c.moveTo(cx - bodyW - 2, bodyTop + 4);
+      c.quadraticCurveTo(cx - bodyW - 5, (bodyTop + bodyBot) / 2, cx - bodyW - 3, bodyBot);
+      c.quadraticCurveTo(cx, bodyBot + 3, cx + bodyW + 3, bodyBot);
+      c.quadraticCurveTo(cx + bodyW + 5, (bodyTop + bodyBot) / 2, cx + bodyW + 2, bodyTop + 4);
+      c.stroke();
+      c.fillStyle = 'rgba(255,255,255,0.15)';
+      c.beginPath();
+      c.ellipse(cx - 3, bodyTop + 10, bodyW * 0.5, 4, -0.2, 0, Math.PI * 2);
+      c.fill();
+      break;
+    }
+    case 'wizard_robe': {
+      const robeBot = y + h * 0.78;
+      c.beginPath();
+      c.moveTo(cx - bodyW - 4, bodyTop + 2);
+      c.quadraticCurveTo(cx - bodyW - 14, (bodyTop + robeBot) / 2, cx - bodyW - 8, robeBot);
+      c.quadraticCurveTo(cx, robeBot + 4, cx + bodyW + 8, robeBot);
+      c.quadraticCurveTo(cx + bodyW + 14, (bodyTop + robeBot) / 2, cx + bodyW + 4, bodyTop + 2);
+      c.closePath();
+      c.fill();
+      for (let s = -1; s <= 1; s += 2) {
+        c.beginPath();
+        c.ellipse(cx + s * (bodyW + 12), bodyTop + 18, 12, 8, s * 0.3, 0, Math.PI * 2);
+        c.fill();
+      }
+      c.strokeStyle = _darken(color, 35);
+      c.lineWidth = 1;
+      c.beginPath();
+      c.moveTo(cx - bodyW - 4, bodyTop + 2);
+      c.quadraticCurveTo(cx - bodyW - 14, (bodyTop + robeBot) / 2, cx - bodyW - 8, robeBot);
+      c.quadraticCurveTo(cx, robeBot + 4, cx + bodyW + 8, robeBot);
+      c.quadraticCurveTo(cx + bodyW + 14, (bodyTop + robeBot) / 2, cx + bodyW + 4, bodyTop + 2);
+      c.stroke();
+      c.fillStyle = 'rgba(255,215,0,0.35)';
+      c.font = '7px sans-serif';
+      c.fillText('\u2605', cx - 5, bodyBot - 8);
+      c.fillText('\u2605', cx + 4, (bodyTop + bodyBot) / 2 + 2);
+      c.fillStyle = 'rgba(255,255,255,0.10)';
+      c.beginPath();
+      c.ellipse(cx - 3, bodyTop + 12, bodyW * 0.5, 4, -0.2, 0, Math.PI * 2);
+      c.fill();
+      break;
+    }
+    case 'kimono': {
+      const kimBot = y + h * 0.72;
+      c.beginPath();
+      c.moveTo(cx - bodyW - 6, bodyTop + 2);
+      c.quadraticCurveTo(cx - bodyW - 12, (bodyTop + kimBot) / 2, cx - bodyW - 4, kimBot);
+      c.quadraticCurveTo(cx, kimBot + 3, cx + bodyW + 4, kimBot);
+      c.quadraticCurveTo(cx + bodyW + 12, (bodyTop + kimBot) / 2, cx + bodyW + 6, bodyTop + 2);
+      c.closePath();
+      c.fill();
+      c.strokeStyle = _darken(color, 35);
+      c.lineWidth = 1;
+      c.beginPath();
+      c.moveTo(cx - bodyW - 6, bodyTop + 2);
+      c.quadraticCurveTo(cx - bodyW - 12, (bodyTop + kimBot) / 2, cx - bodyW - 4, kimBot);
+      c.quadraticCurveTo(cx, kimBot + 3, cx + bodyW + 4, kimBot);
+      c.quadraticCurveTo(cx + bodyW + 12, (bodyTop + kimBot) / 2, cx + bodyW + 6, bodyTop + 2);
+      c.stroke();
+      c.fillStyle = _darken(color, 30);
+      const obiY = (bodyTop + bodyBot) / 2 - 2;
+      c.beginPath();
+      c.moveTo(cx - bodyW - 4, obiY);
+      c.quadraticCurveTo(cx, obiY + 3, cx + bodyW + 4, obiY);
+      c.quadraticCurveTo(cx + bodyW + 4, obiY + 7, cx + bodyW + 3, obiY + 7);
+      c.quadraticCurveTo(cx, obiY + 10, cx - bodyW - 3, obiY + 7);
+      c.quadraticCurveTo(cx - bodyW - 4, obiY + 7, cx - bodyW - 4, obiY);
+      c.closePath();
+      c.fill();
+      c.fillStyle = 'rgba(255,255,255,0.12)';
+      c.beginPath();
+      c.ellipse(cx - 3, bodyTop + 10, bodyW * 0.5, 4, -0.2, 0, Math.PI * 2);
+      c.fill();
+      break;
+    }
+    case 'vest': {
+      c.beginPath();
+      c.moveTo(cx - bodyW + 1, bodyTop + 5);
+      c.quadraticCurveTo(cx - bodyW - 1, bodyBot, cx - bodyW + 3, bodyBot - 1);
+      c.quadraticCurveTo(cx, bodyBot + 2, cx + bodyW - 3, bodyBot - 1);
+      c.quadraticCurveTo(cx + bodyW + 1, bodyBot, cx + bodyW - 1, bodyTop + 5);
+      c.closePath();
+      c.fill();
+      c.strokeStyle = _darken(color, 35);
+      c.lineWidth = 1;
+      c.beginPath();
+      c.moveTo(cx - bodyW + 1, bodyTop + 5);
+      c.quadraticCurveTo(cx - bodyW - 1, bodyBot, cx - bodyW + 3, bodyBot - 1);
+      c.quadraticCurveTo(cx, bodyBot + 2, cx + bodyW - 3, bodyBot - 1);
+      c.quadraticCurveTo(cx + bodyW + 1, bodyBot, cx + bodyW - 1, bodyTop + 5);
+      c.stroke();
+      c.strokeStyle = _darken(color, 20);
+      c.lineWidth = 0.7;
+      c.beginPath();
+      c.moveTo(cx, bodyTop + 6);
+      c.quadraticCurveTo(cx + 0.5, (bodyTop + bodyBot) / 2, cx, bodyBot - 2);
+      c.stroke();
+      c.fillStyle = 'rgba(255,255,255,0.12)';
+      c.beginPath();
+      c.ellipse(cx - 2, bodyTop + 10, bodyW * 0.4, 3, -0.2, 0, Math.PI * 2);
+      c.fill();
+      break;
+    }
+    case 'sweater': {
+      c.beginPath();
+      c.moveTo(cx - bodyW - 3, bodyTop + 3);
+      c.quadraticCurveTo(cx - bodyW - 4, bodyBot, cx - bodyW + 2, bodyBot + 1);
+      c.quadraticCurveTo(cx, bodyBot + 3, cx + bodyW - 2, bodyBot + 1);
+      c.quadraticCurveTo(cx + bodyW + 4, bodyBot, cx + bodyW + 3, bodyTop + 3);
+      c.closePath();
+      c.fill();
+      for (let s = -1; s <= 1; s += 2) {
+        c.beginPath();
+        c.ellipse(cx + s * (bodyW + 9), bodyTop + 15, 10, 8, s * 0.25, 0, Math.PI * 2);
+        c.fill();
+      }
+      c.fillStyle = _darken(color, 15);
+      c.beginPath();
+      c.ellipse(cx, bodyTop + 1, 7, 3, 0, 0, Math.PI * 2);
+      c.fill();
+      c.fillStyle = topGrad;
+      c.strokeStyle = _darken(color, 35);
+      c.lineWidth = 1;
+      c.beginPath();
+      c.moveTo(cx - bodyW - 3, bodyTop + 3);
+      c.quadraticCurveTo(cx - bodyW - 4, bodyBot, cx - bodyW + 2, bodyBot + 1);
+      c.quadraticCurveTo(cx, bodyBot + 3, cx + bodyW - 2, bodyBot + 1);
+      c.quadraticCurveTo(cx + bodyW + 4, bodyBot, cx + bodyW + 3, bodyTop + 3);
+      c.stroke();
+      c.strokeStyle = _darken(color, 12);
+      c.lineWidth = 0.5;
+      for (let i = 0; i < 4; i++) {
+        const ly = bodyTop + 8 + i * 7;
+        c.beginPath();
+        c.moveTo(cx - bodyW + 2, ly);
+        c.quadraticCurveTo(cx, ly + 1.5, cx + bodyW - 2, ly);
+        c.stroke();
+      }
+      c.fillStyle = 'rgba(255,255,255,0.12)';
+      c.beginPath();
+      c.ellipse(cx - 3, bodyTop + 10, bodyW * 0.5, 4, -0.2, 0, Math.PI * 2);
+      c.fill();
+      break;
+    }
+    case 'corset': {
+      c.beginPath();
+      c.moveTo(cx - bodyW + 1, bodyTop + 8);
+      c.quadraticCurveTo(cx - bodyW - 2, (bodyTop + bodyBot) / 2, cx - bodyW, bodyBot - 3);
+      c.quadraticCurveTo(cx, bodyBot, cx + bodyW, bodyBot - 3);
+      c.quadraticCurveTo(cx + bodyW + 2, (bodyTop + bodyBot) / 2, cx + bodyW - 1, bodyTop + 8);
+      c.closePath();
+      c.fill();
+      c.strokeStyle = _darken(color, 35);
+      c.lineWidth = 1;
+      c.beginPath();
+      c.moveTo(cx - bodyW + 1, bodyTop + 8);
+      c.quadraticCurveTo(cx - bodyW - 2, (bodyTop + bodyBot) / 2, cx - bodyW, bodyBot - 3);
+      c.quadraticCurveTo(cx, bodyBot, cx + bodyW, bodyBot - 3);
+      c.quadraticCurveTo(cx + bodyW + 2, (bodyTop + bodyBot) / 2, cx + bodyW - 1, bodyTop + 8);
+      c.stroke();
+      c.strokeStyle = 'rgba(255,255,255,0.25)';
+      c.lineWidth = 0.7;
+      for (let i = 0; i < 4; i++) {
+        const ly = bodyTop + 12 + i * 6;
+        c.beginPath();
+        c.moveTo(cx - 2, ly);
+        c.quadraticCurveTo(cx - 5, ly + 2, cx - 7, ly + 3);
+        c.stroke();
+        c.beginPath();
+        c.moveTo(cx + 2, ly);
+        c.quadraticCurveTo(cx + 5, ly + 2, cx + 7, ly + 3);
+        c.stroke();
+      }
+      c.fillStyle = 'rgba(255,255,255,0.12)';
+      c.beginPath();
+      c.ellipse(cx - 2, bodyTop + 14, bodyW * 0.35, 3, -0.2, 0, Math.PI * 2);
+      c.fill();
+      break;
+    }
   }
 }
 
@@ -739,9 +1229,23 @@ const BOTTOM_DEFS = [
   { id:'bell_bottoms', name:'Bell-bottoms',  tags:['retro','cool'],         colors:[['#8e44ad'],['#e67e22'],['#27ae60'],['#2c3e50']] },
 ];
 
+function _bottomHighlight(c, cx, bodyBot, bodyW) {
+  c.save();
+  c.globalAlpha = 0.1;
+  c.fillStyle = '#fff';
+  c.beginPath();
+  c.ellipse(cx, bodyBot + 4, bodyW*0.7, 3, 0, 0, Math.PI*2);
+  c.fill();
+  c.restore();
+}
+
 function drawBottom(style, c, char, x, y, w, h, color) {
   const { cx, bodyBot, bodyW, legBot } = M(x, y, w, h);
-  c.fillStyle = color;
+  const botGrad = c.createLinearGradient(cx, bodyBot, cx, legBot);
+  botGrad.addColorStop(0, _lighten(color, 20));
+  botGrad.addColorStop(0.5, color);
+  botGrad.addColorStop(1, _darken(color, 25));
+  c.fillStyle = botGrad;
 
   switch(style) {
     case 'jeans':
@@ -838,6 +1342,7 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       c.closePath(); c.fill();
       break;
   }
+  _bottomHighlight(c, cx, bodyBot, bodyW);
 }
 
 BOTTOM_DEFS.forEach(d => {
@@ -861,13 +1366,17 @@ const SHOE_DEFS = [
 
 function drawShoes(style, c, char, x, y, w, h, color) {
   const { cx, footY } = M(x, y, w, h);
-  c.fillStyle = color;
+  const shoeGrad = c.createLinearGradient(cx, footY - 15, cx, footY + 8);
+  shoeGrad.addColorStop(0, _lighten(color, 30));
+  shoeGrad.addColorStop(0.5, color);
+  shoeGrad.addColorStop(1, _darken(color, 25));
+  c.fillStyle = shoeGrad;
 
   switch(style) {
     case 'sneakers':
       for(let s=-1;s<=1;s+=2){const fx=cx+s*10;
         c.beginPath();c.ellipse(fx,footY,10,5,0,0,Math.PI*2);c.fill();
-        c.fillStyle='rgba(0,0,0,0.1)';c.beginPath();c.ellipse(fx,footY+2,10,2.5,0,0,Math.PI);c.fill();c.fillStyle=color;}
+        c.fillStyle='rgba(0,0,0,0.1)';c.beginPath();c.ellipse(fx,footY+2,10,2.5,0,0,Math.PI);c.fill();c.fillStyle=shoeGrad;}
       break;
     case 'boots':
       for(let s=-1;s<=1;s+=2){const fx=cx+s*10;
@@ -1336,8 +1845,9 @@ function renderItemGrid() {
   const catItems = ITEMS.filter(it => it.category === currentCategory);
   catItems.forEach(item => {
     const isEquipped = equipped[item.category] && equipped[item.category].itemId === item.id;
+    const locked = item.premium && !isItemUnlocked(item.id);
     const card = document.createElement('div');
-    card.className = 'item-card' + (isEquipped ? ' equipped' : '');
+    card.className = 'item-card' + (isEquipped ? ' equipped' : '') + (locked ? ' locked' : '');
 
     // Mini preview
     const mini = document.createElement('canvas');
@@ -1347,6 +1857,14 @@ function renderItemGrid() {
     drawItemPreview(mc, item, colorIdx);
     card.appendChild(mini);
 
+    // Premium badge
+    if (item.premium) {
+      const badge = document.createElement('div');
+      badge.className = 'premium-badge';
+      badge.textContent = locked ? '\uD83D\uDD12' : '\u2B50';
+      card.appendChild(badge);
+    }
+
     // Name
     const nameEl = document.createElement('div');
     nameEl.className = 'item-name';
@@ -1354,7 +1872,7 @@ function renderItemGrid() {
     card.appendChild(nameEl);
 
     // Color swatches if equipped
-    if (isEquipped && item.colors.length > 1) {
+    if (isEquipped && !locked && item.colors.length > 1) {
       const swatches = document.createElement('div');
       swatches.className = 'color-swatches';
       item.colors.forEach((cols, ci) => {
@@ -1379,6 +1897,10 @@ function renderItemGrid() {
 
     card.onclick = () => {
       Audio.init(); Audio.resume();
+      if (locked) {
+        showPremiumModal(item);
+        return;
+      }
       if (isEquipped) {
         delete equipped[item.category];
         Audio.unequip();
@@ -1617,6 +2139,11 @@ function endChallenge() {
   challengeOverlay.classList.add('visible');
   hudTimer.style.display = 'none';
 
+  // Award coins for challenge
+  let coinReward = 10;
+  if (stars >= 3) coinReward += 5;
+  addCoins(coinReward);
+
   // Achievements
   checkAchievement('challenge_1');
   if (stars >= 3) checkAchievement('three_stars');
@@ -1716,6 +2243,30 @@ if (typeof I18N !== 'undefined') {
   }
 }
 
+// Watch Ad button
+const watchAdBtn = document.getElementById('watchAdBtn');
+if (watchAdBtn) {
+  watchAdBtn.onclick = function () {
+    if (typeof SlayAds !== 'undefined' && SlayAds.showRewardedAd) {
+      SlayAds.showRewardedAd(function () {
+        addCoins(15);
+      });
+    }
+  };
+}
+
+// Premium modal close
+const premiumModal = document.getElementById('premiumModal');
+const premiumClose = document.getElementById('premiumModalClose');
+if (premiumClose) {
+  premiumClose.onclick = function () { premiumModal.classList.remove('visible'); };
+}
+if (premiumModal) {
+  premiumModal.onclick = function (e) {
+    if (e.target === premiumModal) premiumModal.classList.remove('visible');
+  };
+}
+
 // First init
 Audio.init();
 if (Audio.isMuted()) {
@@ -1727,6 +2278,7 @@ buildCategoryTabs();
 renderItemGrid();
 renderAchievements();
 render();
+updateCoinsHUD();
 
 // Re-render on lang change
 window.addEventListener('langchange', () => {
