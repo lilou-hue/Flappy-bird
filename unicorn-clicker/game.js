@@ -237,6 +237,9 @@
   /* ────────────────── Particles ────────────────── */
   let particles = [];
   let floatingTexts = [];
+  let clickRipples = [];
+  let evoFlash = 0;
+  let frenzyRainParticles = [];
 
   function spawnFartParticles(x, y, count) {
     const shapes = ['ellipse', 'cloud', 'star', 'sparkle'];
@@ -307,6 +310,25 @@
     frenzyActive = false;
     frenzyTimeLeft = 0;
     spawnFloatingText(W / 2, H * 0.3, 'ASCENDED! x' + state.ascensionMultiplier.toFixed(1), '#ff69b4');
+    evoFlash = 1.5;
+    // Spawn 30 radial particles from center
+    for (let i = 0; i < 30; i++) {
+      const angle = (i / 30) * Math.PI * 2;
+      particles.push({
+        x: W / 2, y: H / 2,
+        vx: Math.cos(angle) * (3 + Math.random() * 4),
+        vy: Math.sin(angle) * (3 + Math.random() * 4),
+        size: 6 + Math.random() * 8,
+        hue: Math.random() * 360,
+        life: 1,
+        decay: 0.01 + Math.random() * 0.01,
+        wobblePhase: Math.random() * Math.PI * 2,
+        wobbleSpeed: 2 + Math.random() * 3,
+        shape: 'sparkle',
+        spin: (Math.random() - 0.5) * 4,
+        angle: Math.random() * Math.PI * 2,
+      });
+    }
     shakeAmount = 2;
     save();
     checkUCAch();
@@ -3428,6 +3450,25 @@
       }
     }
 
+    // Frenzy particle rain
+    if (frenzyActive && frenzyRainParticles.length < 50) {
+      for (let i = 0; i < 2; i++) {
+        frenzyRainParticles.push({
+          x: Math.random() * W, y: -5,
+          vy: 3 + Math.random() * 4,
+          hue: Math.random() * 360,
+          alpha: 0.6 + Math.random() * 0.3,
+          size: 2 + Math.random() * 3,
+        });
+      }
+    }
+    for (let i = frenzyRainParticles.length - 1; i >= 0; i--) {
+      const rp = frenzyRainParticles[i];
+      rp.y += rp.vy * dt * 60;
+      rp.alpha *= 0.995;
+      if (rp.y > H + 10 || rp.alpha < 0.01) frenzyRainParticles.splice(i, 1);
+    }
+
     // Trail particles
     for (const tp of trailParticles) {
       tp.x += tp.vx * dt * 60;
@@ -3437,6 +3478,23 @@
     trailParticles = trailParticles.filter(tp => tp.life > 0);
 
     if (squash > 0) { squash -= dt * 6; if (squash < 0) squash = 0; }
+    if (squash > 0.3 && particles.length < 200) {
+      particles.push({
+        x: CHAR_X + (Math.random() - 0.5) * 40,
+        y: CHAR_Y + (Math.random() - 0.5) * 40,
+        vx: (Math.random() - 0.5) * 2,
+        vy: -1 - Math.random() * 2,
+        size: 3 + Math.random() * 3,
+        hue: Math.random() * 360,
+        life: 1,
+        decay: 0.03,
+        wobblePhase: Math.random() * Math.PI * 2,
+        wobbleSpeed: 3,
+        shape: 'sparkle',
+        spin: (Math.random() - 0.5) * 4,
+        angle: 0,
+      });
+    }
     if (shakeAmount > 0) { shakeAmount -= dt * 15; if (shakeAmount < 0) shakeAmount = 0; }
 
     // Shooting stars
@@ -3487,9 +3545,31 @@
       ctx.translate((Math.random()-0.5)*shakeAmount*4, (Math.random()-0.5)*shakeAmount*4);
     }
     drawBackground();
+    if (evoFlash > 0) {
+      ctx.fillStyle = `rgba(255,215,0,${evoFlash * 0.4})`;
+      ctx.fillRect(0, 0, W, H);
+      evoFlash *= 0.92;
+    }
     drawGround();
     drawTrailParticles();
     drawParticles();
+    for (let i = clickRipples.length - 1; i >= 0; i--) {
+      const r = clickRipples[i];
+      ctx.strokeStyle = `rgba(255,215,0,${r.alpha})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
+      ctx.stroke();
+      r.radius += 3;
+      r.alpha *= 0.92;
+      if (r.alpha < 0.01) clickRipples.splice(i, 1);
+    }
+    for (const rp of frenzyRainParticles) {
+      ctx.fillStyle = `hsla(${rp.hue}, 90%, 65%, ${rp.alpha})`;
+      ctx.beginPath();
+      ctx.arc(rp.x, rp.y, rp.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
     drawCharacter();
     drawFloatingTexts();
     drawUI();
@@ -3696,6 +3776,7 @@
         state.evolution++;
         SFX.evolve();
         spawnFartParticles(CHAR_X, CHAR_Y, 30);
+        evoFlash = 1.0;
         shakeAmount = 1.5;
         spawnFloatingText(W/2, H*0.3, EVOLUTIONS[state.evolution].name + '!', '#ffd700');
         checkUCAch();
@@ -3723,6 +3804,7 @@
       const sk = currentSkin();
       const count = 5 + Math.floor(Math.random() * 6) + state.evolution * 2;
       spawnFartParticles(CHAR_X + sk.fartDx, CHAR_Y + sk.fartDy, count);
+      clickRipples.push({x: CHAR_X, y: CHAR_Y, radius: 0, alpha: 0.6});
       spawnFloatingText(pos.x + (Math.random()-0.5)*30, pos.y - 20, '+' + formatNum(earned), color);
       if (state.equippedTrail) spawnTrailParticle(pos.x, pos.y);
       checkUCAch();
