@@ -137,6 +137,7 @@ let powerups = [];
 let stars = [];  // parallax starfield
 let nebulae = []; // background nebula patches
 let titleDebris = []; // floating debris for title screen
+let debrisBelt = []; // asteroid/debris belt between waves
 let _frameTime = 0; // accumulated time for visual effects
 
 /* Input state */
@@ -170,6 +171,8 @@ function initStars() {
       alpha: 0.3 + Math.random() * 0.7,
       r: col.r, g: col.g, b: col.b,
       bright: layer === 2 && Math.random() < 0.12, // ~12% of near stars get diffraction cross
+      twinklePhase: Math.random() * Math.PI * 2,
+      twinkleSpeed: 1.5 + Math.random() * 2.5,
     });
   }
 
@@ -213,6 +216,7 @@ function updateStars(dt) {
       s.y = -2;
       s.x = Math.random() * GAME_W;
     }
+    s.twinklePhase += s.twinkleSpeed * dt;
   }
 }
 
@@ -231,13 +235,14 @@ function drawStars() {
   /* Draw stars */
   for (const s of stars) {
     const brightness = [0.4, 0.6, 1.0][s.layer];
-    const a = s.alpha * brightness;
+    const twinkle = 0.6 + Math.sin(s.twinklePhase) * 0.4;
+    const a = s.alpha * brightness * twinkle;
     ctx.fillStyle = `rgba(${s.r}, ${s.g}, ${s.b}, ${a})`;
     ctx.fillRect(s.x - s.size * 0.5, s.y - s.size * 0.5, s.size, s.size);
 
     /* Diffraction cross for bright stars */
     if (s.bright) {
-      const crossLen = s.size * 3;
+      const crossLen = s.size * 3 * twinkle;
       const ca = a * 0.5;
       ctx.strokeStyle = `rgba(${s.r}, ${s.g}, ${s.b}, ${ca})`;
       ctx.lineWidth = 0.5;
@@ -248,6 +253,70 @@ function drawStars() {
       ctx.lineTo(s.x, s.y + crossLen);
       ctx.stroke();
     }
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   ASTEROID / DEBRIS BELT (between waves)
+   ══════════════════════════════════════════════════════════════════ */
+function spawnDebrisBelt() {
+  debrisBelt = [];
+  const count = 8 + Math.floor(Math.random() * 5); // 8-12 rocks
+  const greyBrown = [
+    '#5a5a5a', '#6b6b6b', '#7a6a55', '#8a7a60', '#6e6e6e',
+    '#7c6c50', '#555555', '#8a8070',
+  ];
+  for (let i = 0; i < count; i++) {
+    const numVerts = 5 + Math.floor(Math.random() * 4); // 5-8 points
+    const verts = [];
+    for (let v = 0; v < numVerts; v++) {
+      const angle = (v / numVerts) * Math.PI * 2;
+      const r = 0.6 + Math.random() * 0.4;
+      verts.push({ angle: angle, r: r });
+    }
+    debrisBelt.push({
+      x: GAME_W + 20 + Math.random() * GAME_W,
+      y: 60 + Math.random() * (GAME_H - 120),
+      size: 5 + Math.random() * 12,
+      speed: 30 + Math.random() * 50,
+      rot: Math.random() * Math.PI * 2,
+      rotSpeed: (Math.random() - 0.5) * 1.5,
+      color: greyBrown[Math.floor(Math.random() * greyBrown.length)],
+      verts: verts,
+    });
+  }
+}
+
+function updateDebrisBelt(dt) {
+  for (let i = debrisBelt.length - 1; i >= 0; i--) {
+    const d = debrisBelt[i];
+    d.x -= d.speed * dt;
+    d.rot += d.rotSpeed * dt;
+    if (d.x < -30) debrisBelt.splice(i, 1);
+  }
+}
+
+function drawDebrisBelt() {
+  for (const d of debrisBelt) {
+    ctx.save();
+    ctx.translate(d.x, d.y);
+    ctx.rotate(d.rot);
+    ctx.fillStyle = d.color;
+    ctx.beginPath();
+    for (let vi = 0; vi < d.verts.length; vi++) {
+      const v = d.verts[vi];
+      const vx = Math.cos(v.angle) * d.size * v.r;
+      const vy = Math.sin(v.angle) * d.size * v.r;
+      if (vi === 0) ctx.moveTo(vx, vy);
+      else ctx.lineTo(vx, vy);
+    }
+    ctx.closePath();
+    ctx.fill();
+    /* Highlight edge */
+    ctx.strokeStyle = 'rgba(200, 200, 200, 0.25)';
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+    ctx.restore();
   }
 }
 
@@ -492,6 +561,72 @@ function drawPlayer() {
     ctx.beginPath();
     ctx.arc(px + 13, py + 12, 1.2, 0, Math.PI * 2);
     ctx.fill();
+  }
+
+  /* === Weapon upgrade visuals === */
+
+  /* spreadShot: Glowing wing-tip gun barrels (cyan dots at wing tips) */
+  if (player.spreadShot) {
+    const gwAlpha = 0.6 + Math.sin(_frameTime * 6) * 0.3;
+    ctx.fillStyle = `rgba(0, 255, 255, ${gwAlpha})`;
+    ctx.beginPath();
+    ctx.arc(px - 14, py + 14, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(px + 14, py + 14, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+    /* Glow halos */
+    const gwg1 = ctx.createRadialGradient(px - 14, py + 14, 0, px - 14, py + 14, 6);
+    gwg1.addColorStop(0, `rgba(0, 255, 255, ${gwAlpha * 0.4})`);
+    gwg1.addColorStop(1, 'rgba(0, 255, 255, 0)');
+    ctx.fillStyle = gwg1;
+    ctx.beginPath();
+    ctx.arc(px - 14, py + 14, 6, 0, Math.PI * 2);
+    ctx.fill();
+    const gwg2 = ctx.createRadialGradient(px + 14, py + 14, 0, px + 14, py + 14, 6);
+    gwg2.addColorStop(0, `rgba(0, 255, 255, ${gwAlpha * 0.4})`);
+    gwg2.addColorStop(1, 'rgba(0, 255, 255, 0)');
+    ctx.fillStyle = gwg2;
+    ctx.beginPath();
+    ctx.arc(px + 14, py + 14, 6, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  /* rapidFire: Pulsing center barrel glow + double barrel lines */
+  if (player.rapidFire) {
+    const rfAlpha = 0.5 + Math.sin(_frameTime * 10) * 0.4;
+    /* Double barrel lines */
+    ctx.strokeStyle = `rgba(255, 200, 0, ${rfAlpha})`;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(px - 2, py - 16);
+    ctx.lineTo(px - 2, py - 22);
+    ctx.moveTo(px + 2, py - 16);
+    ctx.lineTo(px + 2, py - 22);
+    ctx.stroke();
+    /* Pulsing center barrel glow */
+    const rfg = ctx.createRadialGradient(px, py - 18, 0, px, py - 18, 5);
+    rfg.addColorStop(0, `rgba(255, 220, 100, ${rfAlpha * 0.7})`);
+    rfg.addColorStop(1, 'rgba(255, 200, 0, 0)');
+    ctx.fillStyle = rfg;
+    ctx.beginPath();
+    ctx.arc(px, py - 18, 5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  /* bomb: Small red warning triangle on hull */
+  if (game.bombs > 0) {
+    const bwAlpha = 0.6 + Math.sin(_frameTime * 5) * 0.3;
+    ctx.fillStyle = `rgba(255, 50, 50, ${bwAlpha})`;
+    ctx.beginPath();
+    ctx.moveTo(px, py + 2);
+    ctx.lineTo(px - 3, py + 7);
+    ctx.lineTo(px + 3, py + 7);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = `rgba(255, 100, 100, ${bwAlpha})`;
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
   }
 
   ctx.restore();
@@ -838,6 +973,17 @@ function drawEnemies() {
       ctx.arc(e.x, e.y - 12, 1.5, 0, Math.PI * 2);
       ctx.fill();
 
+      /* Engine exhaust glow (orange for zigzag) */
+      const zzExR = 8 + Math.random() * 3;
+      const zzExGlow = ctx.createRadialGradient(e.x, e.y + 12, 0, e.x, e.y + 12, zzExR);
+      zzExGlow.addColorStop(0, 'rgba(255, 180, 50, 0.5)');
+      zzExGlow.addColorStop(0.5, 'rgba(255, 120, 20, 0.25)');
+      zzExGlow.addColorStop(1, 'rgba(255, 80, 0, 0)');
+      ctx.fillStyle = zzExGlow;
+      ctx.beginPath();
+      ctx.arc(e.x, e.y + 12, zzExR, 0, Math.PI * 2);
+      ctx.fill();
+
     } else if (e.type === 'swooper') {
       /* ---- SWOOPER: sleek arrowhead/dart with curved wings ---- */
       ctx.shadowBlur = 8;
@@ -887,6 +1033,34 @@ function drawEnemies() {
       ctx.beginPath();
       ctx.arc(e.x, e.y - 2, 5, 0, Math.PI * 2);
       ctx.fill();
+
+      /* Engine exhaust glow (purple for swooper) */
+      if (e.swoopState === 'dive') {
+        /* Longer directional trail when diving */
+        const dvx = e.diveVx || 0;
+        const dvy = e.diveVy || 100;
+        const dspd = Math.sqrt(dvx * dvx + dvy * dvy) || 1;
+        const ndx = -dvx / dspd;
+        const ndy = -dvy / dspd;
+        for (let ti = 1; ti <= 5; ti++) {
+          const ta = 0.25 - ti * 0.04;
+          const tr = 4 + ti * 1.5;
+          ctx.fillStyle = `rgba(180, 60, 255, ${ta})`;
+          ctx.beginPath();
+          ctx.arc(e.x + ndx * ti * 6, e.y + ndy * ti * 6, tr, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else {
+        const swExR = 7 + Math.random() * 3;
+        const swExGlow = ctx.createRadialGradient(e.x, e.y + 10, 0, e.x, e.y + 10, swExR);
+        swExGlow.addColorStop(0, 'rgba(180, 60, 255, 0.45)');
+        swExGlow.addColorStop(0.5, 'rgba(140, 40, 200, 0.2)');
+        swExGlow.addColorStop(1, 'rgba(100, 20, 180, 0)');
+        ctx.fillStyle = swExGlow;
+        ctx.beginPath();
+        ctx.arc(e.x, e.y + 10, swExR, 0, Math.PI * 2);
+        ctx.fill();
+      }
 
     } else {
       /* ---- BASIC: saucer/disc with dome ---- */
@@ -994,6 +1168,22 @@ function spawnExplosion(x, y, color, count) {
       color: color,
     });
   }
+  /* Streak particles — elongated velocity-direction lines */
+  for (let i = 0; i < 8; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 80 + Math.random() * 200;
+    particles.push({
+      x: x,
+      y: y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      life: 0.2 + Math.random() * 0.35,
+      maxLife: 0.4,
+      size: 2 + Math.random() * 2,
+      color: color,
+      type: 'streak',
+    });
+  }
 }
 
 function updateParticles(dt) {
@@ -1013,6 +1203,21 @@ function drawParticles() {
     const a = Math.max(0, p.life / p.maxLife);
     const sz = p.size * a;
     ctx.globalAlpha = a;
+
+    /* Streak particles — elongated lines in velocity direction */
+    if (p.type === 'streak') {
+      const spd = Math.sqrt(p.vx * p.vx + p.vy * p.vy) || 1;
+      const dirX = p.vx / spd;
+      const dirY = p.vy / spd;
+      const streakLen = sz * 4;
+      ctx.strokeStyle = p.color;
+      ctx.lineWidth = Math.max(0.5, sz * 0.4);
+      ctx.beginPath();
+      ctx.moveTo(p.x - dirX * streakLen * 0.5, p.y - dirY * streakLen * 0.5);
+      ctx.lineTo(p.x + dirX * streakLen * 0.5, p.y + dirY * streakLen * 0.5);
+      ctx.stroke();
+      continue;
+    }
 
     /* Alternate between circles and small rotated squares for variety */
     const useSquare = ((p.x * 7 + p.y * 13) | 0) % 3 === 0; // deterministic per-particle
@@ -1306,6 +1511,16 @@ function checkCollisions() {
           player.powerTimer = 0;
           Audio.shieldBreak();
           spawnExplosion(b.x, b.y, '#00ffcc', 8);
+          /* Shield impact sparks — 15 cyan sparks bursting from impact direction */
+          const impDx = b.x - player.x;
+          const impDy = b.y - player.y;
+          const impAngle = Math.atan2(impDy, impDx);
+          for (let si = 0; si < 15; si++) {
+            const sa = impAngle + (Math.random() - 0.5) * 1.2;
+            const ss = 80 + Math.random() * 180;
+            particles.push({ x: b.x, y: b.y, vx: Math.cos(sa) * ss, vy: Math.sin(sa) * ss,
+              life: 0.2 + Math.random() * 0.3, maxLife: 0.4, size: 1 + Math.random() * 1.5, color: '#00ffff' });
+          }
           enemyBullets.splice(i, 1);
         } else {
           hitPlayer();
@@ -1325,6 +1540,14 @@ function checkCollisions() {
           player.powerTimer = 0;
           Audio.shieldBreak();
           spawnExplosion(player.x, player.y, '#00ffcc', 10);
+          /* Shield impact sparks — 15 cyan sparks for body collision */
+          const impAngle2 = Math.atan2(e.y - player.y, e.x - player.x);
+          for (let si = 0; si < 15; si++) {
+            const sa = impAngle2 + (Math.random() - 0.5) * 1.2;
+            const ss = 80 + Math.random() * 180;
+            particles.push({ x: player.x, y: player.y, vx: Math.cos(sa) * ss, vy: Math.sin(sa) * ss,
+              life: 0.2 + Math.random() * 0.3, maxLife: 0.4, size: 1 + Math.random() * 1.5, color: '#00ffff' });
+          }
         } else {
           hitPlayer();
         }
@@ -1405,6 +1628,7 @@ function startWave() {
     game.waveSpawnTimer = 0;
   }
   game.waveClearDelay = 0;
+  debrisBelt = [];
   waveDisplay.textContent = game.wave;
 }
 
@@ -1437,7 +1661,9 @@ function updateWaveSystem(dt) {
   const allCleared = enemies.length === 0 && allSpawned;
 
   if (allCleared && game.waveEnemiesKilled > 0) {
+    if (game.waveClearDelay === 0 && debrisBelt.length === 0) spawnDebrisBelt();
     game.waveClearDelay += dt;
+    updateDebrisBelt(dt);
     if (game.waveClearDelay > 1.5) {
       Audio.waveClear();
       /* Check flawless */
@@ -1875,6 +2101,9 @@ function draw() {
   ctx.fillRect(0, 0, GAME_W, GAME_H);
 
   drawStars();
+
+  /* Draw debris belt between waves */
+  if (debrisBelt.length > 0) drawDebrisBelt();
 
   if (game.state === 'title') {
     drawTitleScreen();
