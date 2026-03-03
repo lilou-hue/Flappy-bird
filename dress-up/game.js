@@ -30,7 +30,10 @@ const achievementPopupDesc = document.getElementById('achievementPopupDesc');
 
 /* ── i18n helper ── */
 function t(key, fb) {
-  if (typeof I18N !== 'undefined' && I18N.t) return I18N.t(key) || fb;
+  if (typeof I18N !== 'undefined' && I18N.t) {
+    const val = I18N.t(key);
+    return (val && val !== key) ? val : fb;
+  }
   return fb;
 }
 
