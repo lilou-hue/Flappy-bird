@@ -334,6 +334,8 @@ const SKINS = {
 
 let currentSkin = SKINS.classic;
 
+let eatRingAlpha = 0; let eatRingRadius = 0; let eatRingPos = null; let eatRingColor = '#fff';
+
 /* ── Achievements ─────────────────────────────────────────── */
 
 const SNAKE_ACH_I18N = {
@@ -1336,6 +1338,11 @@ function eatFood(now) {
     state.comboMultiplier = 1;
   }
 
+  eatRingAlpha = 0.7;
+  eatRingRadius = 0;
+  eatRingPos = {x: food.x * CELL + CELL/2, y: food.y * CELL + CELL/2};
+  eatRingColor = currentTheme.particleEat;
+
   state.scorePop = 1.0;
   state.headEnlargeTimer = 0.2;
   scoreLabel.textContent = state.score;
@@ -1588,6 +1595,8 @@ function drawSnake(movePhase) {
       const scatterForce = deathElapsed * 120 * (1 + i * 0.3);
       cx += (dx / dist) * scatterForce;
       cy += (dy / dist) * scatterForce;
+      const deathAlpha = Math.max(0, 1 - deathElapsed * 1.2);
+      ctx.globalAlpha = deathAlpha;
     }
 
     positions.push({ cx, cy });
@@ -1627,6 +1636,14 @@ function drawSnake(movePhase) {
       const enlargeScale = state.headEnlargeTimer > 0 ? 1 + state.headEnlargeTimer * 2.5 : 1;
       const headSize = Math.round(18 * enlargeScale);
       const half = headSize / 2;
+
+      ctx.save();
+      ctx.globalAlpha = 0.15;
+      ctx.fillStyle = currentTheme.headGlow;
+      ctx.beginPath();
+      ctx.arc(cx, cy, half + 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
 
       ctx.save();
       ctx.shadowBlur = 12;
@@ -1893,7 +1910,10 @@ function drawPowerUpIndicators() {
     // Bar fill
     ctx.fillStyle = ind.color;
     ctx.globalAlpha = 0.7;
+    ctx.shadowBlur = 4 + Math.sin(performance.now() / 200) * 3;
+    ctx.shadowColor = ind.color;
     ctx.fillRect(4, y - 5, 70 * Math.max(0, ind.remaining), 12);
+    ctx.shadowBlur = 0;
     ctx.globalAlpha = 1;
     // Label
     ctx.fillStyle = "#ffffff";
@@ -1905,6 +1925,13 @@ function drawPowerUpIndicators() {
 
 function drawComboText() {
   if (state.comboTextTimer <= 0) return;
+  if (state.comboCount >= 3 && state.comboTextTimer > 0) {
+    // Golden flash
+    ctx.save();
+    ctx.fillStyle = `rgba(255,215,0,${state.comboTextTimer * 0.15})`;
+    ctx.fillRect(0, 0, GAME_W, GAME_H);
+    ctx.restore();
+  }
   const alpha = Math.min(1, state.comboTextTimer);
   const scale = 1 + (2.0 - state.comboTextTimer) * 0.3;
   ctx.save();
@@ -2054,6 +2081,18 @@ function gameLoop(timestamp) {
   drawDeathRing();
   drawScorePop();
   drawEatFlash();
+  if (eatRingAlpha > 0.01 && eatRingPos) {
+    ctx.save();
+    ctx.strokeStyle = eatRingColor;
+    ctx.globalAlpha = eatRingAlpha;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(eatRingPos.x, eatRingPos.y, eatRingRadius, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+    eatRingRadius += 3;
+    eatRingAlpha *= 0.92;
+  }
   drawPowerUpIndicators();
   drawComboText();
 
