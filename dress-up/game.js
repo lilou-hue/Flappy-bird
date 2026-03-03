@@ -220,15 +220,23 @@ function drawCharacter(c, x, y, w, h, char) {
     c.restore();
   }
 
-  // ── Body (small chibi torso with shading) ──
+  // ── Body (soft moe torso with rich shading) ──
   const torsoH = bodyBot - bodyTop;
-  const bodyGrad = c.createRadialGradient(cx - bodyW * 0.3, bodyTop + torsoH * 0.3, 0, cx, bodyTop + torsoH / 2, torsoH * 0.7);
-  bodyGrad.addColorStop(0, _lighten(furColor, 20));
-  bodyGrad.addColorStop(1, _darken(furColor, 15));
+  const bodyGrad = c.createRadialGradient(cx - bodyW * 0.3, bodyTop + torsoH * 0.25, 0, cx, bodyTop + torsoH / 2, torsoH * 0.7);
+  bodyGrad.addColorStop(0, _lighten(furColor, 30));
+  bodyGrad.addColorStop(0.6, furColor);
+  bodyGrad.addColorStop(1, _darken(furColor, 25));
   c.fillStyle = bodyGrad;
   c.beginPath();
   c.ellipse(cx, bodyTop + torsoH/2, bodyW, torsoH/2, 0, 0, Math.PI*2);
   c.fill();
+  // Soft body outline
+  c.save();
+  c.strokeStyle = _darken(furColor, 30);
+  c.lineWidth = 1;
+  c.globalAlpha = 0.2;
+  c.beginPath(); c.ellipse(cx, bodyTop + torsoH/2, bodyW, torsoH/2, 0, 0, Math.PI*2); c.stroke();
+  c.restore();
   if (isWolf) {
     c.fillStyle = '#b0bec5';
     c.beginPath(); c.ellipse(cx, bodyTop+torsoH/2+3, bodyW*0.5, torsoH/2*0.5, 0, 0, Math.PI*2); c.fill();
@@ -339,19 +347,33 @@ function drawCharacter(c, x, y, w, h, char) {
     }
   }
 
-  // ── Head shine highlight ──
-  const shineGrad = c.createRadialGradient(cx - headR*0.3, headY - headR*0.35, 0, cx, headY, headR);
-  shineGrad.addColorStop(0, 'rgba(255,255,255,0.18)');
-  shineGrad.addColorStop(0.5, 'rgba(255,255,255,0.04)');
+  // ── Anime head shine (big + small highlight) ──
+  const shineGrad = c.createRadialGradient(cx - headR*0.25, headY - headR*0.4, 0, cx, headY, headR);
+  shineGrad.addColorStop(0, 'rgba(255,255,255,0.28)');
+  shineGrad.addColorStop(0.4, 'rgba(255,255,255,0.06)');
   shineGrad.addColorStop(1, 'rgba(0,0,0,0)');
   c.fillStyle = shineGrad;
   c.beginPath(); c.arc(cx, headY, headR, 0, Math.PI*2); c.fill();
+  // Secondary cheek shine
+  c.save();
+  c.globalAlpha = 0.12;
+  c.fillStyle = '#fff';
+  c.beginPath(); c.ellipse(cx + headR*0.35, headY - headR*0.15, headR*0.18, headR*0.12, 0.3, 0, Math.PI*2); c.fill();
+  c.restore();
 
-  // ── BIG anime eyes ──
+  // ── Soft face outline ──
+  c.save();
+  c.strokeStyle = _darken(sk, 25);
+  c.lineWidth = 1.5;
+  c.globalAlpha = 0.25;
+  c.beginPath(); c.arc(cx, headY, headR + 0.5, 0.3, Math.PI - 0.3); c.stroke();
+  c.restore();
+
+  // ── MOE anime eyes (oversized) ──
   const eyeY = headY + headR * 0.0;
   const eyeSp = headR * 0.34;
-  const eyeW = headR * 0.32;
-  const eyeH = headR * 0.40;
+  const eyeW = headR * 0.38;
+  const eyeH = headR * 0.48;
 
   if (isWolf) {
     // Stylized wolf anime eyes — larger and more expressive
@@ -403,65 +425,108 @@ function drawCharacter(c, x, y, w, h, char) {
         c.fillStyle = '#0a0a1a';
         c.beginPath(); c.arc(ex, eyeY + 1, irisR * 0.45, 0, Math.PI * 2); c.fill();
       }
+      // Iris color ring (bright rim around iris)
+      c.save();
+      c.strokeStyle = _lighten(char.eyeColor, 40);
+      c.lineWidth = 1.2;
+      c.globalAlpha = 0.5;
+      if (isCat) {
+        c.beginPath(); c.ellipse(ex, eyeY + 1, irisR * 0.5, irisR, 0, 0, Math.PI * 2); c.stroke();
+      } else {
+        c.beginPath(); c.arc(ex, eyeY + 1, irisR, 0, Math.PI * 2); c.stroke();
+      }
+      c.restore();
       // Big primary highlight (top-right)
       c.fillStyle = '#fff';
-      c.beginPath(); c.arc(ex + eyeW * 0.22, eyeY - eyeH * 0.3, eyeW * 0.32, 0, Math.PI * 2); c.fill();
+      c.beginPath(); c.arc(ex + eyeW * 0.2, eyeY - eyeH * 0.28, eyeW * 0.35, 0, Math.PI * 2); c.fill();
       // Secondary highlight (bottom-left)
-      c.fillStyle = 'rgba(255,255,255,0.6)';
-      c.beginPath(); c.arc(ex - eyeW * 0.2, eyeY + eyeH * 0.2, eyeW * 0.16, 0, Math.PI * 2); c.fill();
+      c.fillStyle = 'rgba(255,255,255,0.7)';
+      c.beginPath(); c.arc(ex - eyeW * 0.22, eyeY + eyeH * 0.18, eyeW * 0.18, 0, Math.PI * 2); c.fill();
       // Third sparkle (tiny, top-left)
-      c.fillStyle = 'rgba(255,255,255,0.45)';
-      c.beginPath(); c.arc(ex - eyeW * 0.1, eyeY - eyeH * 0.35, eyeW * 0.09, 0, Math.PI * 2); c.fill();
+      c.fillStyle = 'rgba(255,255,255,0.55)';
+      c.beginPath(); c.arc(ex - eyeW * 0.12, eyeY - eyeH * 0.38, eyeW * 0.11, 0, Math.PI * 2); c.fill();
+      // Fourth sparkle (tiny, bottom-right)
+      c.fillStyle = 'rgba(255,255,255,0.4)';
+      c.beginPath(); c.arc(ex + eyeW * 0.3, eyeY + eyeH * 0.1, eyeW * 0.07, 0, Math.PI * 2); c.fill();
+      // Fifth star sparkle (animated twinkle)
+      const _now = Date.now() / 400;
+      const twinkleA = 0.3 + Math.sin(_now + s) * 0.2;
+      c.fillStyle = `rgba(255,255,255,${twinkleA})`;
+      c.beginPath(); c.arc(ex + eyeW * 0.05, eyeY - eyeH * 0.15, eyeW * 0.06, 0, Math.PI * 2); c.fill();
       // Thick upper eyelid line
-      c.strokeStyle = 'rgba(20,20,40,0.6)'; c.lineWidth = 2.2; c.lineCap = 'round';
+      c.strokeStyle = 'rgba(20,20,40,0.7)'; c.lineWidth = 2.5; c.lineCap = 'round';
       c.beginPath(); c.ellipse(ex, eyeY, eyeW, eyeH, 0, Math.PI + 0.25, -0.25); c.stroke();
+      // Soft lower eyelid
+      c.strokeStyle = 'rgba(20,20,40,0.12)'; c.lineWidth = 1;
+      c.beginPath(); c.ellipse(ex, eyeY, eyeW * 0.85, eyeH * 0.9, 0, 0.3, Math.PI - 0.3); c.stroke();
       // Eyelashes (girl/fairy/elf/cat)
       if (!isBoy) {
-        c.strokeStyle = 'rgba(20,20,40,0.5)'; c.lineWidth = 1.2;
-        c.beginPath(); c.moveTo(ex - eyeW * 0.85, eyeY - eyeH * 0.3); c.lineTo(ex - eyeW * 1.05, eyeY - eyeH * 0.55); c.stroke();
-        c.beginPath(); c.moveTo(ex - eyeW * 0.6, eyeY - eyeH * 0.65); c.lineTo(ex - eyeW * 0.7, eyeY - eyeH * 0.9); c.stroke();
-        c.beginPath(); c.moveTo(ex + eyeW * 0.85, eyeY - eyeH * 0.3); c.lineTo(ex + eyeW * 1.05, eyeY - eyeH * 0.55); c.stroke();
+        c.strokeStyle = 'rgba(20,20,40,0.6)'; c.lineWidth = 1.5;
+        c.beginPath(); c.moveTo(ex - eyeW * 0.85, eyeY - eyeH * 0.3); c.lineTo(ex - eyeW * 1.1, eyeY - eyeH * 0.6); c.stroke();
+        c.beginPath(); c.moveTo(ex - eyeW * 0.6, eyeY - eyeH * 0.65); c.lineTo(ex - eyeW * 0.72, eyeY - eyeH * 0.95); c.stroke();
+        c.beginPath(); c.moveTo(ex - eyeW * 0.35, eyeY - eyeH * 0.82); c.lineTo(ex - eyeW * 0.38, eyeY - eyeH * 1.08); c.stroke();
+        c.beginPath(); c.moveTo(ex + eyeW * 0.85, eyeY - eyeH * 0.3); c.lineTo(ex + eyeW * 1.1, eyeY - eyeH * 0.6); c.stroke();
+        c.beginPath(); c.moveTo(ex + eyeW * 0.6, eyeY - eyeH * 0.65); c.lineTo(ex + eyeW * 0.72, eyeY - eyeH * 0.95); c.stroke();
       }
     }
   }
 
-  // ── Eyebrows ──
-  c.strokeStyle = isWolf ? '#5d6d7d' : 'rgba(60,40,30,0.35)';
-  c.lineWidth = isWolf ? 1.8 : 1.5; c.lineCap = 'round';
+  // ── Moe eyebrows (soft, thin arches) ──
+  c.strokeStyle = isWolf ? '#5d6d7d' : 'rgba(60,40,30,0.25)';
+  c.lineWidth = isWolf ? 1.6 : 1.2; c.lineCap = 'round';
   for (let s = -1; s <= 1; s += 2) {
     c.beginPath();
-    c.moveTo(cx + s * (eyeSp - eyeW * 0.5), eyeY - eyeH - 3);
-    c.quadraticCurveTo(cx + s * eyeSp, eyeY - eyeH - 6, cx + s * (eyeSp + eyeW * 0.5), eyeY - eyeH - 2);
+    c.moveTo(cx + s * (eyeSp - eyeW * 0.4), eyeY - eyeH - 4);
+    c.quadraticCurveTo(cx + s * eyeSp, eyeY - eyeH - 8, cx + s * (eyeSp + eyeW * 0.4), eyeY - eyeH - 3);
     c.stroke();
   }
 
-  // ── Mouth (anime ω / w mouth) ──
+  // ── Moe mouth (tiny cute ω shape) ──
   if (!isWolf && !isCat) {
     const mY = headY + headR * 0.38;
-    c.strokeStyle = '#d4726a'; c.lineWidth = 1.3; c.lineCap = 'round';
+    // Tiny open mouth shadow (gives depth)
+    c.fillStyle = 'rgba(180,80,80,0.08)';
+    c.beginPath(); c.ellipse(cx, mY + 1.5, headR * 0.06, 1.5, 0, 0, Math.PI * 2); c.fill();
+    // Cute ω line
+    c.strokeStyle = '#d4726a'; c.lineWidth = 1.2; c.lineCap = 'round';
     c.beginPath();
-    c.moveTo(cx - headR * 0.1, mY);
-    c.quadraticCurveTo(cx - headR * 0.05, mY + 3, cx, mY);
-    c.quadraticCurveTo(cx + headR * 0.05, mY + 3, cx + headR * 0.1, mY);
+    c.moveTo(cx - headR * 0.08, mY);
+    c.quadraticCurveTo(cx - headR * 0.04, mY + 2.5, cx, mY);
+    c.quadraticCurveTo(cx + headR * 0.04, mY + 2.5, cx + headR * 0.08, mY);
     c.stroke();
   } else if (isCat) {
-    // Cat :3 mouth
+    // Cat :3 mouth (cuter, rounder)
     const mY = headY + headR * 0.3;
-    c.strokeStyle = '#d4726a'; c.lineWidth = 1; c.lineCap = 'round';
-    c.beginPath(); c.moveTo(cx - 4, mY); c.quadraticCurveTo(cx - 2, mY + 3, cx, mY + 1); c.stroke();
-    c.beginPath(); c.moveTo(cx + 4, mY); c.quadraticCurveTo(cx + 2, mY + 3, cx, mY + 1); c.stroke();
+    c.strokeStyle = '#d4726a'; c.lineWidth = 1.2; c.lineCap = 'round';
+    c.beginPath(); c.moveTo(cx - 5, mY); c.quadraticCurveTo(cx - 2, mY + 4, cx, mY + 1.5); c.stroke();
+    c.beginPath(); c.moveTo(cx + 5, mY); c.quadraticCurveTo(cx + 2, mY + 4, cx, mY + 1.5); c.stroke();
   }
 
-  // ── Anime blush marks (horizontal lines) ──
+  // ── Tiny anime nose ──
+  if (!isWolf && !isCat) {
+    c.fillStyle = _darken(sk, 20);
+    c.globalAlpha = 0.3;
+    c.beginPath(); c.arc(cx, headY + headR * 0.22, 1.5, 0, Math.PI * 2); c.fill();
+    c.globalAlpha = 1;
+  }
+
+  // ── Moe blush patches (soft rosy ovals) ──
   if (!isWolf) {
-    const blushY = eyeY + eyeH + 3;
-    c.strokeStyle = 'rgba(255,120,120,0.25)'; c.lineWidth = 1; c.lineCap = 'round';
+    const blushY = eyeY + eyeH + 2;
     for (let s = -1; s <= 1; s += 2) {
-      const bx = cx + s * (eyeSp + eyeW + 4);
+      const bx = cx + s * (eyeSp + eyeW * 0.5);
+      // Soft pink oval blush
+      c.save();
+      c.globalAlpha = 0.18;
+      c.fillStyle = '#ff6b8a';
+      c.beginPath(); c.ellipse(bx, blushY, headR * 0.22, headR * 0.12, 0, 0, Math.PI * 2); c.fill();
+      c.restore();
+      // Tiny highlight lines within blush
+      c.strokeStyle = 'rgba(255,120,140,0.15)'; c.lineWidth = 0.8; c.lineCap = 'round';
       for (let j = 0; j < 3; j++) {
         c.beginPath();
-        c.moveTo(bx - 4, blushY + j * 2.5);
-        c.lineTo(bx + 4, blushY + j * 2.5);
+        c.moveTo(bx - 4, blushY - 1 + j * 2);
+        c.lineTo(bx + 4, blushY - 1 + j * 2);
         c.stroke();
       }
     }
@@ -497,9 +562,14 @@ function drawCharacter(c, x, y, w, h, char) {
     }
   }
 
-  // ── Ground shadow ──
-  c.fillStyle = 'rgba(0,0,0,0.08)';
-  c.beginPath(); c.ellipse(cx, footY + 5, bodyW + 8, 3, 0, 0, Math.PI * 2); c.fill();
+  // ── Ground shadow (softer, wider) ──
+  c.save();
+  const shadowGrad = c.createRadialGradient(cx, footY + 5, 0, cx, footY + 5, bodyW + 14);
+  shadowGrad.addColorStop(0, 'rgba(0,0,0,0.12)');
+  shadowGrad.addColorStop(1, 'rgba(0,0,0,0)');
+  c.fillStyle = shadowGrad;
+  c.beginPath(); c.ellipse(cx, footY + 5, bodyW + 14, 4, 0, 0, Math.PI * 2); c.fill();
+  c.restore();
 }
 
 /* Color utility helpers */
