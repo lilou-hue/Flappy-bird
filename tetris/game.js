@@ -271,6 +271,18 @@
   const FIELD_W = COLS * CELL; // 280
   const FIELD_H = VISIBLE_ROWS * CELL; // 560
 
+  /* ── Background Sparkles ─────────────────────────────────────────── */
+  const bgSparkles = [];
+  for (let i = 0; i < 20; i++) {
+    bgSparkles.push({
+      x: FIELD_X + Math.random() * FIELD_W,
+      y: FIELD_Y + Math.random() * FIELD_H,
+      size: 0.5 + Math.random() * 1.5,
+      alpha: 0.1 + Math.random() * 0.3,
+      speed: 8 + Math.random() * 16,
+    });
+  }
+
   /* ================================================================== */
   /*  Piece definitions (SRS)                                            */
   /* ================================================================== */
@@ -620,6 +632,26 @@
       state.lockFlashCells.push([r, c]);
     }
     state.lockFlash = 0.3;
+    // Piece lock sparks — emit small sparks at each locked cell
+    for (const [r, c] of cells) {
+      if (r >= 4) {
+        const px = FIELD_X + c * CELL + CELL / 2;
+        const py = FIELD_Y + (r - 4) * CELL + CELL / 2;
+        for (let si = 0; si < 2; si++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = 80 + Math.random() * 150;
+          state.particles.push({
+            x: px, y: py,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            life: 0.3 + Math.random() * 0.4,
+            maxLife: 0.7,
+            color: themedColor(type),
+            size: 2 + Math.random() * 2,
+          });
+        }
+      }
+    }
     Audio.lock();
 
     if (anyAbove) {
@@ -1431,7 +1463,34 @@
     ctx2d.fillStyle = currentTheme.field;
     ctx2d.fillRect(FIELD_X, FIELD_Y, FIELD_W, FIELD_H);
 
-    // Grid lines
+    // Scanline texture on playfield
+    ctx2d.fillStyle = 'rgba(0,0,0,0.04)';
+    for (let sy = 0; sy < FIELD_H; sy += 2) {
+      ctx2d.fillRect(FIELD_X, FIELD_Y + sy, FIELD_W, 1);
+    }
+
+    // Animated background sparkles (clipped to playfield)
+    ctx2d.save();
+    ctx2d.beginPath();
+    ctx2d.rect(FIELD_X, FIELD_Y, FIELD_W, FIELD_H);
+    ctx2d.clip();
+    const acHex = currentTheme.accentColor;
+    const acR = parseInt(acHex.slice(1,3),16);
+    const acG = parseInt(acHex.slice(3,5),16);
+    const acB = parseInt(acHex.slice(5,7),16);
+    for (const sp of bgSparkles) {
+      ctx2d.globalAlpha = sp.alpha * 0.5;
+      ctx2d.fillStyle = 'rgba(' + acR + ',' + acG + ',' + acB + ',' + sp.alpha + ')';
+      ctx2d.beginPath();
+      ctx2d.arc(sp.x, sp.y, sp.size, 0, Math.PI * 2);
+      ctx2d.fill();
+    }
+    ctx2d.restore();
+
+    // Grid lines with level-pulsing opacity
+    const gridPulse = 0.7 + 0.3 * Math.sin(Date.now() / (1000 / Math.max(1, state.level)) * 0.5);
+    ctx2d.save();
+    ctx2d.globalAlpha = gridPulse;
     ctx2d.strokeStyle = currentTheme.gridColor;
     ctx2d.lineWidth = 0.5;
     for (let c = 0; c <= COLS; c++) {
@@ -1448,6 +1507,7 @@
       ctx2d.lineTo(FIELD_X + FIELD_W, y);
       ctx2d.stroke();
     }
+    ctx2d.restore();
 
     // Playfield border
     if (state.garbageWarning > 0) {
@@ -1477,6 +1537,24 @@
               drawBlock(bx, by, "#333340", null, true);
             } else {
               drawBlock(bx, by, themedColor(pieceType), themedGlow(pieceType), true);
+              // Glow skin particle leaks — tiny edge particles on 'glow' skin blocks
+              if (currentSkinName === 'glow' && Math.random() < 0.012) {
+                const edgeSide = Math.floor(Math.random() * 4);
+                let epx, epy;
+                if (edgeSide === 0) { epx = bx + Math.random() * CELL; epy = by; }
+                else if (edgeSide === 1) { epx = bx + CELL; epy = by + Math.random() * CELL; }
+                else if (edgeSide === 2) { epx = bx + Math.random() * CELL; epy = by + CELL; }
+                else { epx = bx; epy = by + Math.random() * CELL; }
+                state.particles.push({
+                  x: epx, y: epy,
+                  vx: (Math.random() - 0.5) * 20,
+                  vy: -10 - Math.random() * 20,
+                  life: 0.2 + Math.random() * 0.3,
+                  maxLife: 0.5,
+                  color: themedColor(pieceType),
+                  size: 0.5 + Math.random() * 1,
+                });
+              }
             }
           }
         }
@@ -1537,6 +1615,20 @@
         }
       }
     }
+
+    // Field vignette depth — darken edges of the playfield slightly
+    ctx2d.save();
+    const fvCx = FIELD_X + FIELD_W / 2;
+    const fvCy = FIELD_Y + FIELD_H / 2;
+    const fvRadius = Math.max(FIELD_W, FIELD_H) * 0.75;
+    const fieldVig = ctx2d.createRadialGradient(fvCx, fvCy, FIELD_W * 0.25, fvCx, fvCy, fvRadius);
+    fieldVig.addColorStop(0, 'rgba(0,0,0,0)');
+    fieldVig.addColorStop(1, 'rgba(0,0,0,0.25)');
+    ctx2d.fillStyle = fieldVig;
+    ctx2d.beginPath();
+    ctx2d.rect(FIELD_X, FIELD_Y, FIELD_W, FIELD_H);
+    ctx2d.fill();
+    ctx2d.restore();
 
     // Level up flash
     if (state.levelUpFlash > 0) {
@@ -1782,6 +1874,15 @@
 
     update(dt);
     updateParticles(dt);
+
+    // Update background sparkles (drift upward, wrap around)
+    for (const sp of bgSparkles) {
+      sp.y -= sp.speed * dt;
+      if (sp.y < FIELD_Y) {
+        sp.y = FIELD_Y + FIELD_H;
+        sp.x = FIELD_X + Math.random() * FIELD_W;
+      }
+    }
 
     // Decay effects
     if (state.shakeTimer > 0) {
