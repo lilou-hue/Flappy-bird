@@ -123,6 +123,19 @@ let flowers = [];
 let butterflies = [];
 let stars = [];
 
+/* --- Game over flash + expanding ring --- */
+let gameOverFlash = 0;
+let gameOverRingRadius = 0;
+let gameOverRingAlpha = 0;
+let gameOverBirdPos = null;
+
+/* --- Ambient gameplay particles (fireflies/pollen) --- */
+let ambientParticles = [];
+
+/* --- Shooting stars for night phase --- */
+let shootingStars = [];
+let shootingStarTimer = 0;
+
 /* --- Drip state for top-pipe water drops --- */
 let dripState = {
   y: 0,
@@ -312,6 +325,27 @@ const resetGame = () => {
   initFlowers();
   initButterflies();
   initStars();
+  /* Init ambient particles */
+  ambientParticles = [];
+  for (let i = 0; i < 10; i++) {
+    ambientParticles.push({
+      x: Math.random() * GAME_W,
+      y: 40 + Math.random() * (GAME_H - 160),
+      speedX: 3 + Math.random() * 6,
+      speedY: 2 + Math.random() * 4,
+      phase: Math.random() * Math.PI * 2,
+      size: 1 + Math.random() * 1.5,
+      alpha: 0.2 + Math.random() * 0.4,
+    });
+  }
+  /* Reset shooting stars */
+  shootingStars = [];
+  shootingStarTimer = 0;
+  /* Reset game over flash */
+  gameOverFlash = 0;
+  gameOverRingRadius = 0;
+  gameOverRingAlpha = 0;
+  gameOverBirdPos = null;
   Audio.stopDrone();
   draw();
 };
@@ -443,6 +477,28 @@ const drawBackground = () => {
       context.beginPath();
       context.arc(star.x, star.y, star.size, 0, Math.PI * 2);
       context.fill();
+    }
+
+    /* Shooting stars (night only) */
+    for (const ss of shootingStars) {
+      const trailLen = 25;
+      const grad = context.createLinearGradient(
+        ss.x, ss.y,
+        ss.x - (ss.vx / Math.sqrt(ss.vx * ss.vx + ss.vy * ss.vy)) * trailLen,
+        ss.y - (ss.vy / Math.sqrt(ss.vx * ss.vx + ss.vy * ss.vy)) * trailLen
+      );
+      grad.addColorStop(0, `rgba(255, 255, 255, ${ss.alpha})`);
+      grad.addColorStop(1, `rgba(255, 255, 255, 0)`);
+      context.strokeStyle = grad;
+      context.lineWidth = 1.5;
+      context.beginPath();
+      context.moveTo(ss.x, ss.y);
+      const mag = Math.sqrt(ss.vx * ss.vx + ss.vy * ss.vy);
+      context.lineTo(
+        ss.x - (ss.vx / mag) * trailLen,
+        ss.y - (ss.vy / mag) * trailLen
+      );
+      context.stroke();
     }
   }
 
@@ -586,6 +642,23 @@ const drawBackground = () => {
   context.fillStyle = groundGrad;
   context.fillRect(0, GAME_H - 35, GAME_W, 35);
 
+  /* Ground depth texture: horizontal stripe lines */
+  context.strokeStyle = `rgba(0, 0, 0, 0.06)`;
+  context.lineWidth = 1;
+  for (let sy = groundTop + 15; sy < GAME_H - 40; sy += 18) {
+    context.beginPath();
+    context.moveTo(0, sy);
+    context.lineTo(GAME_W, sy);
+    context.stroke();
+  }
+  /* Bright top-edge highlight line */
+  context.strokeStyle = `rgba(255, 255, 255, 0.15)`;
+  context.lineWidth = 1.5;
+  context.beginPath();
+  context.moveTo(0, groundTop);
+  context.lineTo(GAME_W, groundTop);
+  context.stroke();
+
   /* Grass blade tufts along ground top edge — darken during night */
   const grassColor1 = lerpColor("#3aad55", "#1a4a28", isNight ? t : 0);
   const grassColor2 = lerpColor("#5cc86e", "#2a5a35", isNight ? t : 0);
@@ -679,6 +752,32 @@ const drawBackground = () => {
     context.globalAlpha = 1;
     context.restore();
   }
+
+  /* Ambient gameplay particles (fireflies/pollen) */
+  const now = performance.now() / 1000;
+  for (const ap of ambientParticles) {
+    const pulsingAlpha = ap.alpha * (0.5 + 0.5 * Math.sin(now * 2 + ap.phase));
+    if (isNight) {
+      /* Night: firefly glow (green/gold) */
+      context.save();
+      context.shadowBlur = 6;
+      context.shadowColor = Math.random() > 0.5 ? "rgba(100,255,100,0.8)" : "rgba(255,220,80,0.8)";
+      context.fillStyle = `rgba(180, 255, 120, ${pulsingAlpha})`;
+      context.beginPath();
+      context.arc(ap.x, ap.y, ap.size, 0, Math.PI * 2);
+      context.fill();
+      context.restore();
+    } else {
+      /* Day: tiny white/yellow dots */
+      const r = Math.random() > 0.5 ? 255 : 255;
+      const g = Math.random() > 0.5 ? 255 : 240;
+      const b = Math.random() > 0.5 ? 255 : 180;
+      context.fillStyle = `rgba(${r}, ${g}, ${b}, ${pulsingAlpha * 0.5})`;
+      context.beginPath();
+      context.arc(ap.x, ap.y, ap.size * 0.7, 0, Math.PI * 2);
+      context.fill();
+    }
+  }
 };
 
 /* --- Wind streaks for speed --- */
@@ -700,6 +799,10 @@ const drawBird = () => {
   /* Tilt based on velocity: nose up when flapping, nose down when falling */
   const tilt = Math.max(-0.5, Math.min(0.65, bird.velocity * 0.0012));
   context.rotate(tilt);
+
+  /* Squash/stretch scaling on flap */
+  const flapStretch = bird.velocity < -200 ? 1 + Math.min(0.15, Math.abs(bird.velocity) * 0.0003) : 1;
+  context.scale(flapStretch, 2 - flapStretch);
 
   /* Speed trail behind the bird */
   for (let i = 0; i < bird.trail.length; i += 1) {
@@ -1113,6 +1216,23 @@ const drawPipes = () => {
     context.fillStyle = skin.shadowColor;
     context.fillRect(pipe.x + gameState.pipeWidth - 8, 0, 8, pipe.top - capH);
     context.fillRect(pipe.x + gameState.pipeWidth - 8, bottomY + capH, 8, GAME_H - bottomY - capH);
+
+    /* Pipe gap light rays (default/wooden skin only) */
+    if (skin.type === "wooden") {
+      context.save();
+      context.globalAlpha = 0.08;
+      context.strokeStyle = "rgba(255, 255, 200, 1)";
+      context.lineWidth = 1;
+      for (let r = 0; r < 4; r++) {
+        const rx = pipe.x + 8 + r * (gameState.pipeWidth / 5);
+        const skew = (r - 1.5) * 2;
+        context.beginPath();
+        context.moveTo(rx, pipe.top + 2);
+        context.lineTo(rx + skew, bottomY - 2);
+        context.stroke();
+      }
+      context.restore();
+    }
   });
 };
 
@@ -1148,10 +1268,13 @@ const drawScorePop = () => {
     context.save();
     context.translate(GAME_W / 2, GAME_H * 0.15);
     context.scale(scale, scale);
+    context.shadowBlur = 12;
+    context.shadowColor = "rgba(255,220,80,0.8)";
     context.fillStyle = `rgba(255, 255, 255, ${alpha})`;
     context.font = "bold 28px 'Trebuchet MS'";
     context.textAlign = "center";
     context.fillText(`+1`, 0, 0);
+    context.shadowBlur = 0;
     context.restore();
     gameState.scorePop *= 0.88;
     if (gameState.scorePop < 0.02) gameState.scorePop = 0;
@@ -1283,6 +1406,10 @@ const update = (deltaSeconds) => {
     if (!feathersSpawned) {
       spawnFeatherParticles();
       feathersSpawned = true;
+      gameOverFlash = 1.0;
+      gameOverRingRadius = 0;
+      gameOverRingAlpha = 0.8;
+      gameOverBirdPos = { x: bird.x, y: bird.y };
       Audio.crash();
       Audio.stopDrone();
       if (wasNewBest && gameState.score > 0) {
@@ -1329,6 +1456,43 @@ const update = (deltaSeconds) => {
     if (leaf.x < -10) {
       leaf.x = GAME_W + 10;
       leaf.y = 60 + Math.random() * (GAME_H - 160);
+    }
+  }
+
+  /* Update ambient particles */
+  for (const ap of ambientParticles) {
+    ap.phase += deltaSeconds * 1.5;
+    ap.x += Math.sin(ap.phase) * ap.speedX * deltaSeconds;
+    ap.y += Math.cos(ap.phase * 0.7) * ap.speedY * deltaSeconds;
+    /* Wrap around edges */
+    if (ap.x < -5) ap.x = GAME_W + 5;
+    if (ap.x > GAME_W + 5) ap.x = -5;
+    if (ap.y < 20) ap.y = GAME_H - 120;
+    if (ap.y > GAME_H - 100) ap.y = 20;
+  }
+
+  /* Update shooting stars */
+  const { phase: skyPhase } = getSkyPhase(gameState.score);
+  if (skyPhase === "night") {
+    shootingStarTimer += deltaSeconds;
+    if (shootingStarTimer >= 4 && shootingStars.length < 2) {
+      shootingStarTimer = 0;
+      shootingStars.push({
+        x: Math.random() * GAME_W * 0.6,
+        y: Math.random() * GAME_H * 0.3,
+        vx: 200 + Math.random() * 150,
+        vy: 80 + Math.random() * 60,
+        alpha: 0.9,
+      });
+    }
+  }
+  for (let i = shootingStars.length - 1; i >= 0; i--) {
+    const ss = shootingStars[i];
+    ss.x += ss.vx * deltaSeconds;
+    ss.y += ss.vy * deltaSeconds;
+    ss.alpha -= 0.4 * deltaSeconds;
+    if (ss.alpha <= 0 || ss.x > GAME_W + 20 || ss.y > GAME_H) {
+      shootingStars.splice(i, 1);
     }
   }
 
@@ -1398,6 +1562,22 @@ const draw = () => {
 
   if (!gameState.isRunning && !gameState.isGameOver) {
     drawOverlay(I18N.t("tapToStart"), I18N.t("keepBirdInGaps"));
+  }
+
+  /* Game over flash + expanding ring */
+  if (gameOverFlash > 0 && gameOverBirdPos) {
+    context.fillStyle = 'rgba(255,255,255,' + gameOverFlash * 0.4 + ')';
+    context.fillRect(0, 0, GAME_W, GAME_H);
+    gameOverFlash *= 0.92;
+    if (gameOverFlash < 0.01) gameOverFlash = 0;
+
+    context.strokeStyle = 'rgba(255,255,255,' + gameOverRingAlpha + ')';
+    context.lineWidth = 2;
+    context.beginPath();
+    context.arc(gameOverBirdPos.x, gameOverBirdPos.y, gameOverRingRadius, 0, Math.PI * 2);
+    context.stroke();
+    gameOverRingRadius += 3;
+    gameOverRingAlpha *= 0.95;
   }
 
   if (gameState.isGameOver) {
