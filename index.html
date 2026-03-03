@@ -352,6 +352,7 @@
       .star-fury-tag { background: rgba(0,204,255,0.12); color: #00ccff; border: 1px solid rgba(0,204,255,0.2); }
       .astro-miner-tag { background: rgba(0,229,255,0.12); color: #00e5ff; border: 1px solid rgba(0,229,255,0.2); }
       .inkognito-tag   { background: rgba(168,85,247,0.12); color: #a855f7; border: 1px solid rgba(168,85,247,0.2); }
+      .dress-up-tag    { background: rgba(232,67,147,0.12); color: #e84393; border: 1px solid rgba(232,67,147,0.2); }
 
       .card-best {
         position: absolute;
@@ -584,6 +585,17 @@
           <h2 data-i18n="inkTitle">Inkognito</h2>
           <p data-i18n="inkDesc">Draw on canvas and let the AI guess what you're drawing in real-time. 10 rounds of creative chaos!</p>
           <span class="card-tag inkognito-tag" data-i18n="creative">Creative</span>
+        </div>
+      </a>
+
+      <a href="/dress-up/" class="game-card">
+        <div class="card-preview dress-up-preview">
+          <canvas id="dressUpCanvas" width="360" height="200"></canvas>
+        </div>
+        <div class="card-body">
+          <h2 data-i18n="dressUpTitle">Dress-Up</h2>
+          <p data-i18n="dressUpDesc">Choose from 6 characters, style them with 56+ items, and take on timed challenges!</p>
+          <span class="card-tag dress-up-tag" data-i18n="creative">Creative</span>
         </div>
       </a>
     </div>
@@ -1762,6 +1774,86 @@
         requestAnimationFrame(draw);
       })();
 
+      /* ─ Dress-Up Preview ─ */
+      (function() {
+        const c = document.getElementById('dressUpCanvas');
+        if (!c) return;
+        const x = c.getContext('2d');
+        let t = 0;
+
+        function draw() {
+          t += 0.016;
+          // Background gradient
+          const bg = x.createLinearGradient(0,0,0,H);
+          bg.addColorStop(0,'#2d1b3d'); bg.addColorStop(1,'#1a1a2e');
+          x.fillStyle = bg; x.fillRect(0,0,W,H);
+
+          // Sparkles
+          for (let i = 0; i < 15; i++) {
+            const sx = (Math.sin(t*0.7+i*2.1)*0.4+0.5)*W;
+            const sy = (Math.cos(t*0.5+i*1.7)*0.4+0.5)*H;
+            const a = 0.2 + Math.sin(t*2+i)*0.15;
+            x.fillStyle = `rgba(232,67,147,${a})`;
+            x.beginPath(); x.arc(sx, sy, 1.5, 0, Math.PI*2); x.fill();
+          }
+
+          // Three character silhouettes
+          const chars = [
+            {cx:90, skin:'#f5cba7', eye:'#3498db', sz:1},
+            {cx:180, skin:'#7f8c8d', eye:'#f39c12', sz:1.15},
+            {cx:270, skin:'#fadbd8', eye:'#e84393', sz:0.9}
+          ];
+          chars.forEach((ch, i) => {
+            const bob = Math.sin(t*1.5 + i*2)*4;
+            const cy = 85 + bob;
+            const s = ch.sz;
+            // Body
+            x.fillStyle = ch.skin;
+            x.beginPath(); x.ellipse(ch.cx, cy+32, 16*s, 28*s, 0, 0, Math.PI*2); x.fill();
+            // Head
+            x.beginPath(); x.arc(ch.cx, cy-8, 14*s, 0, Math.PI*2); x.fill();
+            // Eyes
+            x.fillStyle = '#fff';
+            x.beginPath(); x.arc(ch.cx-5*s, cy-10, 3*s, 0, Math.PI*2); x.fill();
+            x.beginPath(); x.arc(ch.cx+5*s, cy-10, 3*s, 0, Math.PI*2); x.fill();
+            x.fillStyle = ch.eye;
+            x.beginPath(); x.arc(ch.cx-5*s, cy-10, 1.5*s, 0, Math.PI*2); x.fill();
+            x.beginPath(); x.arc(ch.cx+5*s, cy-10, 1.5*s, 0, Math.PI*2); x.fill();
+            // Wolf ears for middle
+            if (i === 1) {
+              x.fillStyle = ch.skin;
+              x.beginPath(); x.moveTo(ch.cx-10, cy-18); x.lineTo(ch.cx-5, cy-32); x.lineTo(ch.cx, cy-18); x.fill();
+              x.beginPath(); x.moveTo(ch.cx+10, cy-18); x.lineTo(ch.cx+5, cy-32); x.lineTo(ch.cx, cy-18); x.fill();
+            }
+            // Fairy wings for third
+            if (i === 2) {
+              x.fillStyle = 'rgba(232,67,147,0.2)';
+              x.beginPath();
+              x.moveTo(ch.cx-14, cy+20); x.quadraticCurveTo(ch.cx-35, cy, ch.cx-12, cy+35); x.fill();
+              x.beginPath();
+              x.moveTo(ch.cx+14, cy+20); x.quadraticCurveTo(ch.cx+35, cy, ch.cx+12, cy+35); x.fill();
+            }
+          });
+
+          // Floating clothing items
+          const items = ['👗','👕','👒','👠','🎀','✨'];
+          x.font = '16px sans-serif'; x.textAlign = 'center';
+          items.forEach((em, i) => {
+            const ix = 30 + i*60;
+            const iy = H - 30 + Math.sin(t*2+i*1.1)*8;
+            x.fillText(em, ix, iy);
+          });
+
+          // Title sparkle
+          x.fillStyle = `rgba(232,67,147,${0.6+Math.sin(t*3)*0.2})`;
+          x.font = 'bold 14px Trebuchet MS'; x.textAlign = 'center';
+          x.fillText('DRESS-UP', W/2, H-6);
+
+          requestAnimationFrame(draw);
+        }
+        requestAnimationFrame(draw);
+      })();
+
     })();
     </script>
     <script src="i18n.js"></script>
@@ -1774,7 +1866,7 @@
       (function() {
         const bestKeys = [
           'flappyBest', 'methaneDriftBest', 'snakeBest', 'luminaBest',
-          'phantomRoadBest', null, 'tetrisBest', 'gunGameBest', 'astroMinerBest', 'starFuryBest', 'inkognitoBest'
+          'phantomRoadBest', null, 'tetrisBest', 'gunGameBest', 'astroMinerBest', 'starFuryBest', 'inkognitoBest', null
         ];
         const cards = document.querySelectorAll('.game-card');
         cards.forEach((card, i) => {

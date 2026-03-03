@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Dress-Up</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="../leaderboard.css" />
+</head>
+<body>
+  <main class="game" id="gameContainer">
+    <header class="game__header">
+      <a href="/" class="back-link" data-i18n="backToGames">&larr; Back to Games</a>
+      <h1 data-i18n="duTitle">Dress-Up</h1>
+      <p data-i18n="duInstructions">Choose a character, pick outfits, and show off your style!</p>
+    </header>
+
+    <!-- HUD -->
+    <div class="game__hud">
+      <div class="hud__score" id="hudScore" style="display:none;">
+        <span data-i18n="score">Score</span>
+        <strong id="scoreDisplay">0</strong>
+      </div>
+      <div class="hud__timer" id="hudTimer" style="display:none;">60</div>
+      <div class="hud__spacer"></div>
+      <button id="muteButton" class="hud__button" type="button" data-i18n="duMute">Mute</button>
+      <button id="fullscreenButton" class="hud__button" type="button" aria-label="Toggle fullscreen">&#x26F6;</button>
+    </div>
+
+    <!-- Main Game Panel -->
+    <section class="game__panel">
+      <!-- Canvas Column -->
+      <div class="canvas-wrap">
+        <canvas id="gameCanvas" width="400" height="600" aria-label="Dress-Up Character"></canvas>
+        <div class="challenge-overlay" id="challengeOverlay">
+          <div class="challenge-theme" id="challengeTheme"></div>
+          <div class="challenge-stars" id="challengeStars">
+            <span class="star" id="star1">&#9733;</span>
+            <span class="star" id="star2">&#9733;</span>
+            <span class="star" id="star3">&#9733;</span>
+          </div>
+          <div class="challenge-score-display" id="challengeScoreDisplay"></div>
+          <button class="action-btn primary" id="challengeCloseBtn" data-i18n="duContinue">Continue</button>
+        </div>
+      </div>
+
+      <!-- Controls Column -->
+      <div class="controls">
+        <!-- Character Selection -->
+        <div class="char-select" id="charSelect"></div>
+
+        <!-- Category Tabs -->
+        <div class="category-tabs" id="categoryTabs"></div>
+
+        <!-- Item Grid -->
+        <div class="item-grid" id="itemGrid"></div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+          <button class="action-btn" id="randomizeBtn" data-i18n="duRandomize">Randomize</button>
+          <button class="action-btn" id="saveBtn" data-i18n="duSave">Save</button>
+          <button class="action-btn" id="loadBtn" data-i18n="duLoad">Load</button>
+          <button class="action-btn" id="clearBtn" data-i18n="duClear">Clear</button>
+          <button class="action-btn primary" id="challengeBtn" data-i18n="duChallenge">Challenge</button>
+          <button class="action-btn" id="screenshotBtn" data-i18n="duScreenshot">Screenshot</button>
+        </div>
+      </div>
+    </section>
+
+    <footer class="game__footer">
+      <p data-i18n="duTip">Tip: Try challenge mode to test your styling skills against the clock!</p>
+    </footer>
+
+    <!-- Achievements Panel -->
+    <div class="achievements-panel" id="achievementsPanel">
+      <button class="achievements-toggle" id="achievementsToggle" type="button" data-i18n="achievements">Achievements</button>
+      <div class="achievements-list" id="achievementsList"></div>
+    </div>
+  </main>
+
+  <!-- Achievement Popup -->
+  <div class="achievement-popup" id="achievementPopup">
+    <div class="achievement-popup__icon" id="achievementPopupIcon"></div>
+    <div class="achievement-popup__text">
+      <strong id="achievementPopupTitle"></strong>
+      <span id="achievementPopupDesc"></span>
+    </div>
+  </div>
+
+  <!-- Load Modal -->
+  <div class="modal-overlay" id="loadModal">
+    <div class="modal">
+      <h3 data-i18n="duLoadOutfit">Load Outfit</h3>
+      <div class="saved-outfits" id="savedOutfits"></div>
+      <button class="modal-close" id="loadModalClose" data-i18n="duClose">Close</button>
+    </div>
+  </div>
+
+  <!-- Leaderboard -->
+  <div id="leaderboardPanel"></div>
+
+  <!-- Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="../leaderboard.js"></script>
+  <script src="../i18n.js"></script>
+  <script src="audio.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
