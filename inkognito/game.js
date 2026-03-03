@@ -39,7 +39,7 @@
     ROUND_TIME: 20,
     TOTAL_ROUNDS: 10,
     CLASSIFY_INTERVAL: 300,
-    GRID_SIZE: 42,
+    GRID_SIZE: 56,
     CONFIDENCE_THRESHOLD: 0.20,
     STROKE_WIDTH: 10,
     COUNTDOWN_SECS: 3,
@@ -82,23 +82,22 @@
     return 3;
   }
 
-  /* ── Feature Templates ── */
-  // Each template: [q1, q2, q3, q4, balH, balV, centerDens, edgeDens, fillRatio, aspectRatio, circularity, convexity, symH, symV, strokeCount, holeCount, endpointRatio, centroidX, centroidY]
-  // 19 features per template
-  /* Feature weights for weighted cosine similarity */
+  /* ── Feature Configuration ── */
+  // Spatial zone grid: divide normalized drawing into ZONES×ZONES cells
+  const ZONES = 7; // 7×7 = 49 zone features (each zone = 8×8 px at GRID_SIZE 56)
+  const NUM_ZONE_FEATURES = ZONES * ZONES;
+
+  /* Feature vector: [49 zone densities, aspectRatio, symH, symV, strokeCount, holeCount, circularity, endpointRatio, fillRatio] = 57 features */
   const FEATURE_WEIGHTS = [
-    1.5, 1.5, 1.5, 1.5,  // quadrant densities
-    1.2, 1.2,              // balance H, V
-    1.5, 1.5,              // center density, edge density
-    2.5,                   // fill ratio
-    3.0,                   // aspect ratio
-    3.0,                   // circularity
-    2.0,                   // convexity
-    2.5, 2.5,              // symmetry H, V
-    2.5,                   // stroke count (normalized 0-1)
-    2.5,                   // hole count (normalized 0-1)
-    2.0,                   // endpoint ratio
-    0.5, 0.5,              // centroid X, Y
+    ...new Array(NUM_ZONE_FEATURES).fill(1.8),  // zone densities — primary spatial discriminator
+    5.0,    // aspect ratio — critical for wide vs tall shapes
+    3.5,    // symmetry H
+    3.5,    // symmetry V
+    3.0,    // stroke count (normalized)
+    3.0,    // hole count (normalized)
+    3.0,    // circularity
+    2.0,    // endpoint ratio
+    2.0,    // fill ratio
   ];
 
   /* ── Canonical shape drawing functions ── */
@@ -302,6 +301,33 @@
     },
   };
 
+  /* ── Floating menu shapes ── */
+  const menuShapes = [];
+  (function initMenuShapes() {
+    const keys = Object.keys(SHAPE_DRAWERS);
+    for (let i = 0; i < 10; i++) {
+      menuShapes.push({
+        drawFn: SHAPE_DRAWERS[keys[i % keys.length]],
+        x: Math.random() * CFG.W,
+        y: Math.random() * CFG.H,
+        size: 40 + Math.random() * 50,
+        vx: (Math.random() - 0.5) * 20,
+        vy: (Math.random() - 0.5) * 20,
+        alpha: 0.04 + Math.random() * 0.06,
+      });
+    }
+  })();
+
+  /* ── Confetti particles ── */
+  let confettiParticles = [];
+
+  /* ── Smooth AI guess bars ── */
+  let barDisplayConf = [0, 0, 0];
+  let shimmerX = 0;
+
+  /* ── Round transition wipe ── */
+  let wipeTimer = 0;
+
   /* ── Generate templates by drawing canonical shapes through the pipeline ── */
   /* This ensures templates match exactly what extractFeatures produces for outlines */
   let TEMPLATES = {};
@@ -502,23 +528,60 @@
      AI CLASSIFIER
      ══════════════════════════════════════════════════════════ */
 
-  function downsampleToGrid() {
-    gridCtx.clearRect(0, 0, CFG.GRID_SIZE, CFG.GRID_SIZE);
-    gridCtx.drawImage(drawCanvas, 0, 0, CFG.GRID_SIZE, CFG.GRID_SIZE);
-    const imgData = gridCtx.getImageData(0, 0, CFG.GRID_SIZE, CFG.GRID_SIZE);
+  /**
+   * Normalize any source canvas to a centered, scale-invariant grid.
+   * Finds the bounding box of all drawn pixels, then renders it centered
+   * and scaled (preserving aspect ratio) onto the analysis grid.
+   * Returns { grid, aspectRatio } or null if the drawing is too small.
+   */
+  function normalizeCanvasToGrid(sourceCanvas, sourceW, sourceH) {
+    // Scan source for bounding box
+    const srcCtx = sourceCanvas.getContext('2d');
+    const srcData = srcCtx.getImageData(0, 0, sourceW, sourceH).data;
+    let minX = sourceW, maxX = 0, minY = sourceH, maxY = 0;
+    let hasPixels = false;
+    for (let y = 0; y < sourceH; y++) {
+      for (let x = 0; x < sourceW; x++) {
+        if (srcData[(y * sourceW + x) * 4 + 3] > 40) {
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+          hasPixels = true;
+        }
+      }
+    }
+    if (!hasPixels) return null;
+
+    const bw = maxX - minX + 1;
+    const bh = maxY - minY + 1;
+    // Skip if drawing is too small (prevents noise matches)
+    if (bw < 15 && bh < 15) return null;
+    const aspectRatio = bw / bh;
+
+    // Render BB content centered on gridCanvas, preserving aspect ratio
+    const G = CFG.GRID_SIZE;
+    const pad = 2;
+    const maxDim = G - 2 * pad;
+    const scale = maxDim / Math.max(bw, bh);
+    const dw = bw * scale;
+    const dh = bh * scale;
+    const dx = (G - dw) / 2;
+    const dy = (G - dh) / 2;
+
+    gridCtx.clearRect(0, 0, G, G);
+    gridCtx.drawImage(sourceCanvas, minX, minY, bw, bh, dx, dy, dw, dh);
+
+    const imgData = gridCtx.getImageData(0, 0, G, G).data;
     const grid = [];
-    for (let y = 0; y < CFG.GRID_SIZE; y++) {
-      const row = [];
-      for (let x = 0; x < CFG.GRID_SIZE; x++) {
-        const idx = (y * CFG.GRID_SIZE + x) * 4;
-        // Use alpha channel — strokes are white-on-transparent, so alpha
-        // correctly represents coverage after anti-aliased downsampling
-        const alpha = imgData.data[idx + 3];
-        row.push(alpha > 80 ? 1 : 0);
+    for (let y = 0; y < G; y++) {
+      const row = new Uint8Array(G);
+      for (let x = 0; x < G; x++) {
+        row[x] = imgData[(y * G + x) * 4 + 3] > 60 ? 1 : 0;
       }
       grid.push(row);
     }
-    return grid;
+    return { grid, aspectRatio };
   }
 
   function extractFeatures(grid) {
@@ -823,6 +886,24 @@
       // Transition to result
       state = STATES.ROUND_RESULT;
       resultTimer = 2.0;
+      wipeTimer = 1.0;
+
+      // Spawn confetti celebration
+      confettiParticles = [];
+      for (let i = 0; i < 45; i++) {
+        confettiParticles.push({
+          x: CFG.W / 2 + (Math.random() - 0.5) * 200,
+          y: DRAW_Y + CFG.DRAW_SIZE / 2,
+          vx: (Math.random() - 0.5) * 300,
+          vy: -200 - Math.random() * 250,
+          size: 3 + Math.random() * 5,
+          color: ['#a855f7','#00dca0','#ffd700','#ff5577','#38bdf8'][Math.floor(Math.random()*5)],
+          alpha: 1,
+          rotation: Math.random() * Math.PI * 2,
+          rotSpeed: (Math.random() - 0.5) * 10,
+          isRect: Math.random() > 0.5,
+        });
+      }
     }
   }
 
@@ -1040,7 +1121,9 @@
     guesses = [];
     lastClassifyTime = 0;
     clearDrawing();
+    barDisplayConf = [0, 0, 0];
     state = STATES.COUNTDOWN;
+    wipeTimer = 1.0;
     Audio.newRound();
   }
 
@@ -1097,9 +1180,45 @@
       case STATES.ROUND_RESULT: renderResult(dt); break;
       case STATES.GAME_OVER: renderGameOver(dt); break;
     }
+
+    // Round transition wipe overlay
+    if (wipeTimer > 0) {
+      ctx.save();
+      const progress = 1 - wipeTimer; // 0 -> 1
+      const barW = CFG.W * 1.2;
+      const barH = 6;
+      const xPos = -CFG.W * 0.1 + progress * (CFG.W + CFG.W * 0.2);
+      ctx.globalAlpha = wipeTimer;
+      ctx.fillStyle = PAL.accent;
+      ctx.fillRect(xPos - barW / 2, 0, barW, barH);
+      ctx.fillRect(xPos - barW / 2, CFG.H - barH, barW, barH);
+      ctx.restore();
+    }
   }
 
   function renderMenu(dt) {
+    // Floating shape outlines
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    for (const shape of menuShapes) {
+      shape.x += shape.vx * dt;
+      shape.y += shape.vy * dt;
+      if (shape.x < -60) shape.x = CFG.W + 60;
+      if (shape.x > CFG.W + 60) shape.x = -60;
+      if (shape.y < -60) shape.y = CFG.H + 60;
+      if (shape.y > CFG.H + 60) shape.y = -60;
+      ctx.save();
+      ctx.translate(shape.x, shape.y);
+      ctx.globalAlpha = shape.alpha;
+      ctx.strokeStyle = PAL.accent;
+      shape.drawFn(ctx, shape.size);
+      ctx.restore();
+    }
+    ctx.restore();
+
     // Title
     ctx.save();
     ctx.textAlign = 'center';
@@ -1286,6 +1405,17 @@
     ctx.beginPath();
     ctx.roundRect(DRAW_X, DRAW_Y, CFG.DRAW_SIZE, CFG.DRAW_SIZE, 12);
     ctx.clip();
+
+    // Dot-grid texture
+    ctx.fillStyle = 'rgba(168,85,247,0.08)';
+    for (let dx = 0; dx < CFG.DRAW_SIZE; dx += 20) {
+      for (let dy = 0; dy < CFG.DRAW_SIZE; dy += 20) {
+        ctx.beginPath();
+        ctx.arc(DRAW_X + dx, DRAW_Y + dy, 1, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
     ctx.drawImage(drawCanvas, DRAW_X, DRAW_Y);
     ctx.restore();
   }
@@ -1306,8 +1436,8 @@
     for (let i = 0; i < 3; i++) {
       const guess = guesses[i];
       const word = guess ? guess.word : '---';
-      const conf = guess ? guess.confidence : 0;
-      const isCorrect = guess && guess.word === targetWord && conf >= CFG.CONFIDENCE_THRESHOLD;
+      const smoothConf = barDisplayConf[i] || 0;
+      const isCorrect = guess && guess.word === targetWord && smoothConf >= CFG.CONFIDENCE_THRESHOLD;
 
       // Bar background
       ctx.fillStyle = PAL.barBg;
@@ -1315,13 +1445,28 @@
       ctx.roundRect(DRAW_X, y, barW, barH, 4);
       ctx.fill();
 
-      // Bar fill
-      const fillW = barW * Math.min(1, conf);
+      // Bar fill (using smoothed value)
+      const fillW = barW * Math.min(1, smoothConf);
       if (fillW > 0) {
         ctx.fillStyle = isCorrect ? PAL.barCorrect : (i === 0 ? PAL.barFill : 'rgba(168, 85, 247, 0.3)');
         ctx.beginPath();
         ctx.roundRect(DRAW_X, y, fillW, barH, 4);
         ctx.fill();
+
+        // Shimmer highlight on top bar
+        if (i === 0 && fillW > 10) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.roundRect(DRAW_X, y, fillW, barH, 4);
+          ctx.clip();
+          const shimGrad = ctx.createLinearGradient(DRAW_X + shimmerX - 30, y, DRAW_X + shimmerX + 30, y);
+          shimGrad.addColorStop(0, 'rgba(255,255,255,0)');
+          shimGrad.addColorStop(0.5, 'rgba(255,255,255,0.18)');
+          shimGrad.addColorStop(1, 'rgba(255,255,255,0)');
+          ctx.fillStyle = shimGrad;
+          ctx.fillRect(DRAW_X, y, fillW, barH);
+          ctx.restore();
+        }
       }
 
       // Label
@@ -1334,7 +1479,7 @@
       // Confidence percentage
       ctx.textAlign = 'right';
       ctx.fillStyle = PAL.textDim;
-      ctx.fillText(Math.round(conf * 100) + '%', DRAW_X + barW - 8, y + barH / 2);
+      ctx.fillText(Math.round(smoothConf * 100) + '%', DRAW_X + barW - 8, y + barH / 2);
 
       y += barH + gap;
     }
@@ -1384,6 +1529,28 @@
     }
 
     ctx.restore();
+
+    // Draw confetti
+    if (confettiParticles.length > 0) {
+      ctx.save();
+      for (const p of confettiParticles) {
+        if (p.alpha <= 0) continue;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rotation);
+        ctx.globalAlpha = p.alpha;
+        ctx.fillStyle = p.color;
+        if (p.isRect) {
+          ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+        } else {
+          ctx.beginPath();
+          ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+      ctx.restore();
+    }
 
     // Show AI guesses
     renderAIGuesses();
@@ -1443,6 +1610,32 @@
   function update(dt) {
     animTime += dt;
 
+    // Update confetti particles
+    for (const p of confettiParticles) {
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.vy += 400 * dt; // gravity
+      p.rotation += p.rotSpeed * dt;
+      p.alpha -= 0.4 * dt;
+      if (p.alpha < 0) p.alpha = 0;
+    }
+
+    // Smooth bar confidence lerp
+    for (let i = 0; i < 3; i++) {
+      const target = (guesses[i] ? guesses[i].confidence : 0);
+      barDisplayConf[i] += (target - barDisplayConf[i]) * Math.min(1, 8 * dt);
+    }
+
+    // Shimmer animation
+    shimmerX += 120 * dt;
+    if (shimmerX > CFG.DRAW_SIZE + 60) shimmerX = -60;
+
+    // Wipe timer decay
+    if (wipeTimer > 0) {
+      wipeTimer -= dt * 2;
+      if (wipeTimer < 0) wipeTimer = 0;
+    }
+
     switch (state) {
       case STATES.COUNTDOWN: {
         const prevSec = Math.ceil(countdownTimer);
@@ -1466,6 +1659,7 @@
             Audio.wrong();
             state = STATES.ROUND_RESULT;
             resultTimer = 2.5;
+            wipeTimer = 1.0;
             // Run final classification
             classify();
           }
