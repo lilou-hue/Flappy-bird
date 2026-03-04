@@ -166,8 +166,8 @@ const BGMusic = (() => {
         {n:N.Eb4,d:1},{n:N.Db4,d:0.5},{n:N.Eb4,d:0.5},{n:N.F4,d:1},{n:N.R,d:1},
       ],
       bass: [
-        {n:N.F3,d:2},{n:N.Eb3,d:2},{n:N.Db4,d:2},{n:N.Eb3,d:2},
-        {n:N.F3,d:2},{n:N.Eb3,d:2},{n:N.Db4,d:2},{n:N.Eb3,d:2},
+        {n:N.F3,d:2},{n:N.Eb3,d:2},{n:N.Db3,d:2},{n:N.Eb3,d:2},
+        {n:N.F3,d:2},{n:N.Eb3,d:2},{n:N.Db3,d:2},{n:N.Eb3,d:2},
       ],
     },
     badGuy: {
@@ -212,13 +212,18 @@ const BGMusic = (() => {
   };
 
   let currentSong = null;
-  let melodyTimers = [];
+  let loopTimer = null;
   let playing = false;
+  let activeNodes = []; // track oscillators so we can kill them on stop
 
   function stopAll() {
     playing = false;
-    melodyTimers.forEach(t => clearTimeout(t));
-    melodyTimers = [];
+    if (loopTimer) { clearTimeout(loopTimer); loopTimer = null; }
+    // Immediately stop all scheduled oscillators
+    for (const node of activeNodes) {
+      try { node.gain.gain.cancelScheduledValues(0); node.gain.gain.value = 0; node.osc.stop(); } catch (e) {}
+    }
+    activeNodes = [];
   }
 
   function scheduleNote(actx, master, freq, startTime, duration, type, vol) {
@@ -229,12 +234,15 @@ const BGMusic = (() => {
     o.frequency.value = freq;
     g.gain.setValueAtTime(0, startTime);
     g.gain.linearRampToValueAtTime(vol, startTime + 0.02);
-    g.gain.setValueAtTime(vol, startTime + duration - 0.03);
+    g.gain.setValueAtTime(vol, startTime + Math.max(0.02, duration - 0.03));
     g.gain.linearRampToValueAtTime(0, startTime + duration);
     o.connect(g);
     g.connect(master);
     o.start(startTime);
     o.stop(startTime + duration + 0.01);
+    const entry = { osc: o, gain: g };
+    activeNodes.push(entry);
+    o.onended = () => { const i = activeNodes.indexOf(entry); if (i >= 0) activeNodes.splice(i, 1); };
   }
 
   function playLoop() {
@@ -272,8 +280,7 @@ const BGMusic = (() => {
 
     // Schedule next loop
     const loopMs = totalMelodyDur * 1000;
-    const tid = setTimeout(() => { if (playing) playLoop(); }, loopMs - 200);
-    melodyTimers.push(tid);
+    loopTimer = setTimeout(() => { if (playing) playLoop(); }, loopMs - 200);
   }
 
   function play(songId) {
