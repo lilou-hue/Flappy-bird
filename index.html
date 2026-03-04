@@ -253,6 +253,10 @@
       .game-card:nth-child(9) { animation-delay: 0.45s; }
       .game-card:nth-child(10) { animation-delay: 0.5s; }
       .game-card:nth-child(11) { animation-delay: 0.55s; }
+      .game-card:nth-child(12) { animation-delay: 0.6s; }
+      .game-card:nth-child(13) { animation-delay: 0.65s; }
+      .game-card:nth-child(14) { animation-delay: 0.7s; }
+      .game-card:nth-child(15) { animation-delay: 0.75s; }
       @keyframes cardReveal {
         to { opacity: 1; transform: translateY(0); }
       }
@@ -289,7 +293,10 @@
       .game-card:nth-child(9)::after { box-shadow: inset 0 0 0 1px rgba(0,229,255,0.4), 0 0 30px rgba(0,229,255,0.08); }
       .game-card:nth-child(10)::after { box-shadow: inset 0 0 0 1px rgba(0,229,255,0.4), 0 0 30px rgba(0,229,255,0.08); }
       .game-card:nth-child(11)::after { box-shadow: inset 0 0 0 1px rgba(168,85,247,0.4), 0 0 30px rgba(168,85,247,0.08); }
-      .game-card:nth-child(10)::after { box-shadow: inset 0 0 0 1px rgba(0,204,255,0.4), 0 0 30px rgba(0,204,255,0.08); }
+      .game-card:nth-child(12)::after { box-shadow: inset 0 0 0 1px rgba(232,67,147,0.4), 0 0 30px rgba(232,67,147,0.08); }
+      .game-card:nth-child(13)::after { box-shadow: inset 0 0 0 1px rgba(255,100,200,0.4), 0 0 30px rgba(255,100,200,0.08); }
+      .game-card:nth-child(14)::after { box-shadow: inset 0 0 0 1px rgba(0,210,255,0.4), 0 0 30px rgba(0,210,255,0.08); }
+      .game-card:nth-child(15)::after { box-shadow: inset 0 0 0 1px rgba(255,50,150,0.4), 0 0 30px rgba(255,50,150,0.08); }
 
       .game-card:hover .card-preview canvas { filter: brightness(1.12) saturate(1.1); }
 
@@ -348,6 +355,10 @@
       .star-fury-preview { background: linear-gradient(180deg, #050510, #0a0a20 55%, #080818 85%, #020208 100%); }
       .astro-miner-preview { background: linear-gradient(180deg, #1a0a3a, #0f0625, #0a0520); }
       .inkognito-preview   { background: linear-gradient(180deg, #1a0835, #0c0620, #06041a); }
+      .dress-up-preview    { background: linear-gradient(180deg, #2d1b3d, #1a1a2e, #100a1e); }
+      .stack-tower-preview { background: linear-gradient(180deg, #0a0a1a, #12102a, #0a0a1a); }
+      .neon-pong-preview   { background: linear-gradient(180deg, #060612, #0a0a20, #060612); }
+      .beat-drop-preview   { background: linear-gradient(180deg, #140a20, #0a0a1a, #140a20); }
 
       .flappy-tag    { background: rgba(123,228,149,0.12); color: #7be495; border: 1px solid rgba(123,228,149,0.2); }
       .methane-tag   { background: rgba(23,205,211,0.12); color: #17cdd3; border: 1px solid rgba(23,205,211,0.2); }
@@ -361,6 +372,9 @@
       .astro-miner-tag { background: rgba(0,229,255,0.12); color: #00e5ff; border: 1px solid rgba(0,229,255,0.2); }
       .inkognito-tag   { background: rgba(168,85,247,0.12); color: #a855f7; border: 1px solid rgba(168,85,247,0.2); }
       .dress-up-tag    { background: rgba(232,67,147,0.12); color: #e84393; border: 1px solid rgba(232,67,147,0.2); }
+      .stack-tower-tag { background: rgba(255,100,200,0.12); color: #ff64c8; border: 1px solid rgba(255,100,200,0.2); }
+      .neon-pong-tag   { background: rgba(0,210,255,0.12); color: #00d2ff; border: 1px solid rgba(0,210,255,0.2); }
+      .beat-drop-tag   { background: rgba(255,50,150,0.12); color: #ff3296; border: 1px solid rgba(255,50,150,0.2); }
 
       .card-best {
         position: absolute;
@@ -604,6 +618,39 @@
           <h2 data-i18n="dressUpTitle">Dress-Up</h2>
           <p data-i18n="dressUpDesc">Choose from 6 characters, style them with 56+ items, and take on timed challenges!</p>
           <span class="card-tag dress-up-tag" data-i18n="creative">Creative</span>
+        </div>
+      </a>
+
+      <a href="/stack-tower/" class="game-card">
+        <div class="card-preview stack-tower-preview">
+          <canvas id="stackTowerCanvas" width="360" height="200"></canvas>
+        </div>
+        <div class="card-body">
+          <h2 data-i18n="stackTowerTitle">Stack Tower</h2>
+          <p data-i18n="stackTowerDesc">Tap to drop blocks and build the tallest tower. Perfect alignment keeps full width!</p>
+          <span class="card-tag stack-tower-tag" data-i18n="arcade">Arcade</span>
+        </div>
+      </a>
+
+      <a href="/neon-pong/" class="game-card">
+        <div class="card-preview neon-pong-preview">
+          <canvas id="neonPongCanvas" width="360" height="200"></canvas>
+        </div>
+        <div class="card-body">
+          <h2 data-i18n="neonPongTitle">Neon Pong</h2>
+          <p data-i18n="neonPongDesc">Classic Pong with neon glow, AI opponent, and power-ups. First to 11 wins!</p>
+          <span class="card-tag neon-pong-tag" data-i18n="versus">Versus</span>
+        </div>
+      </a>
+
+      <a href="/beat-drop/" class="game-card">
+        <div class="card-preview beat-drop-preview">
+          <canvas id="beatDropCanvas" width="360" height="200"></canvas>
+        </div>
+        <div class="card-body">
+          <h2 data-i18n="beatDropTitle">Beat Drop</h2>
+          <p data-i18n="beatDropDesc">Hit notes as they fall to the beat. Procedural music builds with your combo!</p>
+          <span class="card-tag beat-drop-tag" data-i18n="rhythm">Rhythm</span>
         </div>
       </a>
     </div>
@@ -1862,6 +1909,207 @@
         requestAnimationFrame(draw);
       })();
 
+      /* ─ Stack Tower Preview ─ */
+      (function() {
+        const c = document.getElementById('stackTowerCanvas');
+        if (!c) return;
+        const x = c.getContext('2d');
+        let t = 0;
+        const blocks = [];
+        let bw = 120, bx = (W - 120) / 2;
+        for (let i = 0; i < 6; i++) {
+          blocks.push({ x: bx + (Math.random()-0.5)*4, w: bw - i*3, hue: i*40 });
+        }
+        let movingX = 0, movingDir = 1, movingHue = 240;
+
+        function draw() {
+          t += 0.016;
+          x.fillStyle = '#0a0a1a'; x.fillRect(0,0,W,H);
+
+          // Stars
+          for (let i = 0; i < 20; i++) {
+            const sx = (i*53+10)%W, sy = (i*37+5)%(H*0.5);
+            x.fillStyle = `rgba(255,255,255,${0.2+Math.sin(t*2+i)*0.15})`;
+            x.fillRect(sx, sy, 1, 1);
+          }
+
+          // Draw stack
+          const baseY = H - 20;
+          const bh = 22;
+          for (let i = 0; i < blocks.length; i++) {
+            const b = blocks[i];
+            const by = baseY - (i + 1) * bh;
+            const grad = x.createLinearGradient(b.x, by, b.x, by + bh);
+            grad.addColorStop(0, `hsl(${b.hue}, 80%, 65%)`);
+            grad.addColorStop(1, `hsl(${b.hue}, 80%, 50%)`);
+            x.fillStyle = grad;
+            x.fillRect(b.x, by, b.w, bh - 2);
+            x.fillStyle = 'rgba(255,255,255,0.15)';
+            x.fillRect(b.x + 2, by + 1, b.w - 4, 3);
+          }
+
+          // Moving block
+          movingX += movingDir * 2;
+          if (movingX + 100 > W) movingDir = -1;
+          if (movingX < 0) movingDir = 1;
+          const my = baseY - (blocks.length + 1) * bh;
+          movingHue = (t * 60) % 360;
+          x.shadowBlur = 10;
+          x.shadowColor = `hsl(${movingHue}, 80%, 55%)`;
+          const mg = x.createLinearGradient(movingX, my, movingX, my + bh);
+          mg.addColorStop(0, `hsl(${movingHue}, 80%, 65%)`);
+          mg.addColorStop(1, `hsl(${movingHue}, 80%, 50%)`);
+          x.fillStyle = mg;
+          x.fillRect(movingX, my, blocks[blocks.length-1].w, bh - 2);
+          x.shadowBlur = 0;
+
+          requestAnimationFrame(draw);
+        }
+        requestAnimationFrame(draw);
+      })();
+
+      /* ─ Neon Pong Preview ─ */
+      (function() {
+        const c = document.getElementById('neonPongCanvas');
+        if (!c) return;
+        const x = c.getContext('2d');
+        let t = 0;
+        let ballX = W/2, ballY = H/2, bvx = 2, bvy = 1.5;
+        let p1y = H/2 - 20, p2y = H/2 - 20;
+
+        function draw() {
+          t += 0.016;
+          x.fillStyle = '#060612'; x.fillRect(0,0,W,H);
+
+          // Center line
+          x.setLineDash([4,6]);
+          x.strokeStyle = 'rgba(255,255,255,0.1)';
+          x.lineWidth = 1;
+          x.beginPath(); x.moveTo(W/2,0); x.lineTo(W/2,H); x.stroke();
+          x.setLineDash([]);
+
+          // Ball movement
+          ballX += bvx; ballY += bvy;
+          if (ballY < 6 || ballY > H-6) bvy *= -1;
+          if (ballX < 25 && ballY > p1y && ballY < p1y+40) { bvx = Math.abs(bvx); }
+          if (ballX > W-25 && ballY > p2y && ballY < p2y+40) { bvx = -Math.abs(bvx); }
+          if (ballX < -10 || ballX > W+10) { ballX = W/2; ballY = H/2; bvx = bvx > 0 ? 2 : -2; }
+
+          // AI paddles
+          p1y += (ballY - p1y - 20) * 0.04;
+          p2y += (ballY - p2y - 20) * 0.03;
+
+          // Player paddle (cyan)
+          x.save();
+          x.shadowBlur = 12; x.shadowColor = '#00d4ff';
+          x.fillStyle = '#00d4ff';
+          x.fillRect(14, p1y, 6, 40);
+          x.restore();
+
+          // AI paddle (pink)
+          x.save();
+          x.shadowBlur = 12; x.shadowColor = '#ff69b4';
+          x.fillStyle = '#ff69b4';
+          x.fillRect(W-20, p2y, 6, 40);
+          x.restore();
+
+          // Ball trail
+          for (let i = 1; i <= 5; i++) {
+            x.fillStyle = `rgba(255,255,255,${0.15 - i*0.025})`;
+            x.beginPath(); x.arc(ballX - bvx*i*2, ballY - bvy*i*2, 5 - i*0.6, 0, Math.PI*2); x.fill();
+          }
+
+          // Ball
+          x.save();
+          x.shadowBlur = 10; x.shadowColor = '#fff';
+          x.fillStyle = '#fff';
+          x.beginPath(); x.arc(ballX, ballY, 5, 0, Math.PI*2); x.fill();
+          x.restore();
+
+          // Score
+          x.font = 'bold 20px sans-serif';
+          x.textAlign = 'center';
+          x.fillStyle = 'rgba(255,255,255,0.08)';
+          x.fillText('7', W/4, 30);
+          x.fillText('5', 3*W/4, 30);
+
+          requestAnimationFrame(draw);
+        }
+        requestAnimationFrame(draw);
+      })();
+
+      /* ─ Beat Drop Preview ─ */
+      (function() {
+        const c = document.getElementById('beatDropCanvas');
+        if (!c) return;
+        const x = c.getContext('2d');
+        let t = 0;
+        const laneColors = ['#ff69b4','#00d2ff','#00ff88','#ffa500'];
+        const notes = [];
+        for (let i = 0; i < 8; i++) {
+          notes.push({ lane: Math.floor(Math.random()*4), y: -i*35 - Math.random()*20 });
+        }
+
+        function draw() {
+          t += 0.016;
+          x.fillStyle = '#0a0a1a'; x.fillRect(0,0,W,H);
+          const lw = W/4;
+
+          // Lane backgrounds
+          for (let i = 0; i < 4; i++) {
+            x.fillStyle = 'rgba(255,255,255,0.02)';
+            x.fillRect(i*lw, 0, lw, H);
+            x.strokeStyle = 'rgba(255,255,255,0.05)';
+            x.lineWidth = 1;
+            x.beginPath(); x.moveTo(i*lw,0); x.lineTo(i*lw,H); x.stroke();
+          }
+
+          // Strike line
+          const sy = H - 30;
+          x.strokeStyle = 'rgba(255,255,255,0.2)';
+          x.lineWidth = 2;
+          x.beginPath(); x.moveTo(0,sy); x.lineTo(W,sy); x.stroke();
+
+          // Receptors
+          for (let i = 0; i < 4; i++) {
+            const cx = i*lw + lw/2;
+            const pulse = Math.sin(t*4+i)*0.3 + 0.7;
+            x.strokeStyle = laneColors[i];
+            x.lineWidth = 1.5;
+            x.globalAlpha = pulse * 0.5;
+            x.beginPath(); x.arc(cx, sy, 12, 0, Math.PI*2); x.stroke();
+            x.globalAlpha = 1;
+          }
+
+          // Notes falling
+          for (const n of notes) {
+            n.y += 1.5;
+            if (n.y > H + 20) { n.y = -20; n.lane = Math.floor(Math.random()*4); }
+            const cx = n.lane*lw + lw/2;
+            const color = laneColors[n.lane];
+            x.save();
+            x.shadowBlur = 8; x.shadowColor = color;
+            const grad = x.createRadialGradient(cx, n.y, 2, cx, n.y, 12);
+            grad.addColorStop(0, '#fff');
+            grad.addColorStop(0.5, color);
+            grad.addColorStop(1, color + '60');
+            x.fillStyle = grad;
+            x.beginPath(); x.arc(cx, n.y, 12, 0, Math.PI*2); x.fill();
+            x.restore();
+          }
+
+          // Combo text
+          const combo = 25 + Math.floor(Math.sin(t*0.5)*10);
+          x.font = 'bold 16px sans-serif';
+          x.textAlign = 'center';
+          x.fillStyle = `rgba(255,255,255,${0.2+Math.sin(t*3)*0.1})`;
+          x.fillText(combo + 'x', W/2, 25);
+
+          requestAnimationFrame(draw);
+        }
+        requestAnimationFrame(draw);
+      })();
+
     })();
     </script>
     <script src="i18n.js"></script>
@@ -1874,7 +2122,8 @@
       (function() {
         const bestKeys = [
           'flappyBest', 'methaneDriftBest', 'snakeBest', 'luminaBest',
-          'phantomRoadBest', null, 'tetrisBest', 'gunGameBest', 'astroMinerBest', 'starFuryBest', 'inkognitoBest', null
+          'phantomRoadBest', null, 'tetrisBest', 'gunGameBest', 'astroMinerBest', 'starFuryBest', 'inkognitoBest', null,
+          'stackTowerBest', 'neonPongBest', 'beatDropBest'
         ];
         const cards = document.querySelectorAll('.game-card');
         cards.forEach((card, i) => {
@@ -1919,9 +2168,12 @@
           { key: 'astroMinerAch', total: 0 },
           { key: 'starFuryAch', total: 0 },
           { key: 'inkognitoAch', total: 0 },
+          { key: 'stackTowerAch', total: 0 },
+          { key: 'neonPongAch', total: 0 },
+          { key: 'beatDropAch', total: 0 },
         ];
 
-        const gameNames = ['Flappy Bird', 'Methane Drift', 'Snake', 'Lumina', 'Phantom Road', 'Unicorn Clicker', 'Tetris', 'Gun Game', 'Astro Miner', 'Star Fury', 'Inkognito'];
+        const gameNames = ['Flappy Bird', 'Methane Drift', 'Snake', 'Lumina', 'Phantom Road', 'Unicorn Clicker', 'Tetris', 'Gun Game', 'Astro Miner', 'Star Fury', 'Inkognito', 'Dress-Up', 'Stack Tower', 'Neon Pong', 'Beat Drop'];
 
         let totalAch = 0;
         let maxPlayed = 0;
@@ -1940,7 +2192,7 @@
           } catch(e) {}
         }
 
-        const bestKeys = ['flappyBest', 'methaneDriftBest', 'snakeBest', 'luminaBest', 'phantomRoadBest', 'tetrisBest', 'gunGameBest', 'astroMinerBest', 'starFuryBest', 'inkognitoBest'];
+        const bestKeys = ['flappyBest', 'methaneDriftBest', 'snakeBest', 'luminaBest', 'phantomRoadBest', 'tetrisBest', 'gunGameBest', 'astroMinerBest', 'starFuryBest', 'inkognitoBest', 'stackTowerBest', 'neonPongBest', 'beatDropBest'];
         let combinedBest = 0;
         for (const key of bestKeys) {
           combinedBest += Number(localStorage.getItem(key)) || 0;
