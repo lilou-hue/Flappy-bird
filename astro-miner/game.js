@@ -772,6 +772,8 @@ function render() {
   const W = CONFIG.width;
   const H = CONFIG.height;
 
+  ctx.setTransform(canvas.width / W, 0, 0, canvas.height / H, 0, 0);
+
   /* Background */
   const bg = ctx.createLinearGradient(0, 0, 0, H);
   bg.addColorStop(0, '#0a0520');
@@ -1704,14 +1706,38 @@ muteBtn.addEventListener('click', () => {
   muteBtn.textContent = muted ? t('soundOff', 'Sound: OFF') : t('soundOn', 'Sound: ON');
 });
 
+let isFullscreen = false;
+function updateCanvasSize() {
+  const dpr = window.devicePixelRatio || 1;
+  if (isFullscreen) {
+    const screenW = window.innerWidth;
+    const screenH = window.innerHeight;
+    const aspect = CONFIG.width / CONFIG.height;
+    let w, h;
+    if (screenW / screenH > aspect) { h = screenH; w = Math.floor(h * aspect); }
+    else { w = screenW; h = Math.floor(w / aspect); }
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    canvas.width = Math.floor(w * dpr);
+    canvas.height = Math.floor(h * dpr);
+  } else {
+    canvas.style.width = '';
+    canvas.style.height = '';
+    canvas.width = CONFIG.width;
+    canvas.height = CONFIG.height;
+  }
+}
 fullscreenBtn.addEventListener('click', () => {
+  const el = document.querySelector('.game-area') || document.documentElement;
   if (!document.fullscreenElement) {
-    const el = document.documentElement;
     (el.requestFullscreen || el.webkitRequestFullscreen).call(el).catch(() => {});
   } else {
     document.exitFullscreen();
   }
 });
+document.addEventListener('fullscreenchange', () => { isFullscreen = !!document.fullscreenElement; updateCanvasSize(); });
+document.addEventListener('webkitfullscreenchange', () => { isFullscreen = !!document.webkitFullscreenElement; updateCanvasSize(); });
+window.addEventListener('resize', () => { if (isFullscreen) updateCanvasSize(); });
 
 achievementsToggle.addEventListener('click', () => {
   achievementsList.classList.toggle('open');

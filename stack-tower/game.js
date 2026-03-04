@@ -128,6 +128,22 @@ muteBtn.addEventListener('click', () => {
   muteBtn.textContent = m ? '\u{1F507}' : '\u{1F50A}';
 });
 
+let isFullscreen = false;
+function updateCanvasSize() {
+  if (isFullscreen) {
+    const screenW = window.innerWidth;
+    const screenH = window.innerHeight - 52;
+    const aspect = CW / CH;
+    let w, h;
+    if (screenW / screenH > aspect) { h = screenH; w = Math.floor(h * aspect); }
+    else { w = screenW; h = Math.floor(w / aspect); }
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+  } else {
+    canvas.style.width = '';
+    canvas.style.height = '';
+  }
+}
 document.getElementById('fullscreenButton').addEventListener('click', () => {
   const el = document.getElementById('gameContainer');
   if (!document.fullscreenElement) {
@@ -136,6 +152,9 @@ document.getElementById('fullscreenButton').addEventListener('click', () => {
     (document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen).call(document);
   }
 });
+document.addEventListener('fullscreenchange', () => { isFullscreen = !!document.fullscreenElement; requestAnimationFrame(updateCanvasSize); });
+document.addEventListener('webkitfullscreenchange', () => { isFullscreen = !!document.webkitFullscreenElement; requestAnimationFrame(updateCanvasSize); });
+window.addEventListener('resize', () => { if (isFullscreen) updateCanvasSize(); });
 
 // ── Achievements ──
 const ACH = [

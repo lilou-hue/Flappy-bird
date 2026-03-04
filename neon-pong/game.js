@@ -319,7 +319,7 @@ muteBtn.addEventListener('click', () => {
   const nowMuted = Audio.toggle();
   muteBtn.textContent = nowMuted ? '\u{1F507}' : '\u{1F50A}';
   if (nowMuted) BGMusic.stop();
-  else {
+  else if (gameActive) {
     const ms = document.getElementById('musicSelect').value;
     if (ms !== 'none') BGMusic.play(ms);
   }
