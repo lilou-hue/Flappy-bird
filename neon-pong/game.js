@@ -116,15 +116,206 @@ const Audio = (() => {
   function playDefeat() {
     [330, 294, 262].forEach((f, i) => setTimeout(() => playTone(f, 0.3, 'sine', 0.2), i * 200));
   }
-  return { init, resume, toggle, isMuted, playPaddleHit, playWallHit, playScore, playPowerup, playFreeze, playVictory, playDefeat };
+  return { init, resume, toggle, isMuted, getCtx() { return actx; }, getMaster() { return master; }, playPaddleHit, playWallHit, playScore, playPowerup, playFreeze, playVictory, playDefeat };
 })();
+
+// ── Background Music ──
+const BGMusic = (() => {
+  // Note frequencies
+  const N = {
+    C3:131,Db3:139,D3:147,Eb3:156,E3:165,F3:175,Gb3:185,G3:196,Ab3:208,A3:220,Bb3:233,B3:247,
+    C4:262,Db4:277,D4:294,Eb4:311,E4:330,F4:349,Gb4:370,G4:392,Ab4:415,A4:440,Bb4:466,B4:494,
+    C5:523,Db5:554,D5:587,Eb5:622,E5:659,F5:698,G5:784,A5:880,B5:988,
+    C6:1047,R:0
+  };
+
+  // Songs: arrays of {note, dur} where dur is in beats. Each song has bpm + melody + bass
+  const SONGS = {
+    shakeItOff: {
+      name: 'Shake It Off', bpm: 160,
+      melody: [
+        {n:N.G4,d:0.5},{n:N.G4,d:0.5},{n:N.G4,d:0.5},{n:N.G4,d:0.5},{n:N.E4,d:0.5},{n:N.E4,d:0.5},{n:N.E4,d:1},
+        {n:N.G4,d:0.5},{n:N.G4,d:0.5},{n:N.G4,d:0.5},{n:N.G4,d:0.5},{n:N.A4,d:0.5},{n:N.A4,d:0.5},{n:N.A4,d:1},
+        {n:N.G4,d:0.5},{n:N.G4,d:0.5},{n:N.G4,d:0.5},{n:N.A4,d:0.5},{n:N.B4,d:1},{n:N.A4,d:0.5},{n:N.G4,d:0.5},{n:N.E4,d:1},
+        {n:N.D4,d:0.5},{n:N.E4,d:0.5},{n:N.G4,d:1},{n:N.E4,d:0.5},{n:N.D4,d:0.5},{n:N.C4,d:1},
+      ],
+      bass: [
+        {n:N.C3,d:2},{n:N.G3,d:2},{n:N.A3,d:2},{n:N.F3,d:2},
+        {n:N.C3,d:2},{n:N.G3,d:2},{n:N.A3,d:2},{n:N.F3,d:2},
+      ],
+    },
+    radioactive: {
+      name: 'Radioactive', bpm: 136,
+      melody: [
+        {n:N.Bb4,d:1},{n:N.A4,d:0.5},{n:N.G4,d:0.5},{n:N.R,d:0.5},{n:N.G4,d:0.5},{n:N.Bb4,d:1},
+        {n:N.A4,d:1},{n:N.G4,d:0.5},{n:N.F4,d:0.5},{n:N.R,d:0.5},{n:N.F4,d:0.5},{n:N.G4,d:1},
+        {n:N.Bb4,d:1},{n:N.A4,d:0.5},{n:N.G4,d:0.5},{n:N.R,d:0.5},{n:N.G4,d:0.5},{n:N.Bb4,d:1},
+        {n:N.C5,d:1.5},{n:N.Bb4,d:0.5},{n:N.A4,d:1},{n:N.R,d:1},
+      ],
+      bass: [
+        {n:N.Bb3,d:2},{n:N.D3,d:2},{n:N.F3,d:2},{n:N.C3,d:2},
+        {n:N.Bb3,d:2},{n:N.D3,d:2},{n:N.F3,d:2},{n:N.C3,d:2},
+      ],
+    },
+    blindingLights: {
+      name: 'Blinding Lights', bpm: 171,
+      melody: [
+        {n:N.F4,d:0.5},{n:N.Eb4,d:0.5},{n:N.F4,d:0.5},{n:N.Ab4,d:0.5},{n:N.F4,d:0.5},{n:N.Eb4,d:0.5},{n:N.F4,d:1},
+        {n:N.Eb4,d:0.5},{n:N.Db4,d:0.5},{n:N.Eb4,d:0.5},{n:N.F4,d:0.5},{n:N.Eb4,d:0.5},{n:N.Db4,d:0.5},{n:N.Eb4,d:1},
+        {n:N.F4,d:0.5},{n:N.Eb4,d:0.5},{n:N.F4,d:0.5},{n:N.Ab4,d:0.5},{n:N.Bb4,d:1},{n:N.Ab4,d:0.5},{n:N.F4,d:0.5},
+        {n:N.Eb4,d:1},{n:N.Db4,d:0.5},{n:N.Eb4,d:0.5},{n:N.F4,d:1},{n:N.R,d:1},
+      ],
+      bass: [
+        {n:N.F3,d:2},{n:N.Eb3,d:2},{n:N.Db4,d:2},{n:N.Eb3,d:2},
+        {n:N.F3,d:2},{n:N.Eb3,d:2},{n:N.Db4,d:2},{n:N.Eb3,d:2},
+      ],
+    },
+    badGuy: {
+      name: 'Bad Guy', bpm: 135,
+      melody: [
+        {n:N.D4,d:0.5},{n:N.D4,d:0.5},{n:N.D4,d:0.5},{n:N.E4,d:0.5},{n:N.R,d:0.5},{n:N.Gb4,d:0.5},{n:N.E4,d:0.5},{n:N.D4,d:0.5},
+        {n:N.R,d:0.5},{n:N.B3,d:0.5},{n:N.R,d:0.5},{n:N.A3,d:0.5},{n:N.B3,d:1},{n:N.R,d:1},
+        {n:N.D4,d:0.5},{n:N.D4,d:0.5},{n:N.D4,d:0.5},{n:N.E4,d:0.5},{n:N.R,d:0.5},{n:N.Gb4,d:0.5},{n:N.E4,d:0.5},{n:N.D4,d:0.5},
+        {n:N.R,d:0.5},{n:N.B3,d:0.75},{n:N.D4,d:0.75},{n:N.E4,d:0.5},{n:N.D4,d:1},
+      ],
+      bass: [
+        {n:N.D3,d:1},{n:N.R,d:0.5},{n:N.D3,d:0.5},{n:N.D3,d:1},{n:N.R,d:0.5},{n:N.D3,d:0.5},
+        {n:N.D3,d:1},{n:N.R,d:0.5},{n:N.D3,d:0.5},{n:N.D3,d:1},{n:N.R,d:0.5},{n:N.D3,d:0.5},
+      ],
+    },
+    believer: {
+      name: 'Believer', bpm: 125,
+      melody: [
+        {n:N.A4,d:0.5},{n:N.R,d:0.25},{n:N.A4,d:0.5},{n:N.R,d:0.25},{n:N.A4,d:0.5},{n:N.C5,d:1},{n:N.R,d:0.5},
+        {n:N.A4,d:0.5},{n:N.R,d:0.25},{n:N.A4,d:0.5},{n:N.R,d:0.25},{n:N.A4,d:0.5},{n:N.G4,d:1},{n:N.R,d:0.5},
+        {n:N.A4,d:0.5},{n:N.R,d:0.25},{n:N.A4,d:0.5},{n:N.R,d:0.25},{n:N.A4,d:0.5},{n:N.C5,d:0.5},{n:N.D5,d:0.5},{n:N.R,d:0.5},
+        {n:N.E5,d:1},{n:N.D5,d:0.5},{n:N.C5,d:0.5},{n:N.A4,d:1},{n:N.R,d:0.5},
+      ],
+      bass: [
+        {n:N.A3,d:2},{n:N.F3,d:2},{n:N.C3,d:2},{n:N.G3,d:2},
+        {n:N.A3,d:2},{n:N.F3,d:2},{n:N.C3,d:2},{n:N.G3,d:2},
+      ],
+    },
+    levitating: {
+      name: 'Levitating', bpm: 103,
+      melody: [
+        {n:N.Bb4,d:0.5},{n:N.A4,d:0.5},{n:N.G4,d:0.5},{n:N.A4,d:0.5},{n:N.Bb4,d:0.5},{n:N.C5,d:0.5},{n:N.Bb4,d:0.5},{n:N.A4,d:0.5},
+        {n:N.G4,d:0.5},{n:N.F4,d:0.5},{n:N.G4,d:1},{n:N.R,d:0.5},{n:N.G4,d:0.5},{n:N.A4,d:0.5},{n:N.Bb4,d:0.5},
+        {n:N.C5,d:0.5},{n:N.D5,d:0.5},{n:N.C5,d:0.5},{n:N.Bb4,d:0.5},{n:N.A4,d:0.5},{n:N.Bb4,d:0.5},{n:N.A4,d:0.5},{n:N.G4,d:0.5},
+        {n:N.F4,d:1},{n:N.G4,d:1},{n:N.R,d:1},{n:N.R,d:1},
+      ],
+      bass: [
+        {n:N.Bb3,d:2},{n:N.G3,d:2},{n:N.Eb3,d:2},{n:N.F3,d:2},
+        {n:N.Bb3,d:2},{n:N.G3,d:2},{n:N.Eb3,d:2},{n:N.F3,d:2},
+      ],
+    },
+  };
+
+  let currentSong = null;
+  let melodyTimers = [];
+  let playing = false;
+
+  function stopAll() {
+    playing = false;
+    melodyTimers.forEach(t => clearTimeout(t));
+    melodyTimers = [];
+  }
+
+  function scheduleNote(actx, master, freq, startTime, duration, type, vol) {
+    if (freq === 0) return; // rest
+    const o = actx.createOscillator();
+    const g = actx.createGain();
+    o.type = type;
+    o.frequency.value = freq;
+    g.gain.setValueAtTime(0, startTime);
+    g.gain.linearRampToValueAtTime(vol, startTime + 0.02);
+    g.gain.setValueAtTime(vol, startTime + duration - 0.03);
+    g.gain.linearRampToValueAtTime(0, startTime + duration);
+    o.connect(g);
+    g.connect(master);
+    o.start(startTime);
+    o.stop(startTime + duration + 0.01);
+  }
+
+  function playLoop() {
+    if (!playing || !currentSong) return;
+    const actx = Audio.getCtx();
+    const master = Audio.getMaster();
+    if (!actx || !master) return;
+
+    const song = SONGS[currentSong];
+    if (!song) return;
+    const beatDur = 60 / song.bpm;
+    let now = actx.currentTime + 0.05;
+
+    // Schedule melody
+    let melodyTime = now;
+    for (const note of song.melody) {
+      const dur = note.d * beatDur;
+      scheduleNote(actx, master, note.n, melodyTime, dur * 0.9, 'square', 0.08);
+      melodyTime += dur;
+    }
+
+    // Schedule bass
+    let bassTime = now;
+    const totalMelodyDur = song.melody.reduce((s, n) => s + n.d, 0) * beatDur;
+    const totalBassDur = song.bass.reduce((s, n) => s + n.d, 0) * beatDur;
+    // Loop bass to fill melody length
+    while (bassTime < now + totalMelodyDur) {
+      for (const note of song.bass) {
+        const dur = note.d * beatDur;
+        if (bassTime >= now + totalMelodyDur) break;
+        scheduleNote(actx, master, note.n, bassTime, dur * 0.85, 'triangle', 0.06);
+        bassTime += dur;
+      }
+    }
+
+    // Schedule next loop
+    const loopMs = totalMelodyDur * 1000;
+    const tid = setTimeout(() => { if (playing) playLoop(); }, loopMs - 200);
+    melodyTimers.push(tid);
+  }
+
+  function play(songId) {
+    stopAll();
+    if (!songId || songId === 'none') { currentSong = null; return; }
+    currentSong = songId;
+    playing = true;
+    Audio.init();
+    Audio.resume();
+    playLoop();
+  }
+
+  function stop() { stopAll(); currentSong = null; }
+  function getCurrent() { return currentSong; }
+  function isPlaying() { return playing; }
+
+  return { play, stop, getCurrent, isPlaying, SONGS };
+})();
+
+// Music selector
+const musicSelect = document.getElementById('musicSelect');
+const savedMusic = localStorage.getItem('neonPongMusic') || 'none';
+musicSelect.value = savedMusic;
+musicSelect.addEventListener('change', () => {
+  const val = musicSelect.value;
+  localStorage.setItem('neonPongMusic', val);
+  if (val === 'none') BGMusic.stop();
+  else BGMusic.play(val);
+});
 
 // ── Mute / Fullscreen ──
 const muteBtn = document.getElementById('muteButton');
 muteBtn.textContent = Audio.isMuted() ? '\u{1F507}' : '\u{1F50A}';
 muteBtn.addEventListener('click', () => {
   Audio.init(); Audio.resume();
-  muteBtn.textContent = Audio.toggle() ? '\u{1F507}' : '\u{1F50A}';
+  const nowMuted = Audio.toggle();
+  muteBtn.textContent = nowMuted ? '\u{1F507}' : '\u{1F50A}';
+  if (nowMuted) BGMusic.stop();
+  else {
+    const ms = document.getElementById('musicSelect').value;
+    if (ms !== 'none') BGMusic.play(ms);
+  }
 });
 
 document.getElementById('fullscreenButton').addEventListener('click', () => {
@@ -248,6 +439,9 @@ function resetGame() {
   aiNoiseOffset = 0;
   updateHUD();
   Audio.init(); Audio.resume();
+  // Start background music if selected
+  const ms = document.getElementById('musicSelect').value;
+  if (ms !== 'none') BGMusic.play(ms);
 }
 
 function updateHUD() {
@@ -477,6 +671,7 @@ function update(dt) {
 function endMatch() {
   gameActive = false;
   matchOver = true;
+  BGMusic.stop();
   achData.stats.gamesPlayed++;
 
   if (playerScore >= WIN_SCORE) {
