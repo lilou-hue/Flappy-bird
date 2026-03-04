@@ -1753,7 +1753,7 @@ if (fullscreenButton) fullscreenButton.addEventListener("click", toggleFullscree
 /* ── Tab Visibility ───────────────────────────────────────── */
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) { Audio.stopDrone(); }
-  else if (gameState === "playing" && !Audio.isMuted()) { Audio.startDrone(); }
+  else if (gameState.isRunning && !Audio.isMuted()) { Audio.startDrone(); }
 });
 
 /* ── Canvas sizing (DPI-aware) ──────────────────────────── */

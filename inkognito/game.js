@@ -1174,8 +1174,8 @@
       ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(CFG.W, y); ctx.stroke();
     }
 
+    ctx.save();
     if (shakeTimer > 0) {
-      ctx.save();
       ctx.translate((Math.random() - 0.5) * shakeIntensity, (Math.random() - 0.5) * shakeIntensity);
       shakeTimer -= dt; shakeIntensity *= 0.85;
     }
@@ -1188,7 +1188,7 @@
       case STATES.GAME_OVER: renderGameOver(dt); break;
     }
 
-    if (shakeTimer > 0) ctx.restore();
+    ctx.restore();
 
     // Round transition wipe overlay
     if (wipeTimer > 0) {
@@ -1650,7 +1650,7 @@
     ctx.fillStyle = PAL.textDim;
     ctx.fillText('Best: ' + bestScore, CFG.W / 2, 280);
 
-    if (score >= bestScore && score > 0) {
+    if (score > bestScore && score > 0) {
       ctx.font = 'bold 20px "Trebuchet MS", system-ui, sans-serif';
       ctx.fillStyle = '#ffd700';
       ctx.fillText('\u2B50 NEW BEST! \u2B50', CFG.W / 2, 310);

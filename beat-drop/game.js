@@ -460,13 +460,15 @@ function endGame() {
   gameOver = true;
   AudioEngine.playGameOver();
 
-  // Stats
-  if (score > achData.stats.bestScore) achData.stats.bestScore = score;
-  if (combo > achData.stats.bestCombo) achData.stats.bestCombo = combo;
-  if (perfectStreak > achData.stats.bestPerfectStreak) achData.stats.bestPerfectStreak = perfectStreak;
-  achData.stats.totalHits += totalHits;
-  if (bpm > achData.stats.maxBPM) achData.stats.maxBPM = bpm;
-  checkAch();
+  // Stats (skip in practice mode)
+  if (!practiceMode) {
+    if (score > achData.stats.bestScore) achData.stats.bestScore = score;
+    if (combo > achData.stats.bestCombo) achData.stats.bestCombo = combo;
+    if (perfectStreak > achData.stats.bestPerfectStreak) achData.stats.bestPerfectStreak = perfectStreak;
+    achData.stats.totalHits += totalHits;
+    if (bpm > achData.stats.maxBPM) achData.stats.maxBPM = bpm;
+    checkAch();
+  }
 
   if (score > bestScore) {
     bestScore = score;
