@@ -1068,208 +1068,287 @@ function updateFragments(dt) {
 const drawBackground = () => {
   const scoreProgress = Math.min(gameState.score / 30, 1);
 
-  const skyTop = lerpColor("#5cb8ff", "#ff9944", scoreProgress);
-  const skyMid = lerpColor("#a8e0ff", "#ffc577", scoreProgress);
-  const skyLow = lerpColor("#d4f0d4", "#ffe0a0", scoreProgress);
-  const skyBot = lerpColor("#7be495", "#7be495", scoreProgress * 0.3);
-
+  /* ── Dark cyberpunk sky gradient ── */
   const skyGrad = context.createLinearGradient(0, 0, 0, GAME_H);
-  skyGrad.addColorStop(0, skyTop);
-  skyGrad.addColorStop(0.55, skyMid);
-  skyGrad.addColorStop(0.85, skyLow);
-  skyGrad.addColorStop(1, skyBot);
+  skyGrad.addColorStop(0, "#0a0a1a");
+  skyGrad.addColorStop(0.4, "#1a1035");
+  skyGrad.addColorStop(0.75, "#120c28");
+  skyGrad.addColorStop(1, "#0d0d1a");
   context.fillStyle = skyGrad;
   context.fillRect(0, 0, GAME_W, GAME_H);
 
-  const sunX = 60;
-  const sunY = 50;
-  const haloGrad = context.createRadialGradient(sunX, sunY, 8, sunX, sunY, 70);
-  const haloAlpha = 0.12 + scoreProgress * 0.1;
-  haloGrad.addColorStop(0, `rgba(255, 240, 180, ${0.6 + scoreProgress * 0.3})`);
-  haloGrad.addColorStop(0.3, `rgba(255, 220, 120, ${haloAlpha})`);
-  haloGrad.addColorStop(1, "rgba(255, 220, 120, 0)");
-  context.fillStyle = haloGrad;
-  context.fillRect(0, 0, 160, 140);
+  /* ── Glowing moon ── */
+  const moonX = 60;
+  const moonY = 50;
+  const moonGlow = context.createRadialGradient(moonX, moonY, 6, moonX, moonY, 80);
+  moonGlow.addColorStop(0, "rgba(180, 200, 255, 0.8)");
+  moonGlow.addColorStop(0.2, "rgba(140, 160, 220, 0.3)");
+  moonGlow.addColorStop(0.5, "rgba(100, 80, 180, 0.08)");
+  moonGlow.addColorStop(1, "rgba(100, 80, 180, 0)");
+  context.fillStyle = moonGlow;
+  context.fillRect(0, 0, 180, 160);
 
-  context.fillStyle = `rgba(255, 240, 200, ${0.7 + scoreProgress * 0.2})`;
+  context.fillStyle = "rgba(180, 200, 255, 0.85)";
   context.beginPath();
-  context.arc(sunX, sunY, 16, 0, Math.PI * 2);
+  context.arc(moonX, moonY, 14, 0, Math.PI * 2);
+  context.fill();
+  /* Moon crater hints */
+  context.fillStyle = "rgba(140, 160, 220, 0.3)";
+  context.beginPath();
+  context.arc(moonX - 4, moonY - 3, 3, 0, Math.PI * 2);
+  context.fill();
+  context.beginPath();
+  context.arc(moonX + 5, moonY + 4, 2, 0, Math.PI * 2);
   context.fill();
 
+  /* ── Slow-drifting smoke / haze (replaces clouds) ── */
   for (const cloud of clouds) {
-    context.fillStyle = `rgba(255, 255, 255, ${cloud.alpha})`;
+    const smokeAlpha = cloud.alpha * 0.35;
+    context.fillStyle = `rgba(60, 40, 80, ${smokeAlpha})`;
     context.beginPath();
-    context.ellipse(cloud.x, cloud.y, cloud.width / 2, cloud.height / 2, 0, 0, Math.PI * 2);
+    context.ellipse(cloud.x, cloud.y, cloud.width * 0.7, cloud.height * 0.5, 0, 0, Math.PI * 2);
     context.fill();
+    context.fillStyle = `rgba(80, 50, 100, ${smokeAlpha * 0.6})`;
     context.beginPath();
-    context.ellipse(cloud.x - cloud.width * 0.25, cloud.y + 4, cloud.width * 0.35, cloud.height * 0.4, 0, 0, Math.PI * 2);
+    context.ellipse(cloud.x - cloud.width * 0.2, cloud.y + 3, cloud.width * 0.4, cloud.height * 0.35, 0, 0, Math.PI * 2);
     context.fill();
+    context.fillStyle = `rgba(50, 30, 70, ${smokeAlpha * 0.4})`;
     context.beginPath();
-    context.ellipse(cloud.x + cloud.width * 0.25, cloud.y + 3, cloud.width * 0.3, cloud.height * 0.35, 0, 0, Math.PI * 2);
-    context.fill();
-    /* Bottom-shadow gradient for volumetric look */
-    context.fillStyle = `rgba(200, 210, 220, ${cloud.alpha * 0.4})`;
-    context.beginPath();
-    context.ellipse(cloud.x, cloud.y + cloud.height * 0.18, cloud.width * 0.45, cloud.height * 0.32, 0, 0, Math.PI * 2);
-    context.fill();
-    context.fillStyle = `rgba(180, 195, 210, ${cloud.alpha * 0.25})`;
-    context.beginPath();
-    context.ellipse(cloud.x - cloud.width * 0.15, cloud.y + cloud.height * 0.22, cloud.width * 0.3, cloud.height * 0.22, 0, 0, Math.PI * 2);
+    context.ellipse(cloud.x + cloud.width * 0.25, cloud.y + 2, cloud.width * 0.35, cloud.height * 0.3, 0, 0, Math.PI * 2);
     context.fill();
   }
 
+  /* ── Distant neon city skyline (replaces hills) ── */
   const groundTop = GAME_H - 90;
   if (hills.length > 1) {
-    context.fillStyle = "rgba(80, 160, 100, 0.25)";
+    /* Dark building silhouettes */
+    context.fillStyle = "#0f0f2a";
     context.beginPath();
     context.moveTo(0, groundTop);
     for (const h of hills) {
-      context.lineTo(h.x, h.y);
+      /* Convert smooth hill curves into blocky building tops */
+      const buildingTop = h.y - 10;
+      context.lineTo(h.x - 4, groundTop);
+      context.lineTo(h.x - 4, buildingTop);
+      context.lineTo(h.x + 4, buildingTop);
+      context.lineTo(h.x + 4, groundTop);
     }
     context.lineTo(GAME_W, groundTop);
     context.closePath();
     context.fill();
 
-    context.fillStyle = "rgba(60, 140, 80, 0.15)";
-    context.beginPath();
-    context.moveTo(0, groundTop);
+    /* Neon glow on building tops */
     for (let i = 0; i < hills.length; i++) {
-      context.lineTo(hills[i].x, hills[i].y + 8 + Math.sin(i * 1.1) * 6);
+      const h = hills[i];
+      const buildingTop = h.y - 10;
+      const neonColor = i % 3 === 0 ? "rgba(0, 255, 204, 0.15)"
+                       : i % 3 === 1 ? "rgba(255, 0, 170, 0.12)"
+                       : "rgba(100, 80, 255, 0.1)";
+      const glowGrad = context.createRadialGradient(h.x, buildingTop, 1, h.x, buildingTop, 12);
+      glowGrad.addColorStop(0, neonColor);
+      glowGrad.addColorStop(1, "rgba(0,0,0,0)");
+      context.fillStyle = glowGrad;
+      context.fillRect(h.x - 12, buildingTop - 12, 24, 24);
     }
-    context.lineTo(GAME_W, groundTop);
-    context.closePath();
-    context.fill();
+
+    /* Tiny lit windows on buildings */
+    for (let i = 0; i < hills.length; i += 2) {
+      const h = hills[i];
+      const buildingTop = h.y - 10;
+      const bH = groundTop - buildingTop;
+      for (let wy = buildingTop + 4; wy < groundTop - 4; wy += 6) {
+        for (let wx = -2; wx <= 2; wx += 4) {
+          if (Math.sin(h.x * 13 + wy * 7 + wx) > 0.1) {
+            const winColor = Math.sin(h.x + wy) > 0 ? "rgba(0, 255, 204, 0.4)" : "rgba(255, 200, 60, 0.35)";
+            context.fillStyle = winColor;
+            context.fillRect(h.x + wx - 0.8, wy, 1.6, 2);
+          }
+        }
+      }
+    }
   }
 
+  /* ── Tall building silhouettes (replaces trees) ── */
   for (const tree of trees) {
-    context.fillStyle = "rgba(40, 100, 50, 0.3)";
-    context.fillRect(tree.x - 1.5, groundTop - tree.height * 0.4, 3, tree.height * 0.4);
-    /* 3 stacked bezier ovals for a rounder canopy */
-    const tx = tree.x, tw = tree.width, th = tree.height;
-    const canopyBase = groundTop - th * 0.3;
-    const layers = [
-      { yOff: 0, w: tw * 0.55, h: th * 0.38 },
-      { yOff: -th * 0.18, w: tw * 0.45, h: th * 0.34 },
-      { yOff: -th * 0.34, w: tw * 0.3, h: th * 0.28 },
-    ];
-    for (const l of layers) {
-      const cy = canopyBase + l.yOff;
-      context.fillStyle = "rgba(40, 100, 50, 0.3)";
-      context.beginPath();
-      context.moveTo(tx - l.w / 2, cy);
-      context.quadraticCurveTo(tx - l.w / 2, cy - l.h, tx, cy - l.h);
-      context.quadraticCurveTo(tx + l.w / 2, cy - l.h, tx + l.w / 2, cy);
-      context.quadraticCurveTo(tx + l.w / 2, cy + l.h * 0.3, tx, cy + l.h * 0.15);
-      context.quadraticCurveTo(tx - l.w / 2, cy + l.h * 0.3, tx - l.w / 2, cy);
-      context.closePath();
-      context.fill();
+    const bw = tree.width * 0.35;
+    const bh = tree.height * 0.8;
+    const bx = tree.x - bw / 2;
+    const by = groundTop - bh;
+    /* Building body */
+    context.fillStyle = "#0a0a20";
+    context.fillRect(bx, by, bw, bh);
+    /* Neon edge line */
+    context.strokeStyle = "rgba(0, 255, 204, 0.2)";
+    context.lineWidth = 0.5;
+    context.strokeRect(bx, by, bw, bh);
+    /* Antenna / spire */
+    context.strokeStyle = "rgba(255, 0, 170, 0.4)";
+    context.lineWidth = 0.8;
+    context.beginPath();
+    context.moveTo(tree.x, by);
+    context.lineTo(tree.x, by - tree.height * 0.15);
+    context.stroke();
+    /* Blinking light on top */
+    const blinkPhase = Math.sin(Date.now() * 0.003 + tree.x) * 0.5 + 0.5;
+    context.fillStyle = `rgba(255, 0, 100, ${0.4 + blinkPhase * 0.5})`;
+    context.beginPath();
+    context.arc(tree.x, by - tree.height * 0.15, 1.2, 0, Math.PI * 2);
+    context.fill();
+    /* Small windows */
+    for (let wy = by + 3; wy < groundTop - 3; wy += 5) {
+      const litChance = Math.sin(tree.x * 7 + wy * 3);
+      if (litChance > -0.3) {
+        const wc = litChance > 0.5 ? "rgba(0, 255, 204, 0.3)" : "rgba(255, 200, 60, 0.25)";
+        context.fillStyle = wc;
+        context.fillRect(bx + 2, wy, bw - 4, 1.5);
+      }
     }
   }
 
+  /* ── Falling digital particles (replaces leaves) ── */
   for (const leaf of leafParticles) {
     context.save();
     context.translate(leaf.x, leaf.y);
     context.rotate(leaf.rot);
-    context.globalAlpha = leaf.alpha;
-    context.fillStyle = "#5eaa5e";
-    context.beginPath();
-    context.moveTo(0, -leaf.size);
-    context.quadraticCurveTo(leaf.size, 0, 0, leaf.size);
-    context.quadraticCurveTo(-leaf.size, 0, 0, -leaf.size);
-    context.fill();
+    context.globalAlpha = leaf.alpha * 0.7;
+    const isSquare = Math.sin(leaf.x * 3 + leaf.y) > 0;
+    context.fillStyle = isSquare ? "#00ffcc" : "#ff00aa";
+    if (isSquare) {
+      context.fillRect(-leaf.size * 0.4, -leaf.size * 0.4, leaf.size * 0.8, leaf.size * 0.8);
+    } else {
+      context.fillRect(-leaf.size * 0.1, -leaf.size, leaf.size * 0.2, leaf.size * 2);
+    }
     context.globalAlpha = 1;
     context.restore();
   }
 
-  context.fillStyle = "rgba(123, 228, 149, 0.5)";
+  /* ── Dark concrete ground with neon edge stripe ── */
+  context.fillStyle = "#0a0a12";
   context.fillRect(0, groundTop, GAME_W, 90);
 
   const groundGrad = context.createLinearGradient(0, GAME_H - 35, 0, GAME_H);
-  groundGrad.addColorStop(0, "#6cd47e");
-  groundGrad.addColorStop(1, "#4fb866");
+  groundGrad.addColorStop(0, "#08080f");
+  groundGrad.addColorStop(1, "#050509");
   context.fillStyle = groundGrad;
   context.fillRect(0, GAME_H - 35, GAME_W, 35);
 
-  context.strokeStyle = "#3aad55";
-  context.lineWidth = 1.2;
+  /* Neon edge stripe at ground top */
+  context.strokeStyle = "#00ffcc";
+  context.lineWidth = 1.5;
+  context.shadowColor = "#00ffcc";
+  context.shadowBlur = 6;
+  context.beginPath();
+  context.moveTo(0, groundTop);
+  context.lineTo(GAME_W, groundTop);
+  context.stroke();
+  context.shadowBlur = 0;
+
+  /* Secondary magenta stripe */
+  context.strokeStyle = "rgba(255, 0, 170, 0.4)";
+  context.lineWidth = 0.8;
+  context.beginPath();
+  context.moveTo(0, groundTop + 3);
+  context.lineTo(GAME_W, groundTop + 3);
+  context.stroke();
+
+  /* ── Ground texture lines (replaces grass blades) ── */
+  context.strokeStyle = "rgba(0, 255, 204, 0.06)";
+  context.lineWidth = 0.5;
   for (const g of grassBlades) {
     context.beginPath();
-    context.moveTo(g.x, groundTop);
-    context.lineTo(g.x + g.lean, groundTop - g.height);
-    context.stroke();
-  }
-  context.strokeStyle = "#5cc86e";
-  context.lineWidth = 1;
-  for (let i = 0; i < grassBlades.length; i += 2) {
-    const g = grassBlades[i];
-    context.beginPath();
-    context.moveTo(g.x + 1.5, groundTop);
-    context.lineTo(g.x + g.lean + 2, groundTop - g.height * 0.7);
+    context.moveTo(g.x, groundTop + 4);
+    context.lineTo(g.x + g.lean * 0.3, groundTop + 4 + g.height * 0.2);
     context.stroke();
   }
 
+  /* ── Neon signs / ground lights (replaces flowers/mushrooms) ── */
   for (const fl of flowers) {
     if (fl.type === "flower") {
-      context.strokeStyle = "#3aad55";
-      context.lineWidth = 1.5;
+      /* Small neon sign */
+      const signW = fl.size * 2.5;
+      const signH = fl.size * 1.5;
+      const sx = fl.x - signW / 2;
+      const sy = fl.y - fl.stemHeight - signH;
+      /* Sign post */
+      context.strokeStyle = "rgba(100, 100, 120, 0.4)";
+      context.lineWidth = 1;
       context.beginPath();
       context.moveTo(fl.x, fl.y);
-      context.lineTo(fl.x, fl.y - fl.stemHeight);
+      context.lineTo(fl.x, sy + signH);
       context.stroke();
-      context.fillStyle = fl.color;
-      const petalR = fl.size * 0.6;
-      for (let p = 0; p < 5; p++) {
-        const angle = (p / 5) * Math.PI * 2;
-        const px = fl.x + Math.cos(angle) * fl.size * 0.5;
-        const py = (fl.y - fl.stemHeight) + Math.sin(angle) * fl.size * 0.5;
-        context.beginPath();
-        context.arc(px, py, petalR, 0, Math.PI * 2);
-        context.fill();
-      }
-      context.fillStyle = "#ffee88";
+      /* Sign body glow */
+      const signColor = fl.color;
+      context.fillStyle = "rgba(10, 10, 20, 0.6)";
+      context.fillRect(sx, sy, signW, signH);
+      context.strokeStyle = signColor;
+      context.lineWidth = 0.8;
+      context.shadowColor = signColor;
+      context.shadowBlur = 4;
+      context.strokeRect(sx, sy, signW, signH);
+      context.shadowBlur = 0;
+      /* Inner neon text placeholder (horizontal lines) */
+      context.strokeStyle = signColor;
+      context.lineWidth = 0.5;
+      context.globalAlpha = 0.6;
       context.beginPath();
-      context.arc(fl.x, fl.y - fl.stemHeight, fl.size * 0.3, 0, Math.PI * 2);
-      context.fill();
+      context.moveTo(sx + 2, sy + signH * 0.4);
+      context.lineTo(sx + signW - 2, sy + signH * 0.4);
+      context.stroke();
+      context.beginPath();
+      context.moveTo(sx + 2, sy + signH * 0.7);
+      context.lineTo(sx + signW * 0.6, sy + signH * 0.7);
+      context.stroke();
+      context.globalAlpha = 1;
     } else {
-      context.fillStyle = "#e8dcc8";
-      context.fillRect(fl.x - 1.5, fl.y - fl.stemHeight * 0.5, 3, fl.stemHeight * 0.5);
-      context.fillStyle = "#cc4444";
+      /* Ground neon light / puddle reflection */
+      const glowR = fl.size * 2;
+      const puddleGrad = context.createRadialGradient(fl.x, fl.y, 0, fl.x, fl.y, glowR);
+      const puddleColor = Math.sin(fl.x) > 0 ? "0, 255, 204" : "255, 0, 170";
+      puddleGrad.addColorStop(0, `rgba(${puddleColor}, 0.25)`);
+      puddleGrad.addColorStop(0.5, `rgba(${puddleColor}, 0.08)`);
+      puddleGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+      context.fillStyle = puddleGrad;
       context.beginPath();
-      context.ellipse(fl.x, fl.y - fl.stemHeight * 0.5, fl.size * 1.2, fl.size * 0.8, 0, Math.PI, Math.PI * 2);
+      context.ellipse(fl.x, fl.y, glowR, glowR * 0.4, 0, 0, Math.PI * 2);
       context.fill();
-      context.fillStyle = "rgba(255,255,255,0.6)";
+      /* Central light dot */
+      context.fillStyle = `rgba(${puddleColor}, 0.6)`;
       context.beginPath();
-      context.arc(fl.x - 1, fl.y - fl.stemHeight * 0.5 - fl.size * 0.3, 1, 0, Math.PI * 2);
-      context.fill();
-      context.beginPath();
-      context.arc(fl.x + 1.5, fl.y - fl.stemHeight * 0.5 - fl.size * 0.5, 0.8, 0, Math.PI * 2);
+      context.arc(fl.x, fl.y - 1, 1.2, 0, Math.PI * 2);
       context.fill();
     }
   }
 
+  /* ── Floating holographic data fragments (replaces butterflies) ── */
   for (const bf of butterflies) {
     context.save();
     context.translate(bf.x, bf.y);
-    const wingFlap = Math.sin(bf.wingPhase) * 0.6;
-    context.fillStyle = bf.color1;
-    context.globalAlpha = 0.7;
+    const pulse = Math.sin(bf.wingPhase) * 0.5 + 0.5;
+    context.globalAlpha = 0.4 + pulse * 0.3;
+
+    /* Main data fragment (rotating rectangle) */
+    context.rotate(bf.wingPhase * 0.3);
+    const fragColor = Math.sin(bf.x + bf.y) > 0 ? "#00ffcc" : "#ff00aa";
+    context.fillStyle = fragColor;
+    context.fillRect(-bf.size * 0.8, -bf.size * 0.15, bf.size * 1.6, bf.size * 0.3);
+
+    /* Horizontal scan line */
+    context.fillStyle = "rgba(255, 255, 255, 0.3)";
+    context.fillRect(-bf.size * 0.6, -bf.size * 0.02, bf.size * 1.2, bf.size * 0.04);
+
+    /* Surrounding glow */
+    const fragGlow = context.createRadialGradient(0, 0, 0, 0, 0, bf.size * 2);
+    fragGlow.addColorStop(0, fragColor.replace(")", ", 0.15)").replace("rgb", "rgba").replace("#00ffcc", "rgba(0,255,204,0.15)").replace("#ff00aa", "rgba(255,0,170,0.15)"));
+    fragGlow.addColorStop(1, "rgba(0,0,0,0)");
+    context.fillStyle = Math.sin(bf.x + bf.y) > 0 ? "rgba(0,255,204,0.08)" : "rgba(255,0,170,0.08)";
     context.beginPath();
-    context.ellipse(-bf.size * 0.6, 0, bf.size, bf.size * 0.6 * (0.4 + Math.abs(wingFlap)), 0.3 + wingFlap, 0, Math.PI * 2);
+    context.arc(0, 0, bf.size * 2, 0, Math.PI * 2);
     context.fill();
-    context.fillStyle = bf.color2;
-    context.beginPath();
-    context.ellipse(bf.size * 0.6, 0, bf.size, bf.size * 0.6 * (0.4 + Math.abs(wingFlap)), -0.3 - wingFlap, 0, Math.PI * 2);
-    context.fill();
-    context.globalAlpha = 0.8;
-    context.fillStyle = "#333";
-    context.beginPath();
-    context.ellipse(0, 0, 1, bf.size * 0.5, 0, 0, Math.PI * 2);
-    context.fill();
+
     context.globalAlpha = 1;
     context.restore();
   }
 };
-
 const drawWind = () => {
   for (const w of windParticles) {
     context.strokeStyle = `rgba(255, 255, 255, ${w.alpha})`;
@@ -1288,129 +1367,166 @@ const drawBird = () => {
   const tilt = Math.max(-0.5, Math.min(0.65, bird.velocity * 0.0012));
   context.rotate(tilt);
 
+  /* Cyan exhaust trail */
   for (let i = 0; i < bird.trail.length; i += 1) {
     const t = bird.trail[i];
     const age = 1 - i / bird.trail.length;
-    const alpha = age * 0.2;
-    const r = bird.radius * age * 0.7;
-    context.fillStyle = `rgba(255, 210, 80, ${alpha})`;
+    const alpha = age * 0.25;
+    const r = bird.radius * age * 0.6;
+    context.fillStyle = `rgba(0, 229, 255, ${alpha})`;
     context.beginPath();
     context.arc(t.x - bird.x, t.y - bird.y, r, 0, Math.PI * 2);
     context.fill();
   }
 
-  context.fillStyle = "rgba(200, 140, 0, 0.25)";
+  /* Engine glow (magenta) behind the drone */
+  context.save();
+  context.shadowColor = "#ff00aa";
+  context.shadowBlur = 12;
+  context.fillStyle = "rgba(255, 0, 170, 0.25)";
   context.beginPath();
-  context.arc(1, 2, bird.radius + 1, 0, Math.PI * 2);
+  context.arc(-bird.radius + 2, 0, bird.radius * 0.45, 0, Math.PI * 2);
   context.fill();
+  context.restore();
 
-  const bodyGrad = context.createRadialGradient(-3, -3, 2, 0, 0, bird.radius);
-  bodyGrad.addColorStop(0, "#ffe066");
-  bodyGrad.addColorStop(0.7, "#ffcc4d");
-  bodyGrad.addColorStop(1, "#f0a030");
+  /* Exhaust trail lines (2-3 cyan/magenta lines behind) */
+  const exhaustColors = ["rgba(0, 229, 255, 0.5)", "rgba(255, 0, 170, 0.35)", "rgba(0, 229, 255, 0.3)"];
+  const exhaustOffsets = [-3, 0, 3];
+  for (let i = 0; i < 3; i++) {
+    const flicker = Math.sin(Date.now() * 0.01 + i * 2) * 2;
+    context.strokeStyle = exhaustColors[i];
+    context.lineWidth = 1.2;
+    context.beginPath();
+    context.moveTo(-bird.radius + 2, exhaustOffsets[i]);
+    context.lineTo(-bird.radius - 8 - flicker, exhaustOffsets[i] + flicker * 0.5);
+    context.stroke();
+  }
+
+  /* Dark metallic body — angular hexagonal shape */
+  const bodyGrad = context.createLinearGradient(-bird.radius, -bird.radius, bird.radius, bird.radius);
+  bodyGrad.addColorStop(0, "#2a2a3a");
+  bodyGrad.addColorStop(0.5, "#1a1a2a");
+  bodyGrad.addColorStop(1, "#2a2a3a");
   context.fillStyle = bodyGrad;
   context.beginPath();
-  context.arc(0, 0, bird.radius, 0, Math.PI * 2);
-  context.fill();
-
-  context.strokeStyle = "rgba(210, 160, 40, 0.35)";
-  context.lineWidth = 0.8;
-  for (let i = 0; i < 3; i++) {
-    const yOff = -5 + i * 5;
-    context.beginPath();
-    context.arc(2, yOff, 8, -0.4, 0.8);
-    context.stroke();
-  }
-
-  /* Curved tail feathers with barb detail */
-  const tailBase = -bird.radius + 2;
-  const feathers = [
-    { sy: -2, cpx: -bird.radius - 4, cpy: -8, ex: -bird.radius - 10, ey: -9 },
-    { sy: 0, cpx: -bird.radius - 5, cpy: -1, ex: -bird.radius - 11, ey: 0 },
-    { sy: 2, cpx: -bird.radius - 4, cpy: 6, ex: -bird.radius - 10, ey: 8 },
-  ];
-  for (const f of feathers) {
-    /* Main feather curve */
-    context.strokeStyle = "#d48a20";
-    context.lineWidth = 1.8;
-    context.beginPath();
-    context.moveTo(tailBase, f.sy);
-    context.quadraticCurveTo(f.cpx, f.cpy, f.ex, f.ey);
-    context.stroke();
-    /* Small barb cross-lines along the feather */
-    for (let t = 0.3; t <= 0.85; t += 0.28) {
-      const mx = (1 - t) * (1 - t) * tailBase + 2 * (1 - t) * t * f.cpx + t * t * f.ex;
-      const my = (1 - t) * (1 - t) * f.sy + 2 * (1 - t) * t * f.cpy + t * t * f.ey;
-      const perpX = (f.ey - f.sy) * 0.12;
-      const perpY = -(f.ex - tailBase) * 0.12;
-      context.strokeStyle = "rgba(180,120,20,0.5)";
-      context.lineWidth = 0.7;
-      context.beginPath();
-      context.moveTo(mx - perpX, my - perpY);
-      context.lineTo(mx + perpX, my + perpY);
-      context.stroke();
-    }
-  }
-
-  bird.wingAngle += (bird.velocity < -100 ? 0.35 : -0.15);
-  bird.wingAngle = Math.max(-0.4, Math.min(0.5, bird.wingAngle));
-  const wingY = Math.sin(bird.wingAngle * 4) * 5;
-  const fanSpread = bird.wingAngle * 0.4;
-
-  context.fillStyle = "#f0a030";
-  context.beginPath();
-  context.ellipse(-6, wingY + 2, 8, 4, -0.3 + bird.wingAngle * 0.5, 0, Math.PI * 2);
-  context.fill();
-
-  context.strokeStyle = "#d48a20";
-  context.lineWidth = 1.8;
-  for (let f = -1; f <= 1; f++) {
-    const tipAngle = (-0.3 + bird.wingAngle * 0.5) + f * fanSpread;
-    const tipLen = 7 + Math.abs(bird.wingAngle) * 4;
-    const baseX = -6 + Math.cos(-0.3 + bird.wingAngle * 0.5) * 5;
-    const baseY = wingY + 2 + Math.sin(-0.3 + bird.wingAngle * 0.5) * 3;
-    context.beginPath();
-    context.moveTo(baseX, baseY);
-    context.lineTo(
-      baseX + Math.cos(tipAngle + Math.PI * 0.7) * tipLen,
-      baseY + Math.sin(tipAngle + Math.PI * 0.7) * tipLen
-    );
-    context.stroke();
-  }
-
-  context.fillStyle = "rgba(255, 140, 120, 0.35)";
-  context.beginPath();
-  context.arc(5, 2, 4, 0, Math.PI * 2);
-  context.fill();
-
-  context.fillStyle = "#ff7b54";
-  context.beginPath();
-  context.moveTo(bird.radius - 2, -3);
-  context.lineTo(bird.radius + 8, 0);
-  context.lineTo(bird.radius - 2, 3);
+  /* Hexagonal / angular body */
+  const r = bird.radius;
+  context.moveTo(r * 0.9, 0);         /* nose (right) */
+  context.lineTo(r * 0.4, -r * 0.85); /* top-right */
+  context.lineTo(-r * 0.5, -r * 0.7); /* top-left (flat top) */
+  context.lineTo(-r * 0.9, 0);        /* tail (left) */
+  context.lineTo(-r * 0.5, r * 0.7);  /* bottom-left */
+  context.lineTo(r * 0.4, r * 0.85);  /* bottom-right */
   context.closePath();
   context.fill();
 
-  context.fillStyle = "#ffffff";
-  context.beginPath();
-  context.arc(-2, -5, 4, 0, Math.PI * 2);
-  context.fill();
-  context.fillStyle = "#1b2a36";
-  context.beginPath();
-  context.arc(-1, -5, 2.2, 0, Math.PI * 2);
-  context.fill();
-
-  context.fillStyle = "rgba(255, 255, 255, 0.8)";
-  context.beginPath();
-  context.arc(-3, -6.5, 1.2, 0, Math.PI * 2);
-  context.fill();
-
-  const browTilt = Math.max(-0.3, Math.min(0.4, bird.velocity * 0.0008));
-  context.strokeStyle = "#5a3a10";
+  /* Metallic highlight stripe */
+  context.strokeStyle = "rgba(100, 120, 150, 0.3)";
   context.lineWidth = 1.5;
   context.beginPath();
-  context.arc(-1, -9, 5, Math.PI + 0.4 + browTilt, Math.PI + 1.2 + browTilt);
+  context.moveTo(-r * 0.4, 0);
+  context.lineTo(r * 0.6, 0);
   context.stroke();
+
+  /* Hull stripe detail (replaces cheek blush) */
+  context.strokeStyle = "#00e5ff";
+  context.lineWidth = 0.8;
+  context.globalAlpha = 0.6;
+  context.beginPath();
+  context.moveTo(-r * 0.3, r * 0.3);
+  context.lineTo(r * 0.5, r * 0.3);
+  context.stroke();
+  context.beginPath();
+  context.moveTo(-r * 0.2, -r * 0.3);
+  context.lineTo(r * 0.5, -r * 0.3);
+  context.stroke();
+  context.globalAlpha = 1.0;
+
+  /* Cyan neon edge outline */
+  context.save();
+  context.shadowColor = "#00e5ff";
+  context.shadowBlur = 6;
+  context.strokeStyle = "rgba(0, 229, 255, 0.35)";
+  context.lineWidth = 1;
+  context.beginPath();
+  context.moveTo(r * 0.9, 0);
+  context.lineTo(r * 0.4, -r * 0.85);
+  context.lineTo(-r * 0.5, -r * 0.7);
+  context.lineTo(-r * 0.9, 0);
+  context.lineTo(-r * 0.5, r * 0.7);
+  context.lineTo(r * 0.4, r * 0.85);
+  context.closePath();
+  context.stroke();
+  context.restore();
+
+  /* Angular blade-like wing fins with neon pulse */
+  bird.wingAngle += (bird.velocity < -100 ? 0.35 : -0.15);
+  bird.wingAngle = Math.max(-0.4, Math.min(0.5, bird.wingAngle));
+  const wingY = Math.sin(bird.wingAngle * 4) * 5;
+  const pulse = 0.5 + 0.5 * Math.sin(Date.now() * 0.008);
+
+  context.save();
+  context.shadowColor = "#00e5ff";
+  context.shadowBlur = 4 + pulse * 4;
+
+  /* Upper blade fin */
+  context.fillStyle = `rgba(0, 229, 255, ${0.3 + pulse * 0.3})`;
+  context.beginPath();
+  context.moveTo(-2, -r * 0.5 + wingY);
+  context.lineTo(-10, -r * 1.3 + wingY);
+  context.lineTo(-6, -r * 0.5 + wingY);
+  context.closePath();
+  context.fill();
+
+  /* Lower blade fin */
+  context.beginPath();
+  context.moveTo(-2, r * 0.5 + wingY);
+  context.lineTo(-10, r * 1.3 + wingY);
+  context.lineTo(-6, r * 0.5 + wingY);
+  context.closePath();
+  context.fill();
+
+  /* Fin edge strokes */
+  context.strokeStyle = "#00e5ff";
+  context.lineWidth = 1;
+  context.beginPath();
+  context.moveTo(-2, -r * 0.5 + wingY);
+  context.lineTo(-10, -r * 1.3 + wingY);
+  context.stroke();
+  context.beginPath();
+  context.moveTo(-2, r * 0.5 + wingY);
+  context.lineTo(-10, r * 1.3 + wingY);
+  context.stroke();
+
+  context.restore();
+
+  /* Glowing cyan eye/sensor */
+  context.save();
+  context.shadowColor = "#00e5ff";
+  context.shadowBlur = 10;
+  context.fillStyle = "#00e5ff";
+  context.beginPath();
+  context.arc(r * 0.25, -r * 0.25, 2.5, 0, Math.PI * 2);
+  context.fill();
+  /* Inner bright core */
+  context.fillStyle = "#ffffff";
+  context.beginPath();
+  context.arc(r * 0.25, -r * 0.25, 1, 0, Math.PI * 2);
+  context.fill();
+  context.restore();
+
+  /* Angular visor/sensor in front (replaces beak) */
+  context.save();
+  context.shadowColor = "#00e5ff";
+  context.shadowBlur = 6;
+  context.fillStyle = "rgba(0, 229, 255, 0.5)";
+  context.beginPath();
+  context.moveTo(r * 0.9, 0);
+  context.lineTo(r * 1.2, -2);
+  context.lineTo(r * 1.2, 2);
+  context.closePath();
+  context.fill();
+  context.restore();
 
   context.restore();
 };
@@ -1425,15 +1541,15 @@ const drawPipes = () => {
 
     const topGrad = context.createLinearGradient(pipe.x, 0, pipe.x + gameState.pipeWidth, 0);
     if (isReinforced) {
-      topGrad.addColorStop(0, "#6a6a6a");
-      topGrad.addColorStop(0.3, "#8a8a8a");
-      topGrad.addColorStop(0.7, "#7a7a7a");
-      topGrad.addColorStop(1, "#5a5a5a");
+      topGrad.addColorStop(0, "#2a2a38");
+      topGrad.addColorStop(0.3, "#3a3a48");
+      topGrad.addColorStop(0.7, "#303040");
+      topGrad.addColorStop(1, "#222230");
     } else {
-      topGrad.addColorStop(0, "#2d8a5e");
-      topGrad.addColorStop(0.3, "#3da870");
-      topGrad.addColorStop(0.7, "#35966a");
-      topGrad.addColorStop(1, "#28774e");
+      topGrad.addColorStop(0, "#1a1a28");
+      topGrad.addColorStop(0.3, "#252535");
+      topGrad.addColorStop(0.7, "#1e1e2e");
+      topGrad.addColorStop(1, "#141420");
     }
 
     if (!pipe.topDestroyed) {
@@ -1442,82 +1558,102 @@ const drawPipes = () => {
 
       const capGrad = context.createLinearGradient(capX, 0, capX + capW, 0);
       if (isReinforced) {
-        capGrad.addColorStop(0, "#6a6a6a");
-        capGrad.addColorStop(0.3, "#9a9a9a");
-        capGrad.addColorStop(0.7, "#8a8a8a");
-        capGrad.addColorStop(1, "#5a5a5a");
+        capGrad.addColorStop(0, "#2a2a38");
+        capGrad.addColorStop(0.5, "#3a3a48");
+        capGrad.addColorStop(1, "#222230");
       } else {
-        capGrad.addColorStop(0, "#2d8a5e");
-        capGrad.addColorStop(0.3, "#45b87a");
-        capGrad.addColorStop(0.7, "#3da870");
-        capGrad.addColorStop(1, "#28774e");
+        capGrad.addColorStop(0, "#252535");
+        capGrad.addColorStop(0.5, "#2e2e3e");
+        capGrad.addColorStop(1, "#1a1a28");
       }
       context.fillStyle = capGrad;
       context.beginPath();
-      context.roundRect(capX, pipe.top - capH, capW, capH, [4, 4, 0, 0]);
+      context.roundRect(capX, pipe.top - capH, capW, capH, [1, 1, 0, 0]);
       context.fill();
 
-      context.fillStyle = "rgba(255, 255, 255, 0.12)";
-      context.fillRect(pipe.x + 8, 0, 6, pipe.top - capH);
+      context.strokeStyle = "rgba(0, 229, 255, 0.6)";
+      context.lineWidth = 1;
+      context.strokeRect(capX, pipe.top - capH, capW, capH);
 
-      context.strokeStyle = "rgba(20, 60, 30, 0.15)";
+      context.strokeStyle = "rgba(0, 229, 255, 0.5)";
+      context.lineWidth = 1;
+      context.beginPath();
+      context.moveTo(pipe.x, 0);
+      context.lineTo(pipe.x, pipe.top - capH);
+      context.stroke();
+      context.beginPath();
+      context.moveTo(pipe.x + gameState.pipeWidth, 0);
+      context.lineTo(pipe.x + gameState.pipeWidth, pipe.top - capH);
+      context.stroke();
+
+      const scannerY = ((Date.now() * 0.03) % (pipe.top - capH));
+      context.strokeStyle = "rgba(0, 229, 255, 0.35)";
+      context.lineWidth = 1.5;
+      context.beginPath();
+      context.moveTo(pipe.x + 2, scannerY);
+      context.lineTo(pipe.x + gameState.pipeWidth - 2, scannerY);
+      context.stroke();
+
+      context.strokeStyle = "rgba(0, 229, 255, 0.15)";
       context.lineWidth = 0.8;
       for (const crack of pipe.cracks) {
         const crackY = crack.yStart * (pipe.top - capH);
+        const lineLen = Math.min(crack.len, 15);
         context.beginPath();
         context.moveTo(pipe.x + crack.xOff, crackY);
-        context.lineTo(
-          pipe.x + crack.xOff + Math.cos(crack.angle) * crack.len,
-          crackY + Math.sin(crack.angle + 0.8) * crack.len
-        );
+        context.lineTo(pipe.x + crack.xOff + lineLen, crackY);
         context.stroke();
-      }
-
-      context.strokeStyle = "rgba(30, 120, 50, 0.25)";
-      context.lineWidth = 1.2;
-      for (const vine of pipe.vines) {
-        context.beginPath();
-        for (let vy = 0; vy < pipe.top - capH; vy += 4) {
-          const vx = pipe.x + vine.xOff + Math.sin(vy * vine.freq) * vine.amp;
-          if (vy === 0) context.moveTo(vx, vy);
-          else context.lineTo(vx, vy);
+        if (lineLen > 8) {
+          context.beginPath();
+          context.moveTo(pipe.x + crack.xOff + lineLen * 0.6, crackY);
+          context.lineTo(pipe.x + crack.xOff + lineLen * 0.6, crackY + 5);
+          context.stroke();
         }
-        context.stroke();
       }
 
       if (dripState.falling && pipeIdx === 0) {
-        const dripX = pipe.x + gameState.pipeWidth * 0.4;
-        const dripY = pipe.top + dripState.y;
-        context.fillStyle = `rgba(150, 210, 255, ${dripState.alpha})`;
-        context.beginPath();
-        context.arc(dripX, dripY, 1.8, 0, Math.PI * 2);
-        context.fill();
+        const sparkCount = 3;
+        for (let s = 0; s < sparkCount; s++) {
+          const sparkX = pipe.x + gameState.pipeWidth * 0.3 + Math.sin(Date.now() * 0.01 + s * 2) * 10;
+          const sparkY = pipe.top + dripState.y + s * 4;
+          context.fillStyle = `rgba(0, 229, 255, ${dripState.alpha * (1 - s * 0.25)})`;
+          context.beginPath();
+          context.arc(sparkX, sparkY, 1.2, 0, Math.PI * 2);
+          context.fill();
+        }
       }
 
       if (pipe.reinforced && pipe.topHP === 1) {
-        context.strokeStyle = 'rgba(200, 50, 50, 0.5)';
+        context.strokeStyle = 'rgba(255, 102, 0, 0.7)';
         context.lineWidth = 2;
         context.beginPath();
         context.moveTo(pipe.x + 10, pipe.top - 30);
-        context.lineTo(pipe.x + 30, pipe.top - 10);
-        context.lineTo(pipe.x + 20, pipe.top - 5);
+        context.lineTo(pipe.x + 18, pipe.top - 18);
+        context.lineTo(pipe.x + 12, pipe.top - 15);
+        context.lineTo(pipe.x + 25, pipe.top - 5);
         context.stroke();
+        context.fillStyle = 'rgba(255, 102, 0, 0.4)';
+        context.beginPath();
+        context.arc(pipe.x + 18, pipe.top - 18, 2, 0, Math.PI * 2);
+        context.fill();
       }
     }
 
     const bottomY = pipe.top + gameState.gap;
 
     const gapShadowH = 14;
-    const topGapShadow = context.createLinearGradient(0, pipe.top - 2, 0, pipe.top + gapShadowH);
-    topGapShadow.addColorStop(0, "rgba(0, 0, 0, 0.18)");
-    topGapShadow.addColorStop(1, "rgba(0, 0, 0, 0)");
-    context.fillStyle = topGapShadow;
+    const topGapGlow = context.createLinearGradient(0, pipe.top - 2, 0, pipe.top + gapShadowH);
+    topGapGlow.addColorStop(0, "rgba(0, 229, 255, 0.12)");
+    topGapGlow.addColorStop(0.4, "rgba(120, 0, 255, 0.06)");
+    topGapGlow.addColorStop(1, "rgba(0, 0, 0, 0)");
+    context.fillStyle = topGapGlow;
     context.fillRect(pipe.x - 5, pipe.top - 2, capW, gapShadowH);
 
-    const botGapShadow = context.createLinearGradient(0, bottomY + 2, 0, bottomY - gapShadowH);
-    botGapShadow.addColorStop(0, "rgba(0, 0, 0, 0.18)");
-    botGapShadow.addColorStop(1, "rgba(0, 0, 0, 0)");
-    context.fillStyle = botGapShadow;
+    const botGapGlow = context.createLinearGradient(0, bottomY + 2, 0, bottomY - gapShadowH);
+    botGapGlow.addColorStop(0, "rgba(0, 229, 255, 0.12)");
+    botGapGlow.addColorStop(0.4, "rgba(120, 0, 255, 0.06)");
+    botGapGlow.addColorStop(1, "rgba(0, 0, 0, 0)");
+    context.fillStyle = botGapGlow;
     context.fillRect(pipe.x - 5, bottomY - gapShadowH + 2, capW, gapShadowH);
 
     if (!pipe.bottomDestroyed) {
@@ -1526,62 +1662,78 @@ const drawPipes = () => {
 
       const capGrad2 = context.createLinearGradient(capX, 0, capX + capW, 0);
       if (isReinforced) {
-        capGrad2.addColorStop(0, "#6a6a6a");
-        capGrad2.addColorStop(0.3, "#9a9a9a");
-        capGrad2.addColorStop(0.7, "#8a8a8a");
-        capGrad2.addColorStop(1, "#5a5a5a");
+        capGrad2.addColorStop(0, "#2a2a38");
+        capGrad2.addColorStop(0.5, "#3a3a48");
+        capGrad2.addColorStop(1, "#222230");
       } else {
-        capGrad2.addColorStop(0, "#2d8a5e");
-        capGrad2.addColorStop(0.3, "#45b87a");
-        capGrad2.addColorStop(0.7, "#3da870");
-        capGrad2.addColorStop(1, "#28774e");
+        capGrad2.addColorStop(0, "#252535");
+        capGrad2.addColorStop(0.5, "#2e2e3e");
+        capGrad2.addColorStop(1, "#1a1a28");
       }
       context.fillStyle = capGrad2;
       context.beginPath();
-      context.roundRect(capX, bottomY, capW, capH, [0, 0, 4, 4]);
+      context.roundRect(capX, bottomY, capW, capH, [0, 0, 1, 1]);
       context.fill();
 
-      context.fillStyle = "rgba(255, 255, 255, 0.12)";
-      context.fillRect(pipe.x + 8, bottomY + capH, 6, GAME_H - bottomY - capH);
+      context.strokeStyle = "rgba(0, 229, 255, 0.6)";
+      context.lineWidth = 1;
+      context.strokeRect(capX, bottomY, capW, capH);
 
-      context.strokeStyle = "rgba(20, 60, 30, 0.15)";
+      context.strokeStyle = "rgba(0, 229, 255, 0.5)";
+      context.lineWidth = 1;
+      context.beginPath();
+      context.moveTo(pipe.x, bottomY + capH);
+      context.lineTo(pipe.x, GAME_H);
+      context.stroke();
+      context.beginPath();
+      context.moveTo(pipe.x + gameState.pipeWidth, bottomY + capH);
+      context.lineTo(pipe.x + gameState.pipeWidth, GAME_H);
+      context.stroke();
+
+      const botPipeH = GAME_H - bottomY - capH;
+      const scannerY2 = ((Date.now() * 0.025 + 100) % botPipeH);
+      context.strokeStyle = "rgba(0, 229, 255, 0.35)";
+      context.lineWidth = 1.5;
+      context.beginPath();
+      context.moveTo(pipe.x + 2, bottomY + capH + scannerY2);
+      context.lineTo(pipe.x + gameState.pipeWidth - 2, bottomY + capH + scannerY2);
+      context.stroke();
+
+      context.strokeStyle = "rgba(0, 229, 255, 0.15)";
       context.lineWidth = 0.8;
       for (const crack of pipe.cracks) {
         const bpHeight = GAME_H - bottomY - capH;
         const crackY = bottomY + capH + crack.yStart * bpHeight;
+        const lineLen = Math.min(crack.len, 15);
         context.beginPath();
         context.moveTo(pipe.x + crack.xOff, crackY);
-        context.lineTo(
-          pipe.x + crack.xOff + Math.cos(crack.angle) * crack.len,
-          crackY + Math.sin(crack.angle + 0.8) * crack.len
-        );
+        context.lineTo(pipe.x + crack.xOff + lineLen, crackY);
         context.stroke();
-      }
-
-      context.strokeStyle = "rgba(30, 120, 50, 0.25)";
-      context.lineWidth = 1.2;
-      for (const vine of pipe.vines) {
-        context.beginPath();
-        for (let vy = bottomY + capH; vy < GAME_H; vy += 4) {
-          const vx = pipe.x + vine.xOff + Math.sin(vy * vine.freq) * vine.amp;
-          if (vy === bottomY + capH) context.moveTo(vx, vy);
-          else context.lineTo(vx, vy);
+        if (lineLen > 8) {
+          context.beginPath();
+          context.moveTo(pipe.x + crack.xOff + lineLen * 0.6, crackY);
+          context.lineTo(pipe.x + crack.xOff + lineLen * 0.6, crackY + 5);
+          context.stroke();
         }
-        context.stroke();
       }
 
       if (pipe.reinforced && pipe.bottomHP === 1) {
-        context.strokeStyle = 'rgba(200, 50, 50, 0.5)';
+        context.strokeStyle = 'rgba(255, 102, 0, 0.7)';
         context.lineWidth = 2;
         context.beginPath();
         context.moveTo(pipe.x + 10, bottomY + capH + 10);
-        context.lineTo(pipe.x + 30, bottomY + capH + 30);
-        context.lineTo(pipe.x + 20, bottomY + capH + 35);
+        context.lineTo(pipe.x + 18, bottomY + capH + 22);
+        context.lineTo(pipe.x + 12, bottomY + capH + 25);
+        context.lineTo(pipe.x + 25, bottomY + capH + 35);
         context.stroke();
+        context.fillStyle = 'rgba(255, 102, 0, 0.4)';
+        context.beginPath();
+        context.arc(pipe.x + 18, bottomY + capH + 22, 2, 0, Math.PI * 2);
+        context.fill();
       }
     }
 
-    context.fillStyle = "rgba(0, 0, 0, 0.1)";
+    context.fillStyle = "rgba(0, 0, 0, 0.15)";
     if (!pipe.topDestroyed)
       context.fillRect(pipe.x + gameState.pipeWidth - 8, 0, 8, pipe.top - capH);
     if (!pipe.bottomDestroyed)
