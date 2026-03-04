@@ -120,15 +120,14 @@ function showPremiumModal(item) {
   const cost = PREMIUM_COST[item.category] || 30;
   const modal = document.getElementById('premiumModal');
   const titleEl = document.getElementById('premiumItemName');
-  const costEl = document.getElementById('premiumCost');
   const buyBtn = document.getElementById('premiumBuyBtn');
 
+  if (!titleEl || !buyBtn) return;
   titleEl.textContent = item.name;
-  costEl.textContent = cost;
   buyBtn.disabled = coins < cost;
-  buyBtn.textContent = coins < cost
+  buyBtn.innerHTML = coins < cost
     ? 'Not enough coins (' + cost + ')'
-    : 'Unlock (' + cost + ' coins)';
+    : 'Unlock (<span id="premiumCost">' + cost + '</span> coins)';
 
   buyBtn.onclick = function () {
     if (coins >= cost) {
