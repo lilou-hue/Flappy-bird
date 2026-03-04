@@ -12,6 +12,9 @@ body {
   justify-content: center;
   min-height: 100vh;
   padding: 32px 16px;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
   background:
     radial-gradient(ellipse at 30% 20%, rgba(232,67,147,0.08) 0%, transparent 60%),
     radial-gradient(ellipse at 70% 80%, rgba(162,155,254,0.06) 0%, transparent 60%),
