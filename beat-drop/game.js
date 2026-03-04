@@ -12,15 +12,30 @@ const CW = 480, CH = 640;
 const LANE_W = CW / 4;
 const STRIKE_Y = 560;
 const NOTE_R = 18;
-const PERFECT_PX = 12;
-const GOOD_PX = 30;
-const MISS_PX = 50;
-const BASE_BPM = 90;
-const BPM_INC = 0.5;
-const MAX_BPM = 180;
-const MAX_LIVES = 5;
+let PERFECT_PX = 12;
+let GOOD_PX = 30;
+let MISS_PX = 50;
+let BASE_BPM = 90;
+let BPM_INC = 0.5;
+let MAX_BPM = 180;
+let MAX_LIVES = 5;
 const LANE_COLORS = ['#ff69b4', '#00d2ff', '#00ff88', '#ffa500'];
 const LANE_KEYS = ['d', 'f', 'j', 'k'];
+
+// ── Difficulty presets ──
+const DIFFICULTIES = {
+  easy:   { BASE_BPM: 70, BPM_INC: 0.3, MAX_BPM: 140, MAX_LIVES: 7, PERFECT_PX: 18, GOOD_PX: 40, MISS_PX: 60, speedFactor: 0.85 },
+  medium: { BASE_BPM: 90, BPM_INC: 0.5, MAX_BPM: 180, MAX_LIVES: 5, PERFECT_PX: 12, GOOD_PX: 30, MISS_PX: 50, speedFactor: 1.0 },
+  hard:   { BASE_BPM: 110, BPM_INC: 0.8, MAX_BPM: 200, MAX_LIVES: 3, PERFECT_PX: 8, GOOD_PX: 22, MISS_PX: 40, speedFactor: 1.2 },
+};
+let difficulty = localStorage.getItem('beatDropDifficulty') || 'medium';
+
+function applyDifficulty() {
+  const d = DIFFICULTIES[difficulty];
+  BASE_BPM = d.BASE_BPM; BPM_INC = d.BPM_INC; MAX_BPM = d.MAX_BPM;
+  MAX_LIVES = d.MAX_LIVES; PERFECT_PX = d.PERFECT_PX; GOOD_PX = d.GOOD_PX; MISS_PX = d.MISS_PX;
+}
+applyDifficulty();
 
 // ── Canvas ──
 const canvas = document.getElementById('gameCanvas');
@@ -49,6 +64,15 @@ themeSelect.addEventListener('change', () => {
   document.body.className = currentTheme === 'neon' ? '' : `theme-${currentTheme}`;
 });
 if (currentTheme !== 'neon') document.body.className = `theme-${currentTheme}`;
+
+// ── Difficulty selector ──
+const difficultySelect = document.getElementById('difficultySelect');
+difficultySelect.value = difficulty;
+difficultySelect.addEventListener('change', () => {
+  difficulty = difficultySelect.value;
+  localStorage.setItem('beatDropDifficulty', difficulty);
+  applyDifficulty();
+});
 
 // ── Practice mode ──
 let practiceMode = false;
@@ -312,9 +336,13 @@ let totalHits = 0;
 
 document.getElementById('bestScore').textContent = bestScore;
 
-function getSpeedMultiplier() { return practiceMode ? 0.5 : 1; }
+function getSpeedMultiplier() {
+  const base = DIFFICULTIES[difficulty].speedFactor;
+  return practiceMode ? base * 0.5 : base;
+}
 
 function resetGame() {
+  applyDifficulty();
   notes = [];
   score = 0;
   combo = 0;
