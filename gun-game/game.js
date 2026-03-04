@@ -211,7 +211,7 @@ function initFlowers() {
       y: groundTop,
       type: Math.random() > 0.3 ? "flower" : "mushroom",
       size: 3 + Math.random() * 3,
-      color: Math.random() > 0.5 ? "#ff6b8a" : "#ffcc4d",
+      color: Math.random() > 0.5 ? "#00e5ff" : "#ff00aa",
       stemHeight: 6 + Math.random() * 8,
     });
   }
@@ -229,8 +229,8 @@ function initButterflies() {
       speedX: 8 + Math.random() * 15,
       speedY: 5 + Math.random() * 10,
       size: 2.5 + Math.random() * 1.5,
-      color1: ["#ff6b8a", "#b388ff", "#64b5f6", "#ffcc4d"][Math.floor(Math.random() * 4)],
-      color2: ["#ffa4b8", "#d1c4e9", "#90caf9", "#ffe082"][Math.floor(Math.random() * 4)],
+      color1: ["#00e5ff", "#ff00aa", "#7b2fff", "#00ffcc"][Math.floor(Math.random() * 4)],
+      color2: ["#00b8cc", "#cc0088", "#5a1fcc", "#00ccaa"][Math.floor(Math.random() * 4)],
     });
   }
 }
@@ -410,7 +410,7 @@ const spawnFeatherParticles = () => {
       rotSpeed: (Math.random() - 0.5) * 8,
       size: 3 + Math.random() * 4,
       alpha: 0.9,
-      color: Math.random() > 0.5 ? "#ffcc4d" : "#f0a030",
+      color: Math.random() > 0.5 ? "#00e5ff" : "#ff00aa",
       gravity: 120 + Math.random() * 80,
     });
   }
@@ -533,7 +533,7 @@ function destroyPipeSection(pipe, section, projX, projY, hasBounced) {
       rot: Math.random() * Math.PI * 2,
       rotSpeed: (Math.random() - 0.5) * 10,
       alpha: 1,
-      color: pipe.reinforced ? '#8a8a8a' : '#3da870',
+      color: pipe.reinforced ? '#3a3a48' : '#252535',
     });
   }
 
@@ -549,7 +549,7 @@ function destroyPipeSection(pipe, section, projX, projY, hasBounced) {
       rot: 0,
       rotSpeed: 0,
       alpha: 0.8,
-      color: '#c8b060',
+      color: '#00e5ff',
     });
   }
 
