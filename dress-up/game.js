@@ -548,234 +548,264 @@ const HAIR_COLORS = [
   ['#4a4a4a','#7f8c8d','#2c3e50','#9b59b6'],
 ];
 
-function _hairShine(c, cx, headY, headR) {
+/* ── Anime hair helpers ── */
+function _animeHairShine(c, cx, headY, headR) {
+  // Single clean anime shine band across the hair cap
   c.save();
-  c.globalAlpha = 0.30;
+  c.globalAlpha = 0.25;
   c.fillStyle = '#fff';
   c.beginPath();
-  c.ellipse(cx - headR*0.15, headY - headR*0.55, headR*0.45, headR*0.2, -0.4, 0, Math.PI*2);
-  c.fill();
-  // Second smaller shine
-  c.globalAlpha = 0.18;
-  c.beginPath();
-  c.ellipse(cx + headR*0.2, headY - headR*0.4, headR*0.2, headR*0.1, 0.3, 0, Math.PI*2);
-  c.fill();
-  // Third tiny bright glint
-  c.globalAlpha = 0.5;
-  c.beginPath();
-  c.arc(cx - headR*0.1, headY - headR*0.6, 2, 0, Math.PI*2);
+  c.ellipse(cx - headR*0.1, headY - headR*0.5, headR*0.5, headR*0.13, -0.3, 0, Math.PI*2);
   c.fill();
   c.restore();
 }
 
-function _hairStrands(c, cx, headY, headR, color) {
+function _animeHairShadow(c, cx, headY, headR, color) {
+  // Subtle shadow on the lower-right of the hair cap
   c.save();
-  c.strokeStyle = _darken(color, 30);
-  c.lineWidth = 1.2;
-  c.globalAlpha = 0.35;
-  c.lineCap = 'round';
-  // Gentle curved strands following the cap shape
-  for (let i = -2; i <= 2; i++) {
-    c.beginPath();
-    c.arc(cx + i * headR*0.25, headY, headR*0.85, Math.PI + 0.6, -0.6);
-    c.stroke();
-  }
-  c.restore();
-}
-
-function _hairOutline(c, cx, headY, headR, color) {
-  c.save();
-  c.strokeStyle = _darken(color, 40);
-  c.lineWidth = 2;
-  c.globalAlpha = 0.5;
+  c.globalAlpha = 0.12;
+  c.fillStyle = _darken(color, 40);
   c.beginPath();
-  c.arc(cx, headY, headR * 1.08, Math.PI, 0);
-  c.stroke();
-  c.restore();
-}
-
-function _hairCelShadow(c, cx, headY, headR, color) {
-  c.save();
-  c.globalAlpha = 0.18;
-  c.fillStyle = _darken(color, 50);
-  c.beginPath();
-  c.arc(cx + headR*0.15, headY + headR*0.05, headR*1.02, -0.3, Math.PI*0.4);
-  c.quadraticCurveTo(cx + headR*0.5, headY + headR*0.3, cx - headR*0.2, headY - headR*0.1);
+  c.arc(cx + headR*0.1, headY - headR*0.05, headR*0.95, -0.4, Math.PI*0.5);
+  c.quadraticCurveTo(cx + headR*0.3, headY + headR*0.1, cx - headR*0.3, headY - headR*0.2);
   c.closePath();
   c.fill();
   c.restore();
 }
 
 function hairDraw(style, c, char, x, y, w, h, color) {
-  const { cx, headR, headY } = M(x, y, w, h);
-  const hairGrad = c.createLinearGradient(cx, headY - headR * 1.5, cx, headY + headR * 0.5);
-  hairGrad.addColorStop(0, _lighten(color, 50));
-  hairGrad.addColorStop(0.4, color);
-  hairGrad.addColorStop(0.6, _darken(color, 10));
-  hairGrad.addColorStop(1, _darken(color, 40));
+  const { cx, headR, headY, bodyBot } = M(x, y, w, h);
+  const R = headR; // shorthand
+  // Anime hair gradient: bright highlight at top, rich color in middle, darker at tips
+  const hairGrad = c.createLinearGradient(cx, headY - R*1.4, cx, headY + R*0.8);
+  hairGrad.addColorStop(0, _lighten(color, 35));
+  hairGrad.addColorStop(0.35, color);
+  hairGrad.addColorStop(1, _darken(color, 25));
   c.fillStyle = hairGrad;
-  // Hair sits on TOP of the head, never covering the face below the eye line
-  const topY = headY - headR;
 
   switch(style) {
-    case 'ponytail':
-      // Cap on top
-      c.beginPath(); c.arc(cx, headY, headR*1.05, Math.PI, 0); c.fill();
-      c.fillRect(cx-headR*1.05, headY-headR*0.15, headR*2.1, headR*0.2);
-      // Side fringe
-      c.beginPath(); c.ellipse(cx-headR*0.6, headY-headR*0.1, headR*0.3, headR*0.5, -0.2, 0, Math.PI*2); c.fill();
-      // Ponytail flowing back
-      c.beginPath(); c.moveTo(cx+headR*0.3, topY+headR*0.5);
-      c.quadraticCurveTo(cx+headR*1.5, headY, cx+headR*0.7, headY+headR*2.2);
-      c.quadraticCurveTo(cx+headR*0.4, headY+headR*1.8, cx+headR*0.3, headY+headR*0.5);
+    case 'ponytail': {
+      // Voluminous cap with anime fringe bangs
+      c.beginPath();
+      c.arc(cx, headY, R*1.08, Math.PI, 0);
       c.fill();
-      // Ponytail outline
-      c.strokeStyle = _darken(color, 35);
-      c.lineWidth = 1;
-      c.globalAlpha = 0.3;
-      c.beginPath(); c.moveTo(cx+headR*0.3, topY+headR*0.5);
-      c.quadraticCurveTo(cx+headR*1.5, headY, cx+headR*0.7, headY+headR*2.2);
-      c.stroke();
-      c.globalAlpha = 1;
-      // Hair tie
+      // Anime fringe: 3 pointed bangs across forehead
+      for (let i = -1; i <= 1; i++) {
+        const bx = cx + i * R*0.28;
+        c.beginPath();
+        c.moveTo(bx - R*0.2, headY - R*0.7);
+        c.quadraticCurveTo(bx - R*0.05, headY - R*0.3, bx, headY + R*0.05);
+        c.quadraticCurveTo(bx + R*0.05, headY - R*0.3, bx + R*0.2, headY - R*0.7);
+        c.fill();
+      }
+      // Flowing ponytail with tapered S-curve
+      c.beginPath();
+      c.moveTo(cx + R*0.2, headY - R*0.6);
+      c.bezierCurveTo(cx + R*1.6, headY - R*0.3, cx + R*1.2, headY + R*1.5, cx + R*0.6, headY + R*2.4);
+      c.quadraticCurveTo(cx + R*0.3, headY + R*2.6, cx + R*0.2, headY + R*2.2);
+      c.bezierCurveTo(cx + R*0.5, headY + R*1.3, cx + R*1.0, headY, cx + R*0.2, headY - R*0.6);
+      c.fill();
+      // Hair tie ribbon
       c.fillStyle = '#e84393';
-      c.beginPath(); c.arc(cx+headR*0.5, headY-headR*0.1, 3, 0, Math.PI*2); c.fill();
-      break;
-    case 'bob':
-      c.beginPath(); c.arc(cx, headY, headR*1.08, Math.PI+0.3, -0.3); c.fill();
-      // Side panels
       c.beginPath();
-      c.moveTo(cx-headR*1.05, headY-headR*0.1);
-      c.quadraticCurveTo(cx-headR*1.15, headY+headR*0.5, cx-headR*0.8, headY+headR*0.7);
-      c.lineTo(cx-headR*0.4, headY+headR*0.3);
+      c.ellipse(cx + R*0.45, headY - R*0.25, 4, 3, 0.3, 0, Math.PI*2);
       c.fill();
-      c.beginPath();
-      c.moveTo(cx+headR*1.05, headY-headR*0.1);
-      c.quadraticCurveTo(cx+headR*1.15, headY+headR*0.5, cx+headR*0.8, headY+headR*0.7);
-      c.lineTo(cx+headR*0.4, headY+headR*0.3);
-      c.fill();
-      // Bob side outlines
-      c.strokeStyle = _darken(color, 35);
-      c.lineWidth = 1;
-      c.globalAlpha = 0.3;
-      c.beginPath();
-      c.moveTo(cx-headR*1.05, headY-headR*0.1);
-      c.quadraticCurveTo(cx-headR*1.15, headY+headR*0.5, cx-headR*0.8, headY+headR*0.7);
-      c.stroke();
-      c.beginPath();
-      c.moveTo(cx+headR*1.05, headY-headR*0.1);
-      c.quadraticCurveTo(cx+headR*1.15, headY+headR*0.5, cx+headR*0.8, headY+headR*0.7);
-      c.stroke();
-      c.globalAlpha = 1;
+      c.fillStyle = hairGrad;
       break;
-    case 'spiky':
-      c.beginPath(); c.arc(cx, headY, headR*1.02, Math.PI, 0); c.fill();
-      for (let i = -3; i <= 3; i++) {
+    }
+    case 'bob': {
+      // Rounded bob with face-framing pieces
+      c.beginPath();
+      c.arc(cx, headY, R*1.08, Math.PI + 0.2, -0.2);
+      c.fill();
+      // Left face-framing strand
+      c.beginPath();
+      c.moveTo(cx - R*1.06, headY - R*0.15);
+      c.bezierCurveTo(cx - R*1.2, headY + R*0.3, cx - R*1.15, headY + R*0.6, cx - R*0.75, headY + R*0.75);
+      c.quadraticCurveTo(cx - R*0.5, headY + R*0.7, cx - R*0.55, headY + R*0.2);
+      c.fill();
+      // Right face-framing strand
+      c.beginPath();
+      c.moveTo(cx + R*1.06, headY - R*0.15);
+      c.bezierCurveTo(cx + R*1.2, headY + R*0.3, cx + R*1.15, headY + R*0.6, cx + R*0.75, headY + R*0.75);
+      c.quadraticCurveTo(cx + R*0.5, headY + R*0.7, cx + R*0.55, headY + R*0.2);
+      c.fill();
+      // Soft center bangs
+      c.beginPath();
+      c.moveTo(cx - R*0.4, headY - R*0.8);
+      c.quadraticCurveTo(cx, headY - R*0.1, cx + R*0.4, headY - R*0.8);
+      c.fill();
+      break;
+    }
+    case 'spiky': {
+      // Base volume
+      c.beginPath(); c.arc(cx, headY, R*1.05, Math.PI, 0); c.fill();
+      // Anime spikes radiating outward — each spike is a tapered blade
+      const spikes = [
+        { x: -0.5, angle: -2.4, len: 1.5 },
+        { x: -0.25, angle: -1.8, len: 1.7 },
+        { x: 0, angle: -1.57, len: 1.8 },
+        { x: 0.25, angle: -1.3, len: 1.7 },
+        { x: 0.5, angle: -0.7, len: 1.5 },
+        { x: -0.7, angle: -2.7, len: 1.2 },
+        { x: 0.7, angle: -0.4, len: 1.2 },
+      ];
+      for (const sp of spikes) {
+        const baseX = cx + sp.x * R;
+        const baseY = headY - R*0.5;
+        const tipX = baseX + Math.cos(sp.angle) * R * sp.len;
+        const tipY = baseY + Math.sin(sp.angle) * R * sp.len;
         c.beginPath();
-        const sx = cx + i * headR * 0.22;
-        const tipY = headY - headR * 1.4 - Math.abs(i) * 4;
-        c.moveTo(sx - 5, headY - headR * 0.5);
-        c.quadraticCurveTo(sx - 2, tipY + 4, sx, tipY);
-        c.quadraticCurveTo(sx + 2, tipY + 4, sx + 5, headY - headR * 0.5);
+        c.moveTo(baseX - 4, baseY);
+        c.quadraticCurveTo((baseX + tipX)/2 - 2, (baseY + tipY)/2, tipX, tipY);
+        c.quadraticCurveTo((baseX + tipX)/2 + 2, (baseY + tipY)/2, baseX + 4, baseY);
         c.fill();
       }
       break;
-    case 'long_flowing':
-      // Top cap only
-      c.beginPath(); c.arc(cx, headY, headR*1.08, Math.PI+0.2, -0.2); c.fill();
-      // Side curtains that frame the face (NOT covering it)
-      c.beginPath();
-      c.moveTo(cx-headR*1.06, headY-headR*0.15);
-      c.quadraticCurveTo(cx-headR*1.3, headY+headR*1.5, cx-headR*0.5, headY+headR*2.8);
-      c.lineTo(cx-headR*0.3, headY+headR*2.5);
-      c.quadraticCurveTo(cx-headR*0.8, headY+headR*1.2, cx-headR*0.75, headY+headR*0.2);
-      c.fill();
-      c.beginPath();
-      c.moveTo(cx+headR*1.06, headY-headR*0.15);
-      c.quadraticCurveTo(cx+headR*1.3, headY+headR*1.5, cx+headR*0.5, headY+headR*2.8);
-      c.lineTo(cx+headR*0.3, headY+headR*2.5);
-      c.quadraticCurveTo(cx+headR*0.8, headY+headR*1.2, cx+headR*0.75, headY+headR*0.2);
-      c.fill();
-      // Long flowing side outlines
-      c.strokeStyle = _darken(color, 35);
-      c.lineWidth = 1;
-      c.globalAlpha = 0.3;
-      c.beginPath();
-      c.moveTo(cx-headR*1.06, headY-headR*0.15);
-      c.quadraticCurveTo(cx-headR*1.3, headY+headR*1.5, cx-headR*0.5, headY+headR*2.8);
-      c.stroke();
-      c.beginPath();
-      c.moveTo(cx+headR*1.06, headY-headR*0.15);
-      c.quadraticCurveTo(cx+headR*1.3, headY+headR*1.5, cx+headR*0.5, headY+headR*2.8);
-      c.stroke();
-      c.globalAlpha = 1;
-      break;
-    case 'braids':
-      c.beginPath(); c.arc(cx, headY, headR*1.06, Math.PI+0.2, -0.2); c.fill();
-      // Two braids
+    }
+    case 'long_flowing': {
+      // Full cap
+      c.beginPath(); c.arc(cx, headY, R*1.1, Math.PI + 0.15, -0.15); c.fill();
+      // Long flowing side curtains with wavy ends
       for (let s = -1; s <= 1; s += 2) {
-        const bx = cx + s*headR*0.65;
-        for (let j = 0; j < 5; j++) {
-          const by = headY + headR*0.3 + j*headR*0.4;
-          c.beginPath(); c.ellipse(bx+s*2*((j%2)*2-1), by, 5, 6, 0, 0, Math.PI*2); c.fill();
-        }
-        // Hair tie at end
-        c.fillStyle = '#e84393';
-        c.beginPath(); c.arc(bx, headY+headR*0.3+5*headR*0.4, 3, 0, Math.PI*2); c.fill();
-        c.fillStyle = hairGrad;
-        // Braid outline
-        c.strokeStyle = _darken(color, 35);
-        c.lineWidth = 1;
-        c.globalAlpha = 0.3;
         c.beginPath();
-        c.moveTo(bx, headY+headR*0.3);
-        c.lineTo(bx, headY+headR*0.3+5*headR*0.4);
-        c.stroke();
-        c.globalAlpha = 1;
+        c.moveTo(cx + s*R*1.08, headY - R*0.2);
+        c.bezierCurveTo(
+          cx + s*R*1.3, headY + R*0.8,
+          cx + s*R*1.1, headY + R*1.8,
+          cx + s*R*0.7, headY + R*2.8
+        );
+        // Wavy tip
+        c.quadraticCurveTo(cx + s*R*0.5, headY + R*2.9, cx + s*R*0.4, headY + R*2.6);
+        c.bezierCurveTo(
+          cx + s*R*0.6, headY + R*1.6,
+          cx + s*R*0.85, headY + R*0.6,
+          cx + s*R*0.8, headY + R*0.1
+        );
+        c.fill();
       }
-      break;
-    case 'mohawk':
-      c.beginPath(); c.arc(cx, headY, headR*1.02, Math.PI+0.6, -0.6); c.fill();
-      for (let i = -2; i <= 2; i++) {
+      // Center-part bangs
+      for (let s = -1; s <= 1; s += 2) {
         c.beginPath();
-        const sx = cx + i * headR * 0.14;
-        const tipY = headY - headR * 1.7;
-        c.moveTo(sx - 5, headY - headR * 0.6);
-        c.quadraticCurveTo(sx - 2, tipY + 5, sx, tipY);
-        c.quadraticCurveTo(sx + 2, tipY + 5, sx + 5, headY - headR * 0.6);
+        c.moveTo(cx, headY - R*0.85);
+        c.quadraticCurveTo(cx + s*R*0.15, headY - R*0.2, cx + s*R*0.35, headY + R*0.05);
+        c.quadraticCurveTo(cx + s*R*0.25, headY - R*0.3, cx + s*R*0.5, headY - R*0.85);
         c.fill();
       }
       break;
-    case 'curly':
-      // Curly puffs around the top of the head
-      for (let a = Math.PI+0.3; a >= -0.3; a -= 0.35) {
-        const rx = cx + Math.cos(a)*headR*1.15;
-        const ry = headY + Math.sin(a)*headR*0.6 - headR*0.2;
-        c.beginPath(); c.arc(rx, ry, headR*0.28, 0, Math.PI*2); c.fill();
-      }
-      // Side curls
+    }
+    case 'braids': {
+      // Cap with side part
+      c.beginPath(); c.arc(cx, headY, R*1.08, Math.PI + 0.15, -0.15); c.fill();
+      // Two braids: interlocking segments with taper
       for (let s = -1; s <= 1; s += 2) {
-        for (let j = 0; j < 2; j++) {
+        const bx = cx + s*R*0.7;
+        const startY = headY + R*0.2;
+        for (let j = 0; j < 6; j++) {
+          const by = startY + j*R*0.35;
+          const taper = 1 - j*0.08;
+          const xOff = s * 2.5 * ((j%2)*2-1);
           c.beginPath();
-          c.arc(cx+s*headR*(0.9+j*0.08), headY+headR*(0.2+j*0.35), headR*0.25, 0, Math.PI*2);
+          c.ellipse(bx + xOff, by, 5*taper, 7*taper, s*0.2, 0, Math.PI*2);
           c.fill();
         }
+        // Ribbon tie
+        c.fillStyle = '#e84393';
+        const endY = startY + 6*R*0.35;
+        c.beginPath();
+        c.moveTo(bx, endY - 2);
+        c.lineTo(bx - 4, endY + 5);
+        c.lineTo(bx, endY + 3);
+        c.lineTo(bx + 4, endY + 5);
+        c.closePath();
+        c.fill();
+        c.fillStyle = hairGrad;
+      }
+      // Center bangs
+      c.beginPath();
+      c.moveTo(cx - R*0.3, headY - R*0.8);
+      c.quadraticCurveTo(cx, headY - R*0.05, cx + R*0.3, headY - R*0.8);
+      c.fill();
+      break;
+    }
+    case 'mohawk': {
+      // Shaved sides (thin coverage)
+      c.beginPath(); c.arc(cx, headY, R*1.02, Math.PI + 0.7, -0.7); c.fill();
+      // Tall dramatic center ridge with sharp blades
+      const ridgeSpikes = [
+        { x: -0.2, h: 1.5 }, { x: -0.08, h: 1.8 }, { x: 0.05, h: 1.9 },
+        { x: 0.18, h: 1.7 }, { x: 0.3, h: 1.3 },
+      ];
+      for (const sp of ridgeSpikes) {
+        const bx = cx + sp.x * R;
+        c.beginPath();
+        c.moveTo(bx - 4, headY - R*0.6);
+        c.quadraticCurveTo(bx - 1, headY - R*sp.h + 3, bx, headY - R*sp.h);
+        c.quadraticCurveTo(bx + 1, headY - R*sp.h + 3, bx + 4, headY - R*0.6);
+        c.fill();
       }
       break;
-    case 'bun':
-      c.beginPath(); c.arc(cx, headY, headR*1.05, Math.PI+0.3, -0.3); c.fill();
-      // Bun on top
-      c.beginPath(); c.arc(cx, headY-headR*1.0, headR*0.45, 0, Math.PI*2); c.fill();
-      // Hair stick
-      c.strokeStyle = '#f4d03f'; c.lineWidth = 2; c.lineCap = 'round';
-      c.beginPath(); c.moveTo(cx-headR*0.5, headY-headR*1.15);
-      c.lineTo(cx+headR*0.5, headY-headR*0.85); c.stroke();
+    }
+    case 'curly': {
+      // Voluminous curly hair: overlapping rounded chunks
+      const curls = [
+        // Top ring
+        { a: Math.PI, r: 1.15, s: 0.32 },
+        { a: Math.PI*0.8, r: 1.18, s: 0.30 },
+        { a: Math.PI*0.6, r: 1.2, s: 0.32 },
+        { a: Math.PI*0.4, r: 1.18, s: 0.30 },
+        { a: Math.PI*0.2, r: 1.15, s: 0.32 },
+        { a: 0, r: 1.15, s: 0.30 },
+        // Side curls hanging down
+        { a: Math.PI*0.9, r: 1.1, s: 0.28, dy: 0.5 },
+        { a: Math.PI*0.1, r: 1.1, s: 0.28, dy: 0.5 },
+        { a: Math.PI*0.92, r: 1.0, s: 0.25, dy: 0.9 },
+        { a: Math.PI*0.08, r: 1.0, s: 0.25, dy: 0.9 },
+      ];
+      for (const curl of curls) {
+        const dy = curl.dy || 0;
+        const rx = cx + Math.cos(curl.a) * R * curl.r;
+        const ry = headY + Math.sin(curl.a) * R * 0.55 - R*0.15 + dy*R;
+        c.beginPath(); c.arc(rx, ry, R*curl.s, 0, Math.PI*2); c.fill();
+      }
       break;
+    }
+    case 'bun': {
+      // Sleek cap
+      c.beginPath(); c.arc(cx, headY, R*1.06, Math.PI + 0.25, -0.25); c.fill();
+      // Elegant bun with donut shape
+      c.beginPath(); c.arc(cx, headY - R*1.05, R*0.42, 0, Math.PI*2); c.fill();
+      // Inner bun detail (spiral feel)
+      c.save();
+      c.globalAlpha = 0.15;
+      c.fillStyle = _darken(color, 35);
+      c.beginPath(); c.arc(cx + 2, headY - R*1.0, R*0.22, 0, Math.PI*2); c.fill();
+      c.restore();
+      c.fillStyle = hairGrad;
+      // Decorative hair stick
+      c.strokeStyle = '#f4d03f'; c.lineWidth = 2; c.lineCap = 'round';
+      c.beginPath();
+      c.moveTo(cx - R*0.45, headY - R*1.2);
+      c.lineTo(cx + R*0.45, headY - R*0.9);
+      c.stroke();
+      // Tiny bead on stick
+      c.fillStyle = '#e74c3c';
+      c.beginPath(); c.arc(cx - R*0.45, headY - R*1.2, 2.5, 0, Math.PI*2); c.fill();
+      c.fillStyle = hairGrad;
+      // Side wisps
+      for (let s = -1; s <= 1; s += 2) {
+        c.beginPath();
+        c.moveTo(cx + s*R*0.85, headY - R*0.1);
+        c.quadraticCurveTo(cx + s*R*0.95, headY + R*0.25, cx + s*R*0.7, headY + R*0.45);
+        c.quadraticCurveTo(cx + s*R*0.6, headY + R*0.3, cx + s*R*0.7, headY - R*0.05);
+        c.fill();
+      }
+      break;
+    }
   }
-  _hairCelShadow(c, cx, headY, headR, color);
-  _hairShine(c, cx, headY, headR);
-  _hairStrands(c, cx, headY, headR, color);
-  _hairOutline(c, cx, headY, headR, color);
+  // Common anime finishing touches
+  _animeHairShadow(c, cx, headY, R, color);
+  _animeHairShine(c, cx, headY, R);
 }
 
 const HAIR_STYLES = ['ponytail','bob','spiky','long_flowing','braids','mohawk','curly','bun'];
