@@ -837,14 +837,15 @@ const TOP_DEFS = [
 
 function drawTop(style, c, char, x, y, w, h, color) {
   const { cx, headR, headY, bodyTop, bodyBot, bodyW } = M(x, y, w, h);
-  const topGrad = c.createLinearGradient(cx, bodyTop, cx, bodyBot);
-  topGrad.addColorStop(0, _lighten(color, 40));
-  topGrad.addColorStop(0.5, color);
-  topGrad.addColorStop(1, _darken(color, 35));
-  c.fillStyle = topGrad;
+  const tG = c.createLinearGradient(cx - bodyW, bodyTop, cx + bodyW, bodyBot);
+  tG.addColorStop(0, _lighten(color, 20));
+  tG.addColorStop(1, _darken(color, 15));
+  c.fillStyle = tG;
+  const midY = (bodyTop + bodyBot) / 2;
 
   switch(style) {
     case 'tshirt': {
+      // Body
       c.beginPath();
       c.moveTo(cx - bodyW - 2, bodyTop + 6);
       c.quadraticCurveTo(cx - bodyW - 3, bodyBot, cx - bodyW + 2, bodyBot);
@@ -852,45 +853,18 @@ function drawTop(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx + bodyW + 3, bodyBot, cx + bodyW + 2, bodyTop + 6);
       c.closePath();
       c.fill();
+      // Sleeves
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath();
         c.ellipse(cx + s * (bodyW + 8), bodyTop + 14, 9, 7, s * 0.3, 0, Math.PI * 2);
         c.fill();
       }
-      // Cel shadow
-      c.save();
-      c.globalAlpha = 0.15;
-      c.fillStyle = _darken(color, 55);
-      c.beginPath();
-      c.ellipse(cx + bodyW*0.2, bodyBot - 8, bodyW*0.8, (bodyBot-bodyTop)*0.3, 0.1, 0, Math.PI*2);
-      c.fill();
-      c.restore();
-      c.fillStyle = topGrad;
-      c.strokeStyle = _darken(color, 50);
-      c.lineWidth = 1.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW - 2, bodyTop + 6);
-      c.quadraticCurveTo(cx - bodyW - 3, bodyBot, cx - bodyW + 2, bodyBot);
-      c.quadraticCurveTo(cx, bodyBot + 3, cx + bodyW - 2, bodyBot);
-      c.quadraticCurveTo(cx + bodyW + 3, bodyBot, cx + bodyW + 2, bodyTop + 6);
-      c.stroke();
-      c.strokeStyle = _darken(color, 20);
-      c.lineWidth = 0.8;
-      c.beginPath();
-      c.arc(cx, bodyTop + 2, 6, 0.3, Math.PI - 0.3);
-      c.stroke();
-      c.fillStyle = 'rgba(255,255,255,0.28)';
-      c.beginPath();
-      c.ellipse(cx - 3, bodyTop + 10, bodyW * 0.65, 6, -0.2, 0, Math.PI * 2);
-      c.fill();
-      // Rim light
-      c.save();
-      c.strokeStyle = 'rgba(255,255,255,0.20)';
-      c.lineWidth = 0.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW - 1, bodyTop + 8);
-      c.quadraticCurveTo(cx - bodyW - 3, (bodyTop+bodyBot)/2, cx - bodyW, bodyBot - 2);
-      c.stroke();
+      // Collar
+      c.strokeStyle = _darken(color, 20); c.lineWidth = 0.8;
+      c.beginPath(); c.arc(cx, bodyTop + 2, 6, 0.3, Math.PI - 0.3); c.stroke();
+      // Shadow under collar
+      c.save(); c.globalAlpha = 0.1; c.fillStyle = _darken(color, 40);
+      c.beginPath(); c.ellipse(cx, bodyTop + 12, bodyW * 0.7, 4, 0, 0, Math.PI * 2); c.fill();
       c.restore();
       break;
     }
@@ -902,54 +876,19 @@ function drawTop(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx + bodyW + 6, bodyBot, cx + bodyW + 4, bodyTop + 4);
       c.closePath();
       c.fill();
+      // Sleeves
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath();
         c.ellipse(cx + s * (bodyW + 10), bodyTop + 16, 11, 8, s * 0.25, 0, Math.PI * 2);
         c.fill();
       }
-      c.beginPath();
-      c.arc(cx, bodyTop, 12, Math.PI, 0);
-      c.fill();
-      // Cel shadow
-      c.save();
-      c.globalAlpha = 0.15;
-      c.fillStyle = _darken(color, 55);
-      c.beginPath();
-      c.ellipse(cx + bodyW*0.2, bodyBot - 8, bodyW*0.8, (bodyBot-bodyTop)*0.3, 0.1, 0, Math.PI*2);
-      c.fill();
-      c.restore();
-      c.fillStyle = topGrad;
-      c.strokeStyle = _darken(color, 30);
-      c.lineWidth = 0.8;
-      c.beginPath();
-      c.arc(cx, bodyTop, 12, Math.PI, 0);
-      c.stroke();
-      c.strokeStyle = _darken(color, 20);
-      c.lineWidth = 0.7;
-      c.beginPath();
-      c.ellipse(cx, bodyBot - 10, 8, 5, 0, 0, Math.PI * 2);
-      c.stroke();
-      c.strokeStyle = _darken(color, 50);
-      c.lineWidth = 1.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW - 4, bodyTop + 4);
-      c.quadraticCurveTo(cx - bodyW - 6, bodyBot, cx - bodyW + 2, bodyBot + 2);
-      c.quadraticCurveTo(cx, bodyBot + 4, cx + bodyW - 2, bodyBot + 2);
-      c.quadraticCurveTo(cx + bodyW + 6, bodyBot, cx + bodyW + 4, bodyTop + 4);
-      c.stroke();
-      c.fillStyle = 'rgba(255,255,255,0.28)';
-      c.beginPath();
-      c.ellipse(cx - 3, bodyTop + 10, bodyW * 0.65, 6, -0.2, 0, Math.PI * 2);
-      c.fill();
-      // Rim light
-      c.save();
-      c.strokeStyle = 'rgba(255,255,255,0.20)';
-      c.lineWidth = 0.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW - 1, bodyTop + 8);
-      c.quadraticCurveTo(cx - bodyW - 3, (bodyTop+bodyBot)/2, cx - bodyW, bodyBot - 2);
-      c.stroke();
-      c.restore();
+      // Hood collar
+      c.beginPath(); c.arc(cx, bodyTop, 12, Math.PI, 0); c.fill();
+      c.strokeStyle = _darken(color, 25); c.lineWidth = 0.8;
+      c.beginPath(); c.arc(cx, bodyTop, 12, Math.PI, 0); c.stroke();
+      // Kangaroo pocket
+      c.strokeStyle = _darken(color, 15); c.lineWidth = 0.6;
+      c.beginPath(); c.ellipse(cx, bodyBot - 8, 8, 4, 0, 0, Math.PI * 2); c.stroke();
       break;
     }
     case 'tank_top': {
@@ -960,43 +899,13 @@ function drawTop(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx + bodyW, bodyBot, cx + bodyW - 1, bodyTop + 5);
       c.closePath();
       c.fill();
-      // Cel shadow
-      c.save();
-      c.globalAlpha = 0.15;
-      c.fillStyle = _darken(color, 55);
-      c.beginPath();
-      c.ellipse(cx + bodyW*0.2, bodyBot - 8, bodyW*0.8, (bodyBot-bodyTop)*0.3, 0.1, 0, Math.PI*2);
-      c.fill();
-      c.restore();
-      c.fillStyle = topGrad;
-      c.strokeStyle = _darken(color, 50);
-      c.lineWidth = 1.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW + 1, bodyTop + 5);
-      c.quadraticCurveTo(cx - bodyW, bodyBot, cx - bodyW + 3, bodyBot);
-      c.quadraticCurveTo(cx, bodyBot + 2, cx + bodyW - 3, bodyBot);
-      c.quadraticCurveTo(cx + bodyW, bodyBot, cx + bodyW - 1, bodyTop + 5);
-      c.stroke();
-      c.strokeStyle = _darken(color, 25);
-      c.lineWidth = 0.7;
+      // Thin straps
+      c.strokeStyle = _darken(color, 20); c.lineWidth = 0.7;
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath();
         c.arc(cx + s * 3, bodyTop + 2, 4, 0.2 * s + Math.PI * 0.5, 0.2 * s + Math.PI * 1.5);
         c.stroke();
       }
-      c.fillStyle = 'rgba(255,255,255,0.28)';
-      c.beginPath();
-      c.ellipse(cx - 2, bodyTop + 10, bodyW * 0.52, 4.5, -0.2, 0, Math.PI * 2);
-      c.fill();
-      // Rim light
-      c.save();
-      c.strokeStyle = 'rgba(255,255,255,0.20)';
-      c.lineWidth = 0.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW - 1, bodyTop + 8);
-      c.quadraticCurveTo(cx - bodyW - 3, (bodyTop+bodyBot)/2, cx - bodyW, bodyBot - 2);
-      c.stroke();
-      c.restore();
       break;
     }
     case 'dress_shirt': {
@@ -1007,28 +916,13 @@ function drawTop(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx + bodyW + 3, bodyBot, cx + bodyW + 2, bodyTop + 4);
       c.closePath();
       c.fill();
+      // Sleeves
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath();
         c.ellipse(cx + s * (bodyW + 10), bodyTop + 16, 10, 7, s * 0.2, 0, Math.PI * 2);
         c.fill();
       }
-      // Cel shadow
-      c.save();
-      c.globalAlpha = 0.15;
-      c.fillStyle = _darken(color, 55);
-      c.beginPath();
-      c.ellipse(cx + bodyW*0.2, bodyBot - 8, bodyW*0.8, (bodyBot-bodyTop)*0.3, 0.1, 0, Math.PI*2);
-      c.fill();
-      c.restore();
-      c.fillStyle = topGrad;
-      c.strokeStyle = _darken(color, 50);
-      c.lineWidth = 1.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW - 2, bodyTop + 4);
-      c.quadraticCurveTo(cx - bodyW - 3, bodyBot, cx - bodyW + 2, bodyBot);
-      c.quadraticCurveTo(cx, bodyBot + 3, cx + bodyW - 2, bodyBot);
-      c.quadraticCurveTo(cx + bodyW + 3, bodyBot, cx + bodyW + 2, bodyTop + 4);
-      c.stroke();
+      // Collar flaps
       c.fillStyle = '#fff';
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath();
@@ -1038,29 +932,15 @@ function drawTop(style, c, char, x, y, w, h, color) {
         c.closePath();
         c.fill();
       }
+      // Buttons
       c.fillStyle = _darken(color, 30);
       for (let i = 0; i < 3; i++) {
-        c.beginPath();
-        c.arc(cx, bodyTop + 14 + i * 8, 1.3, 0, Math.PI * 2);
-        c.fill();
+        c.beginPath(); c.arc(cx, bodyTop + 14 + i * 8, 1.2, 0, Math.PI * 2); c.fill();
       }
-      c.fillStyle = 'rgba(255,255,255,0.28)';
-      c.beginPath();
-      c.ellipse(cx - 3, bodyTop + 10, bodyW * 0.65, 6, -0.2, 0, Math.PI * 2);
-      c.fill();
-      // Rim light
-      c.save();
-      c.strokeStyle = 'rgba(255,255,255,0.20)';
-      c.lineWidth = 0.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW - 1, bodyTop + 8);
-      c.quadraticCurveTo(cx - bodyW - 3, (bodyTop+bodyBot)/2, cx - bodyW, bodyBot - 2);
-      c.stroke();
-      c.restore();
       break;
     }
     case 'crop_top': {
-      const cropBot = (bodyTop + bodyBot) / 2 - 4;
+      const cropBot = midY - 4;
       c.beginPath();
       c.moveTo(cx - bodyW, bodyTop + 5);
       c.quadraticCurveTo(cx - bodyW - 2, cropBot, cx - bodyW + 3, cropBot + 2);
@@ -1068,41 +948,9 @@ function drawTop(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx + bodyW + 2, cropBot, cx + bodyW, bodyTop + 5);
       c.closePath();
       c.fill();
-      // Cel shadow
-      c.save();
-      c.globalAlpha = 0.15;
-      c.fillStyle = _darken(color, 55);
-      c.beginPath();
-      c.ellipse(cx + bodyW*0.2, bodyBot - 8, bodyW*0.8, (bodyBot-bodyTop)*0.3, 0.1, 0, Math.PI*2);
-      c.fill();
-      c.restore();
-      c.fillStyle = topGrad;
-      c.strokeStyle = _darken(color, 50);
-      c.lineWidth = 1.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW, bodyTop + 5);
-      c.quadraticCurveTo(cx - bodyW - 2, cropBot, cx - bodyW + 3, cropBot + 2);
-      c.quadraticCurveTo(cx, cropBot + 4, cx + bodyW - 3, cropBot + 2);
-      c.quadraticCurveTo(cx + bodyW + 2, cropBot, cx + bodyW, bodyTop + 5);
-      c.stroke();
-      c.strokeStyle = _darken(color, 20);
-      c.lineWidth = 0.7;
-      c.beginPath();
-      c.arc(cx, bodyTop + 2, 5, 0.4, Math.PI - 0.4);
-      c.stroke();
-      c.fillStyle = 'rgba(255,255,255,0.28)';
-      c.beginPath();
-      c.ellipse(cx - 2, bodyTop + 10, bodyW * 0.52, 4.5, -0.2, 0, Math.PI * 2);
-      c.fill();
-      // Rim light
-      c.save();
-      c.strokeStyle = 'rgba(255,255,255,0.20)';
-      c.lineWidth = 0.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW - 1, bodyTop + 8);
-      c.quadraticCurveTo(cx - bodyW - 3, (bodyTop+bodyBot)/2, cx - bodyW, bodyBot - 2);
-      c.stroke();
-      c.restore();
+      // Neckline
+      c.strokeStyle = _darken(color, 20); c.lineWidth = 0.7;
+      c.beginPath(); c.arc(cx, bodyTop + 2, 5, 0.4, Math.PI - 0.4); c.stroke();
       break;
     }
     case 'jacket': {
@@ -1113,103 +961,46 @@ function drawTop(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx + bodyW + 6, bodyBot, cx + bodyW + 4, bodyTop + 3);
       c.closePath();
       c.fill();
+      // Sleeves
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath();
         c.ellipse(cx + s * (bodyW + 10), bodyTop + 16, 12, 9, s * 0.25, 0, Math.PI * 2);
         c.fill();
       }
-      // Cel shadow
-      c.save();
-      c.globalAlpha = 0.15;
-      c.fillStyle = _darken(color, 55);
-      c.beginPath();
-      c.ellipse(cx + bodyW*0.2, bodyBot - 8, bodyW*0.8, (bodyBot-bodyTop)*0.3, 0.1, 0, Math.PI*2);
-      c.fill();
-      c.restore();
-      c.fillStyle = topGrad;
-      c.strokeStyle = _darken(color, 50);
-      c.lineWidth = 1.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW - 4, bodyTop + 3);
-      c.quadraticCurveTo(cx - bodyW - 6, bodyBot, cx - bodyW + 2, bodyBot + 1);
-      c.quadraticCurveTo(cx, bodyBot + 3, cx + bodyW - 2, bodyBot + 1);
-      c.quadraticCurveTo(cx + bodyW + 6, bodyBot, cx + bodyW + 4, bodyTop + 3);
-      c.stroke();
-      c.strokeStyle = _darken(color, 20);
-      c.lineWidth = 0.8;
+      // Center zipper line
+      c.strokeStyle = _darken(color, 20); c.lineWidth = 0.8;
       c.beginPath();
       c.moveTo(cx, bodyTop + 5);
-      c.quadraticCurveTo(cx + 1, (bodyTop + bodyBot) / 2, cx, bodyBot);
+      c.quadraticCurveTo(cx + 1, midY, cx, bodyBot);
       c.stroke();
-      c.fillStyle = 'rgba(255,255,255,0.28)';
-      c.beginPath();
-      c.ellipse(cx - 4, bodyTop + 10, bodyW * 0.585, 6, -0.2, 0, Math.PI * 2);
-      c.fill();
-      // Rim light
-      c.save();
-      c.strokeStyle = 'rgba(255,255,255,0.20)';
-      c.lineWidth = 0.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW - 1, bodyTop + 8);
-      c.quadraticCurveTo(cx - bodyW - 3, (bodyTop+bodyBot)/2, cx - bodyW, bodyBot - 2);
-      c.stroke();
+      // Lapel shadow
+      c.save(); c.globalAlpha = 0.08; c.fillStyle = _darken(color, 40);
+      c.beginPath(); c.ellipse(cx, bodyTop + 10, bodyW * 0.6, 5, 0, 0, Math.PI * 2); c.fill();
       c.restore();
       break;
     }
     case 'armor': {
       c.beginPath();
       c.moveTo(cx - bodyW - 2, bodyTop + 4);
-      c.quadraticCurveTo(cx - bodyW - 5, (bodyTop + bodyBot) / 2, cx - bodyW - 3, bodyBot);
+      c.quadraticCurveTo(cx - bodyW - 5, midY, cx - bodyW - 3, bodyBot);
       c.quadraticCurveTo(cx, bodyBot + 3, cx + bodyW + 3, bodyBot);
-      c.quadraticCurveTo(cx + bodyW + 5, (bodyTop + bodyBot) / 2, cx + bodyW + 2, bodyTop + 4);
+      c.quadraticCurveTo(cx + bodyW + 5, midY, cx + bodyW + 2, bodyTop + 4);
       c.closePath();
       c.fill();
+      // Pauldrons
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath();
         c.ellipse(cx + s * (bodyW + 5), bodyTop + 8, 9, 6, s * 0.3, 0, Math.PI * 2);
         c.fill();
-        c.strokeStyle = _darken(color, 30);
-        c.lineWidth = 0.8;
-        c.beginPath();
-        c.ellipse(cx + s * (bodyW + 5), bodyTop + 8, 9, 6, s * 0.3, 0, Math.PI * 2);
-        c.stroke();
+        c.strokeStyle = _darken(color, 25); c.lineWidth = 0.8;
+        c.beginPath(); c.ellipse(cx + s * (bodyW + 5), bodyTop + 8, 9, 6, s * 0.3, 0, Math.PI * 2); c.stroke();
       }
-      // Cel shadow
-      c.save();
-      c.globalAlpha = 0.15;
-      c.fillStyle = _darken(color, 55);
+      // Belt line
+      c.strokeStyle = _darken(color, 25); c.lineWidth = 1;
       c.beginPath();
-      c.ellipse(cx + bodyW*0.2, bodyBot - 8, bodyW*0.8, (bodyBot-bodyTop)*0.3, 0.1, 0, Math.PI*2);
-      c.fill();
-      c.restore();
-      c.fillStyle = topGrad;
-      c.strokeStyle = _darken(color, 25);
-      c.lineWidth = 1.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW, (bodyTop + bodyBot) / 2);
-      c.quadraticCurveTo(cx, (bodyTop + bodyBot) / 2 + 2, cx + bodyW, (bodyTop + bodyBot) / 2);
+      c.moveTo(cx - bodyW, midY);
+      c.quadraticCurveTo(cx, midY + 2, cx + bodyW, midY);
       c.stroke();
-      c.strokeStyle = _darken(color, 50);
-      c.lineWidth = 1.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW - 2, bodyTop + 4);
-      c.quadraticCurveTo(cx - bodyW - 5, (bodyTop + bodyBot) / 2, cx - bodyW - 3, bodyBot);
-      c.quadraticCurveTo(cx, bodyBot + 3, cx + bodyW + 3, bodyBot);
-      c.quadraticCurveTo(cx + bodyW + 5, (bodyTop + bodyBot) / 2, cx + bodyW + 2, bodyTop + 4);
-      c.stroke();
-      c.fillStyle = 'rgba(255,255,255,0.28)';
-      c.beginPath();
-      c.ellipse(cx - 3, bodyTop + 10, bodyW * 0.65, 6, -0.2, 0, Math.PI * 2);
-      c.fill();
-      // Rim light
-      c.save();
-      c.strokeStyle = 'rgba(255,255,255,0.20)';
-      c.lineWidth = 0.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW - 1, bodyTop + 8);
-      c.quadraticCurveTo(cx - bodyW - 3, (bodyTop+bodyBot)/2, cx - bodyW, bodyBot - 2);
-      c.stroke();
-      c.restore();
       break;
     }
     case 'wizard_robe': {
@@ -1221,45 +1012,17 @@ function drawTop(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx + bodyW + 14, (bodyTop + robeBot) / 2, cx + bodyW + 4, bodyTop + 2);
       c.closePath();
       c.fill();
+      // Wide sleeves
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath();
         c.ellipse(cx + s * (bodyW + 12), bodyTop + 18, 12, 8, s * 0.3, 0, Math.PI * 2);
         c.fill();
       }
-      // Cel shadow
-      c.save();
-      c.globalAlpha = 0.15;
-      c.fillStyle = _darken(color, 55);
-      c.beginPath();
-      c.ellipse(cx + bodyW*0.2, bodyBot - 8, bodyW*0.8, (bodyBot-bodyTop)*0.3, 0.1, 0, Math.PI*2);
-      c.fill();
-      c.restore();
-      c.fillStyle = topGrad;
-      c.strokeStyle = _darken(color, 50);
-      c.lineWidth = 1.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW - 4, bodyTop + 2);
-      c.quadraticCurveTo(cx - bodyW - 14, (bodyTop + robeBot) / 2, cx - bodyW - 8, robeBot);
-      c.quadraticCurveTo(cx, robeBot + 4, cx + bodyW + 8, robeBot);
-      c.quadraticCurveTo(cx + bodyW + 14, (bodyTop + robeBot) / 2, cx + bodyW + 4, bodyTop + 2);
-      c.stroke();
+      // Stars decoration
       c.fillStyle = 'rgba(255,215,0,0.35)';
       c.font = '7px sans-serif';
       c.fillText('\u2605', cx - 5, bodyBot - 8);
-      c.fillText('\u2605', cx + 4, (bodyTop + bodyBot) / 2 + 2);
-      c.fillStyle = 'rgba(255,255,255,0.28)';
-      c.beginPath();
-      c.ellipse(cx - 3, bodyTop + 12, bodyW * 0.65, 6, -0.2, 0, Math.PI * 2);
-      c.fill();
-      // Rim light
-      c.save();
-      c.strokeStyle = 'rgba(255,255,255,0.20)';
-      c.lineWidth = 0.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW - 1, bodyTop + 8);
-      c.quadraticCurveTo(cx - bodyW - 3, (bodyTop+bodyBot)/2, cx - bodyW, bodyBot - 2);
-      c.stroke();
-      c.restore();
+      c.fillText('\u2605', cx + 4, midY + 2);
       break;
     }
     case 'kimono': {
@@ -1271,25 +1034,9 @@ function drawTop(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx + bodyW + 12, (bodyTop + kimBot) / 2, cx + bodyW + 6, bodyTop + 2);
       c.closePath();
       c.fill();
-      // Cel shadow
-      c.save();
-      c.globalAlpha = 0.15;
-      c.fillStyle = _darken(color, 55);
-      c.beginPath();
-      c.ellipse(cx + bodyW*0.2, bodyBot - 8, bodyW*0.8, (bodyBot-bodyTop)*0.3, 0.1, 0, Math.PI*2);
-      c.fill();
-      c.restore();
-      c.fillStyle = topGrad;
-      c.strokeStyle = _darken(color, 50);
-      c.lineWidth = 1.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW - 6, bodyTop + 2);
-      c.quadraticCurveTo(cx - bodyW - 12, (bodyTop + kimBot) / 2, cx - bodyW - 4, kimBot);
-      c.quadraticCurveTo(cx, kimBot + 3, cx + bodyW + 4, kimBot);
-      c.quadraticCurveTo(cx + bodyW + 12, (bodyTop + kimBot) / 2, cx + bodyW + 6, bodyTop + 2);
-      c.stroke();
+      // Obi sash
       c.fillStyle = _darken(color, 30);
-      const obiY = (bodyTop + bodyBot) / 2 - 2;
+      const obiY = midY - 2;
       c.beginPath();
       c.moveTo(cx - bodyW - 4, obiY);
       c.quadraticCurveTo(cx, obiY + 3, cx + bodyW + 4, obiY);
@@ -1298,19 +1045,6 @@ function drawTop(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx - bodyW - 4, obiY + 7, cx - bodyW - 4, obiY);
       c.closePath();
       c.fill();
-      c.fillStyle = 'rgba(255,255,255,0.28)';
-      c.beginPath();
-      c.ellipse(cx - 3, bodyTop + 10, bodyW * 0.65, 6, -0.2, 0, Math.PI * 2);
-      c.fill();
-      // Rim light
-      c.save();
-      c.strokeStyle = 'rgba(255,255,255,0.20)';
-      c.lineWidth = 0.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW - 1, bodyTop + 8);
-      c.quadraticCurveTo(cx - bodyW - 3, (bodyTop+bodyBot)/2, cx - bodyW, bodyBot - 2);
-      c.stroke();
-      c.restore();
       break;
     }
     case 'vest': {
@@ -1321,42 +1055,12 @@ function drawTop(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx + bodyW + 1, bodyBot, cx + bodyW - 1, bodyTop + 5);
       c.closePath();
       c.fill();
-      // Cel shadow
-      c.save();
-      c.globalAlpha = 0.15;
-      c.fillStyle = _darken(color, 55);
-      c.beginPath();
-      c.ellipse(cx + bodyW*0.2, bodyBot - 8, bodyW*0.8, (bodyBot-bodyTop)*0.3, 0.1, 0, Math.PI*2);
-      c.fill();
-      c.restore();
-      c.fillStyle = topGrad;
-      c.strokeStyle = _darken(color, 50);
-      c.lineWidth = 1.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW + 1, bodyTop + 5);
-      c.quadraticCurveTo(cx - bodyW - 1, bodyBot, cx - bodyW + 3, bodyBot - 1);
-      c.quadraticCurveTo(cx, bodyBot + 2, cx + bodyW - 3, bodyBot - 1);
-      c.quadraticCurveTo(cx + bodyW + 1, bodyBot, cx + bodyW - 1, bodyTop + 5);
-      c.stroke();
-      c.strokeStyle = _darken(color, 20);
-      c.lineWidth = 0.7;
+      // Center seam
+      c.strokeStyle = _darken(color, 18); c.lineWidth = 0.6;
       c.beginPath();
       c.moveTo(cx, bodyTop + 6);
-      c.quadraticCurveTo(cx + 0.5, (bodyTop + bodyBot) / 2, cx, bodyBot - 2);
+      c.quadraticCurveTo(cx + 0.5, midY, cx, bodyBot - 2);
       c.stroke();
-      c.fillStyle = 'rgba(255,255,255,0.28)';
-      c.beginPath();
-      c.ellipse(cx - 2, bodyTop + 10, bodyW * 0.52, 4.5, -0.2, 0, Math.PI * 2);
-      c.fill();
-      // Rim light
-      c.save();
-      c.strokeStyle = 'rgba(255,255,255,0.20)';
-      c.lineWidth = 0.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW - 1, bodyTop + 8);
-      c.quadraticCurveTo(cx - bodyW - 3, (bodyTop+bodyBot)/2, cx - bodyW, bodyBot - 2);
-      c.stroke();
-      c.restore();
       break;
     }
     case 'sweater': {
@@ -1367,35 +1071,18 @@ function drawTop(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx + bodyW + 4, bodyBot, cx + bodyW + 3, bodyTop + 3);
       c.closePath();
       c.fill();
+      // Sleeves
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath();
         c.ellipse(cx + s * (bodyW + 9), bodyTop + 15, 10, 8, s * 0.25, 0, Math.PI * 2);
         c.fill();
       }
-      c.fillStyle = _darken(color, 15);
-      c.beginPath();
-      c.ellipse(cx, bodyTop + 1, 7, 3, 0, 0, Math.PI * 2);
-      c.fill();
-      c.fillStyle = topGrad;
-      // Cel shadow
-      c.save();
-      c.globalAlpha = 0.15;
-      c.fillStyle = _darken(color, 55);
-      c.beginPath();
-      c.ellipse(cx + bodyW*0.2, bodyBot - 8, bodyW*0.8, (bodyBot-bodyTop)*0.3, 0.1, 0, Math.PI*2);
-      c.fill();
-      c.restore();
-      c.fillStyle = topGrad;
-      c.strokeStyle = _darken(color, 50);
-      c.lineWidth = 1.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW - 3, bodyTop + 3);
-      c.quadraticCurveTo(cx - bodyW - 4, bodyBot, cx - bodyW + 2, bodyBot + 1);
-      c.quadraticCurveTo(cx, bodyBot + 3, cx + bodyW - 2, bodyBot + 1);
-      c.quadraticCurveTo(cx + bodyW + 4, bodyBot, cx + bodyW + 3, bodyTop + 3);
-      c.stroke();
-      c.strokeStyle = _darken(color, 12);
-      c.lineWidth = 0.5;
+      // Turtleneck collar
+      c.fillStyle = _darken(color, 12);
+      c.beginPath(); c.ellipse(cx, bodyTop + 1, 7, 3, 0, 0, Math.PI * 2); c.fill();
+      c.fillStyle = tG;
+      // Knit lines
+      c.strokeStyle = _darken(color, 10); c.lineWidth = 0.4;
       for (let i = 0; i < 4; i++) {
         const ly = bodyTop + 8 + i * 7;
         c.beginPath();
@@ -1403,72 +1090,23 @@ function drawTop(style, c, char, x, y, w, h, color) {
         c.quadraticCurveTo(cx, ly + 1.5, cx + bodyW - 2, ly);
         c.stroke();
       }
-      c.fillStyle = 'rgba(255,255,255,0.28)';
-      c.beginPath();
-      c.ellipse(cx - 3, bodyTop + 10, bodyW * 0.65, 6, -0.2, 0, Math.PI * 2);
-      c.fill();
-      // Rim light
-      c.save();
-      c.strokeStyle = 'rgba(255,255,255,0.20)';
-      c.lineWidth = 0.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW - 1, bodyTop + 8);
-      c.quadraticCurveTo(cx - bodyW - 3, (bodyTop+bodyBot)/2, cx - bodyW, bodyBot - 2);
-      c.stroke();
-      c.restore();
       break;
     }
     case 'corset': {
       c.beginPath();
       c.moveTo(cx - bodyW + 1, bodyTop + 8);
-      c.quadraticCurveTo(cx - bodyW - 2, (bodyTop + bodyBot) / 2, cx - bodyW, bodyBot - 3);
+      c.quadraticCurveTo(cx - bodyW - 2, midY, cx - bodyW, bodyBot - 3);
       c.quadraticCurveTo(cx, bodyBot, cx + bodyW, bodyBot - 3);
-      c.quadraticCurveTo(cx + bodyW + 2, (bodyTop + bodyBot) / 2, cx + bodyW - 1, bodyTop + 8);
+      c.quadraticCurveTo(cx + bodyW + 2, midY, cx + bodyW - 1, bodyTop + 8);
       c.closePath();
       c.fill();
-      // Cel shadow
-      c.save();
-      c.globalAlpha = 0.15;
-      c.fillStyle = _darken(color, 55);
-      c.beginPath();
-      c.ellipse(cx + bodyW*0.2, bodyBot - 8, bodyW*0.8, (bodyBot-bodyTop)*0.3, 0.1, 0, Math.PI*2);
-      c.fill();
-      c.restore();
-      c.fillStyle = topGrad;
-      c.strokeStyle = _darken(color, 50);
-      c.lineWidth = 1.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW + 1, bodyTop + 8);
-      c.quadraticCurveTo(cx - bodyW - 2, (bodyTop + bodyBot) / 2, cx - bodyW, bodyBot - 3);
-      c.quadraticCurveTo(cx, bodyBot, cx + bodyW, bodyBot - 3);
-      c.quadraticCurveTo(cx + bodyW + 2, (bodyTop + bodyBot) / 2, cx + bodyW - 1, bodyTop + 8);
-      c.stroke();
-      c.strokeStyle = 'rgba(255,255,255,0.25)';
-      c.lineWidth = 0.7;
+      // Lacing
+      c.strokeStyle = 'rgba(255,255,255,0.2)'; c.lineWidth = 0.6;
       for (let i = 0; i < 4; i++) {
         const ly = bodyTop + 12 + i * 6;
-        c.beginPath();
-        c.moveTo(cx - 2, ly);
-        c.quadraticCurveTo(cx - 5, ly + 2, cx - 7, ly + 3);
-        c.stroke();
-        c.beginPath();
-        c.moveTo(cx + 2, ly);
-        c.quadraticCurveTo(cx + 5, ly + 2, cx + 7, ly + 3);
-        c.stroke();
+        c.beginPath(); c.moveTo(cx - 2, ly); c.quadraticCurveTo(cx - 5, ly + 2, cx - 7, ly + 3); c.stroke();
+        c.beginPath(); c.moveTo(cx + 2, ly); c.quadraticCurveTo(cx + 5, ly + 2, cx + 7, ly + 3); c.stroke();
       }
-      c.fillStyle = 'rgba(255,255,255,0.28)';
-      c.beginPath();
-      c.ellipse(cx - 2, bodyTop + 14, bodyW * 0.455, 4.5, -0.2, 0, Math.PI * 2);
-      c.fill();
-      // Rim light
-      c.save();
-      c.strokeStyle = 'rgba(255,255,255,0.20)';
-      c.lineWidth = 0.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW - 1, bodyTop + 8);
-      c.quadraticCurveTo(cx - bodyW - 3, (bodyTop+bodyBot)/2, cx - bodyW, bodyBot - 2);
-      c.stroke();
-      c.restore();
       break;
     }
   }
@@ -1498,9 +1136,8 @@ const BOTTOM_DEFS = [
 function drawBottom(style, c, char, x, y, w, h, color) {
   const { cx, bodyBot, bodyW, legBot } = M(x, y, w, h);
   const botGrad = c.createLinearGradient(cx, bodyBot, cx, legBot);
-  botGrad.addColorStop(0, _lighten(color, 40));
-  botGrad.addColorStop(0.5, color);
-  botGrad.addColorStop(1, _darken(color, 40));
+  botGrad.addColorStop(0, _lighten(color, 18));
+  botGrad.addColorStop(1, _darken(color, 12));
   c.fillStyle = botGrad;
 
   switch(style) {
@@ -1521,47 +1158,9 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx + bodyW + 3, (bodyBot + legBot) / 2, cx + bodyW + 1, bodyBot - 3);
       c.closePath();
       c.fill();
-      // Cel-shadow
-      c.save();
-      c.globalAlpha = 0.15;
-      c.fillStyle = _darken(color, 55);
-      c.beginPath();
-      c.ellipse(cx + 3, bodyBot + 8, bodyW*0.6, 6, 0.1, 0, Math.PI*2);
-      c.fill();
-      c.restore();
-      c.fillStyle = botGrad;
-      // Outline
-      c.strokeStyle = _darken(color, 50);
-      c.lineWidth = 1.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW - 1, bodyBot - 3);
-      c.quadraticCurveTo(cx - bodyW - 3, (bodyBot + legBot) / 2, cx - 14, legBot);
-      c.quadraticCurveTo(cx - 8, legBot + 2, cx - 3, legBot);
-      c.quadraticCurveTo(cx, bodyBot + 8, cx + 3, legBot);
-      c.quadraticCurveTo(cx + 8, legBot + 2, cx + 14, legBot);
-      c.quadraticCurveTo(cx + bodyW + 3, (bodyBot + legBot) / 2, cx + bodyW + 1, bodyBot - 3);
-      c.stroke();
       // Center seam
-      c.strokeStyle = _darken(color, 15);
-      c.lineWidth = 0.6;
-      c.beginPath();
-      c.moveTo(cx, bodyBot);
-      c.quadraticCurveTo(cx, bodyBot + 3, cx, bodyBot + 6);
-      c.stroke();
-      // Highlight
-      c.fillStyle = 'rgba(255,255,255,0.25)';
-      c.beginPath();
-      c.ellipse(cx - 6, bodyBot + 4, 5.2, 2.6, -0.1, 0, Math.PI * 2);
-      c.fill();
-      // Rim light
-      c.save();
-      c.strokeStyle = 'rgba(255,255,255,0.18)';
-      c.lineWidth = 0.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW - 1, bodyBot);
-      c.quadraticCurveTo(cx - bodyW - 2, (bodyBot+legBot)/2, cx - 12, legBot - 2);
-      c.stroke();
-      c.restore();
+      c.strokeStyle = _darken(color, 15); c.lineWidth = 0.6;
+      c.beginPath(); c.moveTo(cx, bodyBot); c.lineTo(cx, bodyBot + 6); c.stroke();
       break;
     }
     case 'skirt': {
@@ -1572,36 +1171,6 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx + bodyW + 10, bodyBot + 18, cx + bodyW + 1, bodyBot - 3);
       c.closePath();
       c.fill();
-      // Cel-shadow
-      c.save();
-      c.globalAlpha = 0.15;
-      c.fillStyle = _darken(color, 55);
-      c.beginPath();
-      c.ellipse(cx + 3, bodyBot + 8, bodyW*0.6, 6, 0.1, 0, Math.PI*2);
-      c.fill();
-      c.restore();
-      c.fillStyle = botGrad;
-      c.strokeStyle = _darken(color, 50);
-      c.lineWidth = 1.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW - 1, bodyBot - 3);
-      c.quadraticCurveTo(cx - bodyW - 10, bodyBot + 18, cx - bodyW + 3, bodyBot + 24);
-      c.quadraticCurveTo(cx, bodyBot + 26, cx + bodyW - 3, bodyBot + 24);
-      c.quadraticCurveTo(cx + bodyW + 10, bodyBot + 18, cx + bodyW + 1, bodyBot - 3);
-      c.stroke();
-      c.fillStyle = 'rgba(255,255,255,0.25)';
-      c.beginPath();
-      c.ellipse(cx - 3, bodyBot + 4, bodyW * 0.65, 3.9, -0.1, 0, Math.PI * 2);
-      c.fill();
-      // Rim light
-      c.save();
-      c.strokeStyle = 'rgba(255,255,255,0.18)';
-      c.lineWidth = 0.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW - 1, bodyBot);
-      c.quadraticCurveTo(cx - bodyW - 2, (bodyBot+legBot)/2, cx - 12, legBot - 2);
-      c.stroke();
-      c.restore();
       break;
     }
     case 'shorts': {
@@ -1621,40 +1190,6 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx + bodyW + 2, bodyBot + 6, cx + bodyW + 1, bodyBot - 3);
       c.closePath();
       c.fill();
-      // Cel-shadow
-      c.save();
-      c.globalAlpha = 0.15;
-      c.fillStyle = _darken(color, 55);
-      c.beginPath();
-      c.ellipse(cx + 3, bodyBot + 8, bodyW*0.6, 6, 0.1, 0, Math.PI*2);
-      c.fill();
-      c.restore();
-      c.fillStyle = botGrad;
-      // Outline
-      c.strokeStyle = _darken(color, 50);
-      c.lineWidth = 1.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW - 1, bodyBot - 3);
-      c.quadraticCurveTo(cx - bodyW - 2, bodyBot + 6, cx - bodyW, bodyBot + 10);
-      c.quadraticCurveTo(cx - bodyW / 2, bodyBot + 12, cx - 2, bodyBot + 10);
-      c.quadraticCurveTo(cx, bodyBot + 6, cx + 2, bodyBot + 10);
-      c.quadraticCurveTo(cx + bodyW / 2, bodyBot + 12, cx + bodyW, bodyBot + 10);
-      c.quadraticCurveTo(cx + bodyW + 2, bodyBot + 6, cx + bodyW + 1, bodyBot - 3);
-      c.stroke();
-      // Highlight
-      c.fillStyle = 'rgba(255,255,255,0.25)';
-      c.beginPath();
-      c.ellipse(cx - 4, bodyBot + 2, 3.9, 2.6, 0, 0, Math.PI * 2);
-      c.fill();
-      // Rim light
-      c.save();
-      c.strokeStyle = 'rgba(255,255,255,0.18)';
-      c.lineWidth = 0.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW - 1, bodyBot);
-      c.quadraticCurveTo(cx - bodyW - 2, (bodyBot+legBot)/2, cx - 12, legBot - 2);
-      c.stroke();
-      c.restore();
       break;
     }
     case 'leggings': {
@@ -1674,40 +1209,6 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx + bodyW + 1, (bodyBot + legBot) / 2, cx + bodyW, bodyBot - 3);
       c.closePath();
       c.fill();
-      // Cel-shadow
-      c.save();
-      c.globalAlpha = 0.15;
-      c.fillStyle = _darken(color, 55);
-      c.beginPath();
-      c.ellipse(cx + 3, bodyBot + 8, bodyW*0.6, 6, 0.1, 0, Math.PI*2);
-      c.fill();
-      c.restore();
-      c.fillStyle = botGrad;
-      // Outline
-      c.strokeStyle = _darken(color, 50);
-      c.lineWidth = 1.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW, bodyBot - 3);
-      c.quadraticCurveTo(cx - bodyW - 1, (bodyBot + legBot) / 2, cx - 12, legBot + 1);
-      c.quadraticCurveTo(cx - 8, legBot + 2, cx - 5, legBot + 1);
-      c.quadraticCurveTo(cx, bodyBot + 8, cx + 5, legBot + 1);
-      c.quadraticCurveTo(cx + 8, legBot + 2, cx + 12, legBot + 1);
-      c.quadraticCurveTo(cx + bodyW + 1, (bodyBot + legBot) / 2, cx + bodyW, bodyBot - 3);
-      c.stroke();
-      // Highlight
-      c.fillStyle = 'rgba(255,255,255,0.25)';
-      c.beginPath();
-      c.ellipse(cx - 6, bodyBot + 4, 3.9, 2.6, -0.1, 0, Math.PI * 2);
-      c.fill();
-      // Rim light
-      c.save();
-      c.strokeStyle = 'rgba(255,255,255,0.18)';
-      c.lineWidth = 0.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW - 1, bodyBot);
-      c.quadraticCurveTo(cx - bodyW - 2, (bodyBot+legBot)/2, cx - 12, legBot - 2);
-      c.stroke();
-      c.restore();
       break;
     }
     case 'cargo_pants': {
@@ -1727,49 +1228,10 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx + bodyW + 4, (bodyBot + legBot) / 2, cx + bodyW + 2, bodyBot - 3);
       c.closePath();
       c.fill();
-      // Cel-shadow
-      c.save();
-      c.globalAlpha = 0.15;
-      c.fillStyle = _darken(color, 55);
-      c.beginPath();
-      c.ellipse(cx + 3, bodyBot + 8, bodyW*0.6, 6, 0.1, 0, Math.PI*2);
-      c.fill();
-      c.restore();
-      c.fillStyle = botGrad;
-      // Outline
-      c.strokeStyle = _darken(color, 50);
-      c.lineWidth = 1.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW - 2, bodyBot - 3);
-      c.quadraticCurveTo(cx - bodyW - 4, (bodyBot + legBot) / 2, cx - 15, legBot);
-      c.quadraticCurveTo(cx - 9, legBot + 2, cx - 3, legBot);
-      c.quadraticCurveTo(cx, bodyBot + 8, cx + 3, legBot);
-      c.quadraticCurveTo(cx + 9, legBot + 2, cx + 15, legBot);
-      c.quadraticCurveTo(cx + bodyW + 4, (bodyBot + legBot) / 2, cx + bodyW + 2, bodyBot - 3);
-      c.stroke();
-      // Pocket ellipses
-      c.strokeStyle = _darken(color, 20);
-      c.lineWidth = 0.7;
-      c.beginPath();
-      c.ellipse(cx - 10, bodyBot + 10, 5, 4, 0, 0, Math.PI * 2);
-      c.stroke();
-      c.beginPath();
-      c.ellipse(cx + 10, bodyBot + 10, 5, 4, 0, 0, Math.PI * 2);
-      c.stroke();
-      // Highlight
-      c.fillStyle = 'rgba(255,255,255,0.25)';
-      c.beginPath();
-      c.ellipse(cx - 6, bodyBot + 4, 5.2, 2.6, 0, 0, Math.PI * 2);
-      c.fill();
-      // Rim light
-      c.save();
-      c.strokeStyle = 'rgba(255,255,255,0.18)';
-      c.lineWidth = 0.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW - 1, bodyBot);
-      c.quadraticCurveTo(cx - bodyW - 2, (bodyBot+legBot)/2, cx - 12, legBot - 2);
-      c.stroke();
-      c.restore();
+      // Cargo pockets
+      c.strokeStyle = _darken(color, 18); c.lineWidth = 0.6;
+      c.beginPath(); c.ellipse(cx - 10, bodyBot + 10, 5, 4, 0, 0, Math.PI * 2); c.stroke();
+      c.beginPath(); c.ellipse(cx + 10, bodyBot + 10, 5, 4, 0, 0, Math.PI * 2); c.stroke();
       break;
     }
     case 'flowing_skirt': {
@@ -1780,47 +1242,14 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx + bodyW + 18, bodyBot + 28, cx + bodyW + 1, bodyBot - 3);
       c.closePath();
       c.fill();
-      // Cel-shadow
-      c.save();
-      c.globalAlpha = 0.15;
-      c.fillStyle = _darken(color, 55);
-      c.beginPath();
-      c.ellipse(cx + 3, bodyBot + 8, bodyW*0.6, 6, 0.1, 0, Math.PI*2);
-      c.fill();
-      c.restore();
-      c.fillStyle = botGrad;
-      // Outline
-      c.strokeStyle = _darken(color, 50);
-      c.lineWidth = 1.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW - 1, bodyBot - 3);
-      c.quadraticCurveTo(cx - bodyW - 18, bodyBot + 28, cx - bodyW + 6, y + h * 0.78);
-      c.quadraticCurveTo(cx, y + h * 0.80, cx + bodyW - 6, y + h * 0.78);
-      c.quadraticCurveTo(cx + bodyW + 18, bodyBot + 28, cx + bodyW + 1, bodyBot - 3);
-      c.stroke();
       // Fold lines
-      c.strokeStyle = _darken(color, 15);
-      c.lineWidth = 0.5;
+      c.strokeStyle = _darken(color, 12); c.lineWidth = 0.4;
       for (let i = -2; i <= 2; i++) {
         c.beginPath();
         c.moveTo(cx + i * 6, bodyBot);
         c.quadraticCurveTo(cx + i * 7 + 2, bodyBot + 16, cx + i * 6.5, y + h * 0.77);
         c.stroke();
       }
-      // Highlight
-      c.fillStyle = 'rgba(255,255,255,0.25)';
-      c.beginPath();
-      c.ellipse(cx - 3, bodyBot + 6, bodyW * 0.65, 3.9, -0.1, 0, Math.PI * 2);
-      c.fill();
-      // Rim light
-      c.save();
-      c.strokeStyle = 'rgba(255,255,255,0.18)';
-      c.lineWidth = 0.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW - 1, bodyBot);
-      c.quadraticCurveTo(cx - bodyW - 2, (bodyBot+legBot)/2, cx - 12, legBot - 2);
-      c.stroke();
-      c.restore();
       break;
     }
     case 'armor_greaves': {
@@ -1840,52 +1269,11 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx + bodyW + 4, (bodyBot + legBot) / 2, cx + bodyW + 2, bodyBot - 3);
       c.closePath();
       c.fill();
-      // Cel-shadow
-      c.save();
-      c.globalAlpha = 0.15;
-      c.fillStyle = _darken(color, 55);
-      c.beginPath();
-      c.ellipse(cx + 3, bodyBot + 8, bodyW*0.6, 6, 0.1, 0, Math.PI*2);
-      c.fill();
-      c.restore();
-      c.fillStyle = botGrad;
-      // Outline
-      c.strokeStyle = _darken(color, 50);
-      c.lineWidth = 1.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW - 2, bodyBot - 3);
-      c.quadraticCurveTo(cx - bodyW - 4, (bodyBot + legBot) / 2, cx - 15, legBot + 1);
-      c.quadraticCurveTo(cx - 9, legBot + 3, cx - 4, legBot + 1);
-      c.quadraticCurveTo(cx, bodyBot + 8, cx + 4, legBot + 1);
-      c.quadraticCurveTo(cx + 9, legBot + 3, cx + 15, legBot + 1);
-      c.quadraticCurveTo(cx + bodyW + 4, (bodyBot + legBot) / 2, cx + bodyW + 2, bodyBot - 3);
-      c.stroke();
-      // Horizontal bands
-      c.strokeStyle = _darken(color, 25);
-      c.lineWidth = 0.8;
-      const midY = (bodyBot + legBot) / 2;
-      c.beginPath();
-      c.moveTo(cx - 14, midY);
-      c.quadraticCurveTo(cx - 9, midY + 1, cx - 4, midY);
-      c.stroke();
-      c.beginPath();
-      c.moveTo(cx + 4, midY);
-      c.quadraticCurveTo(cx + 9, midY + 1, cx + 14, midY);
-      c.stroke();
-      // Highlight
-      c.fillStyle = 'rgba(255,255,255,0.25)';
-      c.beginPath();
-      c.ellipse(cx - 8, bodyBot + 4, 3.9, 2.6, 0, 0, Math.PI * 2);
-      c.fill();
-      // Rim light
-      c.save();
-      c.strokeStyle = 'rgba(255,255,255,0.18)';
-      c.lineWidth = 0.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW - 1, bodyBot);
-      c.quadraticCurveTo(cx - bodyW - 2, (bodyBot+legBot)/2, cx - 12, legBot - 2);
-      c.stroke();
-      c.restore();
+      // Horizontal knee bands
+      c.strokeStyle = _darken(color, 22); c.lineWidth = 0.8;
+      const midLeg = (bodyBot + legBot) / 2;
+      c.beginPath(); c.moveTo(cx - 14, midLeg); c.quadraticCurveTo(cx - 9, midLeg + 1, cx - 4, midLeg); c.stroke();
+      c.beginPath(); c.moveTo(cx + 4, midLeg); c.quadraticCurveTo(cx + 9, midLeg + 1, cx + 14, midLeg); c.stroke();
       break;
     }
     case 'sweatpants': {
@@ -1905,49 +1293,10 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx + bodyW + 2, (bodyBot + legBot) / 2, cx + bodyW, bodyBot - 3);
       c.closePath();
       c.fill();
-      // Cel-shadow
-      c.save();
-      c.globalAlpha = 0.15;
-      c.fillStyle = _darken(color, 55);
-      c.beginPath();
-      c.ellipse(cx + 3, bodyBot + 8, bodyW*0.6, 6, 0.1, 0, Math.PI*2);
-      c.fill();
-      c.restore();
-      c.fillStyle = botGrad;
-      // Outline
-      c.strokeStyle = _darken(color, 50);
-      c.lineWidth = 1.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW, bodyBot - 3);
-      c.quadraticCurveTo(cx - bodyW - 2, (bodyBot + legBot) / 2, cx - 13, legBot);
-      c.quadraticCurveTo(cx - 8, legBot + 2, cx - 4, legBot);
-      c.quadraticCurveTo(cx, bodyBot + 8, cx + 4, legBot);
-      c.quadraticCurveTo(cx + 8, legBot + 2, cx + 13, legBot);
-      c.quadraticCurveTo(cx + bodyW + 2, (bodyBot + legBot) / 2, cx + bodyW, bodyBot - 3);
-      c.stroke();
-      // Cuff detail - small ellipses at ankles
-      c.strokeStyle = _darken(color, 20);
-      c.lineWidth = 0.7;
-      c.beginPath();
-      c.ellipse(cx - 8, legBot - 1, 5, 2, 0, 0, Math.PI * 2);
-      c.stroke();
-      c.beginPath();
-      c.ellipse(cx + 8, legBot - 1, 5, 2, 0, 0, Math.PI * 2);
-      c.stroke();
-      // Highlight
-      c.fillStyle = 'rgba(255,255,255,0.25)';
-      c.beginPath();
-      c.ellipse(cx - 5, bodyBot + 4, 3.9, 2.6, 0, 0, Math.PI * 2);
-      c.fill();
-      // Rim light
-      c.save();
-      c.strokeStyle = 'rgba(255,255,255,0.18)';
-      c.lineWidth = 0.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW - 1, bodyBot);
-      c.quadraticCurveTo(cx - bodyW - 2, (bodyBot+legBot)/2, cx - 12, legBot - 2);
-      c.stroke();
-      c.restore();
+      // Ankle cuffs
+      c.strokeStyle = _darken(color, 18); c.lineWidth = 0.6;
+      c.beginPath(); c.ellipse(cx - 8, legBot - 1, 5, 2, 0, 0, Math.PI * 2); c.stroke();
+      c.beginPath(); c.ellipse(cx + 8, legBot - 1, 5, 2, 0, 0, Math.PI * 2); c.stroke();
       break;
     }
     case 'pleated_skirt': {
@@ -1958,47 +1307,14 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx + bodyW + 4, bodyBot + 10, cx + bodyW + 1, bodyBot - 3);
       c.closePath();
       c.fill();
-      // Cel-shadow
-      c.save();
-      c.globalAlpha = 0.15;
-      c.fillStyle = _darken(color, 55);
-      c.beginPath();
-      c.ellipse(cx + 3, bodyBot + 8, bodyW*0.6, 6, 0.1, 0, Math.PI*2);
-      c.fill();
-      c.restore();
-      c.fillStyle = botGrad;
-      // Outline
-      c.strokeStyle = _darken(color, 50);
-      c.lineWidth = 1.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW - 1, bodyBot - 3);
-      c.quadraticCurveTo(cx - bodyW - 4, bodyBot + 10, cx - bodyW - 5, bodyBot + 22);
-      c.quadraticCurveTo(cx, bodyBot + 24, cx + bodyW + 5, bodyBot + 22);
-      c.quadraticCurveTo(cx + bodyW + 4, bodyBot + 10, cx + bodyW + 1, bodyBot - 3);
-      c.stroke();
-      // Curved pleat lines
-      c.strokeStyle = _darken(color, 18);
-      c.lineWidth = 0.5;
+      // Pleat lines
+      c.strokeStyle = _darken(color, 15); c.lineWidth = 0.4;
       for (let i = -2; i <= 2; i++) {
         c.beginPath();
         c.moveTo(cx + i * 5, bodyBot);
         c.quadraticCurveTo(cx + i * 5.2, bodyBot + 10, cx + i * 5.5, bodyBot + 20);
         c.stroke();
       }
-      // Highlight
-      c.fillStyle = 'rgba(255,255,255,0.25)';
-      c.beginPath();
-      c.ellipse(cx - 3, bodyBot + 4, bodyW * 0.52, 2.6, 0, 0, Math.PI * 2);
-      c.fill();
-      // Rim light
-      c.save();
-      c.strokeStyle = 'rgba(255,255,255,0.18)';
-      c.lineWidth = 0.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW - 1, bodyBot);
-      c.quadraticCurveTo(cx - bodyW - 2, (bodyBot+legBot)/2, cx - 12, legBot - 2);
-      c.stroke();
-      c.restore();
       break;
     }
     case 'bell_bottoms': {
@@ -2020,42 +1336,6 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx + bodyW + 1, bodyBot + 10, cx + bodyW, bodyBot - 3);
       c.closePath();
       c.fill();
-      // Cel-shadow
-      c.save();
-      c.globalAlpha = 0.15;
-      c.fillStyle = _darken(color, 55);
-      c.beginPath();
-      c.ellipse(cx + 3, bodyBot + 8, bodyW*0.6, 6, 0.1, 0, Math.PI*2);
-      c.fill();
-      c.restore();
-      c.fillStyle = botGrad;
-      // Outline
-      c.strokeStyle = _darken(color, 50);
-      c.lineWidth = 1.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW, bodyBot - 3);
-      c.quadraticCurveTo(cx - bodyW - 1, bodyBot + 10, cx - 10, bodyBot + 20);
-      c.quadraticCurveTo(cx - 16, legBot, cx - 20, legBot + 2);
-      c.quadraticCurveTo(cx - 10, legBot + 3, cx - 2, legBot + 2);
-      c.quadraticCurveTo(cx, bodyBot + 8, cx + 2, legBot + 2);
-      c.quadraticCurveTo(cx + 10, legBot + 3, cx + 20, legBot + 2);
-      c.quadraticCurveTo(cx + 16, legBot, cx + 10, bodyBot + 20);
-      c.quadraticCurveTo(cx + bodyW + 1, bodyBot + 10, cx + bodyW, bodyBot - 3);
-      c.stroke();
-      // Highlight
-      c.fillStyle = 'rgba(255,255,255,0.25)';
-      c.beginPath();
-      c.ellipse(cx - 5, bodyBot + 4, 3.9, 2.6, 0, 0, Math.PI * 2);
-      c.fill();
-      // Rim light
-      c.save();
-      c.strokeStyle = 'rgba(255,255,255,0.18)';
-      c.lineWidth = 0.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW - 1, bodyBot);
-      c.quadraticCurveTo(cx - bodyW - 2, (bodyBot+legBot)/2, cx - 12, legBot - 2);
-      c.stroke();
-      c.restore();
       break;
     }
   }
@@ -2082,96 +1362,56 @@ const SHOE_DEFS = [
 
 function drawShoes(style, c, char, x, y, w, h, color) {
   const { cx, footY } = M(x, y, w, h);
-  const shoeGrad = c.createLinearGradient(cx, footY - 15, cx, footY + 8);
-  shoeGrad.addColorStop(0, _lighten(color, 45));
-  shoeGrad.addColorStop(0.5, color);
-  shoeGrad.addColorStop(1, _darken(color, 40));
-  c.fillStyle = shoeGrad;
+  const sG = c.createLinearGradient(cx, footY - 8, cx, footY + 5);
+  sG.addColorStop(0, _lighten(color, 20));
+  sG.addColorStop(1, _darken(color, 15));
+  c.fillStyle = sG;
 
   switch(style) {
     case 'sneakers':
       for (let s = -1; s <= 1; s += 2) {
         const fx = cx + s * 10;
-        c.fillStyle = shoeGrad;
+        c.fillStyle = sG;
         c.beginPath(); c.ellipse(fx, footY, 10, 5, 0, 0, Math.PI * 2); c.fill();
-        c.strokeStyle = _darken(color, 50); c.lineWidth = 1.5;
-        c.beginPath(); c.ellipse(fx, footY, 10, 5, 0, 0, Math.PI * 2); c.stroke();
-        c.fillStyle = 'rgba(0,0,0,0.08)';
+        // Sole line
+        c.fillStyle = 'rgba(0,0,0,0.06)';
         c.beginPath(); c.ellipse(fx, footY + 2, 10, 2.5, 0, 0, Math.PI); c.fill();
-        c.fillStyle = 'rgba(255,255,255,0.25)';
-        c.beginPath(); c.ellipse(fx - 2, footY - 2, 3.9, 1.95, -0.3, 0, Math.PI * 2); c.fill();
-        c.fillStyle = 'rgba(255,255,255,0.5)';
-        c.beginPath(); c.arc(fx - 3, footY - 2, 1.5, 0, Math.PI*2); c.fill();
       }
       break;
     case 'boots':
       for (let s = -1; s <= 1; s += 2) {
         const fx = cx + s * 10;
-        c.fillStyle = shoeGrad;
-        // Boot shaft - rounded
-        c.beginPath();
-        c.ellipse(fx, footY - 6, 9, 12, 0, 0, Math.PI * 2);
-        c.fill();
-        // Toe
+        c.fillStyle = sG;
+        c.beginPath(); c.ellipse(fx, footY - 6, 9, 12, 0, 0, Math.PI * 2); c.fill();
         c.beginPath(); c.ellipse(fx, footY + 5, 9, 4, 0, 0, Math.PI * 2); c.fill();
-        // Outline
-        c.strokeStyle = _darken(color, 50); c.lineWidth = 1.5;
-        c.beginPath(); c.ellipse(fx, footY - 6, 9, 12, 0, 0, Math.PI * 2); c.stroke();
-        // Band
-        c.strokeStyle = _darken(color, 20); c.lineWidth = 0.7;
-        c.beginPath();
-        c.moveTo(fx - 8, footY - 8);
-        c.quadraticCurveTo(fx, footY - 7, fx + 8, footY - 8);
-        c.stroke();
-        // Highlight
-        c.fillStyle = 'rgba(255,255,255,0.25)';
-        c.beginPath(); c.ellipse(fx - 2, footY - 10, 3.9, 2.6, -0.2, 0, Math.PI * 2); c.fill();
-        c.fillStyle = 'rgba(255,255,255,0.5)';
-        c.beginPath(); c.arc(fx - 3, footY - 2, 1.5, 0, Math.PI*2); c.fill();
+        // Strap
+        c.strokeStyle = _darken(color, 18); c.lineWidth = 0.6;
+        c.beginPath(); c.moveTo(fx - 8, footY - 8); c.quadraticCurveTo(fx, footY - 7, fx + 8, footY - 8); c.stroke();
       }
       break;
     case 'heels':
       for (let s = -1; s <= 1; s += 2) {
         const fx = cx + s * 10;
-        c.fillStyle = shoeGrad;
+        c.fillStyle = sG;
         c.beginPath(); c.ellipse(fx + s * 2, footY, 9, 4, 0, 0, Math.PI * 2); c.fill();
-        // Heel - rounded rect via ellipse
+        // Heel
         c.beginPath(); c.ellipse(fx - s * 4, footY + 5, 2, 4, 0, 0, Math.PI * 2); c.fill();
-        // Outline
-        c.strokeStyle = _darken(color, 50); c.lineWidth = 1.5;
-        c.beginPath(); c.ellipse(fx + s * 2, footY, 9, 4, 0, 0, Math.PI * 2); c.stroke();
-        // Highlight
-        c.fillStyle = 'rgba(255,255,255,0.25)';
-        c.beginPath(); c.ellipse(fx + s * 1, footY - 1, 3.9, 1.95, 0, 0, Math.PI * 2); c.fill();
-        c.fillStyle = 'rgba(255,255,255,0.5)';
-        c.beginPath(); c.arc(fx - 3, footY - 2, 1.5, 0, Math.PI*2); c.fill();
       }
       break;
     case 'sandals':
       for (let s = -1; s <= 1; s += 2) {
         const fx = cx + s * 10;
-        c.fillStyle = shoeGrad;
+        c.fillStyle = sG;
         c.beginPath(); c.ellipse(fx, footY + 1, 9, 3.5, 0, 0, Math.PI * 2); c.fill();
-        c.strokeStyle = _darken(color, 50); c.lineWidth = 1.5;
-        c.beginPath(); c.ellipse(fx, footY + 1, 9, 3.5, 0, 0, Math.PI * 2); c.stroke();
-        // Straps - curved
-        c.strokeStyle = _darken(color, 15); c.lineWidth = 1.2;
-        c.beginPath();
-        c.moveTo(fx - 4, footY - 2);
-        c.quadraticCurveTo(fx, footY - 6, fx + 4, footY - 2);
-        c.stroke();
-        // Highlight
-        c.fillStyle = 'rgba(255,255,255,0.25)';
-        c.beginPath(); c.ellipse(fx - 2, footY, 3.9, 1.56, 0, 0, Math.PI * 2); c.fill();
-        c.fillStyle = 'rgba(255,255,255,0.5)';
-        c.beginPath(); c.arc(fx - 3, footY - 2, 1.5, 0, Math.PI*2); c.fill();
+        // Strap
+        c.strokeStyle = _darken(color, 15); c.lineWidth = 1;
+        c.beginPath(); c.moveTo(fx - 4, footY - 2); c.quadraticCurveTo(fx, footY - 6, fx + 4, footY - 2); c.stroke();
       }
       break;
     case 'armored_boots':
       for (let s = -1; s <= 1; s += 2) {
         const fx = cx + s * 10;
-        c.fillStyle = shoeGrad;
-        // Rounded boot shape
+        c.fillStyle = sG;
         c.beginPath();
         c.moveTo(fx - 9, footY - 16);
         c.quadraticCurveTo(fx - 10, footY, fx - 10, footY + 4);
@@ -2179,87 +1419,40 @@ function drawShoes(style, c, char, x, y, w, h, color) {
         c.quadraticCurveTo(fx + 10, footY, fx + 9, footY - 16);
         c.closePath();
         c.fill();
-        // Outline
-        c.strokeStyle = _darken(color, 50); c.lineWidth = 1.5;
-        c.beginPath();
-        c.moveTo(fx - 9, footY - 16);
-        c.quadraticCurveTo(fx - 10, footY, fx - 10, footY + 4);
-        c.quadraticCurveTo(fx, footY + 6, fx + 10, footY + 4);
-        c.quadraticCurveTo(fx + 10, footY, fx + 9, footY - 16);
-        c.closePath();
-        c.stroke();
         // Band
-        c.strokeStyle = _darken(color, 25); c.lineWidth = 0.7;
-        c.beginPath();
-        c.moveTo(fx - 9, footY - 6);
-        c.quadraticCurveTo(fx, footY - 5, fx + 9, footY - 6);
-        c.stroke();
-        // Highlight
-        c.fillStyle = 'rgba(255,255,255,0.25)';
-        c.beginPath(); c.ellipse(fx - 2, footY - 10, 3.9, 2.6, -0.2, 0, Math.PI * 2); c.fill();
-        c.fillStyle = 'rgba(255,255,255,0.5)';
-        c.beginPath(); c.arc(fx - 3, footY - 2, 1.5, 0, Math.PI*2); c.fill();
+        c.strokeStyle = _darken(color, 20); c.lineWidth = 0.6;
+        c.beginPath(); c.moveTo(fx - 9, footY - 6); c.quadraticCurveTo(fx, footY - 5, fx + 9, footY - 6); c.stroke();
       }
       break;
     case 'slippers':
       for (let s = -1; s <= 1; s += 2) {
         const fx = cx + s * 10;
-        c.fillStyle = shoeGrad;
+        c.fillStyle = sG;
         c.beginPath(); c.ellipse(fx, footY, 10, 5.5, 0, 0, Math.PI * 2); c.fill();
-        c.strokeStyle = _darken(color, 50); c.lineWidth = 1.5;
-        c.beginPath(); c.ellipse(fx, footY, 10, 5.5, 0, 0, Math.PI * 2); c.stroke();
-        // Fluffy top
-        c.fillStyle = 'rgba(255,255,255,0.25)';
+        // Fluffy rim
+        c.fillStyle = 'rgba(255,255,255,0.18)';
         c.beginPath(); c.ellipse(fx, footY - 2, 7, 3, 0, Math.PI, 0); c.fill();
-        // Highlight
-        c.fillStyle = 'rgba(255,255,255,0.25)';
-        c.beginPath(); c.ellipse(fx - 2, footY - 1, 3.9, 1.95, -0.2, 0, Math.PI * 2); c.fill();
-        c.fillStyle = 'rgba(255,255,255,0.5)';
-        c.beginPath(); c.arc(fx - 3, footY - 2, 1.5, 0, Math.PI*2); c.fill();
       }
       break;
     case 'platforms':
       for (let s = -1; s <= 1; s += 2) {
         const fx = cx + s * 10;
-        c.fillStyle = shoeGrad;
-        // Platform sole - rounded
+        c.fillStyle = sG;
         c.beginPath(); c.ellipse(fx, footY + 4, 10, 5, 0, 0, Math.PI * 2); c.fill();
-        // Top
         c.beginPath(); c.ellipse(fx, footY - 1, 9, 4, 0, 0, Math.PI * 2); c.fill();
-        // Outline
-        c.strokeStyle = _darken(color, 50); c.lineWidth = 1.5;
-        c.beginPath(); c.ellipse(fx, footY + 4, 10, 5, 0, 0, Math.PI * 2); c.stroke();
-        c.beginPath(); c.ellipse(fx, footY - 1, 9, 4, 0, 0, Math.PI * 2); c.stroke();
-        // Stripe
-        c.fillStyle = 'rgba(255,255,255,0.1)';
+        // Platform stripe
+        c.fillStyle = 'rgba(255,255,255,0.08)';
         c.beginPath(); c.ellipse(fx, footY + 4, 9, 1.5, 0, 0, Math.PI * 2); c.fill();
-        // Highlight
-        c.fillStyle = 'rgba(255,255,255,0.25)';
-        c.beginPath(); c.ellipse(fx - 2, footY - 2, 3.9, 1.95, 0, 0, Math.PI * 2); c.fill();
-        c.fillStyle = 'rgba(255,255,255,0.5)';
-        c.beginPath(); c.arc(fx - 3, footY - 2, 1.5, 0, Math.PI*2); c.fill();
       }
       break;
     case 'barefoot':
       for (let s = -1; s <= 1; s += 2) {
         const fx = cx + s * 10;
-        c.strokeStyle = shoeGrad; c.lineWidth = 1.5;
+        c.strokeStyle = sG; c.lineWidth = 1.2;
         c.beginPath(); c.ellipse(fx, footY, 8, 4, 0, 0, Math.PI * 2); c.stroke();
-        // Wrap straps - curved
-        c.beginPath();
-        c.moveTo(fx, footY - 4);
-        c.quadraticCurveTo(fx + 1, footY - 7, fx, footY - 10);
-        c.stroke();
-        c.beginPath();
-        c.moveTo(fx - 4, footY - 6);
-        c.quadraticCurveTo(fx, footY - 7, fx + 4, footY - 6);
-        c.stroke();
-        // Outline
-        c.strokeStyle = _darken(color, 50); c.lineWidth = 1.5;
-        c.beginPath(); c.ellipse(fx, footY, 8, 4, 0, 0, Math.PI * 2); c.stroke();
-        // Specular dot
-        c.fillStyle = 'rgba(255,255,255,0.5)';
-        c.beginPath(); c.arc(fx - 3, footY - 2, 1.5, 0, Math.PI*2); c.fill();
+        // Wrap straps
+        c.beginPath(); c.moveTo(fx, footY - 4); c.quadraticCurveTo(fx + 1, footY - 7, fx, footY - 10); c.stroke();
+        c.beginPath(); c.moveTo(fx - 4, footY - 6); c.quadraticCurveTo(fx, footY - 7, fx + 4, footY - 6); c.stroke();
       }
       break;
   }
