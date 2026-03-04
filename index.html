@@ -1916,74 +1916,164 @@
         const x = c.getContext('2d');
         let t = 0;
         const blocks = [];
-        let bw = 120, bx = (W - 120) / 2;
+        const bw = 90, bx = 175;
+        const pinkHues = [340,320,290,260,330,310];
         for (let i = 0; i < 6; i++) {
-          blocks.push({ x: bx + (Math.random()-0.5)*4, w: bw - i*3, hue: i*40 });
+          blocks.push({ x: bx - bw/2 + (Math.random()-0.5)*3, w: bw - i*2, hue: pinkHues[i] });
         }
-        let movingX = 0, movingDir = 1, movingHue = 240;
+        let movingX = bx - bw/2, movingDir = 1;
+
+        function drawChibi(cx, cy, skin, hair, eye, s) {
+          const bob = Math.sin(t*2)*3;
+          cy += bob;
+          // Body
+          const bGrad = x.createRadialGradient(cx,cy+8,2,cx,cy+8,18*s);
+          bGrad.addColorStop(0,'#fce4ec'); bGrad.addColorStop(1,'#f8bbd0');
+          x.fillStyle = bGrad;
+          x.beginPath(); x.ellipse(cx,cy+25*s,12*s,22*s,0,0,Math.PI*2); x.fill();
+          // Dress gradient
+          const dGrad = x.createLinearGradient(cx,cy+10*s,cx,cy+45*s);
+          dGrad.addColorStop(0,'#e84393'); dGrad.addColorStop(1,'#a855f7');
+          x.fillStyle = dGrad;
+          x.beginPath(); x.ellipse(cx,cy+30*s,14*s,18*s,0,0,Math.PI*2); x.fill();
+          x.fillStyle = 'rgba(255,255,255,0.1)';
+          x.beginPath(); x.ellipse(cx-3*s,cy+25*s,6*s,8*s,-0.2,0,Math.PI*2); x.fill();
+          // Head
+          const hGrad = x.createRadialGradient(cx-2*s,cy-8*s,2,cx,cy-4*s,18*s);
+          hGrad.addColorStop(0,'#fff5f7'); hGrad.addColorStop(0.5,skin); hGrad.addColorStop(1,'#f0b0c8');
+          x.fillStyle = hGrad;
+          x.beginPath(); x.arc(cx,cy-6*s,16*s,0,Math.PI*2); x.fill();
+          x.strokeStyle = 'rgba(60,20,40,0.3)'; x.lineWidth = 1.2;
+          x.beginPath(); x.arc(cx,cy-6*s,16*s,0,Math.PI*2); x.stroke();
+          // Hair
+          x.fillStyle = hair;
+          x.beginPath(); x.arc(cx,cy-12*s,14*s,Math.PI+0.3,Math.PI*2-0.3); x.fill();
+          x.beginPath(); x.ellipse(cx-8*s,cy-8*s,5*s,12*s,-0.2,0,Math.PI*2); x.fill();
+          x.beginPath(); x.ellipse(cx+8*s,cy-8*s,5*s,12*s,0.2,0,Math.PI*2); x.fill();
+          // Hair shine
+          x.fillStyle = 'rgba(255,255,255,0.2)';
+          x.beginPath(); x.ellipse(cx-4*s,cy-18*s,6*s,3*s,-0.3,0,Math.PI*2); x.fill();
+          // Eyes (anime style)
+          for(let side=-1;side<=1;side+=2){
+            const ex = cx+5*s*side;
+            const ey = cy-6*s;
+            x.fillStyle='#fff';
+            x.beginPath(); x.ellipse(ex,ey,4.5*s,5.5*s,0,0,Math.PI*2); x.fill();
+            x.fillStyle = eye;
+            x.beginPath(); x.arc(ex,ey+0.5*s,3*s,0,Math.PI*2); x.fill();
+            x.fillStyle='#111';
+            x.beginPath(); x.arc(ex,ey+1*s,1.8*s,0,Math.PI*2); x.fill();
+            x.fillStyle='#fff';
+            x.beginPath(); x.arc(ex+1.2*s*side,ey-1.5*s,1.2*s,0,Math.PI*2); x.fill();
+            x.beginPath(); x.arc(ex-0.5*s*side,ey+1.5*s,0.6*s,0,Math.PI*2); x.fill();
+          }
+          // Blush
+          x.fillStyle='rgba(255,130,170,0.25)';
+          x.beginPath(); x.ellipse(cx-8*s,cy-1*s,4*s,2.5*s,0,0,Math.PI*2); x.fill();
+          x.beginPath(); x.ellipse(cx+8*s,cy-1*s,4*s,2.5*s,0,0,Math.PI*2); x.fill();
+          // Mouth
+          x.strokeStyle='#c06080'; x.lineWidth=1.2; x.lineCap='round';
+          x.beginPath(); x.moveTo(cx-2*s,cy+3*s); x.quadraticCurveTo(cx,cy+5*s,cx+2*s,cy+3*s); x.stroke();
+          x.lineCap='butt';
+        }
 
         function draw() {
           t += 0.016;
-          x.fillStyle = '#0a0a1a'; x.fillRect(0,0,W,H);
+          // Background gradient (dress-up style)
+          const bg = x.createLinearGradient(0,0,0,H);
+          bg.addColorStop(0,'#2d1b3d'); bg.addColorStop(0.5,'#1a1a2e'); bg.addColorStop(1,'#100a1e');
+          x.fillStyle = bg; x.fillRect(0,0,W,H);
 
-          // Stars
-          for (let i = 0; i < 20; i++) {
-            const sx = (i*53+10)%W, sy = (i*37+5)%(H*0.5);
-            x.fillStyle = `rgba(255,255,255,${0.2+Math.sin(t*2+i)*0.15})`;
-            x.fillRect(sx, sy, 1, 1);
+          // Sparkles
+          for (let i = 0; i < 15; i++) {
+            const sx = (Math.sin(t*0.7+i*2.1)*0.4+0.5)*W;
+            const sy = (Math.cos(t*0.5+i*1.7)*0.3+0.3)*H;
+            const a = 0.15 + Math.sin(t*2+i)*0.1;
+            x.fillStyle = `rgba(232,67,147,${a})`;
+            x.beginPath(); x.arc(sx, sy, 1.5, 0, Math.PI*2); x.fill();
           }
 
-          // Draw stack
-          const baseY = H - 20;
-          const bh = 22;
+          // Draw stack (pastel pink/purple blocks)
+          const baseY = H - 18;
+          const bh = 18;
           for (let i = 0; i < blocks.length; i++) {
             const b = blocks[i];
             const by = baseY - (i + 1) * bh;
             const grad = x.createLinearGradient(b.x, by, b.x, by + bh);
-            grad.addColorStop(0, `hsl(${b.hue}, 80%, 65%)`);
-            grad.addColorStop(1, `hsl(${b.hue}, 80%, 50%)`);
+            grad.addColorStop(0, `hsl(${b.hue}, 70%, 72%)`);
+            grad.addColorStop(1, `hsl(${b.hue}, 70%, 55%)`);
             x.fillStyle = grad;
-            x.fillRect(b.x, by, b.w, bh - 2);
-            x.fillStyle = 'rgba(255,255,255,0.15)';
+            if(x.roundRect){x.beginPath();x.roundRect(b.x,by,b.w,bh-2,3);x.fill();}
+            else x.fillRect(b.x, by, b.w, bh - 2);
+            x.fillStyle = 'rgba(255,255,255,0.18)';
             x.fillRect(b.x + 2, by + 1, b.w - 4, 3);
           }
 
           // Moving block
-          movingX += movingDir * 2;
-          if (movingX + 100 > W) movingDir = -1;
-          if (movingX < 0) movingDir = 1;
+          movingX += movingDir * 1.8;
+          if (movingX + bw > bx + bw + 30) movingDir = -1;
+          if (movingX < bx - bw - 10) movingDir = 1;
           const my = baseY - (blocks.length + 1) * bh;
-          movingHue = (t * 60) % 360;
-          x.shadowBlur = 10;
-          x.shadowColor = `hsl(${movingHue}, 80%, 55%)`;
+          const mhue = (t * 40 + 300) % 360;
+          x.save();
+          x.shadowBlur = 12; x.shadowColor = '#e84393';
           const mg = x.createLinearGradient(movingX, my, movingX, my + bh);
-          mg.addColorStop(0, `hsl(${movingHue}, 80%, 65%)`);
-          mg.addColorStop(1, `hsl(${movingHue}, 80%, 50%)`);
+          mg.addColorStop(0, `hsl(${mhue}, 70%, 72%)`);
+          mg.addColorStop(1, `hsl(${mhue}, 70%, 55%)`);
           x.fillStyle = mg;
-          x.fillRect(movingX, my, blocks[blocks.length-1].w, bh - 2);
-          x.shadowBlur = 0;
+          if(x.roundRect){x.beginPath();x.roundRect(movingX,my,blocks[blocks.length-1].w,bh-2,3);x.fill();}
+          else x.fillRect(movingX, my, blocks[blocks.length-1].w, bh - 2);
+          x.restore();
+
+          // Chibi character watching from the left
+          drawChibi(65, 100, '#fce4d8', '#8B4513', '#e84393', 0.9);
+
+          // Floating emojis
+          const items = ['🏗️','⭐','✨','💎'];
+          x.font = '14px sans-serif'; x.textAlign = 'center';
+          items.forEach((em, i) => {
+            const ix = 290 + i*18;
+            const iy = 25 + Math.sin(t*2+i*1.3)*6;
+            x.fillText(em, ix, iy);
+          });
+
+          // Title
+          x.fillStyle = `rgba(232,67,147,${0.6+Math.sin(t*3)*0.2})`;
+          x.font = 'bold 12px Trebuchet MS'; x.textAlign = 'center';
+          x.fillText('STACK TOWER', W/2, H-4);
 
           requestAnimationFrame(draw);
         }
         requestAnimationFrame(draw);
       })();
 
-      /* ─ Neon Pong Preview ─ */
+      /* ─ Neon Pong Preview (DTI style) ─ */
       (function() {
         const c = document.getElementById('neonPongCanvas');
         if (!c) return;
         const x = c.getContext('2d');
         let t = 0;
-        let ballX = W/2, ballY = H/2, bvx = 2, bvy = 1.5;
-        let p1y = H/2 - 20, p2y = H/2 - 20;
+        let ballX = W/2, ballY = H/2, bvx = 1.8, bvy = 1.2;
 
         function draw() {
           t += 0.016;
-          x.fillStyle = '#060612'; x.fillRect(0,0,W,H);
+          // Background gradient (dress-up style)
+          const bg = x.createLinearGradient(0,0,0,H);
+          bg.addColorStop(0,'#2d1b3d'); bg.addColorStop(0.5,'#1a1a2e'); bg.addColorStop(1,'#100a1e');
+          x.fillStyle = bg; x.fillRect(0,0,W,H);
 
-          // Center line
-          x.setLineDash([4,6]);
-          x.strokeStyle = 'rgba(255,255,255,0.1)';
+          // Sparkles
+          for (let i = 0; i < 12; i++) {
+            const sx = (Math.sin(t*0.6+i*2.3)*0.4+0.5)*W;
+            const sy = (Math.cos(t*0.4+i*1.9)*0.3+0.3)*H;
+            const a = 0.12 + Math.sin(t*2.2+i)*0.08;
+            x.fillStyle = `rgba(232,67,147,${a})`;
+            x.beginPath(); x.arc(sx, sy, 1.5, 0, Math.PI*2); x.fill();
+          }
+
+          // Center line (soft pink dashes)
+          x.setLineDash([4,8]);
+          x.strokeStyle = 'rgba(232,67,147,0.15)';
           x.lineWidth = 1;
           x.beginPath(); x.moveTo(W/2,0); x.lineTo(W/2,H); x.stroke();
           x.setLineDash([]);
@@ -1991,60 +2081,85 @@
           // Ball movement
           ballX += bvx; ballY += bvy;
           if (ballY < 6 || ballY > H-6) bvy *= -1;
-          if (ballX < 25 && ballY > p1y && ballY < p1y+40) { bvx = Math.abs(bvx); }
-          if (ballX > W-25 && ballY > p2y && ballY < p2y+40) { bvx = -Math.abs(bvx); }
-          if (ballX < -10 || ballX > W+10) { ballX = W/2; ballY = H/2; bvx = bvx > 0 ? 2 : -2; }
+          if (ballX < 55) { bvx = Math.abs(bvx); }
+          if (ballX > W-55) { bvx = -Math.abs(bvx); }
 
-          // AI paddles
-          p1y += (ballY - p1y - 20) * 0.04;
-          p2y += (ballY - p2y - 20) * 0.03;
-
-          // Player paddle (cyan)
-          x.save();
-          x.shadowBlur = 12; x.shadowColor = '#00d4ff';
-          x.fillStyle = '#00d4ff';
-          x.fillRect(14, p1y, 6, 40);
+          // Left chibi (player) - bounces to track ball
+          const p1y = H/2 + (ballY - H/2)*0.3 + Math.sin(t*2)*4;
+          drawChibi(30, p1y, '#fce4d8', '#e84393', '#00d4ff', 0.55);
+          // Paddle glow behind left chibi
+          x.save(); x.shadowBlur = 10; x.shadowColor = '#e84393';
+          const pg1 = x.createLinearGradient(10, p1y-18, 10, p1y+18);
+          pg1.addColorStop(0,'#e84393'); pg1.addColorStop(1,'#c06090');
+          x.fillStyle = pg1;
+          if(x.roundRect){x.beginPath();x.roundRect(10,p1y-18,6,36,3);x.fill();}
+          else x.fillRect(10, p1y-18, 6, 36);
           x.restore();
 
-          // AI paddle (pink)
-          x.save();
-          x.shadowBlur = 12; x.shadowColor = '#ff69b4';
-          x.fillStyle = '#ff69b4';
-          x.fillRect(W-20, p2y, 6, 40);
+          // Right chibi (AI) - tracks ball
+          const p2y = H/2 + (ballY - H/2)*0.25 + Math.sin(t*1.8+1)*4;
+          drawChibi(W-30, p2y, '#f5deb3', '#6c5ce7', '#a29bfe', 0.55);
+          // Paddle glow behind right chibi
+          x.save(); x.shadowBlur = 10; x.shadowColor = '#a29bfe';
+          const pg2 = x.createLinearGradient(W-16, p2y-18, W-16, p2y+18);
+          pg2.addColorStop(0,'#a29bfe'); pg2.addColorStop(1,'#6c5ce7');
+          x.fillStyle = pg2;
+          if(x.roundRect){x.beginPath();x.roundRect(W-16,p2y-18,6,36,3);x.fill();}
+          else x.fillRect(W-16, p2y-18, 6, 36);
           x.restore();
 
-          // Ball trail
-          for (let i = 1; i <= 5; i++) {
-            x.fillStyle = `rgba(255,255,255,${0.15 - i*0.025})`;
-            x.beginPath(); x.arc(ballX - bvx*i*2, ballY - bvy*i*2, 5 - i*0.6, 0, Math.PI*2); x.fill();
+          // Ball trail (pink hearts)
+          for (let i = 1; i <= 4; i++) {
+            const tx = ballX - bvx*i*3;
+            const ty = ballY - bvy*i*3;
+            x.fillStyle = `rgba(232,67,147,${0.2 - i*0.04})`;
+            x.font = `${10-i}px sans-serif`; x.textAlign = 'center';
+            x.fillText('💖', tx, ty+3);
           }
 
-          // Ball
+          // Ball (glowing pink star)
           x.save();
-          x.shadowBlur = 10; x.shadowColor = '#fff';
-          x.fillStyle = '#fff';
+          x.shadowBlur = 14; x.shadowColor = '#e84393';
+          x.fillStyle = '#e84393';
           x.beginPath(); x.arc(ballX, ballY, 5, 0, Math.PI*2); x.fill();
+          x.fillStyle = '#fff';
+          x.beginPath(); x.arc(ballX, ballY, 2.5, 0, Math.PI*2); x.fill();
           x.restore();
 
-          // Score
-          x.font = 'bold 20px sans-serif';
+          // Score (pastel)
+          x.font = 'bold 16px Trebuchet MS';
           x.textAlign = 'center';
-          x.fillStyle = 'rgba(255,255,255,0.08)';
-          x.fillText('7', W/4, 30);
-          x.fillText('5', 3*W/4, 30);
+          x.fillStyle = 'rgba(232,67,147,0.2)';
+          x.fillText('7', W/4, 22);
+          x.fillStyle = 'rgba(162,155,254,0.2)';
+          x.fillText('5', 3*W/4, 22);
+
+          // Floating emojis
+          const items = ['🏓','⭐','💫','🎀'];
+          x.font = '12px sans-serif'; x.textAlign = 'center';
+          items.forEach((em, i) => {
+            const ix = W/2-30 + i*20;
+            const iy = H-8 + Math.sin(t*2.5+i*1.1)*3;
+            x.globalAlpha = 0.6; x.fillText(em, ix, iy); x.globalAlpha = 1;
+          });
+
+          // Title
+          x.fillStyle = `rgba(232,67,147,${0.6+Math.sin(t*3)*0.2})`;
+          x.font = 'bold 12px Trebuchet MS'; x.textAlign = 'center';
+          x.fillText('NEON PONG', W/2, H-22);
 
           requestAnimationFrame(draw);
         }
         requestAnimationFrame(draw);
       })();
 
-      /* ─ Beat Drop Preview ─ */
+      /* ─ Beat Drop Preview (DTI style) ─ */
       (function() {
         const c = document.getElementById('beatDropCanvas');
         if (!c) return;
         const x = c.getContext('2d');
         let t = 0;
-        const laneColors = ['#ff69b4','#00d2ff','#00ff88','#ffa500'];
+        const laneColors = ['#e84393','#a29bfe','#fd79a8','#fab1a0'];
         const notes = [];
         for (let i = 0; i < 8; i++) {
           notes.push({ lane: Math.floor(Math.random()*4), y: -i*35 - Math.random()*20 });
@@ -2052,58 +2167,94 @@
 
         function draw() {
           t += 0.016;
-          x.fillStyle = '#0a0a1a'; x.fillRect(0,0,W,H);
+          // Background gradient (dress-up style)
+          const bg = x.createLinearGradient(0,0,0,H);
+          bg.addColorStop(0,'#2d1b3d'); bg.addColorStop(0.5,'#1a1a2e'); bg.addColorStop(1,'#100a1e');
+          x.fillStyle = bg; x.fillRect(0,0,W,H);
+
+          // Sparkles
+          for (let i = 0; i < 12; i++) {
+            const sx = (Math.sin(t*0.8+i*2.0)*0.4+0.5)*W;
+            const sy = (Math.cos(t*0.5+i*1.6)*0.3+0.25)*H;
+            const a = 0.1 + Math.sin(t*2.5+i)*0.08;
+            x.fillStyle = `rgba(232,67,147,${a})`;
+            x.beginPath(); x.arc(sx, sy, 1.5, 0, Math.PI*2); x.fill();
+          }
+
           const lw = W/4;
 
-          // Lane backgrounds
-          for (let i = 0; i < 4; i++) {
-            x.fillStyle = 'rgba(255,255,255,0.02)';
-            x.fillRect(i*lw, 0, lw, H);
-            x.strokeStyle = 'rgba(255,255,255,0.05)';
+          // Lane dividers (soft pink)
+          for (let i = 1; i < 4; i++) {
+            x.strokeStyle = 'rgba(232,67,147,0.08)';
             x.lineWidth = 1;
             x.beginPath(); x.moveTo(i*lw,0); x.lineTo(i*lw,H); x.stroke();
           }
 
-          // Strike line
-          const sy = H - 30;
-          x.strokeStyle = 'rgba(255,255,255,0.2)';
+          // Strike zone (pastel pink line)
+          const sy = H - 35;
+          x.strokeStyle = 'rgba(232,67,147,0.25)';
           x.lineWidth = 2;
           x.beginPath(); x.moveTo(0,sy); x.lineTo(W,sy); x.stroke();
 
-          // Receptors
+          // Receptors (heart-shaped pulsing)
           for (let i = 0; i < 4; i++) {
             const cx = i*lw + lw/2;
-            const pulse = Math.sin(t*4+i)*0.3 + 0.7;
-            x.strokeStyle = laneColors[i];
-            x.lineWidth = 1.5;
+            const pulse = Math.sin(t*4+i*1.5)*0.3 + 0.7;
             x.globalAlpha = pulse * 0.5;
-            x.beginPath(); x.arc(cx, sy, 12, 0, Math.PI*2); x.stroke();
+            x.fillStyle = laneColors[i];
+            x.font = '16px sans-serif'; x.textAlign = 'center';
+            x.fillText('♡', cx, sy+5);
             x.globalAlpha = 1;
           }
 
-          // Notes falling
+          // Falling notes (pastel circles with glow)
           for (const n of notes) {
-            n.y += 1.5;
+            n.y += 1.3;
             if (n.y > H + 20) { n.y = -20; n.lane = Math.floor(Math.random()*4); }
             const cx = n.lane*lw + lw/2;
             const color = laneColors[n.lane];
             x.save();
-            x.shadowBlur = 8; x.shadowColor = color;
-            const grad = x.createRadialGradient(cx, n.y, 2, cx, n.y, 12);
+            x.shadowBlur = 10; x.shadowColor = color;
+            const grad = x.createRadialGradient(cx, n.y, 2, cx, n.y, 10);
             grad.addColorStop(0, '#fff');
-            grad.addColorStop(0.5, color);
-            grad.addColorStop(1, color + '60');
+            grad.addColorStop(0.4, color);
+            grad.addColorStop(1, 'rgba(232,67,147,0.1)');
             x.fillStyle = grad;
-            x.beginPath(); x.arc(cx, n.y, 12, 0, Math.PI*2); x.fill();
+            x.beginPath(); x.arc(cx, n.y, 10, 0, Math.PI*2); x.fill();
             x.restore();
           }
 
-          // Combo text
+          // Dancing chibi in center
+          const bobY = H/2 - 10 + Math.sin(t*4)*5;
+          const sway = Math.sin(t*2)*3;
+          x.save();
+          x.translate(sway, 0);
+          drawChibi(W/2, bobY, '#fce4d8', '#e84393', '#a29bfe', 0.65);
+          x.restore();
+
+          // Musical notes floating
+          const musicNotes = ['♪','♫','🎵','✨'];
+          x.font = '11px sans-serif'; x.textAlign = 'center';
+          musicNotes.forEach((em, i) => {
+            const mx = W/2 - 40 + i*28;
+            const my = bobY - 40 + Math.sin(t*3+i*1.5)*8;
+            x.globalAlpha = 0.5 + Math.sin(t*2+i)*0.2;
+            x.fillStyle = laneColors[i];
+            x.fillText(em, mx, my);
+          });
+          x.globalAlpha = 1;
+
+          // Combo text (pink)
           const combo = 25 + Math.floor(Math.sin(t*0.5)*10);
-          x.font = 'bold 16px sans-serif';
+          x.font = 'bold 13px Trebuchet MS';
           x.textAlign = 'center';
-          x.fillStyle = `rgba(255,255,255,${0.2+Math.sin(t*3)*0.1})`;
-          x.fillText(combo + 'x', W/2, 25);
+          x.fillStyle = `rgba(232,67,147,${0.25+Math.sin(t*3)*0.1})`;
+          x.fillText(combo + 'x COMBO', W/2, 18);
+
+          // Title
+          x.fillStyle = `rgba(232,67,147,${0.6+Math.sin(t*3)*0.2})`;
+          x.font = 'bold 12px Trebuchet MS'; x.textAlign = 'center';
+          x.fillText('BEAT DROP', W/2, H-4);
 
           requestAnimationFrame(draw);
         }
