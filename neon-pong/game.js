@@ -49,9 +49,9 @@ if (currentTheme !== 'neon') document.body.className = `theme-${currentTheme}`;
 
 // ── Difficulty ──
 const DIFFICULTIES = {
-  easy:   { reactionDelay: 0.12, speedFactor: 0.55, noise: 40 },
-  medium: { reactionDelay: 0.06, speedFactor: 0.75, noise: 20 },
-  hard:   { reactionDelay: 0.02, speedFactor: 0.95, noise: 5 },
+  easy:   { reactionDelay: 0.25, speedFactor: 0.38, noise: 55, trackZone: 0.45 },
+  medium: { reactionDelay: 0.12, speedFactor: 0.55, noise: 30, trackZone: 0.35 },
+  hard:   { reactionDelay: 0.04, speedFactor: 0.78, noise: 12, trackZone: 0.25 },
 };
 
 let difficulty = localStorage.getItem('neonPongDiff') || 'medium';
@@ -215,6 +215,7 @@ let ballTrails = [];
 let maxBallsThisGame = 1;
 let bestDown = 0;
 let scoredWhileFrozen = false;
+let aiNoiseOffset = 0;
 
 function createBall(dir) {
   const angle = (Math.random() * 0.8 - 0.4);
@@ -244,6 +245,7 @@ function resetGame() {
   maxBallsThisGame = 1;
   bestDown = 0;
   scoredWhileFrozen = false;
+  aiNoiseOffset = 0;
   updateHUD();
   Audio.init(); Audio.resume();
 }
@@ -321,13 +323,29 @@ function updateAI(dt) {
   const targetBall = balls.reduce((best, b) => (!best || b.x > best.x) ? b : best, null);
   if (!targetBall) return;
 
-  const targetY = targetBall.y + (Math.random() - 0.5) * diff.noise * 2 - aiPaddleH / 2;
+  // Only track when ball is on AI's side of the field
+  const trackThreshold = CW * (1 - diff.trackZone);
+  if (targetBall.vx < 0 || targetBall.x < trackThreshold) {
+    // Ball heading away or too far — drift toward center
+    const center = aiY + aiPaddleH / 2;
+    const mid = CH / 2;
+    if (Math.abs(center - mid) > 10) {
+      aiY += (mid > center ? 1 : -1) * 1.5;
+    }
+    aiY = Math.max(0, Math.min(CH - aiPaddleH, aiY));
+    return;
+  }
+
+  // Persistent noise: update slowly instead of every frame
+  if (Math.random() < 0.05) aiNoiseOffset = (Math.random() - 0.5) * diff.noise * 2;
+
+  const targetY = targetBall.y + aiNoiseOffset;
   const center = aiY + aiPaddleH / 2;
   const maxMove = 5 * diff.speedFactor;
 
   if (Math.random() > diff.reactionDelay) {
-    if (targetY + aiPaddleH / 2 > center + 5) aiY += Math.min(maxMove, targetY + aiPaddleH / 2 - center);
-    else if (targetY + aiPaddleH / 2 < center - 5) aiY -= Math.min(maxMove, center - targetY - aiPaddleH / 2);
+    if (targetY > center + 5) aiY += Math.min(maxMove, targetY - center);
+    else if (targetY < center - 5) aiY -= Math.min(maxMove, center - targetY);
   }
   aiY = Math.max(0, Math.min(CH - aiPaddleH, aiY));
 }
