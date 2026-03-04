@@ -25,10 +25,10 @@ const ctx = canvas.getContext('2d');
 
 // ── Themes ──
 const THEMES = {
-  neon:   { name: () => I18N.t('stThemeNeon')   || 'Neon',   bg: '#08081a', starColor: 'rgba(255,255,255,0.4)', blockSat: 80, blockLight: 55 },
-  sunset: { name: () => I18N.t('stThemeSunset') || 'Sunset', bg: '#1a0a08', starColor: 'rgba(255,200,150,0.3)', blockSat: 70, blockLight: 50 },
-  ice:    { name: () => I18N.t('stThemeIce')    || 'Ice',    bg: '#081020', starColor: 'rgba(180,220,255,0.4)', blockSat: 60, blockLight: 60 },
-  retro:  { name: () => I18N.t('stThemeRetro')  || 'Retro',  bg: '#000000', starColor: 'rgba(0,255,0,0.3)',     blockSat: 90, blockLight: 45 },
+  neon:   { name: () => I18N.t('stThemeNeon')   || 'Neon',   bg: '#1a1028', bg2: '#100a1e', starColor: 'rgba(232,67,147,0.3)', blockSat: 70, blockLight: 65, accent: '#e84393' },
+  sunset: { name: () => I18N.t('stThemeSunset') || 'Sunset', bg: '#2d1b3d', bg2: '#1a0a18', starColor: 'rgba(255,180,200,0.3)', blockSat: 60, blockLight: 68, accent: '#fd79a8' },
+  ice:    { name: () => I18N.t('stThemeIce')    || 'Ice',    bg: '#1a1a2e', bg2: '#0a0a1e', starColor: 'rgba(162,155,254,0.3)', blockSat: 55, blockLight: 70, accent: '#a29bfe' },
+  retro:  { name: () => I18N.t('stThemeRetro')  || 'Retro',  bg: '#2d1b2d', bg2: '#100a10', starColor: 'rgba(250,177,160,0.3)', blockSat: 65, blockLight: 60, accent: '#fab1a0' },
 };
 
 let currentTheme = localStorage.getItem('stackTowerTheme') || 'neon';
@@ -400,38 +400,47 @@ document.getElementById('restartButton').addEventListener('click', resetGame);
 function drawStarfield(t) {
   const theme = THEMES[currentTheme];
   for (const s of stars) {
-    const alpha = 0.3 + Math.sin(t * 2 + s.tw) * 0.3;
-    ctx.fillStyle = theme.starColor.replace('0.4', alpha.toFixed(2)).replace('0.3', alpha.toFixed(2));
-    ctx.fillRect(s.x, s.y, s.s, s.s);
+    const alpha = 0.15 + Math.sin(t * 2 + s.tw) * 0.15;
+    ctx.fillStyle = theme.starColor.replace(/[\d.]+\)$/, alpha.toFixed(2) + ')');
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.s * 0.8, 0, Math.PI * 2);
+    ctx.fill();
   }
 }
 
 function drawBlock(b, glow) {
   const theme = THEMES[currentTheme];
   const color = `hsl(${b.hue}, ${theme.blockSat}%, ${theme.blockLight}%)`;
-  const lightColor = `hsl(${b.hue}, ${theme.blockSat}%, ${theme.blockLight + 15}%)`;
+  const lightColor = `hsl(${b.hue}, ${theme.blockSat}%, ${theme.blockLight + 12}%)`;
 
   if (glow) {
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = `hsla(${b.hue}, ${theme.blockSat}%, ${theme.blockLight}%, 0.5)`;
+    ctx.shadowBlur = 18;
+    ctx.shadowColor = theme.accent || `hsla(${b.hue}, ${theme.blockSat}%, ${theme.blockLight}%, 0.5)`;
   }
 
   const grad = ctx.createLinearGradient(b.x, b.y, b.x, b.y + BLOCK_H);
   grad.addColorStop(0, lightColor);
-  grad.addColorStop(1, color);
+  grad.addColorStop(0.6, color);
+  grad.addColorStop(1, `hsl(${b.hue}, ${theme.blockSat}%, ${theme.blockLight - 10}%)`);
   ctx.fillStyle = grad;
 
   if (ctx.roundRect) {
     ctx.beginPath();
-    ctx.roundRect(b.x, b.y, b.w, BLOCK_H, 3);
+    ctx.roundRect(b.x, b.y, b.w, BLOCK_H, 5);
     ctx.fill();
   } else {
     ctx.fillRect(b.x, b.y, b.w, BLOCK_H);
   }
 
-  // Highlight
-  ctx.fillStyle = 'rgba(255,255,255,0.15)';
-  ctx.fillRect(b.x + 2, b.y + 2, b.w - 4, 3);
+  // Soft anime-style shine highlight
+  ctx.fillStyle = 'rgba(255,255,255,0.2)';
+  ctx.beginPath();
+  if (ctx.roundRect) {
+    ctx.roundRect(b.x + 3, b.y + 2, b.w - 6, 4, 2);
+    ctx.fill();
+  } else {
+    ctx.fillRect(b.x + 3, b.y + 2, b.w - 6, 4);
+  }
 
   ctx.shadowBlur = 0;
 }
@@ -468,7 +477,10 @@ function update(dt) {
 
 function render() {
   const theme = THEMES[currentTheme];
-  ctx.fillStyle = theme.bg;
+  const bgGrad = ctx.createLinearGradient(0, 0, 0, CH);
+  bgGrad.addColorStop(0, theme.bg);
+  bgGrad.addColorStop(1, theme.bg2 || '#100a1e');
+  ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, CW, CH);
 
   drawStarfield(time);
@@ -495,7 +507,7 @@ function render() {
   // Draw particles
   for (const p of particles) {
     const alpha = p.life / p.maxLife;
-    ctx.fillStyle = `hsla(${p.hue}, 80%, 65%, ${alpha})`;
+    ctx.fillStyle = `hsla(${p.hue}, 70%, 75%, ${alpha})`;
     ctx.beginPath();
     ctx.arc(p.x, p.y, p.size * alpha, 0, Math.PI * 2);
     ctx.fill();
@@ -506,21 +518,21 @@ function render() {
     ctx.save();
     ctx.font = 'bold 18px "Segoe UI", system-ui, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillStyle = `hsla(50, 100%, 70%, ${0.6 + Math.sin(time * 5) * 0.3})`;
+    ctx.fillStyle = `rgba(232, 67, 147, ${0.6 + Math.sin(time * 5) * 0.3})`;
     ctx.fillText(`${perfectStreak}x PERFECT`, CW / 2, 40);
     ctx.restore();
   }
 
   // Game over overlay
   if (gameOver) {
-    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.fillStyle = 'rgba(26,16,40,0.75)';
     ctx.fillRect(0, 0, CW, CH);
     ctx.font = 'bold 42px "Segoe UI", system-ui, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillStyle = '#fff';
+    ctx.fillStyle = '#e84393';
     ctx.fillText(I18N.t('gameOver') || 'Game Over', CW / 2, CH / 2 - 30);
     ctx.font = '24px "Segoe UI", system-ui, sans-serif';
-    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.fillStyle = 'rgba(232,67,147,0.7)';
     ctx.fillText(`${I18N.t('score') || 'Score'}: ${score}`, CW / 2, CH / 2 + 15);
     ctx.font = '16px "Segoe UI", system-ui, sans-serif';
     ctx.fillStyle = 'rgba(255,255,255,0.5)';
@@ -529,14 +541,14 @@ function render() {
 
   // Start screen
   if (!gameStarted) {
-    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillStyle = 'rgba(26,16,40,0.75)';
     ctx.fillRect(0, 0, CW, CH);
     ctx.font = 'bold 36px "Segoe UI", system-ui, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillStyle = '#fff';
+    ctx.fillStyle = '#e84393';
     ctx.fillText(I18N.t('stackTowerTitle') || 'Stack Tower', CW / 2, CH / 2 - 20);
     ctx.font = '18px "Segoe UI", system-ui, sans-serif';
-    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
     ctx.fillText(I18N.t('tapToStart') || 'Tap or press Space to start', CW / 2, CH / 2 + 20);
   }
 }

@@ -1,8 +1,8 @@
 :root {
   color-scheme: dark;
   font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
-  background: #0a0a1a;
-  color: #e0e0ff;
+  background: #1a1028;
+  color: #f0e0f0;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -13,28 +13,28 @@ body {
   min-height: 100vh;
   padding: 32px 16px;
   background:
-    radial-gradient(ellipse at 30% 20%, rgba(255,100,200,0.06) 0%, transparent 60%),
-    radial-gradient(ellipse at 70% 80%, rgba(100,200,255,0.05) 0%, transparent 60%),
-    linear-gradient(170deg, #0a0a1a 0%, #12102a 40%, #0a0a1a 100%);
+    radial-gradient(ellipse at 30% 20%, rgba(232,67,147,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse at 70% 80%, rgba(162,155,254,0.06) 0%, transparent 60%),
+    linear-gradient(170deg, #1a1028 0%, #2d1b3d 40%, #100a1e 100%);
   transition: background 0.5s ease;
 }
 
 body.theme-sunset {
   background:
-    radial-gradient(ellipse at 30% 20%, rgba(255,140,50,0.08) 0%, transparent 60%),
-    radial-gradient(ellipse at 70% 80%, rgba(255,80,100,0.06) 0%, transparent 60%),
-    linear-gradient(170deg, #1a0a08 0%, #201008 40%, #1a0a08 100%);
+    radial-gradient(ellipse at 30% 20%, rgba(253,121,168,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse at 70% 80%, rgba(255,180,200,0.06) 0%, transparent 60%),
+    linear-gradient(170deg, #2d1b3d 0%, #3d2040 40%, #1a0a18 100%);
 }
 body.theme-ice {
   background:
-    radial-gradient(ellipse at 30% 20%, rgba(100,200,255,0.08) 0%, transparent 60%),
-    radial-gradient(ellipse at 70% 80%, rgba(150,220,255,0.06) 0%, transparent 60%),
-    linear-gradient(170deg, #081020 0%, #0a1830 40%, #081020 100%);
+    radial-gradient(ellipse at 30% 20%, rgba(162,155,254,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse at 70% 80%, rgba(200,200,255,0.06) 0%, transparent 60%),
+    linear-gradient(170deg, #1a1a2e 0%, #20204a 40%, #0a0a1e 100%);
 }
 body.theme-retro {
   background:
-    radial-gradient(ellipse at 30% 20%, rgba(0,255,0,0.06) 0%, transparent 60%),
-    linear-gradient(170deg, #000 0%, #001100 40%, #000 100%);
+    radial-gradient(ellipse at 30% 20%, rgba(250,177,160,0.06) 0%, transparent 60%),
+    linear-gradient(170deg, #2d1b2d 0%, #3d2030 40%, #100a10 100%);
 }
 
 .game {

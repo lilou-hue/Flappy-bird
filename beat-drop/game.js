@@ -19,7 +19,7 @@ let BASE_BPM = 90;
 let BPM_INC = 0.5;
 let MAX_BPM = 180;
 let MAX_LIVES = 5;
-const LANE_COLORS = ['#ff69b4', '#00d2ff', '#00ff88', '#ffa500'];
+const LANE_COLORS = ['#e84393', '#a29bfe', '#fd79a8', '#fab1a0'];
 const LANE_KEYS = ['d', 'f', 'j', 'k'];
 
 // ── Difficulty presets ──
@@ -43,10 +43,10 @@ const ctx = canvas.getContext('2d');
 
 // ── Themes ──
 const THEMES = {
-  neon:       { name: () => I18N.t('bdThemeNeon')       || 'Neon',       bg: '#08081a', laneBg: 'rgba(255,255,255,0.03)' },
-  vapor:      { name: () => I18N.t('bdThemeVapor')      || 'Vapor',      bg: '#1a1028', laneBg: 'rgba(200,150,255,0.03)' },
-  monochrome: { name: () => I18N.t('bdThemeMonochrome') || 'Monochrome', bg: '#111111', laneBg: 'rgba(255,255,255,0.02)' },
-  sakura:     { name: () => I18N.t('bdThemeSakura')     || 'Sakura',     bg: '#1a0a10', laneBg: 'rgba(255,150,180,0.03)' },
+  neon:       { name: () => I18N.t('bdThemeNeon')       || 'Neon',       bg: '#1a1028', bg2: '#100a1e', laneBg: 'rgba(232,67,147,0.03)' },
+  vapor:      { name: () => I18N.t('bdThemeVapor')      || 'Vapor',      bg: '#2d1b3d', bg2: '#1a0a28', laneBg: 'rgba(162,155,254,0.04)' },
+  monochrome: { name: () => I18N.t('bdThemeMonochrome') || 'Monochrome', bg: '#1a1a2e', bg2: '#0a0a1e', laneBg: 'rgba(255,255,255,0.02)' },
+  sakura:     { name: () => I18N.t('bdThemeSakura')     || 'Sakura',     bg: '#2d1020', bg2: '#1a0a18', laneBg: 'rgba(255,150,180,0.04)' },
 };
 
 let currentTheme = localStorage.getItem('beatDropTheme') || 'neon';
@@ -618,8 +618,22 @@ function render() {
   const theme = THEMES[currentTheme];
 
   // Background with hue shift
-  ctx.fillStyle = theme.bg;
+  const bgGrad = ctx.createLinearGradient(0, 0, 0, CH);
+  bgGrad.addColorStop(0, theme.bg);
+  bgGrad.addColorStop(1, theme.bg2 || '#100a1e');
+  ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, CW, CH);
+
+  // Sparkle particles (DTI style)
+  for (let i = 0; i < 12; i++) {
+    const sx = (Math.sin(time * 0.6 + i * 2.0) * 0.4 + 0.5) * CW;
+    const sy = (Math.cos(time * 0.4 + i * 1.8) * 0.3 + 0.2) * CH;
+    const a = 0.08 + Math.sin(time * 2.0 + i) * 0.06;
+    ctx.fillStyle = `rgba(232,67,147,${a})`;
+    ctx.beginPath();
+    ctx.arc(sx, sy, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   // Lane backgrounds
   for (let i = 0; i < 4; i++) {
@@ -627,7 +641,7 @@ function render() {
     ctx.fillRect(i * LANE_W, 0, LANE_W, CH);
 
     // Lane dividers
-    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+    ctx.strokeStyle = 'rgba(232,67,147,0.06)';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(i * LANE_W, 0);
@@ -636,7 +650,7 @@ function render() {
   }
 
   // Strike zone line
-  ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+  ctx.strokeStyle = 'rgba(232,67,147,0.25)';
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.moveTo(0, STRIKE_Y);
@@ -663,7 +677,7 @@ function render() {
     // Key labels
     ctx.font = 'bold 14px "Segoe UI", system-ui, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillStyle = `rgba(255,255,255,${0.3 + pulse * 0.5})`;
+    ctx.fillStyle = `rgba(232,167,197,${0.3 + pulse * 0.5})`;
     ctx.fillText(LANE_KEYS[i].toUpperCase(), cx, STRIKE_Y + 5);
   }
 
@@ -719,12 +733,12 @@ function render() {
   if (combo > 0) {
     ctx.font = 'bold 28px "Segoe UI", system-ui, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillStyle = `rgba(255,255,255,${0.3 + Math.min(combo / 50, 0.7)})`;
+    ctx.fillStyle = `rgba(232,67,147,${0.3 + Math.min(combo / 50, 0.7)})`;
     ctx.fillText(`${combo}x`, CW / 2, 50);
 
     if (multiplier > 1) {
       ctx.font = '14px "Segoe UI", system-ui, sans-serif';
-      ctx.fillStyle = 'rgba(255,215,0,0.6)';
+      ctx.fillStyle = 'rgba(253,121,168,0.6)';
       ctx.fillText(`x${multiplier}`, CW / 2, 70);
     }
   }
@@ -734,9 +748,9 @@ function render() {
     ctx.save();
     ctx.font = 'bold 36px "Segoe UI", system-ui, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillStyle = '#ffd700';
+    ctx.fillStyle = '#e84393';
     ctx.shadowBlur = 20;
-    ctx.shadowColor = '#ffd700';
+    ctx.shadowColor = '#e84393';
     ctx.fillText(`${combo} COMBO!`, CW / 2, CH / 2);
     ctx.restore();
   }
@@ -745,7 +759,7 @@ function render() {
   if (!practiceMode) {
     ctx.font = '14px "Segoe UI", system-ui, sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.fillStyle = 'rgba(232,67,147,0.5)';
     const hearts = '\u2764'.repeat(Math.max(0, lives));
     ctx.fillText(hearts, 10, 25);
   }
@@ -753,7 +767,7 @@ function render() {
   // BPM
   ctx.font = '12px "Segoe UI", system-ui, sans-serif';
   ctx.textAlign = 'right';
-  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  ctx.fillStyle = 'rgba(162,155,254,0.4)';
   ctx.fillText(`${Math.round(bpm)} BPM`, CW - 10, 25);
 
   // Practice mode indicator
@@ -766,36 +780,36 @@ function render() {
 
   // Game over overlay
   if (gameOver) {
-    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.fillStyle = 'rgba(26,16,40,0.75)';
     ctx.fillRect(0, 0, CW, CH);
     ctx.font = 'bold 42px "Segoe UI", system-ui, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillStyle = '#fff';
+    ctx.fillStyle = '#e84393';
     ctx.fillText(I18N.t('gameOver') || 'Game Over', CW / 2, CH / 2 - 40);
     ctx.font = '24px "Segoe UI", system-ui, sans-serif';
-    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.fillStyle = 'rgba(232,67,147,0.7)';
     ctx.fillText(`${I18N.t('score') || 'Score'}: ${score}`, CW / 2, CH / 2 + 5);
     ctx.font = '18px "Segoe UI", system-ui, sans-serif';
-    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.fillStyle = 'rgba(253,121,168,0.5)';
     ctx.fillText(`${I18N.t('bdBestCombo') || 'Best Combo'}: ${combo}`, CW / 2, CH / 2 + 35);
     ctx.font = '16px "Segoe UI", system-ui, sans-serif';
-    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.fillStyle = 'rgba(255,200,220,0.4)';
     ctx.fillText(I18N.t('tapToRestart') || 'Tap to restart', CW / 2, CH / 2 + 70);
   }
 
   // Start screen
   if (!gameActive && !gameOver) {
-    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillStyle = 'rgba(26,16,40,0.7)';
     ctx.fillRect(0, 0, CW, CH);
     ctx.font = 'bold 36px "Segoe UI", system-ui, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillStyle = '#fff';
+    ctx.fillStyle = '#e84393';
     ctx.fillText(I18N.t('beatDropTitle') || 'Beat Drop', CW / 2, CH / 2 - 30);
     ctx.font = '18px "Segoe UI", system-ui, sans-serif';
-    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.fillStyle = 'rgba(232,67,147,0.6)';
     ctx.fillText('D  F  J  K', CW / 2, CH / 2 + 10);
     ctx.font = '14px "Segoe UI", system-ui, sans-serif';
-    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.fillStyle = 'rgba(255,200,220,0.4)';
     ctx.fillText(I18N.t('tapToStart') || 'Tap or press any key to start', CW / 2, CH / 2 + 40);
   }
 }

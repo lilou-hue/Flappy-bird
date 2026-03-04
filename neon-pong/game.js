@@ -25,10 +25,10 @@ const ctx = canvas.getContext('2d');
 
 // ── Themes ──
 const THEMES = {
-  neon:      { name: () => I18N.t('npThemeNeon')      || 'Neon',      bg: '#060612', playerColor: '#00d4ff', aiColor: '#ff69b4', ballColor: '#fff', lineColor: 'rgba(255,255,255,0.15)' },
-  retro:     { name: () => I18N.t('npThemeRetro')     || 'Retro',     bg: '#001100', playerColor: '#00ff00', aiColor: '#00ff00', ballColor: '#00ff00', lineColor: 'rgba(0,255,0,0.15)' },
-  synthwave: { name: () => I18N.t('npThemeSynthwave') || 'Synthwave', bg: '#10061a', playerColor: '#b060ff', aiColor: '#ff8030', ballColor: '#fff', lineColor: 'rgba(180,100,255,0.15)' },
-  minimal:   { name: () => I18N.t('npThemeMinimal')   || 'Minimal',   bg: '#111111', playerColor: '#ccc', aiColor: '#888', ballColor: '#fff', lineColor: 'rgba(255,255,255,0.08)' },
+  neon:      { name: () => I18N.t('npThemeNeon')      || 'Neon',      bg: '#1a1028', bg2: '#100a1e', playerColor: '#e84393', aiColor: '#a29bfe', ballColor: '#fd79a8', lineColor: 'rgba(232,67,147,0.12)' },
+  retro:     { name: () => I18N.t('npThemeRetro')     || 'Retro',     bg: '#1a1a2e', bg2: '#0a0a1e', playerColor: '#55efc4', aiColor: '#55efc4', ballColor: '#55efc4', lineColor: 'rgba(85,239,196,0.12)' },
+  synthwave: { name: () => I18N.t('npThemeSynthwave') || 'Synthwave', bg: '#2d1b3d', bg2: '#10061a', playerColor: '#a29bfe', aiColor: '#fd79a8', ballColor: '#dfe6e9', lineColor: 'rgba(162,155,254,0.12)' },
+  minimal:   { name: () => I18N.t('npThemeMinimal')   || 'Minimal',   bg: '#1a1a2e', bg2: '#111', playerColor: '#dfe6e9', aiColor: '#b2bec3', ballColor: '#dfe6e9', lineColor: 'rgba(255,255,255,0.06)' },
 };
 
 let currentTheme = localStorage.getItem('neonPongTheme') || 'neon';
@@ -697,8 +697,22 @@ function endMatch() {
 // ── Render ──
 function render() {
   const theme = THEMES[currentTheme];
-  ctx.fillStyle = theme.bg;
+  const bgGrad = ctx.createLinearGradient(0, 0, 0, CH);
+  bgGrad.addColorStop(0, theme.bg);
+  bgGrad.addColorStop(1, theme.bg2 || '#100a1e');
+  ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, CW, CH);
+
+  // Sparkle particles (DTI style)
+  for (let i = 0; i < 15; i++) {
+    const sx = (Math.sin(time * 0.5 + i * 2.1) * 0.4 + 0.5) * CW;
+    const sy = (Math.cos(time * 0.4 + i * 1.7) * 0.4 + 0.5) * CH;
+    const a = 0.08 + Math.sin(time * 1.8 + i) * 0.06;
+    ctx.fillStyle = `rgba(232,67,147,${a})`;
+    ctx.beginPath();
+    ctx.arc(sx, sy, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   // Center line
   ctx.setLineDash([8, 8]);
@@ -712,10 +726,10 @@ function render() {
 
   // Paddles
   ctx.save();
-  ctx.shadowBlur = 15;
+  ctx.shadowBlur = 18;
   ctx.shadowColor = theme.playerColor;
   ctx.fillStyle = theme.playerColor;
-  if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(20, playerY, PADDLE_W, playerPaddleH, 4); ctx.fill(); }
+  if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(20, playerY, PADDLE_W, playerPaddleH, 6); ctx.fill(); }
   else ctx.fillRect(20, playerY, PADDLE_W, playerPaddleH);
   if (playerFrozen > 0) {
     ctx.fillStyle = 'rgba(136,221,255,0.4)';
@@ -723,7 +737,7 @@ function render() {
   }
   ctx.shadowColor = theme.aiColor;
   ctx.fillStyle = theme.aiColor;
-  if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(CW - 20 - PADDLE_W, aiY, PADDLE_W, aiPaddleH, 4); ctx.fill(); }
+  if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(CW - 20 - PADDLE_W, aiY, PADDLE_W, aiPaddleH, 6); ctx.fill(); }
   else ctx.fillRect(CW - 20 - PADDLE_W, aiY, PADDLE_W, aiPaddleH);
   if (aiFrozen > 0) {
     ctx.fillStyle = 'rgba(136,221,255,0.4)';
@@ -734,7 +748,7 @@ function render() {
   // Ball trails
   for (const t of ballTrails) {
     const alpha = 1 - t.age / 0.15;
-    ctx.fillStyle = `rgba(255,255,255,${alpha * 0.3})`;
+    ctx.fillStyle = `rgba(232,167,197,${alpha * 0.35})`;
     ctx.beginPath();
     ctx.arc(t.x, t.y, BALL_R * alpha * 0.8, 0, Math.PI * 2);
     ctx.fill();
@@ -768,7 +782,7 @@ function render() {
     ctx.font = 'bold 10px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    const labels = { speed: 'S', big: 'B', multi: 'M', freeze: 'F' };
+    const labels = { speed: '\u26A1', big: '\uD83D\uDCAA', multi: '\u2728', freeze: '\u2744\uFE0F' };
     ctx.fillText(labels[p.type], 0, 0);
     ctx.restore();
   }
@@ -776,21 +790,21 @@ function render() {
   // Scores on canvas
   ctx.font = 'bold 48px "Segoe UI", system-ui, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillStyle = 'rgba(255,255,255,0.1)';
+  ctx.fillStyle = 'rgba(232,67,147,0.12)';
   ctx.fillText(playerScore, CW / 4, 60);
   ctx.fillText(aiScore, 3 * CW / 4, 60);
 
   // Match over overlay
   if (matchOver) {
-    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.fillStyle = 'rgba(26,16,40,0.75)';
     ctx.fillRect(0, 0, CW, CH);
     ctx.font = 'bold 42px "Segoe UI", system-ui, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillStyle = '#fff';
+    ctx.fillStyle = '#e84393';
     const msg = playerScore >= WIN_SCORE ? (I18N.t('npYouWin') || 'You Win!') : (I18N.t('npYouLose') || 'You Lose');
     ctx.fillText(msg, CW / 2, CH / 2 - 20);
     ctx.font = '20px "Segoe UI", system-ui, sans-serif';
-    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.fillStyle = 'rgba(232,67,147,0.7)';
     ctx.fillText(`${playerScore} - ${aiScore}`, CW / 2, CH / 2 + 20);
     ctx.font = '16px "Segoe UI", system-ui, sans-serif';
     ctx.fillStyle = 'rgba(255,255,255,0.5)';
@@ -799,14 +813,14 @@ function render() {
 
   // Start screen
   if (!gameActive && !matchOver) {
-    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillStyle = 'rgba(26,16,40,0.7)';
     ctx.fillRect(0, 0, CW, CH);
     ctx.font = 'bold 36px "Segoe UI", system-ui, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillStyle = '#fff';
+    ctx.fillStyle = '#e84393';
     ctx.fillText(I18N.t('neonPongTitle') || 'Neon Pong', CW / 2, CH / 2 - 20);
     ctx.font = '18px "Segoe UI", system-ui, sans-serif';
-    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.fillStyle = 'rgba(255,200,220,0.6)';
     ctx.fillText(I18N.t('tapToStart') || 'Tap or press any key to start', CW / 2, CH / 2 + 20);
   }
 }

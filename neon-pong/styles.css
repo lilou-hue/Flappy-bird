@@ -1,8 +1,8 @@
 :root {
   color-scheme: dark;
   font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
-  background: #0a0a1a;
-  color: #e0e8ff;
+  background: #1a1028;
+  color: #f0e0f0;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -13,27 +13,27 @@ body {
   min-height: 100vh;
   padding: 32px 16px;
   background:
-    radial-gradient(ellipse at 30% 20%, rgba(0,210,255,0.06) 0%, transparent 60%),
-    radial-gradient(ellipse at 70% 80%, rgba(255,100,200,0.05) 0%, transparent 60%),
-    linear-gradient(170deg, #0a0a1a 0%, #101028 40%, #0a0a1a 100%);
+    radial-gradient(ellipse at 30% 20%, rgba(232,67,147,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse at 70% 80%, rgba(162,155,254,0.06) 0%, transparent 60%),
+    linear-gradient(170deg, #1a1028 0%, #2d1b3d 40%, #100a1e 100%);
   transition: background 0.5s ease;
 }
 
 body.theme-retro {
   background:
-    radial-gradient(ellipse at 30% 20%, rgba(0,255,0,0.06) 0%, transparent 60%),
-    linear-gradient(170deg, #000 0%, #001100 40%, #000 100%);
+    radial-gradient(ellipse at 30% 20%, rgba(85,239,196,0.06) 0%, transparent 60%),
+    linear-gradient(170deg, #1a1a2e 0%, #20204a 40%, #0a0a1e 100%);
 }
 body.theme-synthwave {
   background:
-    radial-gradient(ellipse at 30% 20%, rgba(180,0,255,0.08) 0%, transparent 60%),
-    radial-gradient(ellipse at 70% 80%, rgba(255,120,0,0.06) 0%, transparent 60%),
-    linear-gradient(170deg, #10061a 0%, #1a0a28 40%, #10061a 100%);
+    radial-gradient(ellipse at 30% 20%, rgba(162,155,254,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse at 70% 80%, rgba(253,121,168,0.06) 0%, transparent 60%),
+    linear-gradient(170deg, #2d1b3d 0%, #3d2050 40%, #10061a 100%);
 }
 body.theme-minimal {
   background:
-    radial-gradient(ellipse at 50% 50%, rgba(200,200,200,0.04) 0%, transparent 60%),
-    linear-gradient(170deg, #111 0%, #1a1a1a 40%, #111 100%);
+    radial-gradient(ellipse at 50% 50%, rgba(200,200,220,0.04) 0%, transparent 60%),
+    linear-gradient(170deg, #1a1a2e 0%, #202030 40%, #111 100%);
 }
 
 .game {
@@ -61,7 +61,7 @@ body.theme-minimal {
   font-size: 2.2rem;
   margin-bottom: 4px;
   letter-spacing: 0.02em;
-  background: linear-gradient(90deg, #00d4ff, #ff69b4);
+  background: linear-gradient(90deg, #e84393, #a29bfe);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -75,7 +75,7 @@ body.theme-minimal {
   padding: 16px;
   box-shadow: 0 20px 50px rgba(0,0,0,0.4), 0 4px 12px rgba(0,0,0,0.3);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(0,210,255,0.08);
+  border: 1px solid rgba(232,67,147,0.08);
   display: grid;
   gap: 12px;
   justify-items: center;
@@ -85,10 +85,10 @@ canvas {
   width: min(100%, 640px);
   height: auto;
   aspect-ratio: 640 / 480;
-  background: #060612;
+  background: #100a1e;
   border-radius: 14px;
-  border: 2px solid rgba(0,210,255,0.3);
-  box-shadow: inset 0 2px 8px rgba(0,0,0,0.3), 0 0 30px rgba(0,210,255,0.08);
+  border: 2px solid rgba(232,67,147,0.25);
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.3), 0 0 30px rgba(232,67,147,0.08);
   touch-action: manipulation;
   user-select: none;
   -webkit-user-select: none;
@@ -130,23 +130,23 @@ canvas {
   color: #e0e8ff;
   transition: background 0.15s ease, transform 0.15s ease;
 }
-.hud__mute:hover { background: rgba(0,210,255,0.1); transform: scale(1.1); }
+.hud__mute:hover { background: rgba(232,67,147,0.1); transform: scale(1.1); }
 .hud__mute:active { transform: scale(0.95); }
 
 .hud__button {
   border: none;
   border-radius: 999px;
   padding: 10px 20px;
-  background: linear-gradient(135deg, #00d4ff, #0088cc);
+  background: linear-gradient(135deg, #e84393, #c0306e);
   color: #050520;
   font-weight: 700;
   font-size: 0.9rem;
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
   justify-self: end;
-  box-shadow: 0 4px 10px rgba(0,210,255,0.2);
+  box-shadow: 0 4px 10px rgba(232,67,147,0.2);
 }
-.hud__button:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,210,255,0.3); }
+.hud__button:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(232,67,147,0.3); }
 .hud__button:active { transform: translateY(0); }
 
 .settings-bar { width: 100%; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
@@ -155,7 +155,7 @@ canvas {
 .setting-group select {
   background: rgba(15,15,35,0.8);
   color: #e0e8ff;
-  border: 1px solid rgba(0,210,255,0.2);
+  border: 1px solid rgba(232,67,147,0.2);
   border-radius: 8px;
   padding: 5px 10px;
   font-size: 0.82rem;
@@ -164,11 +164,11 @@ canvas {
   outline: none;
   transition: border-color 0.2s ease;
 }
-.setting-group select:focus { border-color: rgba(0,210,255,0.5); }
+.setting-group select:focus { border-color: rgba(232,67,147,0.5); }
 
 .achievements-panel { text-align: center; }
 .achievements-toggle {
-  border: 1px solid rgba(0,210,255,0.2);
+  border: 1px solid rgba(232,67,147,0.2);
   border-radius: 999px;
   padding: 8px 20px;
   background: rgba(12,12,28,0.6);
@@ -179,12 +179,12 @@ canvas {
   font-family: inherit;
   transition: background 0.2s ease, border-color 0.2s ease;
 }
-.achievements-toggle:hover { background: rgba(0,210,255,0.08); border-color: rgba(0,210,255,0.4); }
+.achievements-toggle:hover { background: rgba(232,67,147,0.08); border-color: rgba(232,67,147,0.4); }
 .achievements-list { display: none; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 12px; }
 .achievements-list.open { display: flex; }
 .achievement-item {
   display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 10px; font-size: 0.78rem;
-  border: 1px solid rgba(0,210,255,0.1); background: rgba(12,12,28,0.5); color: rgba(224,232,255,0.4); transition: all 0.3s ease;
+  border: 1px solid rgba(232,67,147,0.1); background: rgba(12,12,28,0.5); color: rgba(224,232,255,0.4); transition: all 0.3s ease;
 }
 .achievement-item.unlocked { border-color: rgba(255,215,0,0.4); background: rgba(255,215,0,0.08); color: #ffd700; }
 .achievement-item__icon { font-size: 1.1rem; }
@@ -221,7 +221,7 @@ canvas {
   width: 100%; max-width: 100%; padding: 0; border: none; border-radius: 0; background: transparent; box-shadow: none; gap: 0;
 }
 .game:fullscreen canvas, .game:-webkit-full-screen canvas, .game.pseudo-fullscreen canvas {
-  border-radius: 0; border: none; box-shadow: 0 0 80px rgba(0,210,255,0.12);
+  border-radius: 0; border: none; box-shadow: 0 0 80px rgba(232,67,147,0.12);
 }
 .game:fullscreen .game__hud, .game:-webkit-full-screen .game__hud, .game.pseudo-fullscreen .game__hud {
   width: auto; max-width: 700px; background: rgba(255,255,255,0.05); border-radius: 12px;
