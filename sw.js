@@ -1,4 +1,4 @@
-const CACHE_NAME = 'slayplay-v1';
+const CACHE_NAME = 'slayplay-v2';
 
 const PRECACHE_URLS = [
   '/',
@@ -10,7 +10,7 @@ const PRECACHE_URLS = [
   '/flappy-bird/',
   '/flappy-bird/game.js',
   '/flappy-bird/audio.js',
-  '/flappy-bird/styles.css',
+  '/flappy-bird/style.css',
   '/snake/',
   '/snake/game.js',
   '/snake/audio.js',
@@ -21,7 +21,6 @@ const PRECACHE_URLS = [
   '/tetris/styles.css',
   '/lumina/',
   '/lumina/game.js',
-  '/lumina/audio.js',
   '/lumina/styles.css',
   '/phantom-road/',
   '/phantom-road/game.js',
@@ -42,6 +41,27 @@ const PRECACHE_URLS = [
   '/astro-miner/game.js',
   '/astro-miner/audio.js',
   '/astro-miner/styles.css',
+  '/beat-drop/',
+  '/beat-drop/game.js',
+  '/beat-drop/styles.css',
+  '/dress-up/',
+  '/dress-up/game.js',
+  '/dress-up/audio.js',
+  '/dress-up/styles.css',
+  '/inkognito/',
+  '/inkognito/game.js',
+  '/inkognito/audio.js',
+  '/inkognito/styles.css',
+  '/neon-pong/',
+  '/neon-pong/game.js',
+  '/neon-pong/styles.css',
+  '/stack-tower/',
+  '/stack-tower/game.js',
+  '/stack-tower/styles.css',
+  '/star-fury/',
+  '/star-fury/game.js',
+  '/star-fury/audio.js',
+  '/star-fury/styles.css',
 ];
 
 const NETWORK_FIRST_HOSTS = [
