@@ -168,11 +168,16 @@ const Audio = (() => {
     playNoise(0.15, 0.06, 3000);
   }
 
+  function getCtx() { return ctx; }
+  function getMaster() { return masterGain; }
+
   return {
     init,
     resume,
     toggle,
     isMuted,
+    getCtx,
+    getMaster,
     equip,
     unequip,
     colorChange,
@@ -184,4 +189,138 @@ const Audio = (() => {
     achievement,
     characterSwitch
   };
+})();
+
+/**
+ * Background music engine for Dress-Up Game.
+ * Procedural looping songs via Web Audio API.
+ */
+const BGMusic = (() => {
+  const N = {
+    C3:131,D3:147,E3:165,F3:175,G3:196,A3:220,B3:247,
+    C4:262,D4:294,E4:330,F4:349,G4:392,A4:440,B4:494,
+    C5:523,D5:587,E5:659,F5:698,G5:784,A5:880,
+    R:0
+  };
+
+  const SONGS = {
+    lofi: {
+      name: 'Lo-Fi Chill', bpm: 80,
+      melody: [
+        {n:N.E4,d:1},{n:N.G4,d:0.5},{n:N.A4,d:0.5},{n:N.G4,d:1},{n:N.E4,d:0.5},{n:N.D4,d:0.5},
+        {n:N.C4,d:1},{n:N.D4,d:0.5},{n:N.E4,d:0.5},{n:N.G4,d:1},{n:N.R,d:1},
+        {n:N.A4,d:0.5},{n:N.G4,d:0.5},{n:N.E4,d:1},{n:N.D4,d:0.5},{n:N.C4,d:0.5},{n:N.D4,d:1},{n:N.R,d:1},
+      ],
+      bass: [
+        {n:N.C3,d:2},{n:N.A3,d:2},{n:N.F3,d:2},{n:N.G3,d:2},
+      ],
+      melodyType: 'triangle', bassType: 'sine', melodyVol: 0.06, bassVol: 0.05,
+    },
+    poppy: {
+      name: 'Pop Beat', bpm: 120,
+      melody: [
+        {n:N.C5,d:0.5},{n:N.E5,d:0.5},{n:N.G5,d:0.5},{n:N.E5,d:0.5},{n:N.C5,d:0.5},{n:N.D5,d:0.5},{n:N.E5,d:1},
+        {n:N.D5,d:0.5},{n:N.C5,d:0.5},{n:N.A4,d:0.5},{n:N.C5,d:0.5},{n:N.D5,d:1},{n:N.R,d:1},
+        {n:N.E5,d:0.5},{n:N.D5,d:0.5},{n:N.C5,d:0.5},{n:N.E5,d:0.5},{n:N.G5,d:1},{n:N.E5,d:0.5},{n:N.D5,d:0.5},{n:N.C5,d:1},
+      ],
+      bass: [
+        {n:N.C3,d:1},{n:N.R,d:0.5},{n:N.C3,d:0.5},{n:N.G3,d:1},{n:N.R,d:0.5},{n:N.G3,d:0.5},
+        {n:N.A3,d:1},{n:N.R,d:0.5},{n:N.A3,d:0.5},{n:N.F3,d:1},{n:N.R,d:0.5},{n:N.F3,d:0.5},
+      ],
+      melodyType: 'square', bassType: 'triangle', melodyVol: 0.06, bassVol: 0.05,
+    },
+    dreamy: {
+      name: 'Dreamy', bpm: 65,
+      melody: [
+        {n:N.E4,d:2},{n:N.G4,d:2},{n:N.A4,d:1.5},{n:N.B4,d:0.5},{n:N.A4,d:2},{n:N.R,d:1},
+        {n:N.G4,d:1.5},{n:N.E4,d:0.5},{n:N.D4,d:2},{n:N.E4,d:2},{n:N.R,d:1},
+      ],
+      bass: [
+        {n:N.C3,d:3},{n:N.G3,d:3},{n:N.A3,d:3},{n:N.E3,d:3},
+      ],
+      melodyType: 'sine', bassType: 'sine', melodyVol: 0.07, bassVol: 0.04,
+    },
+  };
+
+  let currentSong = null;
+  let loopTimer = null;
+  let playing = false;
+  let activeNodes = [];
+
+  function stopAll() {
+    playing = false;
+    if (loopTimer) { clearTimeout(loopTimer); loopTimer = null; }
+    for (const node of activeNodes) {
+      try { node.gain.gain.cancelScheduledValues(0); node.gain.gain.value = 0; node.osc.stop(); } catch (e) {}
+    }
+    activeNodes = [];
+  }
+
+  function scheduleNote(actx, master, freq, startTime, duration, type, vol) {
+    if (freq === 0) return;
+    const o = actx.createOscillator();
+    const g = actx.createGain();
+    o.type = type;
+    o.frequency.value = freq;
+    g.gain.setValueAtTime(0, startTime);
+    g.gain.linearRampToValueAtTime(vol, startTime + 0.02);
+    g.gain.setValueAtTime(vol, startTime + Math.max(0.02, duration - 0.03));
+    g.gain.linearRampToValueAtTime(0, startTime + duration);
+    o.connect(g);
+    g.connect(master);
+    o.start(startTime);
+    o.stop(startTime + duration + 0.01);
+    const entry = { osc: o, gain: g };
+    activeNodes.push(entry);
+    o.onended = () => { const i = activeNodes.indexOf(entry); if (i >= 0) activeNodes.splice(i, 1); };
+  }
+
+  function playLoop() {
+    if (!playing || !currentSong) return;
+    const actx = Audio.getCtx();
+    const master = Audio.getMaster();
+    if (!actx || !master) return;
+
+    const song = SONGS[currentSong];
+    if (!song) return;
+    const beatDur = 60 / song.bpm;
+    let now = actx.currentTime + 0.05;
+
+    let melodyTime = now;
+    for (const note of song.melody) {
+      const dur = note.d * beatDur;
+      scheduleNote(actx, master, note.n, melodyTime, dur * 0.9, song.melodyType || 'square', song.melodyVol || 0.06);
+      melodyTime += dur;
+    }
+
+    let bassTime = now;
+    const totalMelodyDur = song.melody.reduce((s, n) => s + n.d, 0) * beatDur;
+    while (bassTime < now + totalMelodyDur) {
+      for (const note of song.bass) {
+        const dur = note.d * beatDur;
+        if (bassTime >= now + totalMelodyDur) break;
+        scheduleNote(actx, master, note.n, bassTime, dur * 0.85, song.bassType || 'triangle', song.bassVol || 0.05);
+        bassTime += dur;
+      }
+    }
+
+    const loopMs = totalMelodyDur * 1000;
+    loopTimer = setTimeout(() => { if (playing) playLoop(); }, loopMs - 200);
+  }
+
+  function play(songId) {
+    stopAll();
+    if (!songId || songId === 'none') { currentSong = null; return; }
+    currentSong = songId;
+    playing = true;
+    Audio.init();
+    Audio.resume();
+    playLoop();
+  }
+
+  function stop() { stopAll(); currentSong = null; }
+  function getCurrent() { return currentSong; }
+  function isPlaying() { return playing; }
+
+  return { play, stop, getCurrent, isPlaying, SONGS };
 })();

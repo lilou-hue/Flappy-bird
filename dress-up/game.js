@@ -47,7 +47,7 @@ let challengeInterval = null;
 let currentChallengeTheme = null;
 let colorCycleCount = {}; // itemId -> count of color cycles
 
-const CATEGORIES = ['hair','top','bottom','shoes','accessory','background'];
+const CATEGORIES = ['hair','top','bottom','dress','shoes','accessory','background'];
 const SAVE_KEY = 'dressUpOutfits';
 const ACHIEVE_KEY = 'dressUpAchievements';
 const STATS_KEY = 'dressUpStats';
@@ -62,10 +62,11 @@ const PREMIUM_IDS = new Set([
   'shoes_armored_boots','shoes_platforms','shoes_heels',
   'acc_crown','acc_extra_wings','acc_cape',
   'bg_space','bg_castle','bg_rainbow',
+  'dress_ball_gown','dress_fairy_dress',
 ]);
 
 const PREMIUM_COST = {
-  hair:25, top:30, bottom:25, shoes:25, accessory:30, background:35
+  hair:25, top:30, bottom:25, dress:30, shoes:25, accessory:30, background:35
 };
 
 /* ── Coins Economy ── */
@@ -1239,6 +1240,158 @@ BOTTOM_DEFS.forEach(d => {
     });
 });
 
+/* ── Dresses ── */
+const DRESS_DEFS = [
+  { id:'sundress',       name:'Sundress',       tags:['casual','summer','cute'],       colors:[['#f39c12'],['#e84393'],['#87ceeb'],['#2ecc71']] },
+  { id:'ball_gown',      name:'Ball Gown',      tags:['elegant','formal','fancy','royal'], colors:[['#6c3483'],['#c0392b'],['#1a5276'],['#f4d03f']] },
+  { id:'cocktail_dress', name:'Cocktail Dress', tags:['elegant','fancy','cool'],       colors:[['#2c3e50'],['#c0392b'],['#e84393'],['#1abc9c']] },
+  { id:'kimono_dress',   name:'Kimono Dress',   tags:['elegant','formal'],             colors:[['#e74c3c'],['#2e86c1'],['#f8c471'],['#27ae60']] },
+  { id:'fairy_dress',    name:'Fairy Dress',    tags:['magic','fantasy','cute'],        colors:[['#d4a5e5'],['#a5d4e5'],['#f8b4c8'],['#c8e6c9']] },
+];
+
+function drawDress(style, c, char, x, y, w, h, color) {
+  const { cx, headR, headY, bodyTop, bodyBot, bodyW, legBot, footY } = M(x, y, w, h);
+  const dG = c.createLinearGradient(cx - bodyW, bodyTop, cx + bodyW, legBot);
+  dG.addColorStop(0, _lighten(color, 20));
+  dG.addColorStop(0.5, color);
+  dG.addColorStop(1, _darken(color, 15));
+  c.fillStyle = dG;
+  const midY = (bodyTop + bodyBot) / 2;
+
+  switch(style) {
+    case 'sundress': {
+      // Fitted bodice
+      c.beginPath();
+      c.moveTo(cx - bodyW, bodyTop + 5);
+      c.quadraticCurveTo(cx - bodyW - 1, bodyBot, cx - bodyW + 2, bodyBot);
+      c.quadraticCurveTo(cx, bodyBot + 2, cx + bodyW - 2, bodyBot);
+      c.quadraticCurveTo(cx + bodyW + 1, bodyBot, cx + bodyW, bodyTop + 5);
+      c.closePath(); c.fill();
+      // A-line skirt
+      c.beginPath();
+      c.moveTo(cx - bodyW - 1, bodyBot - 2);
+      c.quadraticCurveTo(cx - bodyW - 14, bodyBot + 22, cx - bodyW + 4, footY - 4);
+      c.quadraticCurveTo(cx, footY - 2, cx + bodyW - 4, footY - 4);
+      c.quadraticCurveTo(cx + bodyW + 14, bodyBot + 22, cx + bodyW + 1, bodyBot - 2);
+      c.closePath(); c.fill();
+      // Thin straps
+      c.strokeStyle = _darken(color, 20); c.lineWidth = 1;
+      for (let s = -1; s <= 1; s += 2) {
+        c.beginPath(); c.moveTo(cx + s * 4, bodyTop + 5); c.lineTo(cx + s * 6, bodyTop - 4); c.stroke();
+      }
+      break;
+    }
+    case 'ball_gown': {
+      // Fitted bodice with sweetheart neckline
+      c.beginPath();
+      c.moveTo(cx - bodyW - 2, bodyTop + 6);
+      c.quadraticCurveTo(cx - bodyW - 3, bodyBot, cx - bodyW + 1, bodyBot);
+      c.quadraticCurveTo(cx, bodyBot + 2, cx + bodyW - 1, bodyBot);
+      c.quadraticCurveTo(cx + bodyW + 3, bodyBot, cx + bodyW + 2, bodyTop + 6);
+      c.closePath(); c.fill();
+      // Wide ball gown skirt
+      c.beginPath();
+      c.moveTo(cx - bodyW - 1, bodyBot - 2);
+      c.quadraticCurveTo(cx - bodyW - 28, bodyBot + 30, cx - bodyW - 10, footY + 2);
+      c.quadraticCurveTo(cx, footY + 6, cx + bodyW + 10, footY + 2);
+      c.quadraticCurveTo(cx + bodyW + 28, bodyBot + 30, cx + bodyW + 1, bodyBot - 2);
+      c.closePath(); c.fill();
+      // Neckline curve
+      c.strokeStyle = _darken(color, 22); c.lineWidth = 0.8;
+      c.beginPath(); c.arc(cx, bodyTop + 4, 7, 0.3, Math.PI - 0.3); c.stroke();
+      // Waist sash
+      c.fillStyle = _darken(color, 30);
+      c.fillRect(cx - bodyW - 1, bodyBot - 5, bodyW * 2 + 2, 4);
+      break;
+    }
+    case 'cocktail_dress': {
+      // Sleek fitted bodice
+      c.beginPath();
+      c.moveTo(cx - bodyW + 1, bodyTop + 6);
+      c.quadraticCurveTo(cx - bodyW - 1, bodyBot, cx - bodyW + 2, bodyBot);
+      c.quadraticCurveTo(cx, bodyBot + 2, cx + bodyW - 2, bodyBot);
+      c.quadraticCurveTo(cx + bodyW + 1, bodyBot, cx + bodyW - 1, bodyTop + 6);
+      c.closePath(); c.fill();
+      // Knee-length pencil skirt
+      const kneeY = bodyBot + (legBot - bodyBot) * 0.7;
+      c.beginPath();
+      c.moveTo(cx - bodyW, bodyBot - 2);
+      c.quadraticCurveTo(cx - bodyW - 4, (bodyBot + kneeY) / 2, cx - bodyW + 2, kneeY);
+      c.quadraticCurveTo(cx, kneeY + 3, cx + bodyW - 2, kneeY);
+      c.quadraticCurveTo(cx + bodyW + 4, (bodyBot + kneeY) / 2, cx + bodyW, bodyBot - 2);
+      c.closePath(); c.fill();
+      // Single strap
+      c.strokeStyle = _darken(color, 20); c.lineWidth = 1.2;
+      c.beginPath(); c.moveTo(cx - 3, bodyTop + 6); c.lineTo(cx - 5, bodyTop - 3); c.stroke();
+      break;
+    }
+    case 'kimono_dress': {
+      const kimBot = footY + 2;
+      c.beginPath();
+      c.moveTo(cx - bodyW - 6, bodyTop + 2);
+      c.quadraticCurveTo(cx - bodyW - 12, (bodyTop + kimBot) / 2, cx - bodyW - 4, kimBot);
+      c.quadraticCurveTo(cx, kimBot + 3, cx + bodyW + 4, kimBot);
+      c.quadraticCurveTo(cx + bodyW + 12, (bodyTop + kimBot) / 2, cx + bodyW + 6, bodyTop + 2);
+      c.closePath(); c.fill();
+      // Wide sleeves
+      for (let s = -1; s <= 1; s += 2) {
+        c.beginPath();
+        c.ellipse(cx + s * (bodyW + 12), bodyTop + 18, 14, 10, s * 0.3, 0, Math.PI * 2);
+        c.fill();
+      }
+      // Obi sash
+      c.fillStyle = _darken(color, 30);
+      const obiY = midY - 2;
+      c.beginPath();
+      c.moveTo(cx - bodyW - 5, obiY);
+      c.quadraticCurveTo(cx, obiY + 3, cx + bodyW + 5, obiY);
+      c.quadraticCurveTo(cx + bodyW + 5, obiY + 8, cx + bodyW + 4, obiY + 8);
+      c.quadraticCurveTo(cx, obiY + 11, cx - bodyW - 4, obiY + 8);
+      c.quadraticCurveTo(cx - bodyW - 5, obiY + 8, cx - bodyW - 5, obiY);
+      c.closePath(); c.fill();
+      break;
+    }
+    case 'fairy_dress': {
+      // Bodice
+      c.beginPath();
+      c.moveTo(cx - bodyW, bodyTop + 5);
+      c.quadraticCurveTo(cx - bodyW - 1, bodyBot, cx - bodyW + 2, bodyBot);
+      c.quadraticCurveTo(cx, bodyBot + 2, cx + bodyW - 2, bodyBot);
+      c.quadraticCurveTo(cx + bodyW + 1, bodyBot, cx + bodyW, bodyTop + 5);
+      c.closePath(); c.fill();
+      // Layered petal skirt
+      c.save(); c.globalAlpha = 0.7;
+      for (let layer = 0; layer < 3; layer++) {
+        const layerBot = bodyBot + (footY - bodyBot) * (0.6 + layer * 0.2);
+        const spread = 8 + layer * 6;
+        c.beginPath();
+        c.moveTo(cx - bodyW - layer * 2, bodyBot - 2 + layer * 4);
+        c.quadraticCurveTo(cx - bodyW - spread, (bodyBot + layerBot) / 2, cx - bodyW + 2 + layer, layerBot);
+        c.quadraticCurveTo(cx, layerBot + 3, cx + bodyW - 2 - layer, layerBot);
+        c.quadraticCurveTo(cx + bodyW + spread, (bodyBot + layerBot) / 2, cx + bodyW + layer * 2, bodyBot - 2 + layer * 4);
+        c.closePath(); c.fill();
+      }
+      c.restore();
+      // Sparkle details
+      c.fillStyle = 'rgba(255,255,255,0.3)';
+      const now = Date.now() / 800;
+      for (let i = 0; i < 5; i++) {
+        const sx = cx + Math.sin(now + i * 1.5) * (bodyW + 5);
+        const sy = bodyBot + 5 + Math.cos(now + i * 2.1) * (footY - bodyBot - 10) * 0.5;
+        c.beginPath(); c.arc(sx, sy, 1.2, 0, Math.PI * 2); c.fill();
+      }
+      break;
+    }
+  }
+}
+
+DRESS_DEFS.forEach(d => {
+  defItem('dress_'+d.id, d.name, 'dress', d.tags, d.colors,
+    (c, char, x, y, w, h, colIdx) => {
+      drawDress(d.id, c, char, x, y, w, h, d.colors[colIdx % d.colors.length][0]);
+    });
+});
+
 /* ── Shoes ── */
 const SHOE_DEFS = [
   { id:'sneakers',     name:'Sneakers',       tags:['casual','sporty'],     colors:[['#fff'],['#e74c3c'],['#3498db'],['#2c3e50']] },
@@ -1671,22 +1824,28 @@ function render() {
     if (item) item.draw(ctx, char, charX, charY, charW, charH, equipped.hair.colorIdx);
   }
 
-  // Bottom (drawn before top so top overlaps waist)
-  if (equipped.bottom) {
-    const item = ITEMS.find(it => it.id === equipped.bottom.itemId);
-    if (item) item.draw(ctx, char, charX, charY, charW, charH, equipped.bottom.colorIdx);
+  // Dress OR top+bottom
+  if (equipped.dress) {
+    const item = ITEMS.find(it => it.id === equipped.dress.itemId);
+    if (item) item.draw(ctx, char, charX, charY, charW, charH, equipped.dress.colorIdx);
+  } else {
+    // Bottom (drawn before top so top overlaps waist)
+    if (equipped.bottom) {
+      const item = ITEMS.find(it => it.id === equipped.bottom.itemId);
+      if (item) item.draw(ctx, char, charX, charY, charW, charH, equipped.bottom.colorIdx);
+    }
+
+    // Top
+    if (equipped.top) {
+      const item = ITEMS.find(it => it.id === equipped.top.itemId);
+      if (item) item.draw(ctx, char, charX, charY, charW, charH, equipped.top.colorIdx);
+    }
   }
 
   // Shoes
   if (equipped.shoes) {
     const item = ITEMS.find(it => it.id === equipped.shoes.itemId);
     if (item) item.draw(ctx, char, charX, charY, charW, charH, equipped.shoes.colorIdx);
-  }
-
-  // Top
-  if (equipped.top) {
-    const item = ITEMS.find(it => it.id === equipped.top.itemId);
-    if (item) item.draw(ctx, char, charX, charY, charW, charH, equipped.top.colorIdx);
   }
 
   // Accessory (non-cape/wings)
@@ -1747,7 +1906,8 @@ function buildCategoryTabs() {
   categoryTabsEl.innerHTML = '';
   const labels = {
     hair: t('duCatHair','Hair'), top: t('duCatTop','Top'),
-    bottom: t('duCatBottom','Bottom'), shoes: t('duCatShoes','Shoes'),
+    bottom: t('duCatBottom','Bottom'), dress: t('duCatDress','Dress'),
+    shoes: t('duCatShoes','Shoes'),
     accessory: t('duCatAccessory','Accessory'), background: t('duCatBG','Background'),
   };
   CATEGORIES.forEach(cat => {
@@ -1834,6 +1994,13 @@ function renderItemGrid() {
         equipped[item.category] = { itemId: item.id, colorIdx: 0 };
         Audio.equip();
         trackCategoryUsed(item.category);
+        // Mutual exclusion: dress <-> top/bottom
+        if (item.category === 'dress') {
+          delete equipped.top;
+          delete equipped.bottom;
+        } else if (item.category === 'top' || item.category === 'bottom') {
+          delete equipped.dress;
+        }
       }
       renderItemGrid();
       render();
@@ -1870,8 +2037,12 @@ function trackCategoryUsed(cat) {
 }
 
 function checkFullOutfit() {
-  const filled = CATEGORIES.filter(c => equipped[c]).length;
-  if (filled >= 6) checkAchievement('full_outfit');
+  // With dress category, a "full outfit" means all non-exclusive slots are filled
+  // Either: hair+dress+shoes+acc+bg (5) or hair+top+bottom+shoes+acc+bg (6)
+  const hasDress = !!equipped.dress;
+  const hasTopBot = !!equipped.top && !!equipped.bottom;
+  const hasCore = !!equipped.hair && !!equipped.shoes && !!equipped.accessory && !!equipped.background;
+  if (hasCore && (hasDress || hasTopBot)) checkAchievement('full_outfit');
 }
 
 /* ================================================================
@@ -1879,7 +2050,12 @@ function checkFullOutfit() {
    ================================================================ */
 function randomizeOutfit() {
   Audio.init(); Audio.resume(); Audio.randomize();
+  // 40% chance to use a dress instead of top+bottom
+  const useDress = Math.random() < 0.4;
   CATEGORIES.forEach(cat => {
+    // Skip dress when using top+bottom, skip top/bottom when using dress
+    if (useDress && (cat === 'top' || cat === 'bottom')) { delete equipped[cat]; return; }
+    if (!useDress && cat === 'dress') { delete equipped[cat]; return; }
     const catItems = ITEMS.filter(it => it.category === cat);
     const item = catItems[Math.floor(Math.random()*catItems.length)];
     const ci = Math.floor(Math.random()*item.colors.length);
@@ -1966,9 +2142,13 @@ function renderToCtx(c) {
   }
   drawCharacter(c, charX, charY, charW, charH, char);
   if (equipped.hair) { const it = ITEMS.find(i2=>i2.id===equipped.hair.itemId); if(it) it.draw(c,char,charX,charY,charW,charH,equipped.hair.colorIdx); }
-  if (equipped.bottom) { const it = ITEMS.find(i2=>i2.id===equipped.bottom.itemId); if(it) it.draw(c,char,charX,charY,charW,charH,equipped.bottom.colorIdx); }
+  if (equipped.dress) {
+    const it = ITEMS.find(i2=>i2.id===equipped.dress.itemId); if(it) it.draw(c,char,charX,charY,charW,charH,equipped.dress.colorIdx);
+  } else {
+    if (equipped.bottom) { const it = ITEMS.find(i2=>i2.id===equipped.bottom.itemId); if(it) it.draw(c,char,charX,charY,charW,charH,equipped.bottom.colorIdx); }
+    if (equipped.top) { const it = ITEMS.find(i2=>i2.id===equipped.top.itemId); if(it) it.draw(c,char,charX,charY,charW,charH,equipped.top.colorIdx); }
+  }
   if (equipped.shoes) { const it = ITEMS.find(i2=>i2.id===equipped.shoes.itemId); if(it) it.draw(c,char,charX,charY,charW,charH,equipped.shoes.colorIdx); }
-  if (equipped.top) { const it = ITEMS.find(i2=>i2.id===equipped.top.itemId); if(it) it.draw(c,char,charX,charY,charW,charH,equipped.top.colorIdx); }
   if (equipped.accessory) {
     const accItem = ITEMS.find(it => it.id === equipped.accessory.itemId);
     if (accItem && accItem.id !== 'acc_cape' && accItem.id !== 'acc_extra_wings')
@@ -2107,12 +2287,123 @@ function calculateScore() {
     });
   });
 
-  // All slots bonus
-  const filled = CATEGORIES.filter(c => equipped[c]).length;
-  if (filled >= 6) score += 5;
+  // All slots bonus (dress replaces top+bottom, so 5 or 6 slots filled counts)
+  const hasDress = !!equipped.dress;
+  const hasTopBot = !!equipped.top && !!equipped.bottom;
+  const coreSlots = ['hair','shoes','accessory','background'].filter(c => equipped[c]).length;
+  if (coreSlots >= 4 && (hasDress || hasTopBot)) score += 5;
 
   scoreDisplay.textContent = score;
   return score;
+}
+
+/* ================================================================
+   RUNWAY MODE
+   ================================================================ */
+let runwayActive = false;
+let runwayOffset = 0;
+let runwayAnimId = null;
+
+function startRunway() {
+  if (runwayActive || challengeActive) return;
+  Audio.init(); Audio.resume();
+  runwayActive = true;
+  runwayOffset = -450; // start off-screen left
+  canvas.parentElement.classList.add('runway-active');
+
+  function animateRunway() {
+    runwayOffset += 4; // speed
+    if (runwayOffset > 500) {
+      // Animation complete
+      runwayActive = false;
+      runwayOffset = 0;
+      canvas.parentElement.classList.remove('runway-active');
+      render();
+      return;
+    }
+
+    // Render with offset
+    const W = canvas.width, H = canvas.height;
+    const char = CHARACTERS[currentCharIdx];
+    const margin = 50;
+    const charW = W - margin * 2, charH = H - 60;
+    // Map offset: -450 -> far left, 0 -> center, 500 -> far right
+    const charX = margin + runwayOffset;
+    const charY = 30;
+
+    // Clear and draw background
+    if (equipped.background) {
+      const bgItem = ITEMS.find(it => it.id === equipped.background.itemId);
+      if (bgItem) bgItem.draw(ctx, char, margin, charY, charW, charH, equipped.background.colorIdx);
+    } else {
+      const g = ctx.createLinearGradient(0, 0, 0, H);
+      g.addColorStop(0, '#2c2c3e'); g.addColorStop(1, '#1e1e30');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    }
+
+    // Spotlight effect
+    ctx.save();
+    const spotX = charX + charW / 2;
+    const spot = ctx.createRadialGradient(spotX, H * 0.4, 20, spotX, H * 0.4, 200);
+    spot.addColorStop(0, 'rgba(255,255,255,0.06)');
+    spot.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = spot;
+    ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+
+    // Draw cape/wings behind
+    if (equipped.accessory) {
+      const accItem = ITEMS.find(it => it.id === equipped.accessory.itemId);
+      if (accItem && (accItem.id === 'acc_cape' || accItem.id === 'acc_extra_wings'))
+        accItem.draw(ctx, char, charX, charY, charW, charH, equipped.accessory.colorIdx);
+    }
+    drawCharacter(ctx, charX, charY, charW, charH, char);
+    if (equipped.hair) { const it = ITEMS.find(i2=>i2.id===equipped.hair.itemId); if(it) it.draw(ctx,char,charX,charY,charW,charH,equipped.hair.colorIdx); }
+    if (equipped.dress) {
+      const it = ITEMS.find(i2=>i2.id===equipped.dress.itemId); if(it) it.draw(ctx,char,charX,charY,charW,charH,equipped.dress.colorIdx);
+    } else {
+      if (equipped.bottom) { const it = ITEMS.find(i2=>i2.id===equipped.bottom.itemId); if(it) it.draw(ctx,char,charX,charY,charW,charH,equipped.bottom.colorIdx); }
+      if (equipped.top) { const it = ITEMS.find(i2=>i2.id===equipped.top.itemId); if(it) it.draw(ctx,char,charX,charY,charW,charH,equipped.top.colorIdx); }
+    }
+    if (equipped.shoes) { const it = ITEMS.find(i2=>i2.id===equipped.shoes.itemId); if(it) it.draw(ctx,char,charX,charY,charW,charH,equipped.shoes.colorIdx); }
+    if (equipped.accessory) {
+      const accItem = ITEMS.find(it => it.id === equipped.accessory.itemId);
+      if (accItem && accItem.id !== 'acc_cape' && accItem.id !== 'acc_extra_wings')
+        accItem.draw(ctx, char, charX, charY, charW, charH, equipped.accessory.colorIdx);
+    }
+
+    runwayAnimId = requestAnimationFrame(animateRunway);
+  }
+
+  runwayAnimId = requestAnimationFrame(animateRunway);
+}
+
+/* ================================================================
+   BACKGROUND MUSIC INTEGRATION
+   ================================================================ */
+function initMusicSelector() {
+  const sel = document.getElementById('musicSelect');
+  if (!sel) return;
+  const saved = localStorage.getItem('dressUpMusic') || 'none';
+  sel.value = saved;
+  sel.onchange = () => {
+    Audio.init(); Audio.resume();
+    const songId = sel.value;
+    localStorage.setItem('dressUpMusic', songId);
+    if (songId === 'none') BGMusic.stop();
+    else BGMusic.play(songId);
+  };
+  // Auto-play saved music on first interaction
+  if (saved !== 'none') {
+    const startMusic = () => {
+      Audio.init(); Audio.resume();
+      if (!Audio.isMuted()) BGMusic.play(saved);
+      document.removeEventListener('click', startMusic);
+      document.removeEventListener('keydown', startMusic);
+    };
+    document.addEventListener('click', startMusic, { once: true });
+    document.addEventListener('keydown', startMusic, { once: true });
+  }
 }
 
 /* ================================================================
@@ -2125,6 +2416,7 @@ document.getElementById('loadBtn').onclick = showLoadModal;
 document.getElementById('clearBtn').onclick = clearOutfit;
 document.getElementById('challengeBtn').onclick = startChallenge;
 document.getElementById('screenshotBtn').onclick = takeScreenshot;
+document.getElementById('runwayBtn').onclick = startRunway;
 
 // Modal close
 loadModalClose.onclick = () => loadModal.classList.remove('visible');
@@ -2141,6 +2433,14 @@ document.getElementById('muteButton').onclick = () => {
   Audio.init();
   const m = Audio.toggle();
   document.getElementById('muteButton').textContent = m ? t('unmute','Unmute') : t('duMute','Mute');
+  // Stop/resume background music
+  if (m) {
+    BGMusic.stop();
+  } else {
+    const sel = document.getElementById('musicSelect');
+    const songId = sel ? sel.value : localStorage.getItem('dressUpMusic');
+    if (songId && songId !== 'none') BGMusic.play(songId);
+  }
 };
 
 // Fullscreen
@@ -2193,6 +2493,7 @@ renderItemGrid();
 renderAchievements();
 render();
 updateCoinsHUD();
+initMusicSelector();
 
 // Re-render on lang change
 window.addEventListener('langchange', () => {
