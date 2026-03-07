@@ -81,6 +81,7 @@
           <button class="action-btn" id="clearBtn" data-i18n="duClear">Clear</button>
           <button class="action-btn primary" id="challengeBtn" data-i18n="duChallenge">Challenge</button>
           <button class="action-btn" id="screenshotBtn" data-i18n="duScreenshot">Screenshot</button>
+          <button class="action-btn" id="shopBtn">Shop</button>
           <button class="action-btn" id="runwayBtn" data-i18n="duRunway">Runway</button>
         </div>
       </div>
@@ -124,6 +125,45 @@
         <button class="action-btn primary" id="premiumBuyBtn">Unlock (<span id="premiumCost">0</span> coins)</button>
       </div>
       <button class="modal-close" id="premiumModalClose">Close</button>
+    </div>
+  </div>
+
+  <!-- Shop Modal -->
+  <div class="modal-overlay" id="shopModal">
+    <div class="modal shop-modal">
+      <h3>&#x1F6CD; Shop — Premium Bundles</h3>
+      <div class="shop-bundles">
+        <div class="shop-bundle">
+          <div class="shop-bundle__name">Fantasy Bundle</div>
+          <div class="shop-bundle__desc">Armor, Wizard Robe, Armor Greaves, Armored Boots, Crown, Castle BG</div>
+          <div class="shop-bundle__price">~$2</div>
+          <a class="action-btn primary shop-bundle__link" href="https://ko-fi.com/s/FANTASY_PRODUCT_ID" target="_blank" rel="noopener">Buy on Ko-fi</a>
+        </div>
+        <div class="shop-bundle">
+          <div class="shop-bundle__name">Glam Bundle</div>
+          <div class="shop-bundle__desc">Corset, Kimono, Flowing Skirt, Heels, Long Flowing Hair, Rainbow BG, Ball Gown</div>
+          <div class="shop-bundle__price">~$2</div>
+          <a class="action-btn primary shop-bundle__link" href="https://ko-fi.com/s/GLAM_PRODUCT_ID" target="_blank" rel="noopener">Buy on Ko-fi</a>
+        </div>
+        <div class="shop-bundle">
+          <div class="shop-bundle__name">Adventure Bundle</div>
+          <div class="shop-bundle__desc">Cape, Extra Wings, Braids, Curly Hair, Platforms, Space BG, Fairy Dress</div>
+          <div class="shop-bundle__price">~$2</div>
+          <a class="action-btn primary shop-bundle__link" href="https://ko-fi.com/s/ADVENTURE_PRODUCT_ID" target="_blank" rel="noopener">Buy on Ko-fi</a>
+        </div>
+        <div class="shop-bundle">
+          <div class="shop-bundle__name">Premium Pass</div>
+          <div class="shop-bundle__desc">ALL premium items unlocked!</div>
+          <div class="shop-bundle__price">~$4</div>
+          <a class="action-btn primary shop-bundle__link" href="https://ko-fi.com/s/PREMIUMPASS_PRODUCT_ID" target="_blank" rel="noopener">Buy on Ko-fi</a>
+        </div>
+      </div>
+      <div class="shop-redeem">
+        <input type="text" id="shopCodeInput" class="shop-redeem__input" placeholder="Enter redeem code..." />
+        <button class="action-btn primary" id="shopRedeemBtn">Redeem</button>
+      </div>
+      <div class="shop-status" id="shopStatus"></div>
+      <button class="modal-close" id="shopModalClose">Close</button>
     </div>
   </div>
 
