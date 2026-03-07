@@ -815,6 +815,10 @@
     if (typeof Leaderboard !== 'undefined' && state.score > 0) {
       Leaderboard.submitScore('tetris', state.score).then(() => Leaderboard.refresh('tetris'));
     }
+    if (typeof Arcade !== 'undefined') {
+      Arcade.onGameOver('tetris', state.score);
+      document.body.appendChild(Arcade.createScoreCard('tetris', state.score, state.best));
+    }
     tetAchStats.gamesPlayed++;
     tetAchStats.bestScore = Math.max(tetAchStats.bestScore, state.score);
     tetAchStats.bestLevel = Math.max(tetAchStats.bestLevel, state.level || 0);

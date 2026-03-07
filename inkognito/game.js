@@ -1141,6 +1141,10 @@
     if (typeof Leaderboard !== 'undefined' && score > 0) {
       Leaderboard.submitScore('inkognito', score);
     }
+    if (typeof Arcade !== 'undefined') {
+      Arcade.onGameOver('inkognito', score);
+      document.body.appendChild(Arcade.createScoreCard('inkognito', score, bestScore));
+    }
 
     // Achievement checks
     achData.stats.gamesPlayed = (achData.stats.gamesPlayed || 0) + 1;

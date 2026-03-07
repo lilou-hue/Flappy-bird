@@ -1695,6 +1695,10 @@ function gameOver() {
   Audio.stopDrone();
   if (isNewBest && game.score > 0) setTimeout(() => Audio.newHighScore(), 1200);
   if (typeof Leaderboard !== 'undefined') Leaderboard.submitScore('star-fury', game.score);
+  if (typeof Arcade !== 'undefined') {
+    Arcade.onGameOver('star-fury', game.score);
+    document.body.appendChild(Arcade.createScoreCard('star-fury', game.score, achStats.bestScore||0));
+  }
 }
 
 /* ══════════════════════════════════════════════════════════════════

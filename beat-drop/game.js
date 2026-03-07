@@ -497,6 +497,10 @@ function endGame() {
 
   if (!practiceMode) {
     try { initLB(); Leaderboard.submitScore('beat-drop', score); } catch (e) {}
+    if (typeof Arcade !== 'undefined') {
+      Arcade.onGameOver('beat-drop', score);
+      document.body.appendChild(Arcade.createScoreCard('beat-drop', score, bestScore));
+    }
   }
 }
 

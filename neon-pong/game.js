@@ -688,6 +688,10 @@ function endMatch() {
     if (bestDown >= 5) achData.stats.comeback5 = true;
     if (difficulty === 'hard') achData.stats.hardWin = true;
     try { initLB(); Leaderboard.submitScore('neon-pong', playerScore * 100 + (WIN_SCORE - aiScore) * 10); } catch (e) {}
+    if (typeof Arcade !== 'undefined') {
+      Arcade.onGameOver('neon-pong', playerScore * 100 + (WIN_SCORE - aiScore) * 10);
+      document.body.appendChild(Arcade.createScoreCard('neon-pong', playerScore * 100 + (WIN_SCORE - aiScore) * 10, Number(localStorage.getItem('neonPongBest'))||0));
+    }
   } else {
     Audio.playDefeat();
   }

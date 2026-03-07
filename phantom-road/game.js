@@ -767,6 +767,10 @@ function gameOver() {
   if (typeof Leaderboard !== 'undefined' && state.score > 0) {
     Leaderboard.submitScore('phantom-road', state.score).then(() => Leaderboard.refresh('phantom-road'));
   }
+  if (typeof Arcade !== 'undefined') {
+    Arcade.onGameOver('phantom-road', state.score);
+    document.body.appendChild(Arcade.createScoreCard('phantom-road', state.score, Number(localStorage.getItem('phantomRoadBest'))||0));
+  }
 
   prAchStats.gamesPlayed++;
   prAchStats.bestScore = Math.max(prAchStats.bestScore, state.score);

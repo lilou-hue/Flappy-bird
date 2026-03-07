@@ -402,6 +402,9 @@
     if (typeof Leaderboard !== 'undefined' && state.lifetimeSP > 0 && Leaderboard.getNickname()) {
       Leaderboard.submitScore('unicorn-clicker', Math.floor(state.lifetimeSP));
     }
+    if (typeof Arcade !== 'undefined') {
+      Arcade.onGameOver('unicorn-clicker', Math.floor(state.lifetimeSP));
+    }
     saveUCAch();
   }
 

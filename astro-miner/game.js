@@ -443,6 +443,10 @@ function endGame() {
   if (typeof Leaderboard !== 'undefined') {
     Leaderboard.submitScore('astro-miner', score).then(() => Leaderboard.refresh('astro-miner'));
   }
+  if (typeof Arcade !== 'undefined') {
+    Arcade.onGameOver('astro-miner', score);
+    document.body.appendChild(Arcade.createScoreCard('astro-miner', score, bestScore));
+  }
 }
 
 /* --- Achievements --- */

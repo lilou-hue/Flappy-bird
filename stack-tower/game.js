@@ -399,6 +399,10 @@ function endGame() {
 
   // Submit to leaderboard
   try { initLB(); Leaderboard.submitScore('stack-tower', score); } catch (e) {}
+  if (typeof Arcade !== 'undefined') {
+    Arcade.onGameOver('stack-tower', score);
+    document.body.appendChild(Arcade.createScoreCard('stack-tower', score, bestScore));
+  }
 }
 
 // ── Controls ──

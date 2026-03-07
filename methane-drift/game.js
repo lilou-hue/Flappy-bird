@@ -1139,6 +1139,10 @@ function finishCrash() {
   if (typeof Leaderboard !== 'undefined' && world.score > 0) {
     Leaderboard.submitScore('methane-drift', world.score).then(() => Leaderboard.refresh('methane-drift'));
   }
+  if (typeof Arcade !== 'undefined') {
+    Arcade.onGameOver('methane-drift', world.score);
+    document.body.appendChild(Arcade.createScoreCard('methane-drift', world.score, Number(localStorage.getItem('methaneDriftBest'))||0));
+  }
 
   /* Stop music */
   if (Audio.stopMusic) Audio.stopMusic();

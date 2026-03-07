@@ -1,5 +1,5 @@
 /* ================================================================
-   Dress-Up Game — Main Engine
+   Dress-Up Game — Main Engine  (Fashion-Slim Proportions)
    ================================================================ */
 (function () {
 'use strict';
@@ -40,12 +40,12 @@ function t(key, fb) {
 /* ── State ── */
 let currentCharIdx = 0;
 let currentCategory = 'hair';
-let equipped = {}; // { hair: {itemId, colorIdx}, top: {...}, ... }
+let equipped = {};
 let challengeActive = false;
 let challengeTimer = 0;
 let challengeInterval = null;
 let currentChallengeTheme = null;
-let colorCycleCount = {}; // itemId -> count of color cycles
+let colorCycleCount = {};
 
 const CATEGORIES = ['hair','top','bottom','dress','shoes','accessory','background'];
 const SAVE_KEY = 'dressUpOutfits';
@@ -118,7 +118,7 @@ function redeemCode(code) {
 }
 
 /* ── Coins Economy ── */
-let coins = 0; // loaded after loadJSON is defined
+let coins = 0;
 let unlockedPremium = [];
 
 let stats = loadJSON(STATS_KEY, {
@@ -135,7 +135,6 @@ function loadJSON(key, fallback) {
 }
 function saveJSON(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
 
-// Load coins & unlocked now that loadJSON is defined
 coins = loadJSON(COINS_KEY, 0);
 unlockedPremium = loadJSON(UNLOCKED_KEY, []);
 
@@ -170,14 +169,12 @@ function showPremiumModal(item) {
   const modal = document.getElementById('premiumModal');
   const titleEl = document.getElementById('premiumItemName');
   const buyBtn = document.getElementById('premiumBuyBtn');
-
   if (!titleEl || !buyBtn) return;
   titleEl.textContent = item.name;
   buyBtn.disabled = coins < cost;
   buyBtn.innerHTML = coins < cost
     ? 'Not enough coins (' + cost + ')'
     : 'Unlock (<span id="premiumCost">' + cost + '</span> coins)';
-
   buyBtn.onclick = function () {
     if (coins >= cost) {
       addCoins(-cost);
@@ -187,7 +184,6 @@ function showPremiumModal(item) {
       render();
     }
   };
-
   modal.classList.add('visible');
 }
 
@@ -203,22 +199,36 @@ const CHARACTERS = [
   { id:'fairy',      name:'Fairy', emoji:'🧚', skin:'#fce0e4', hair:'#f1948a', eyeColor:'#e86aa0' },
 ];
 
-/* ── Shared chibi body metrics — every draw function uses this ── */
+/* ── Fashion-slim body metrics ── */
 function M(x, y, w, h) {
   const cx = x + w / 2;
-  const headR = w * 0.28;          // chibi head (proportionate)
-  const headY = y + h * 0.23;
-  const bodyTop = headY + headR + 1;
-  const bodyBot = y + h * 0.55;
-  const bodyW = w * 0.14;          // solid chibi torso
-  const legBot = y + h * 0.72;
-  const footY = y + h * 0.76;
-  return { cx, headR, headY, bodyTop, bodyBot, bodyW, legBot, footY };
+  const headR = h * 0.05;
+  const headY = y + h * 0.085;
+  const bodyTop = headY + headR + h * 0.018;
+  const waistY = y + h * 0.33;
+  const bodyBot = y + h * 0.40;
+  const bodyW = w * 0.10;
+  const kneeY = y + h * 0.62;
+  const legBot = y + h * 0.84;
+  const footY = y + h * 0.87;
+  return { cx, headR, headY, bodyTop, waistY, bodyBot, bodyW, kneeY, legBot, footY };
 }
 
+/* ── Alignment Guide System ── */
+const ALIGNMENT_GUIDES = {
+  HEAD_LINE: (y, h) => y + h * 0.035,
+  SHOULDER_LINE: (y, h) => y + h * 0.085 + h * 0.05 + h * 0.018,
+  WAIST_LINE: (y, h) => y + h * 0.33,
+  HIP_LINE: (y, h) => y + h * 0.40,
+  KNEE_LINE: (y, h) => y + h * 0.62,
+  FOOT_LINE: (y, h) => y + h * 0.87,
+};
+const ASSET_CANVAS = { width: 512, height: 1024 };
+
+/* ── Draw fashion-slim character ── */
 function drawCharacter(c, x, y, w, h, char) {
   const m = M(x, y, w, h);
-  const { cx, headR, headY, bodyTop, bodyBot, bodyW, legBot, footY } = m;
+  const { cx, headR, headY, bodyTop, waistY, bodyBot, bodyW, kneeY, legBot, footY } = m;
   const sk = char.skin;
   const isWolf = char.id === 'wolf_furry';
   const isCat = char.id === 'cat';
@@ -229,14 +239,14 @@ function drawCharacter(c, x, y, w, h, char) {
 
   // ── Tail (behind body) ──
   if (isWolf) {
-    c.strokeStyle = '#7a8a9a'; c.lineWidth = 5; c.lineCap = 'round';
+    c.strokeStyle = '#7a8a9a'; c.lineWidth = 3; c.lineCap = 'round';
     c.beginPath(); c.moveTo(cx + bodyW, bodyBot - 4);
-    c.quadraticCurveTo(cx + bodyW + 25, bodyBot - 20, cx + bodyW + 18, bodyBot - 38);
+    c.quadraticCurveTo(cx + bodyW + 20, bodyBot - 15, cx + bodyW + 14, bodyBot - 30);
     c.stroke();
   } else if (isCat) {
-    c.strokeStyle = _darken(sk, 15); c.lineWidth = 3; c.lineCap = 'round';
+    c.strokeStyle = _darken(sk, 15); c.lineWidth = 2; c.lineCap = 'round';
     c.beginPath(); c.moveTo(cx + bodyW, bodyBot - 3);
-    c.bezierCurveTo(cx+bodyW+25, bodyBot-10, cx+bodyW+30, bodyBot-30, cx+bodyW+18, bodyBot-40);
+    c.bezierCurveTo(cx+bodyW+20, bodyBot-8, cx+bodyW+24, bodyBot-24, cx+bodyW+14, bodyBot-32);
     c.stroke();
   }
 
@@ -250,107 +260,132 @@ function drawCharacter(c, x, y, w, h, char) {
     for (let s = -1; s <= 1; s += 2) {
       c.beginPath();
       c.moveTo(cx + s*(bodyW-1), bodyTop+8);
-      c.quadraticCurveTo(cx+s*(bodyW+28+wf), bodyTop-12, cx+s*(bodyW+6), bodyTop+32);
+      c.quadraticCurveTo(cx+s*(bodyW+22+wf), bodyTop-10, cx+s*(bodyW+5), bodyTop+26);
       c.closePath(); c.fill();
       c.beginPath();
-      c.moveTo(cx + s*(bodyW-1), bodyTop+16);
-      c.quadraticCurveTo(cx+s*(bodyW+20+wf), bodyTop+38, cx+s*(bodyW+3), bodyTop+42);
+      c.moveTo(cx + s*(bodyW-1), bodyTop+14);
+      c.quadraticCurveTo(cx+s*(bodyW+16+wf), bodyTop+30, cx+s*(bodyW+3), bodyTop+36);
       c.closePath(); c.fill();
     }
     c.restore();
   }
 
-  // ── Body ──
-  const torsoH = bodyBot - bodyTop;
+  // ── Torso (hourglass with bezier curves) ──
   c.fillStyle = furColor;
   c.beginPath();
-  c.ellipse(cx, bodyTop + torsoH/2, bodyW, torsoH/2, 0, 0, Math.PI*2);
+  c.moveTo(cx - bodyW, bodyTop);
+  c.bezierCurveTo(cx - bodyW - 2, bodyTop + (waistY - bodyTop) * 0.5,
+                  cx - bodyW * 0.6, waistY - 4,
+                  cx - bodyW * 0.55, waistY);
+  c.bezierCurveTo(cx - bodyW * 0.6, waistY + 4,
+                  cx - bodyW - 2, waistY + (bodyBot - waistY) * 0.5,
+                  cx - bodyW - 1, bodyBot);
+  c.lineTo(cx + bodyW + 1, bodyBot);
+  c.bezierCurveTo(cx + bodyW + 2, waistY + (bodyBot - waistY) * 0.5,
+                  cx + bodyW * 0.6, waistY + 4,
+                  cx + bodyW * 0.55, waistY);
+  c.bezierCurveTo(cx + bodyW * 0.6, waistY - 4,
+                  cx + bodyW + 2, bodyTop + (waistY - bodyTop) * 0.5,
+                  cx + bodyW, bodyTop);
+  c.closePath();
   c.fill();
+
   if (isWolf) {
     c.fillStyle = '#b0bec5';
-    c.beginPath(); c.ellipse(cx, bodyTop+torsoH/2+3, bodyW*0.5, torsoH/2*0.45, 0, 0, Math.PI*2); c.fill();
+    c.beginPath();
+    c.ellipse(cx, (bodyTop + bodyBot) / 2, bodyW * 0.45, (bodyBot - bodyTop) * 0.2, 0, 0, Math.PI*2);
+    c.fill();
   }
 
-  // ── Arms ──
-  c.strokeStyle = furColor; c.lineWidth = w*0.05; c.lineCap = 'round';
-  c.beginPath(); c.moveTo(cx-bodyW, bodyTop+10); c.lineTo(cx-bodyW-11, bodyBot-6); c.stroke();
-  c.beginPath(); c.moveTo(cx+bodyW, bodyTop+10); c.lineTo(cx+bodyW+11, bodyBot-6); c.stroke();
+  // ── Thin neck ──
+  c.fillStyle = furColor;
+  c.fillRect(cx - headR * 0.5, headY + headR, headR, bodyTop - (headY + headR));
 
-  // Paw hands for wolf/cat
+  // ── Arms (long, hanging to hip level) ──
+  c.strokeStyle = furColor; c.lineWidth = w * 0.028; c.lineCap = 'round';
+  c.beginPath(); c.moveTo(cx - bodyW, bodyTop + 4); c.lineTo(cx - bodyW - 8, bodyBot - 4); c.stroke();
+  c.beginPath(); c.moveTo(cx + bodyW, bodyTop + 4); c.lineTo(cx + bodyW + 8, bodyBot - 4); c.stroke();
+
+  // Small hands
   if (isWolf || isCat) {
     c.fillStyle = isWolf ? '#7a8a9a' : '#e8c8a0';
-    c.beginPath(); c.arc(cx-bodyW-11, bodyBot-5, 4.5, 0, Math.PI*2); c.fill();
-    c.beginPath(); c.arc(cx+bodyW+11, bodyBot-5, 4.5, 0, Math.PI*2); c.fill();
+    c.beginPath(); c.arc(cx - bodyW - 8, bodyBot - 3, 3, 0, Math.PI*2); c.fill();
+    c.beginPath(); c.arc(cx + bodyW + 8, bodyBot - 3, 3, 0, Math.PI*2); c.fill();
+  } else {
+    c.fillStyle = furColor;
+    c.beginPath(); c.arc(cx - bodyW - 8, bodyBot - 3, 2.5, 0, Math.PI*2); c.fill();
+    c.beginPath(); c.arc(cx + bodyW + 8, bodyBot - 3, 2.5, 0, Math.PI*2); c.fill();
   }
 
-  // ── Legs ──
-  c.strokeStyle = furColor; c.lineWidth = w*0.055;
-  c.beginPath(); c.moveTo(cx-7, bodyBot); c.lineTo(cx-9, legBot); c.stroke();
-  c.beginPath(); c.moveTo(cx+7, bodyBot); c.lineTo(cx+9, legBot); c.stroke();
+  // ── Legs (long slim with slight gap) ──
+  c.strokeStyle = furColor; c.lineWidth = w * 0.03;
+  c.beginPath(); c.moveTo(cx - 4, bodyBot); c.lineTo(cx - 5, kneeY);
+  c.lineTo(cx - 5, legBot); c.stroke();
+  c.beginPath(); c.moveTo(cx + 4, bodyBot); c.lineTo(cx + 5, kneeY);
+  c.lineTo(cx + 5, legBot); c.stroke();
 
-  // ── Feet ──
+  // ── Small elegant feet ──
   const footColor = (isWolf || isCat) ? (isWolf ? '#7a8a9a' : '#e8c8a0') : sk;
   c.fillStyle = footColor;
-  c.beginPath(); c.ellipse(cx-9, footY, 7, 3.5, 0, 0, Math.PI*2); c.fill();
-  c.beginPath(); c.ellipse(cx+9, footY, 7, 3.5, 0, 0, Math.PI*2); c.fill();
+  c.beginPath(); c.ellipse(cx - 5, footY, 5, 2.5, 0, 0, Math.PI*2); c.fill();
+  c.beginPath(); c.ellipse(cx + 5, footY, 5, 2.5, 0, 0, Math.PI*2); c.fill();
 
   // ── Head ──
   if (isWolf) {
     c.fillStyle = '#8e9eaf';
     c.beginPath(); c.arc(cx, headY, headR, 0, Math.PI*2); c.fill();
-    // Snout
     c.fillStyle = '#a0b0c0';
-    c.beginPath(); c.ellipse(cx, headY+headR*0.4, headR*0.35, headR*0.25, 0, 0, Math.PI*2); c.fill();
-    // Nose
+    c.beginPath(); c.ellipse(cx, headY + headR * 0.4, headR * 0.35, headR * 0.25, 0, 0, Math.PI*2); c.fill();
     c.fillStyle = '#3d4f5f';
-    c.beginPath(); c.ellipse(cx, headY+headR*0.25, 3, 2, 0, 0, Math.PI*2); c.fill();
-    // Ears
+    c.beginPath(); c.ellipse(cx, headY + headR * 0.25, 1.5, 1, 0, 0, Math.PI*2); c.fill();
     c.fillStyle = '#8e9eaf';
     for (let s = -1; s <= 1; s += 2) {
-      c.beginPath(); c.moveTo(cx+s*headR*0.55, headY-headR*0.55);
-      c.lineTo(cx+s*headR*0.25, headY-headR*1.2); c.lineTo(cx-s*headR*0.05, headY-headR*0.5); c.fill();
+      c.beginPath(); c.moveTo(cx + s * headR * 0.55, headY - headR * 0.55);
+      c.lineTo(cx + s * headR * 0.25, headY - headR * 1.2);
+      c.lineTo(cx - s * headR * 0.05, headY - headR * 0.5); c.fill();
     }
     c.fillStyle = '#e8c8b0';
     for (let s = -1; s <= 1; s += 2) {
-      c.beginPath(); c.moveTo(cx+s*headR*0.42, headY-headR*0.57);
-      c.lineTo(cx+s*headR*0.27, headY-headR*1.02); c.lineTo(cx-s*headR*0.0, headY-headR*0.53); c.fill();
+      c.beginPath(); c.moveTo(cx + s * headR * 0.42, headY - headR * 0.57);
+      c.lineTo(cx + s * headR * 0.27, headY - headR * 1.02);
+      c.lineTo(cx - s * headR * 0.0, headY - headR * 0.53); c.fill();
     }
   } else if (isCat) {
     c.fillStyle = sk;
     c.beginPath(); c.arc(cx, headY, headR, 0, Math.PI*2); c.fill();
-    // Ears
     for (let s = -1; s <= 1; s += 2) {
       c.fillStyle = sk;
-      c.beginPath(); c.moveTo(cx+s*headR*0.6, headY-headR*0.45);
-      c.lineTo(cx+s*headR*0.3, headY-headR*1.15); c.lineTo(cx, headY-headR*0.4); c.fill();
+      c.beginPath(); c.moveTo(cx + s * headR * 0.6, headY - headR * 0.45);
+      c.lineTo(cx + s * headR * 0.3, headY - headR * 1.15);
+      c.lineTo(cx, headY - headR * 0.4); c.fill();
       c.fillStyle = '#f8b4c8';
-      c.beginPath(); c.moveTo(cx+s*headR*0.48, headY-headR*0.48);
-      c.lineTo(cx+s*headR*0.32, headY-headR*0.98); c.lineTo(cx+s*headR*0.05, headY-headR*0.44); c.fill();
+      c.beginPath(); c.moveTo(cx + s * headR * 0.48, headY - headR * 0.48);
+      c.lineTo(cx + s * headR * 0.32, headY - headR * 0.98);
+      c.lineTo(cx + s * headR * 0.05, headY - headR * 0.44); c.fill();
     }
-    // Nose
     c.fillStyle = '#e8a87c';
-    c.beginPath(); c.moveTo(cx, headY+headR*0.1); c.lineTo(cx-2.5, headY+headR*0.2); c.lineTo(cx+2.5, headY+headR*0.2); c.fill();
-    // Whiskers
-    c.strokeStyle = 'rgba(160,160,160,0.5)'; c.lineWidth = 0.6; c.lineCap = 'round';
+    c.beginPath(); c.moveTo(cx, headY + headR * 0.1);
+    c.lineTo(cx - 1.5, headY + headR * 0.2); c.lineTo(cx + 1.5, headY + headR * 0.2); c.fill();
+    c.strokeStyle = 'rgba(160,160,160,0.5)'; c.lineWidth = 0.4; c.lineCap = 'round';
     for (let s = -1; s <= 1; s += 2) {
-      c.beginPath(); c.moveTo(cx+s*5, headY+headR*0.16); c.lineTo(cx+s*20, headY+headR*0.1); c.stroke();
-      c.beginPath(); c.moveTo(cx+s*5, headY+headR*0.22); c.lineTo(cx+s*20, headY+headR*0.22); c.stroke();
+      c.beginPath(); c.moveTo(cx + s * 3, headY + headR * 0.16); c.lineTo(cx + s * 12, headY + headR * 0.1); c.stroke();
+      c.beginPath(); c.moveTo(cx + s * 3, headY + headR * 0.22); c.lineTo(cx + s * 12, headY + headR * 0.22); c.stroke();
     }
   } else if (isElf) {
     c.fillStyle = sk;
-    c.beginPath(); c.ellipse(cx, headY, headR*0.92, headR, 0, 0, Math.PI*2); c.fill();
-    // Pointed ears
+    c.beginPath(); c.ellipse(cx, headY, headR * 0.92, headR, 0, 0, Math.PI*2); c.fill();
     for (let s = -1; s <= 1; s += 2) {
       c.fillStyle = sk;
-      c.beginPath(); c.moveTo(cx+s*headR*0.82, headY-2);
-      c.lineTo(cx+s*headR*1.3, headY-headR*0.45); c.lineTo(cx+s*headR*0.82, headY+5); c.fill();
+      c.beginPath(); c.moveTo(cx + s * headR * 0.82, headY - 1);
+      c.lineTo(cx + s * headR * 1.3, headY - headR * 0.45);
+      c.lineTo(cx + s * headR * 0.82, headY + 3); c.fill();
     }
   } else {
     c.fillStyle = sk;
     c.beginPath(); c.arc(cx, headY, headR, 0, Math.PI*2); c.fill();
   }
 
-  // ── Eyes ──
+  // ── Eyes (proportionally smaller) ──
   const eyeY = headY + headR * 0.05;
   const eyeSp = headR * 0.38;
   const eyeW = headR * 0.26;
@@ -358,41 +393,37 @@ function drawCharacter(c, x, y, w, h, char) {
 
   for (let s = -1; s <= 1; s += 2) {
     const ex = cx + s * eyeSp;
-    // Sclera
     c.fillStyle = '#fff';
     c.beginPath(); c.ellipse(ex, eyeY, eyeW, eyeH, 0, 0, Math.PI*2); c.fill();
-    // Iris
     const iR = eyeW * 0.7;
     c.fillStyle = char.eyeColor;
     if (isCat) {
-      c.beginPath(); c.ellipse(ex, eyeY, iR*0.6, iR*1.1, 0, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.ellipse(ex, eyeY, iR * 0.6, iR * 1.1, 0, 0, Math.PI*2); c.fill();
       c.fillStyle = '#111';
-      c.beginPath(); c.ellipse(ex, eyeY, iR*0.12, iR*0.9, 0, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.ellipse(ex, eyeY, iR * 0.12, iR * 0.9, 0, 0, Math.PI*2); c.fill();
     } else if (isWolf) {
       c.beginPath(); c.arc(ex, eyeY, iR, 0, Math.PI*2); c.fill();
       c.fillStyle = '#111';
-      c.beginPath(); c.ellipse(ex, eyeY, iR*0.15, iR*0.7, 0, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.ellipse(ex, eyeY, iR * 0.15, iR * 0.7, 0, 0, Math.PI*2); c.fill();
     } else {
       c.beginPath(); c.arc(ex, eyeY, iR, 0, Math.PI*2); c.fill();
       c.fillStyle = '#111';
-      c.beginPath(); c.arc(ex, eyeY, iR*0.45, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.arc(ex, eyeY, iR * 0.45, 0, Math.PI*2); c.fill();
     }
-    // One clean highlight
     c.fillStyle = '#fff';
-    c.beginPath(); c.arc(ex + eyeW*0.15, eyeY - eyeH*0.2, eyeW*0.22, 0, Math.PI*2); c.fill();
-    // Upper lid line
-    c.strokeStyle = 'rgba(30,30,50,0.6)'; c.lineWidth = 1.5; c.lineCap = 'round';
-    c.beginPath(); c.ellipse(ex, eyeY, eyeW, eyeH, 0, Math.PI+0.2, -0.2); c.stroke();
+    c.beginPath(); c.arc(ex + eyeW * 0.15, eyeY - eyeH * 0.2, eyeW * 0.22, 0, Math.PI*2); c.fill();
+    c.strokeStyle = 'rgba(30,30,50,0.6)'; c.lineWidth = 0.8; c.lineCap = 'round';
+    c.beginPath(); c.ellipse(ex, eyeY, eyeW, eyeH, 0, Math.PI + 0.2, -0.2); c.stroke();
   }
 
   // ── Eyebrows ──
   c.strokeStyle = isWolf ? '#5d6d7d' : _darken(char.hair, 10);
-  c.lineWidth = 1.2; c.lineCap = 'round';
+  c.lineWidth = 0.8; c.lineCap = 'round';
   c.globalAlpha = isWolf ? 0.6 : 0.3;
   for (let s = -1; s <= 1; s += 2) {
     c.beginPath();
-    c.moveTo(cx + s*(eyeSp - eyeW*0.3), eyeY - eyeH - 3);
-    c.quadraticCurveTo(cx + s*eyeSp, eyeY - eyeH - 6, cx + s*(eyeSp + eyeW*0.3), eyeY - eyeH - 2);
+    c.moveTo(cx + s * (eyeSp - eyeW * 0.3), eyeY - eyeH - 2);
+    c.quadraticCurveTo(cx + s * eyeSp, eyeY - eyeH - 4, cx + s * (eyeSp + eyeW * 0.3), eyeY - eyeH - 1);
     c.stroke();
   }
   c.globalAlpha = 1;
@@ -400,16 +431,16 @@ function drawCharacter(c, x, y, w, h, char) {
   // ── Mouth ──
   if (!isWolf && !isCat) {
     const mY = headY + headR * 0.38;
-    c.strokeStyle = '#c06058'; c.lineWidth = 0.9; c.lineCap = 'round';
+    c.strokeStyle = '#c06058'; c.lineWidth = 0.5; c.lineCap = 'round';
     c.beginPath();
-    c.moveTo(cx - headR*0.06, mY);
-    c.quadraticCurveTo(cx, mY + 2, cx + headR*0.06, mY);
+    c.moveTo(cx - headR * 0.06, mY);
+    c.quadraticCurveTo(cx, mY + 1.5, cx + headR * 0.06, mY);
     c.stroke();
   } else if (isCat) {
     const mY = headY + headR * 0.3;
-    c.strokeStyle = '#c06058'; c.lineWidth = 0.9; c.lineCap = 'round';
-    c.beginPath(); c.moveTo(cx-4, mY); c.quadraticCurveTo(cx-2, mY+3, cx, mY+1); c.stroke();
-    c.beginPath(); c.moveTo(cx+4, mY); c.quadraticCurveTo(cx+2, mY+3, cx, mY+1); c.stroke();
+    c.strokeStyle = '#c06058'; c.lineWidth = 0.5; c.lineCap = 'round';
+    c.beginPath(); c.moveTo(cx - 2, mY); c.quadraticCurveTo(cx - 1, mY + 2, cx, mY + 0.5); c.stroke();
+    c.beginPath(); c.moveTo(cx + 2, mY); c.quadraticCurveTo(cx + 1, mY + 2, cx, mY + 0.5); c.stroke();
   }
 
   // ── Blush ──
@@ -417,41 +448,41 @@ function drawCharacter(c, x, y, w, h, char) {
     c.save();
     c.globalAlpha = 0.12;
     c.fillStyle = '#ff7090';
-    const blushY = eyeY + eyeH + 2;
+    const blushY = eyeY + eyeH + 1;
     for (let s = -1; s <= 1; s += 2) {
-      c.beginPath(); c.ellipse(cx + s*(eyeSp + eyeW*0.2), blushY, headR*0.14, headR*0.07, 0, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.ellipse(cx + s * (eyeSp + eyeW * 0.2), blushY, headR * 0.14, headR * 0.07, 0, 0, Math.PI*2); c.fill();
     }
     c.restore();
   }
 
   // ── Fairy/Elf glow ──
   if (isFairy || isElf) {
-    const glow = c.createRadialGradient(cx, headY, headR*0.5, cx, headY, headR*1.5);
+    const glow = c.createRadialGradient(cx, headY, headR * 0.5, cx, headY, headR * 1.5);
     glow.addColorStop(0, isFairy ? 'rgba(255,180,220,0.08)' : 'rgba(200,230,255,0.07)');
     glow.addColorStop(1, 'rgba(255,255,255,0)');
     c.fillStyle = glow;
-    c.beginPath(); c.arc(cx, headY, headR*1.5, 0, Math.PI*2); c.fill();
+    c.beginPath(); c.arc(cx, headY, headR * 1.5, 0, Math.PI*2); c.fill();
   }
 
   // ── Fairy sparkles ──
   if (isFairy) {
     const now = Date.now() / 600;
     for (let i = 0; i < 6; i++) {
-      const sx = cx + Math.sin(now + i*1.2) * (bodyW + 22 + i*3);
-      const sy = headY - headR*0.3 + Math.cos(now + i*1.6) * (bodyBot-headY+headR)*0.6;
-      const al = 0.25 + Math.sin(now + i*0.9) * 0.15;
+      const sx = cx + Math.sin(now + i * 1.2) * (bodyW + 18 + i * 2);
+      const sy = headY - headR * 0.3 + Math.cos(now + i * 1.6) * (bodyBot - headY + headR) * 0.6;
+      const al = 0.25 + Math.sin(now + i * 0.9) * 0.15;
       c.fillStyle = `rgba(255,200,240,${al})`;
-      c.beginPath(); c.arc(sx, sy, 1.5, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.arc(sx, sy, 1.2, 0, Math.PI*2); c.fill();
     }
   }
 
   // ── Ground shadow ──
   c.save();
-  const shadowGrad = c.createRadialGradient(cx, footY+4, 0, cx, footY+4, bodyW+12);
+  const shadowGrad = c.createRadialGradient(cx, footY + 3, 0, cx, footY + 3, bodyW + 10);
   shadowGrad.addColorStop(0, 'rgba(0,0,0,0.1)');
   shadowGrad.addColorStop(1, 'rgba(0,0,0,0)');
   c.fillStyle = shadowGrad;
-  c.beginPath(); c.ellipse(cx, footY+4, bodyW+12, 3.5, 0, 0, Math.PI*2); c.fill();
+  c.beginPath(); c.ellipse(cx, footY + 3, bodyW + 10, 3, 0, 0, Math.PI*2); c.fill();
   c.restore();
 }
 
@@ -490,34 +521,31 @@ const HAIR_COLORS = [
 
 /* ── Anime hair helpers ── */
 function _animeHairShine(c, cx, headY, headR) {
-  // Single clean anime shine band across the hair cap
   c.save();
   c.globalAlpha = 0.25;
   c.fillStyle = '#fff';
   c.beginPath();
-  c.ellipse(cx - headR*0.1, headY - headR*0.5, headR*0.5, headR*0.13, -0.3, 0, Math.PI*2);
+  c.ellipse(cx - headR * 0.1, headY - headR * 0.5, headR * 0.5, headR * 0.13, -0.3, 0, Math.PI*2);
   c.fill();
   c.restore();
 }
 
 function _animeHairShadow(c, cx, headY, headR, color) {
-  // Subtle shadow on the lower-right of the hair cap
   c.save();
   c.globalAlpha = 0.12;
   c.fillStyle = _darken(color, 40);
   c.beginPath();
-  c.arc(cx + headR*0.1, headY - headR*0.05, headR*0.95, -0.4, Math.PI*0.5);
-  c.quadraticCurveTo(cx + headR*0.3, headY + headR*0.1, cx - headR*0.3, headY - headR*0.2);
+  c.arc(cx + headR * 0.1, headY - headR * 0.05, headR * 0.95, -0.4, Math.PI * 0.5);
+  c.quadraticCurveTo(cx + headR * 0.3, headY + headR * 0.1, cx - headR * 0.3, headY - headR * 0.2);
   c.closePath();
   c.fill();
   c.restore();
 }
 
 function hairDraw(style, c, char, x, y, w, h, color) {
-  const { cx, headR, headY, bodyBot } = M(x, y, w, h);
-  const R = headR; // shorthand
-  // Anime hair gradient: bright highlight at top, rich color in middle, darker at tips
-  const hairGrad = c.createLinearGradient(cx, headY - R*1.4, cx, headY + R*0.8);
+  const { cx, headR, headY, bodyTop, bodyBot } = M(x, y, w, h);
+  const R = headR;
+  const hairGrad = c.createLinearGradient(cx, headY - R * 1.4, cx, headY + R * 0.8);
   hairGrad.addColorStop(0, _lighten(color, 35));
   hairGrad.addColorStop(0.35, color);
   hairGrad.addColorStop(1, _darken(color, 25));
@@ -525,153 +553,115 @@ function hairDraw(style, c, char, x, y, w, h, color) {
 
   switch(style) {
     case 'ponytail': {
-      // Voluminous cap with anime fringe bangs
-      c.beginPath();
-      c.arc(cx, headY, R*1.08, Math.PI, 0);
-      c.fill();
-      // Anime fringe: 3 pointed bangs across forehead
+      c.beginPath(); c.arc(cx, headY, R * 1.08, Math.PI, 0); c.fill();
       for (let i = -1; i <= 1; i++) {
-        const bx = cx + i * R*0.28;
+        const bx = cx + i * R * 0.28;
         c.beginPath();
-        c.moveTo(bx - R*0.2, headY - R*0.7);
-        c.quadraticCurveTo(bx - R*0.05, headY - R*0.3, bx, headY + R*0.05);
-        c.quadraticCurveTo(bx + R*0.05, headY - R*0.3, bx + R*0.2, headY - R*0.7);
+        c.moveTo(bx - R * 0.2, headY - R * 0.7);
+        c.quadraticCurveTo(bx - R * 0.05, headY - R * 0.3, bx, headY + R * 0.05);
+        c.quadraticCurveTo(bx + R * 0.05, headY - R * 0.3, bx + R * 0.2, headY - R * 0.7);
         c.fill();
       }
-      // Flowing ponytail with tapered S-curve
       c.beginPath();
-      c.moveTo(cx + R*0.2, headY - R*0.6);
-      c.bezierCurveTo(cx + R*1.6, headY - R*0.3, cx + R*1.2, headY + R*1.5, cx + R*0.6, headY + R*2.4);
-      c.quadraticCurveTo(cx + R*0.3, headY + R*2.6, cx + R*0.2, headY + R*2.2);
-      c.bezierCurveTo(cx + R*0.5, headY + R*1.3, cx + R*1.0, headY, cx + R*0.2, headY - R*0.6);
+      c.moveTo(cx + R * 0.2, headY - R * 0.6);
+      c.bezierCurveTo(cx + R * 1.6, headY - R * 0.3, cx + R * 1.2, headY + R * 1.5, cx + R * 0.6, headY + R * 2.4);
+      c.quadraticCurveTo(cx + R * 0.3, headY + R * 2.6, cx + R * 0.2, headY + R * 2.2);
+      c.bezierCurveTo(cx + R * 0.5, headY + R * 1.3, cx + R * 1.0, headY, cx + R * 0.2, headY - R * 0.6);
       c.fill();
-      // Hair tie ribbon
       c.fillStyle = '#e84393';
-      c.beginPath();
-      c.ellipse(cx + R*0.45, headY - R*0.25, 4, 3, 0.3, 0, Math.PI*2);
-      c.fill();
+      c.beginPath(); c.ellipse(cx + R * 0.45, headY - R * 0.25, 2.5, 2, 0.3, 0, Math.PI*2); c.fill();
       c.fillStyle = hairGrad;
       break;
     }
     case 'bob': {
-      // Rounded bob with face-framing pieces
+      c.beginPath(); c.arc(cx, headY, R * 1.08, Math.PI + 0.2, -0.2); c.fill();
       c.beginPath();
-      c.arc(cx, headY, R*1.08, Math.PI + 0.2, -0.2);
+      c.moveTo(cx - R * 1.06, headY - R * 0.15);
+      c.bezierCurveTo(cx - R * 1.2, headY + R * 0.3, cx - R * 1.15, headY + R * 0.6, cx - R * 0.75, headY + R * 0.75);
+      c.quadraticCurveTo(cx - R * 0.5, headY + R * 0.7, cx - R * 0.55, headY + R * 0.2);
       c.fill();
-      // Left face-framing strand
       c.beginPath();
-      c.moveTo(cx - R*1.06, headY - R*0.15);
-      c.bezierCurveTo(cx - R*1.2, headY + R*0.3, cx - R*1.15, headY + R*0.6, cx - R*0.75, headY + R*0.75);
-      c.quadraticCurveTo(cx - R*0.5, headY + R*0.7, cx - R*0.55, headY + R*0.2);
+      c.moveTo(cx + R * 1.06, headY - R * 0.15);
+      c.bezierCurveTo(cx + R * 1.2, headY + R * 0.3, cx + R * 1.15, headY + R * 0.6, cx + R * 0.75, headY + R * 0.75);
+      c.quadraticCurveTo(cx + R * 0.5, headY + R * 0.7, cx + R * 0.55, headY + R * 0.2);
       c.fill();
-      // Right face-framing strand
       c.beginPath();
-      c.moveTo(cx + R*1.06, headY - R*0.15);
-      c.bezierCurveTo(cx + R*1.2, headY + R*0.3, cx + R*1.15, headY + R*0.6, cx + R*0.75, headY + R*0.75);
-      c.quadraticCurveTo(cx + R*0.5, headY + R*0.7, cx + R*0.55, headY + R*0.2);
-      c.fill();
-      // Soft center bangs
-      c.beginPath();
-      c.moveTo(cx - R*0.4, headY - R*0.8);
-      c.quadraticCurveTo(cx, headY - R*0.1, cx + R*0.4, headY - R*0.8);
+      c.moveTo(cx - R * 0.4, headY - R * 0.8);
+      c.quadraticCurveTo(cx, headY - R * 0.1, cx + R * 0.4, headY - R * 0.8);
       c.fill();
       break;
     }
     case 'spiky': {
-      // Base volume
-      c.beginPath(); c.arc(cx, headY, R*1.05, Math.PI, 0); c.fill();
-      // Anime spikes radiating outward — each spike is a tapered blade
+      c.beginPath(); c.arc(cx, headY, R * 1.05, Math.PI, 0); c.fill();
       const spikes = [
-        { x: -0.5, angle: -2.4, len: 1.5 },
-        { x: -0.25, angle: -1.8, len: 1.7 },
-        { x: 0, angle: -1.57, len: 1.8 },
-        { x: 0.25, angle: -1.3, len: 1.7 },
-        { x: 0.5, angle: -0.7, len: 1.5 },
-        { x: -0.7, angle: -2.7, len: 1.2 },
+        { x: -0.5, angle: -2.4, len: 1.5 }, { x: -0.25, angle: -1.8, len: 1.7 },
+        { x: 0, angle: -1.57, len: 1.8 }, { x: 0.25, angle: -1.3, len: 1.7 },
+        { x: 0.5, angle: -0.7, len: 1.5 }, { x: -0.7, angle: -2.7, len: 1.2 },
         { x: 0.7, angle: -0.4, len: 1.2 },
       ];
       for (const sp of spikes) {
         const baseX = cx + sp.x * R;
-        const baseY = headY - R*0.5;
+        const baseY = headY - R * 0.5;
         const tipX = baseX + Math.cos(sp.angle) * R * sp.len;
         const tipY = baseY + Math.sin(sp.angle) * R * sp.len;
         c.beginPath();
-        c.moveTo(baseX - 4, baseY);
-        c.quadraticCurveTo((baseX + tipX)/2 - 2, (baseY + tipY)/2, tipX, tipY);
-        c.quadraticCurveTo((baseX + tipX)/2 + 2, (baseY + tipY)/2, baseX + 4, baseY);
+        c.moveTo(baseX - 2, baseY);
+        c.quadraticCurveTo((baseX + tipX) / 2 - 1, (baseY + tipY) / 2, tipX, tipY);
+        c.quadraticCurveTo((baseX + tipX) / 2 + 1, (baseY + tipY) / 2, baseX + 2, baseY);
         c.fill();
       }
       break;
     }
     case 'long_flowing': {
-      // Full cap
-      c.beginPath(); c.arc(cx, headY, R*1.1, Math.PI + 0.15, -0.15); c.fill();
-      // Long flowing side curtains with wavy ends
+      c.beginPath(); c.arc(cx, headY, R * 1.1, Math.PI + 0.15, -0.15); c.fill();
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath();
-        c.moveTo(cx + s*R*1.08, headY - R*0.2);
-        c.bezierCurveTo(
-          cx + s*R*1.3, headY + R*0.8,
-          cx + s*R*1.1, headY + R*1.8,
-          cx + s*R*0.7, headY + R*2.8
-        );
-        // Wavy tip
-        c.quadraticCurveTo(cx + s*R*0.5, headY + R*2.9, cx + s*R*0.4, headY + R*2.6);
-        c.bezierCurveTo(
-          cx + s*R*0.6, headY + R*1.6,
-          cx + s*R*0.85, headY + R*0.6,
-          cx + s*R*0.8, headY + R*0.1
-        );
+        c.moveTo(cx + s * R * 1.08, headY - R * 0.2);
+        c.bezierCurveTo(cx + s * R * 1.3, headY + R * 0.8, cx + s * R * 1.1, headY + R * 1.8, cx + s * R * 0.7, headY + R * 2.8);
+        c.quadraticCurveTo(cx + s * R * 0.5, headY + R * 2.9, cx + s * R * 0.4, headY + R * 2.6);
+        c.bezierCurveTo(cx + s * R * 0.6, headY + R * 1.6, cx + s * R * 0.85, headY + R * 0.6, cx + s * R * 0.8, headY + R * 0.1);
         c.fill();
       }
-      // Center-part bangs
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath();
-        c.moveTo(cx, headY - R*0.85);
-        c.quadraticCurveTo(cx + s*R*0.15, headY - R*0.2, cx + s*R*0.35, headY + R*0.05);
-        c.quadraticCurveTo(cx + s*R*0.25, headY - R*0.3, cx + s*R*0.5, headY - R*0.85);
+        c.moveTo(cx, headY - R * 0.85);
+        c.quadraticCurveTo(cx + s * R * 0.15, headY - R * 0.2, cx + s * R * 0.35, headY + R * 0.05);
+        c.quadraticCurveTo(cx + s * R * 0.25, headY - R * 0.3, cx + s * R * 0.5, headY - R * 0.85);
         c.fill();
       }
       break;
     }
     case 'braids': {
-      // Cap with side part
-      c.beginPath(); c.arc(cx, headY, R*1.08, Math.PI + 0.15, -0.15); c.fill();
-      // Two braids: interlocking segments with taper
+      c.beginPath(); c.arc(cx, headY, R * 1.08, Math.PI + 0.15, -0.15); c.fill();
       for (let s = -1; s <= 1; s += 2) {
-        const bx = cx + s*R*0.7;
-        const startY = headY + R*0.2;
+        const bx = cx + s * R * 0.7;
+        const startY = headY + R * 0.2;
         for (let j = 0; j < 6; j++) {
-          const by = startY + j*R*0.35;
-          const taper = 1 - j*0.08;
-          const xOff = s * 2.5 * ((j%2)*2-1);
+          const by = startY + j * R * 0.35;
+          const taper = 1 - j * 0.08;
+          const xOff = s * 1.5 * ((j % 2) * 2 - 1);
           c.beginPath();
-          c.ellipse(bx + xOff, by, 5*taper, 7*taper, s*0.2, 0, Math.PI*2);
+          c.ellipse(bx + xOff, by, 3 * taper, 4.5 * taper, s * 0.2, 0, Math.PI*2);
           c.fill();
         }
-        // Ribbon tie
         c.fillStyle = '#e84393';
-        const endY = startY + 6*R*0.35;
+        const endY = startY + 6 * R * 0.35;
         c.beginPath();
-        c.moveTo(bx, endY - 2);
-        c.lineTo(bx - 4, endY + 5);
-        c.lineTo(bx, endY + 3);
-        c.lineTo(bx + 4, endY + 5);
-        c.closePath();
-        c.fill();
+        c.moveTo(bx, endY - 1);
+        c.lineTo(bx - 2.5, endY + 3);
+        c.lineTo(bx, endY + 2);
+        c.lineTo(bx + 2.5, endY + 3);
+        c.closePath(); c.fill();
         c.fillStyle = hairGrad;
       }
-      // Center bangs
       c.beginPath();
-      c.moveTo(cx - R*0.3, headY - R*0.8);
-      c.quadraticCurveTo(cx, headY - R*0.05, cx + R*0.3, headY - R*0.8);
+      c.moveTo(cx - R * 0.3, headY - R * 0.8);
+      c.quadraticCurveTo(cx, headY - R * 0.05, cx + R * 0.3, headY - R * 0.8);
       c.fill();
       break;
     }
     case 'mohawk': {
-      // Shaved sides (thin coverage)
-      c.beginPath(); c.arc(cx, headY, R*1.02, Math.PI + 0.7, -0.7); c.fill();
-      // Tall dramatic center ridge with sharp blades
+      c.beginPath(); c.arc(cx, headY, R * 1.02, Math.PI + 0.7, -0.7); c.fill();
       const ridgeSpikes = [
         { x: -0.2, h: 1.5 }, { x: -0.08, h: 1.8 }, { x: 0.05, h: 1.9 },
         { x: 0.18, h: 1.7 }, { x: 0.3, h: 1.3 },
@@ -679,71 +669,58 @@ function hairDraw(style, c, char, x, y, w, h, color) {
       for (const sp of ridgeSpikes) {
         const bx = cx + sp.x * R;
         c.beginPath();
-        c.moveTo(bx - 4, headY - R*0.6);
-        c.quadraticCurveTo(bx - 1, headY - R*sp.h + 3, bx, headY - R*sp.h);
-        c.quadraticCurveTo(bx + 1, headY - R*sp.h + 3, bx + 4, headY - R*0.6);
+        c.moveTo(bx - 2, headY - R * 0.6);
+        c.quadraticCurveTo(bx - 0.5, headY - R * sp.h + 2, bx, headY - R * sp.h);
+        c.quadraticCurveTo(bx + 0.5, headY - R * sp.h + 2, bx + 2, headY - R * 0.6);
         c.fill();
       }
       break;
     }
     case 'curly': {
-      // Voluminous curly hair: overlapping rounded chunks
       const curls = [
-        // Top ring
-        { a: Math.PI, r: 1.15, s: 0.32 },
-        { a: Math.PI*0.8, r: 1.18, s: 0.30 },
-        { a: Math.PI*0.6, r: 1.2, s: 0.32 },
-        { a: Math.PI*0.4, r: 1.18, s: 0.30 },
-        { a: Math.PI*0.2, r: 1.15, s: 0.32 },
-        { a: 0, r: 1.15, s: 0.30 },
-        // Side curls hanging down
-        { a: Math.PI*0.9, r: 1.1, s: 0.28, dy: 0.5 },
-        { a: Math.PI*0.1, r: 1.1, s: 0.28, dy: 0.5 },
-        { a: Math.PI*0.92, r: 1.0, s: 0.25, dy: 0.9 },
-        { a: Math.PI*0.08, r: 1.0, s: 0.25, dy: 0.9 },
+        { a: Math.PI, r: 1.15, s: 0.32 }, { a: Math.PI * 0.8, r: 1.18, s: 0.30 },
+        { a: Math.PI * 0.6, r: 1.2, s: 0.32 }, { a: Math.PI * 0.4, r: 1.18, s: 0.30 },
+        { a: Math.PI * 0.2, r: 1.15, s: 0.32 }, { a: 0, r: 1.15, s: 0.30 },
+        { a: Math.PI * 0.9, r: 1.1, s: 0.28, dy: 0.5 },
+        { a: Math.PI * 0.1, r: 1.1, s: 0.28, dy: 0.5 },
+        { a: Math.PI * 0.92, r: 1.0, s: 0.25, dy: 0.9 },
+        { a: Math.PI * 0.08, r: 1.0, s: 0.25, dy: 0.9 },
       ];
       for (const curl of curls) {
         const dy = curl.dy || 0;
         const rx = cx + Math.cos(curl.a) * R * curl.r;
-        const ry = headY + Math.sin(curl.a) * R * 0.55 - R*0.15 + dy*R;
-        c.beginPath(); c.arc(rx, ry, R*curl.s, 0, Math.PI*2); c.fill();
+        const ry = headY + Math.sin(curl.a) * R * 0.55 - R * 0.15 + dy * R;
+        c.beginPath(); c.arc(rx, ry, R * curl.s, 0, Math.PI*2); c.fill();
       }
       break;
     }
     case 'bun': {
-      // Sleek cap
-      c.beginPath(); c.arc(cx, headY, R*1.06, Math.PI + 0.25, -0.25); c.fill();
-      // Elegant bun with donut shape
-      c.beginPath(); c.arc(cx, headY - R*1.05, R*0.42, 0, Math.PI*2); c.fill();
-      // Inner bun detail (spiral feel)
+      c.beginPath(); c.arc(cx, headY, R * 1.06, Math.PI + 0.25, -0.25); c.fill();
+      c.beginPath(); c.arc(cx, headY - R * 1.05, R * 0.42, 0, Math.PI*2); c.fill();
       c.save();
       c.globalAlpha = 0.15;
       c.fillStyle = _darken(color, 35);
-      c.beginPath(); c.arc(cx + 2, headY - R*1.0, R*0.22, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.arc(cx + 1, headY - R * 1.0, R * 0.22, 0, Math.PI*2); c.fill();
       c.restore();
       c.fillStyle = hairGrad;
-      // Decorative hair stick
-      c.strokeStyle = '#f4d03f'; c.lineWidth = 2; c.lineCap = 'round';
+      c.strokeStyle = '#f4d03f'; c.lineWidth = 1; c.lineCap = 'round';
       c.beginPath();
-      c.moveTo(cx - R*0.45, headY - R*1.2);
-      c.lineTo(cx + R*0.45, headY - R*0.9);
+      c.moveTo(cx - R * 0.45, headY - R * 1.2);
+      c.lineTo(cx + R * 0.45, headY - R * 0.9);
       c.stroke();
-      // Tiny bead on stick
       c.fillStyle = '#e74c3c';
-      c.beginPath(); c.arc(cx - R*0.45, headY - R*1.2, 2.5, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.arc(cx - R * 0.45, headY - R * 1.2, 1.5, 0, Math.PI*2); c.fill();
       c.fillStyle = hairGrad;
-      // Side wisps
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath();
-        c.moveTo(cx + s*R*0.85, headY - R*0.1);
-        c.quadraticCurveTo(cx + s*R*0.95, headY + R*0.25, cx + s*R*0.7, headY + R*0.45);
-        c.quadraticCurveTo(cx + s*R*0.6, headY + R*0.3, cx + s*R*0.7, headY - R*0.05);
+        c.moveTo(cx + s * R * 0.85, headY - R * 0.1);
+        c.quadraticCurveTo(cx + s * R * 0.95, headY + R * 0.25, cx + s * R * 0.7, headY + R * 0.45);
+        c.quadraticCurveTo(cx + s * R * 0.6, headY + R * 0.3, cx + s * R * 0.7, headY - R * 0.05);
         c.fill();
       }
       break;
     }
   }
-  // Common anime finishing touches
   _animeHairShadow(c, cx, headY, R, color);
   _animeHairShine(c, cx, headY, R);
 }
@@ -751,8 +728,8 @@ function hairDraw(style, c, char, x, y, w, h, color) {
 const HAIR_STYLES = ['ponytail','bob','spiky','long_flowing','braids','mohawk','curly','bun'];
 const HAIR_NAMES = ['Ponytail','Bob','Spiky','Long Flowing','Braids','Mohawk','Curly','Bun'];
 HAIR_STYLES.forEach((s, i) => {
-  defItem('hair_'+s, HAIR_NAMES[i], 'hair',
-    [s,'hair', s==='mohawk'?'punk':s==='braids'?'elegant':'casual'],
+  defItem('hair_' + s, HAIR_NAMES[i], 'hair',
+    [s, 'hair', s === 'mohawk' ? 'punk' : s === 'braids' ? 'elegant' : 'casual'],
     HAIR_COLORS,
     (c, char, x, y, w, h, colIdx) => {
       hairDraw(s, c, char, x, y, w, h, HAIR_COLORS[colIdx % HAIR_COLORS.length][0]);
@@ -776,7 +753,7 @@ const TOP_DEFS = [
 ];
 
 function drawTop(style, c, char, x, y, w, h, color) {
-  const { cx, headR, headY, bodyTop, bodyBot, bodyW } = M(x, y, w, h);
+  const { cx, headR, headY, bodyTop, waistY, bodyBot, bodyW } = M(x, y, w, h);
   const tG = c.createLinearGradient(cx - bodyW, bodyTop, cx + bodyW, bodyBot);
   tG.addColorStop(0, _lighten(color, 20));
   tG.addColorStop(1, _darken(color, 15));
@@ -785,267 +762,277 @@ function drawTop(style, c, char, x, y, w, h, color) {
 
   switch(style) {
     case 'tshirt': {
-      // Body
       c.beginPath();
-      c.moveTo(cx - bodyW - 2, bodyTop + 6);
-      c.quadraticCurveTo(cx - bodyW - 3, bodyBot, cx - bodyW + 2, bodyBot);
-      c.quadraticCurveTo(cx, bodyBot + 3, cx + bodyW - 2, bodyBot);
-      c.quadraticCurveTo(cx + bodyW + 3, bodyBot, cx + bodyW + 2, bodyTop + 6);
-      c.closePath();
-      c.fill();
-      // Sleeves
+      c.moveTo(cx - bodyW - 2, bodyTop + 4);
+      c.bezierCurveTo(cx - bodyW - 3, bodyTop + (waistY - bodyTop) * 0.5,
+                      cx - bodyW * 0.7, waistY - 2, cx - bodyW * 0.6, waistY);
+      c.bezierCurveTo(cx - bodyW * 0.7, waistY + 2,
+                      cx - bodyW - 2, waistY + (bodyBot - waistY) * 0.5, cx - bodyW - 1, bodyBot);
+      c.lineTo(cx + bodyW + 1, bodyBot);
+      c.bezierCurveTo(cx + bodyW + 2, waistY + (bodyBot - waistY) * 0.5,
+                      cx + bodyW * 0.7, waistY + 2, cx + bodyW * 0.6, waistY);
+      c.bezierCurveTo(cx + bodyW * 0.7, waistY - 2,
+                      cx + bodyW + 3, bodyTop + (waistY - bodyTop) * 0.5, cx + bodyW + 2, bodyTop + 4);
+      c.closePath(); c.fill();
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath();
-        c.ellipse(cx + s * (bodyW + 8), bodyTop + 14, 9, 7, s * 0.3, 0, Math.PI * 2);
+        c.ellipse(cx + s * (bodyW + 6), bodyTop + 10, 6, 5, s * 0.3, 0, Math.PI * 2);
         c.fill();
       }
-      // Collar
-      c.strokeStyle = _darken(color, 20); c.lineWidth = 0.8;
-      c.beginPath(); c.arc(cx, bodyTop + 2, 6, 0.3, Math.PI - 0.3); c.stroke();
-      // Shadow under collar
+      c.strokeStyle = _darken(color, 20); c.lineWidth = 0.6;
+      c.beginPath(); c.arc(cx, bodyTop + 2, 4, 0.3, Math.PI - 0.3); c.stroke();
       c.save(); c.globalAlpha = 0.1; c.fillStyle = _darken(color, 40);
-      c.beginPath(); c.ellipse(cx, bodyTop + 12, bodyW * 0.7, 4, 0, 0, Math.PI * 2); c.fill();
+      c.beginPath(); c.ellipse(cx, bodyTop + 8, bodyW * 0.6, 3, 0, 0, Math.PI * 2); c.fill();
       c.restore();
       break;
     }
     case 'hoodie': {
       c.beginPath();
-      c.moveTo(cx - bodyW - 4, bodyTop + 4);
-      c.quadraticCurveTo(cx - bodyW - 6, bodyBot, cx - bodyW + 2, bodyBot + 2);
-      c.quadraticCurveTo(cx, bodyBot + 4, cx + bodyW - 2, bodyBot + 2);
-      c.quadraticCurveTo(cx + bodyW + 6, bodyBot, cx + bodyW + 4, bodyTop + 4);
-      c.closePath();
-      c.fill();
-      // Sleeves
+      c.moveTo(cx - bodyW - 4, bodyTop + 3);
+      c.bezierCurveTo(cx - bodyW - 5, bodyTop + (waistY - bodyTop) * 0.5,
+                      cx - bodyW * 0.8, waistY, cx - bodyW * 0.7, waistY);
+      c.bezierCurveTo(cx - bodyW * 0.8, waistY,
+                      cx - bodyW - 4, waistY + (bodyBot - waistY) * 0.5, cx - bodyW - 3, bodyBot + 2);
+      c.lineTo(cx + bodyW + 3, bodyBot + 2);
+      c.bezierCurveTo(cx + bodyW + 4, waistY + (bodyBot - waistY) * 0.5,
+                      cx + bodyW * 0.8, waistY, cx + bodyW * 0.7, waistY);
+      c.bezierCurveTo(cx + bodyW * 0.8, waistY,
+                      cx + bodyW + 5, bodyTop + (waistY - bodyTop) * 0.5, cx + bodyW + 4, bodyTop + 3);
+      c.closePath(); c.fill();
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath();
-        c.ellipse(cx + s * (bodyW + 10), bodyTop + 16, 11, 8, s * 0.25, 0, Math.PI * 2);
+        c.ellipse(cx + s * (bodyW + 8), bodyTop + 12, 8, 6, s * 0.25, 0, Math.PI * 2);
         c.fill();
       }
-      // Hood collar
-      c.beginPath(); c.arc(cx, bodyTop, 12, Math.PI, 0); c.fill();
-      c.strokeStyle = _darken(color, 25); c.lineWidth = 0.8;
-      c.beginPath(); c.arc(cx, bodyTop, 12, Math.PI, 0); c.stroke();
-      // Kangaroo pocket
-      c.strokeStyle = _darken(color, 15); c.lineWidth = 0.6;
-      c.beginPath(); c.ellipse(cx, bodyBot - 8, 8, 4, 0, 0, Math.PI * 2); c.stroke();
+      c.beginPath(); c.arc(cx, bodyTop, 8, Math.PI, 0); c.fill();
+      c.strokeStyle = _darken(color, 25); c.lineWidth = 0.6;
+      c.beginPath(); c.arc(cx, bodyTop, 8, Math.PI, 0); c.stroke();
+      c.strokeStyle = _darken(color, 15); c.lineWidth = 0.4;
+      c.beginPath(); c.ellipse(cx, bodyBot - 10, 6, 3, 0, 0, Math.PI * 2); c.stroke();
       break;
     }
     case 'tank_top': {
       c.beginPath();
-      c.moveTo(cx - bodyW + 1, bodyTop + 5);
-      c.quadraticCurveTo(cx - bodyW, bodyBot, cx - bodyW + 3, bodyBot);
-      c.quadraticCurveTo(cx, bodyBot + 2, cx + bodyW - 3, bodyBot);
-      c.quadraticCurveTo(cx + bodyW, bodyBot, cx + bodyW - 1, bodyTop + 5);
-      c.closePath();
-      c.fill();
-      // Thin straps
-      c.strokeStyle = _darken(color, 20); c.lineWidth = 0.7;
+      c.moveTo(cx - bodyW + 1, bodyTop + 4);
+      c.bezierCurveTo(cx - bodyW, bodyTop + (waistY - bodyTop) * 0.5,
+                      cx - bodyW * 0.65, waistY, cx - bodyW * 0.55, waistY);
+      c.bezierCurveTo(cx - bodyW * 0.65, waistY,
+                      cx - bodyW, waistY + (bodyBot - waistY) * 0.5, cx - bodyW + 1, bodyBot);
+      c.lineTo(cx + bodyW - 1, bodyBot);
+      c.bezierCurveTo(cx + bodyW, waistY + (bodyBot - waistY) * 0.5,
+                      cx + bodyW * 0.65, waistY, cx + bodyW * 0.55, waistY);
+      c.bezierCurveTo(cx + bodyW * 0.65, waistY,
+                      cx + bodyW, bodyTop + (waistY - bodyTop) * 0.5, cx + bodyW - 1, bodyTop + 4);
+      c.closePath(); c.fill();
+      c.strokeStyle = _darken(color, 20); c.lineWidth = 0.5;
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath();
-        c.arc(cx + s * 3, bodyTop + 2, 4, 0.2 * s + Math.PI * 0.5, 0.2 * s + Math.PI * 1.5);
+        c.arc(cx + s * 2, bodyTop + 1, 3, 0.2 * s + Math.PI * 0.5, 0.2 * s + Math.PI * 1.5);
         c.stroke();
       }
       break;
     }
     case 'dress_shirt': {
       c.beginPath();
-      c.moveTo(cx - bodyW - 2, bodyTop + 4);
-      c.quadraticCurveTo(cx - bodyW - 3, bodyBot, cx - bodyW + 2, bodyBot);
-      c.quadraticCurveTo(cx, bodyBot + 3, cx + bodyW - 2, bodyBot);
-      c.quadraticCurveTo(cx + bodyW + 3, bodyBot, cx + bodyW + 2, bodyTop + 4);
-      c.closePath();
-      c.fill();
-      // Sleeves
+      c.moveTo(cx - bodyW - 2, bodyTop + 3);
+      c.bezierCurveTo(cx - bodyW - 3, bodyTop + (waistY - bodyTop) * 0.5,
+                      cx - bodyW * 0.7, waistY - 2, cx - bodyW * 0.6, waistY);
+      c.bezierCurveTo(cx - bodyW * 0.7, waistY + 2,
+                      cx - bodyW - 2, waistY + (bodyBot - waistY) * 0.5, cx - bodyW - 1, bodyBot);
+      c.lineTo(cx + bodyW + 1, bodyBot);
+      c.bezierCurveTo(cx + bodyW + 2, waistY + (bodyBot - waistY) * 0.5,
+                      cx + bodyW * 0.7, waistY + 2, cx + bodyW * 0.6, waistY);
+      c.bezierCurveTo(cx + bodyW * 0.7, waistY - 2,
+                      cx + bodyW + 3, bodyTop + (waistY - bodyTop) * 0.5, cx + bodyW + 2, bodyTop + 3);
+      c.closePath(); c.fill();
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath();
-        c.ellipse(cx + s * (bodyW + 10), bodyTop + 16, 10, 7, s * 0.2, 0, Math.PI * 2);
+        c.ellipse(cx + s * (bodyW + 7), bodyTop + 12, 7, 5, s * 0.2, 0, Math.PI * 2);
         c.fill();
       }
-      // Collar flaps
       c.fillStyle = '#fff';
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath();
-        c.moveTo(cx + s * 2, bodyTop + 2);
-        c.quadraticCurveTo(cx + s * 8, bodyTop + 4, cx + s * 7, bodyTop + 12);
-        c.quadraticCurveTo(cx + s * 4, bodyTop + 10, cx + s * 2, bodyTop + 8);
-        c.closePath();
-        c.fill();
+        c.moveTo(cx + s * 1, bodyTop + 2);
+        c.quadraticCurveTo(cx + s * 6, bodyTop + 3, cx + s * 5, bodyTop + 10);
+        c.quadraticCurveTo(cx + s * 3, bodyTop + 8, cx + s * 1, bodyTop + 6);
+        c.closePath(); c.fill();
       }
-      // Buttons
       c.fillStyle = _darken(color, 30);
-      for (let i = 0; i < 3; i++) {
-        c.beginPath(); c.arc(cx, bodyTop + 14 + i * 8, 1.2, 0, Math.PI * 2); c.fill();
+      for (let i = 0; i < 4; i++) {
+        c.beginPath(); c.arc(cx, bodyTop + 12 + i * ((bodyBot - bodyTop - 12) / 4), 0.8, 0, Math.PI * 2); c.fill();
       }
       break;
     }
     case 'crop_top': {
-      const cropBot = midY - 4;
+      const cropBot = waistY - 4;
       c.beginPath();
-      c.moveTo(cx - bodyW, bodyTop + 5);
-      c.quadraticCurveTo(cx - bodyW - 2, cropBot, cx - bodyW + 3, cropBot + 2);
-      c.quadraticCurveTo(cx, cropBot + 4, cx + bodyW - 3, cropBot + 2);
-      c.quadraticCurveTo(cx + bodyW + 2, cropBot, cx + bodyW, bodyTop + 5);
-      c.closePath();
-      c.fill();
-      // Neckline
-      c.strokeStyle = _darken(color, 20); c.lineWidth = 0.7;
-      c.beginPath(); c.arc(cx, bodyTop + 2, 5, 0.4, Math.PI - 0.4); c.stroke();
+      c.moveTo(cx - bodyW, bodyTop + 4);
+      c.quadraticCurveTo(cx - bodyW - 2, (bodyTop + cropBot) / 2, cx - bodyW + 2, cropBot + 2);
+      c.quadraticCurveTo(cx, cropBot + 4, cx + bodyW - 2, cropBot + 2);
+      c.quadraticCurveTo(cx + bodyW + 2, (bodyTop + cropBot) / 2, cx + bodyW, bodyTop + 4);
+      c.closePath(); c.fill();
+      c.strokeStyle = _darken(color, 20); c.lineWidth = 0.5;
+      c.beginPath(); c.arc(cx, bodyTop + 2, 4, 0.4, Math.PI - 0.4); c.stroke();
       break;
     }
     case 'jacket': {
       c.beginPath();
-      c.moveTo(cx - bodyW - 4, bodyTop + 3);
-      c.quadraticCurveTo(cx - bodyW - 6, bodyBot, cx - bodyW + 2, bodyBot + 1);
-      c.quadraticCurveTo(cx, bodyBot + 3, cx + bodyW - 2, bodyBot + 1);
-      c.quadraticCurveTo(cx + bodyW + 6, bodyBot, cx + bodyW + 4, bodyTop + 3);
-      c.closePath();
-      c.fill();
-      // Sleeves
+      c.moveTo(cx - bodyW - 4, bodyTop + 2);
+      c.bezierCurveTo(cx - bodyW - 5, bodyTop + (waistY - bodyTop) * 0.5,
+                      cx - bodyW * 0.8, waistY, cx - bodyW * 0.7, waistY);
+      c.bezierCurveTo(cx - bodyW * 0.8, waistY,
+                      cx - bodyW - 4, waistY + (bodyBot - waistY) * 0.5, cx - bodyW - 3, bodyBot + 1);
+      c.lineTo(cx + bodyW + 3, bodyBot + 1);
+      c.bezierCurveTo(cx + bodyW + 4, waistY + (bodyBot - waistY) * 0.5,
+                      cx + bodyW * 0.8, waistY, cx + bodyW * 0.7, waistY);
+      c.bezierCurveTo(cx + bodyW * 0.8, waistY,
+                      cx + bodyW + 5, bodyTop + (waistY - bodyTop) * 0.5, cx + bodyW + 4, bodyTop + 2);
+      c.closePath(); c.fill();
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath();
-        c.ellipse(cx + s * (bodyW + 10), bodyTop + 16, 12, 9, s * 0.25, 0, Math.PI * 2);
+        c.ellipse(cx + s * (bodyW + 8), bodyTop + 12, 8, 6, s * 0.25, 0, Math.PI * 2);
         c.fill();
       }
-      // Center zipper line
-      c.strokeStyle = _darken(color, 20); c.lineWidth = 0.8;
-      c.beginPath();
-      c.moveTo(cx, bodyTop + 5);
-      c.quadraticCurveTo(cx + 1, midY, cx, bodyBot);
+      c.strokeStyle = _darken(color, 20); c.lineWidth = 0.6;
+      c.beginPath(); c.moveTo(cx, bodyTop + 4);
+      c.quadraticCurveTo(cx + 0.5, midY, cx, bodyBot);
       c.stroke();
-      // Lapel shadow
       c.save(); c.globalAlpha = 0.08; c.fillStyle = _darken(color, 40);
-      c.beginPath(); c.ellipse(cx, bodyTop + 10, bodyW * 0.6, 5, 0, 0, Math.PI * 2); c.fill();
+      c.beginPath(); c.ellipse(cx, bodyTop + 8, bodyW * 0.5, 4, 0, 0, Math.PI * 2); c.fill();
       c.restore();
       break;
     }
     case 'armor': {
       c.beginPath();
-      c.moveTo(cx - bodyW - 2, bodyTop + 4);
-      c.quadraticCurveTo(cx - bodyW - 5, midY, cx - bodyW - 3, bodyBot);
-      c.quadraticCurveTo(cx, bodyBot + 3, cx + bodyW + 3, bodyBot);
-      c.quadraticCurveTo(cx + bodyW + 5, midY, cx + bodyW + 2, bodyTop + 4);
-      c.closePath();
-      c.fill();
-      // Pauldrons
+      c.moveTo(cx - bodyW - 2, bodyTop + 3);
+      c.quadraticCurveTo(cx - bodyW - 4, midY, cx - bodyW - 2, bodyBot);
+      c.quadraticCurveTo(cx, bodyBot + 3, cx + bodyW + 2, bodyBot);
+      c.quadraticCurveTo(cx + bodyW + 4, midY, cx + bodyW + 2, bodyTop + 3);
+      c.closePath(); c.fill();
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath();
-        c.ellipse(cx + s * (bodyW + 5), bodyTop + 8, 9, 6, s * 0.3, 0, Math.PI * 2);
+        c.ellipse(cx + s * (bodyW + 4), bodyTop + 6, 7, 5, s * 0.3, 0, Math.PI * 2);
         c.fill();
-        c.strokeStyle = _darken(color, 25); c.lineWidth = 0.8;
-        c.beginPath(); c.ellipse(cx + s * (bodyW + 5), bodyTop + 8, 9, 6, s * 0.3, 0, Math.PI * 2); c.stroke();
+        c.strokeStyle = _darken(color, 25); c.lineWidth = 0.6;
+        c.beginPath(); c.ellipse(cx + s * (bodyW + 4), bodyTop + 6, 7, 5, s * 0.3, 0, Math.PI * 2); c.stroke();
       }
-      // Belt line
-      c.strokeStyle = _darken(color, 25); c.lineWidth = 1;
+      c.strokeStyle = _darken(color, 25); c.lineWidth = 0.8;
       c.beginPath();
-      c.moveTo(cx - bodyW, midY);
-      c.quadraticCurveTo(cx, midY + 2, cx + bodyW, midY);
+      c.moveTo(cx - bodyW, waistY);
+      c.quadraticCurveTo(cx, waistY + 2, cx + bodyW, waistY);
       c.stroke();
       break;
     }
     case 'wizard_robe': {
-      const robeBot = y + h * 0.78;
+      const robeBot = y + h * 0.82;
       c.beginPath();
       c.moveTo(cx - bodyW - 4, bodyTop + 2);
-      c.quadraticCurveTo(cx - bodyW - 14, (bodyTop + robeBot) / 2, cx - bodyW - 8, robeBot);
-      c.quadraticCurveTo(cx, robeBot + 4, cx + bodyW + 8, robeBot);
-      c.quadraticCurveTo(cx + bodyW + 14, (bodyTop + robeBot) / 2, cx + bodyW + 4, bodyTop + 2);
-      c.closePath();
-      c.fill();
-      // Wide sleeves
+      c.quadraticCurveTo(cx - bodyW - 12, (bodyTop + robeBot) / 2, cx - bodyW - 6, robeBot);
+      c.quadraticCurveTo(cx, robeBot + 4, cx + bodyW + 6, robeBot);
+      c.quadraticCurveTo(cx + bodyW + 12, (bodyTop + robeBot) / 2, cx + bodyW + 4, bodyTop + 2);
+      c.closePath(); c.fill();
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath();
-        c.ellipse(cx + s * (bodyW + 12), bodyTop + 18, 12, 8, s * 0.3, 0, Math.PI * 2);
+        c.ellipse(cx + s * (bodyW + 10), bodyTop + 14, 9, 6, s * 0.3, 0, Math.PI * 2);
         c.fill();
       }
-      // Stars decoration
       c.fillStyle = 'rgba(255,215,0,0.35)';
-      c.font = '7px sans-serif';
-      c.fillText('\u2605', cx - 5, bodyBot - 8);
-      c.fillText('\u2605', cx + 4, midY + 2);
+      c.font = '5px sans-serif';
+      c.fillText('\u2605', cx - 4, bodyBot - 6);
+      c.fillText('\u2605', cx + 3, midY + 2);
       break;
     }
     case 'kimono': {
-      const kimBot = y + h * 0.72;
+      const kimBot = y + h * 0.76;
       c.beginPath();
-      c.moveTo(cx - bodyW - 6, bodyTop + 2);
-      c.quadraticCurveTo(cx - bodyW - 12, (bodyTop + kimBot) / 2, cx - bodyW - 4, kimBot);
-      c.quadraticCurveTo(cx, kimBot + 3, cx + bodyW + 4, kimBot);
-      c.quadraticCurveTo(cx + bodyW + 12, (bodyTop + kimBot) / 2, cx + bodyW + 6, bodyTop + 2);
-      c.closePath();
-      c.fill();
-      // Obi sash
+      c.moveTo(cx - bodyW - 5, bodyTop + 2);
+      c.quadraticCurveTo(cx - bodyW - 10, (bodyTop + kimBot) / 2, cx - bodyW - 3, kimBot);
+      c.quadraticCurveTo(cx, kimBot + 3, cx + bodyW + 3, kimBot);
+      c.quadraticCurveTo(cx + bodyW + 10, (bodyTop + kimBot) / 2, cx + bodyW + 5, bodyTop + 2);
+      c.closePath(); c.fill();
       c.fillStyle = _darken(color, 30);
-      const obiY = midY - 2;
+      const obiY = waistY - 2;
       c.beginPath();
-      c.moveTo(cx - bodyW - 4, obiY);
-      c.quadraticCurveTo(cx, obiY + 3, cx + bodyW + 4, obiY);
-      c.quadraticCurveTo(cx + bodyW + 4, obiY + 7, cx + bodyW + 3, obiY + 7);
-      c.quadraticCurveTo(cx, obiY + 10, cx - bodyW - 3, obiY + 7);
-      c.quadraticCurveTo(cx - bodyW - 4, obiY + 7, cx - bodyW - 4, obiY);
-      c.closePath();
-      c.fill();
+      c.moveTo(cx - bodyW - 3, obiY);
+      c.quadraticCurveTo(cx, obiY + 3, cx + bodyW + 3, obiY);
+      c.quadraticCurveTo(cx + bodyW + 3, obiY + 6, cx + bodyW + 2, obiY + 6);
+      c.quadraticCurveTo(cx, obiY + 9, cx - bodyW - 2, obiY + 6);
+      c.quadraticCurveTo(cx - bodyW - 3, obiY + 6, cx - bodyW - 3, obiY);
+      c.closePath(); c.fill();
       break;
     }
     case 'vest': {
       c.beginPath();
-      c.moveTo(cx - bodyW + 1, bodyTop + 5);
-      c.quadraticCurveTo(cx - bodyW - 1, bodyBot, cx - bodyW + 3, bodyBot - 1);
-      c.quadraticCurveTo(cx, bodyBot + 2, cx + bodyW - 3, bodyBot - 1);
-      c.quadraticCurveTo(cx + bodyW + 1, bodyBot, cx + bodyW - 1, bodyTop + 5);
-      c.closePath();
-      c.fill();
-      // Center seam
-      c.strokeStyle = _darken(color, 18); c.lineWidth = 0.6;
+      c.moveTo(cx - bodyW + 1, bodyTop + 4);
+      c.bezierCurveTo(cx - bodyW, bodyTop + (waistY - bodyTop) * 0.5,
+                      cx - bodyW * 0.7, waistY, cx - bodyW * 0.6, waistY);
+      c.bezierCurveTo(cx - bodyW * 0.7, waistY,
+                      cx - bodyW, waistY + (bodyBot - waistY) * 0.5, cx - bodyW + 1, bodyBot - 1);
+      c.lineTo(cx + bodyW - 1, bodyBot - 1);
+      c.bezierCurveTo(cx + bodyW, waistY + (bodyBot - waistY) * 0.5,
+                      cx + bodyW * 0.7, waistY, cx + bodyW * 0.6, waistY);
+      c.bezierCurveTo(cx + bodyW * 0.7, waistY,
+                      cx + bodyW, bodyTop + (waistY - bodyTop) * 0.5, cx + bodyW - 1, bodyTop + 4);
+      c.closePath(); c.fill();
+      c.strokeStyle = _darken(color, 18); c.lineWidth = 0.4;
       c.beginPath();
-      c.moveTo(cx, bodyTop + 6);
-      c.quadraticCurveTo(cx + 0.5, midY, cx, bodyBot - 2);
+      c.moveTo(cx, bodyTop + 5);
+      c.quadraticCurveTo(cx + 0.3, midY, cx, bodyBot - 3);
       c.stroke();
       break;
     }
     case 'sweater': {
       c.beginPath();
-      c.moveTo(cx - bodyW - 3, bodyTop + 3);
-      c.quadraticCurveTo(cx - bodyW - 4, bodyBot, cx - bodyW + 2, bodyBot + 1);
-      c.quadraticCurveTo(cx, bodyBot + 3, cx + bodyW - 2, bodyBot + 1);
-      c.quadraticCurveTo(cx + bodyW + 4, bodyBot, cx + bodyW + 3, bodyTop + 3);
-      c.closePath();
-      c.fill();
-      // Sleeves
+      c.moveTo(cx - bodyW - 3, bodyTop + 2);
+      c.bezierCurveTo(cx - bodyW - 4, bodyTop + (waistY - bodyTop) * 0.5,
+                      cx - bodyW * 0.75, waistY, cx - bodyW * 0.65, waistY);
+      c.bezierCurveTo(cx - bodyW * 0.75, waistY,
+                      cx - bodyW - 3, waistY + (bodyBot - waistY) * 0.5, cx - bodyW - 2, bodyBot + 1);
+      c.lineTo(cx + bodyW + 2, bodyBot + 1);
+      c.bezierCurveTo(cx + bodyW + 3, waistY + (bodyBot - waistY) * 0.5,
+                      cx + bodyW * 0.75, waistY, cx + bodyW * 0.65, waistY);
+      c.bezierCurveTo(cx + bodyW * 0.75, waistY,
+                      cx + bodyW + 4, bodyTop + (waistY - bodyTop) * 0.5, cx + bodyW + 3, bodyTop + 2);
+      c.closePath(); c.fill();
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath();
-        c.ellipse(cx + s * (bodyW + 9), bodyTop + 15, 10, 8, s * 0.25, 0, Math.PI * 2);
+        c.ellipse(cx + s * (bodyW + 7), bodyTop + 12, 7, 6, s * 0.25, 0, Math.PI * 2);
         c.fill();
       }
-      // Turtleneck collar
       c.fillStyle = _darken(color, 12);
-      c.beginPath(); c.ellipse(cx, bodyTop + 1, 7, 3, 0, 0, Math.PI * 2); c.fill();
+      c.beginPath(); c.ellipse(cx, bodyTop + 1, 5, 2.5, 0, 0, Math.PI * 2); c.fill();
       c.fillStyle = tG;
-      // Knit lines
-      c.strokeStyle = _darken(color, 10); c.lineWidth = 0.4;
-      for (let i = 0; i < 4; i++) {
-        const ly = bodyTop + 8 + i * 7;
+      c.strokeStyle = _darken(color, 10); c.lineWidth = 0.3;
+      const lineSpacing = (bodyBot - bodyTop - 6) / 6;
+      for (let i = 0; i < 6; i++) {
+        const ly = bodyTop + 6 + i * lineSpacing;
         c.beginPath();
         c.moveTo(cx - bodyW + 2, ly);
-        c.quadraticCurveTo(cx, ly + 1.5, cx + bodyW - 2, ly);
+        c.quadraticCurveTo(cx, ly + 1, cx + bodyW - 2, ly);
         c.stroke();
       }
       break;
     }
     case 'corset': {
       c.beginPath();
-      c.moveTo(cx - bodyW + 1, bodyTop + 8);
-      c.quadraticCurveTo(cx - bodyW - 2, midY, cx - bodyW, bodyBot - 3);
-      c.quadraticCurveTo(cx, bodyBot, cx + bodyW, bodyBot - 3);
-      c.quadraticCurveTo(cx + bodyW + 2, midY, cx + bodyW - 1, bodyTop + 8);
-      c.closePath();
-      c.fill();
-      // Lacing
-      c.strokeStyle = 'rgba(255,255,255,0.2)'; c.lineWidth = 0.6;
-      for (let i = 0; i < 4; i++) {
-        const ly = bodyTop + 12 + i * 6;
-        c.beginPath(); c.moveTo(cx - 2, ly); c.quadraticCurveTo(cx - 5, ly + 2, cx - 7, ly + 3); c.stroke();
-        c.beginPath(); c.moveTo(cx + 2, ly); c.quadraticCurveTo(cx + 5, ly + 2, cx + 7, ly + 3); c.stroke();
+      c.moveTo(cx - bodyW + 1, bodyTop + 6);
+      c.bezierCurveTo(cx - bodyW, bodyTop + (waistY - bodyTop) * 0.5,
+                      cx - bodyW * 0.6, waistY, cx - bodyW * 0.5, waistY);
+      c.bezierCurveTo(cx - bodyW * 0.6, waistY,
+                      cx - bodyW, waistY + (bodyBot - waistY) * 0.5, cx - bodyW, bodyBot - 3);
+      c.lineTo(cx + bodyW, bodyBot - 3);
+      c.bezierCurveTo(cx + bodyW, waistY + (bodyBot - waistY) * 0.5,
+                      cx + bodyW * 0.6, waistY, cx + bodyW * 0.5, waistY);
+      c.bezierCurveTo(cx + bodyW * 0.6, waistY,
+                      cx + bodyW, bodyTop + (waistY - bodyTop) * 0.5, cx + bodyW - 1, bodyTop + 6);
+      c.closePath(); c.fill();
+      c.strokeStyle = 'rgba(255,255,255,0.2)'; c.lineWidth = 0.4;
+      const laceSpacing = (bodyBot - bodyTop - 12) / 5;
+      for (let i = 0; i < 5; i++) {
+        const ly = bodyTop + 10 + i * laceSpacing;
+        c.beginPath(); c.moveTo(cx - 1.5, ly); c.quadraticCurveTo(cx - 4, ly + 1.5, cx - 6, ly + 2); c.stroke();
+        c.beginPath(); c.moveTo(cx + 1.5, ly); c.quadraticCurveTo(cx + 4, ly + 1.5, cx + 6, ly + 2); c.stroke();
       }
       break;
     }
@@ -1053,7 +1040,7 @@ function drawTop(style, c, char, x, y, w, h, color) {
 }
 
 TOP_DEFS.forEach(d => {
-  defItem('top_'+d.id, d.name, 'top', d.tags, d.colors,
+  defItem('top_' + d.id, d.name, 'top', d.tags, d.colors,
     (c, char, x, y, w, h, colIdx) => {
       drawTop(d.id, c, char, x, y, w, h, d.colors[colIdx % d.colors.length][0]);
     });
@@ -1074,215 +1061,182 @@ const BOTTOM_DEFS = [
 ];
 
 function drawBottom(style, c, char, x, y, w, h, color) {
-  const { cx, bodyBot, bodyW, legBot } = M(x, y, w, h);
+  const { cx, bodyBot, bodyW, kneeY, legBot } = M(x, y, w, h);
   const botGrad = c.createLinearGradient(cx, bodyBot, cx, legBot);
   botGrad.addColorStop(0, _lighten(color, 18));
   botGrad.addColorStop(1, _darken(color, 12));
   c.fillStyle = botGrad;
+  const midLeg = (bodyBot + legBot) / 2;
 
   switch(style) {
     case 'jeans': {
-      // Left leg
       c.beginPath();
-      c.moveTo(cx - bodyW - 1, bodyBot - 3);
-      c.quadraticCurveTo(cx - bodyW - 3, (bodyBot + legBot) / 2, cx - 14, legBot);
-      c.quadraticCurveTo(cx - 8, legBot + 2, cx - 3, legBot);
-      c.quadraticCurveTo(cx - 1, bodyBot + 8, cx, bodyBot + 6);
-      c.closePath();
-      c.fill();
-      // Right leg
+      c.moveTo(cx - bodyW - 1, bodyBot - 2);
+      c.quadraticCurveTo(cx - bodyW - 2, midLeg, cx - 8, legBot);
+      c.lineTo(cx - 2, legBot);
+      c.quadraticCurveTo(cx - 1, bodyBot + 6, cx, bodyBot + 4);
+      c.closePath(); c.fill();
       c.beginPath();
-      c.moveTo(cx, bodyBot + 6);
-      c.quadraticCurveTo(cx + 1, bodyBot + 8, cx + 3, legBot);
-      c.quadraticCurveTo(cx + 8, legBot + 2, cx + 14, legBot);
-      c.quadraticCurveTo(cx + bodyW + 3, (bodyBot + legBot) / 2, cx + bodyW + 1, bodyBot - 3);
-      c.closePath();
-      c.fill();
-      // Center seam
-      c.strokeStyle = _darken(color, 15); c.lineWidth = 0.6;
-      c.beginPath(); c.moveTo(cx, bodyBot); c.lineTo(cx, bodyBot + 6); c.stroke();
+      c.moveTo(cx, bodyBot + 4);
+      c.quadraticCurveTo(cx + 1, bodyBot + 6, cx + 2, legBot);
+      c.lineTo(cx + 8, legBot);
+      c.quadraticCurveTo(cx + bodyW + 2, midLeg, cx + bodyW + 1, bodyBot - 2);
+      c.closePath(); c.fill();
+      c.strokeStyle = _darken(color, 15); c.lineWidth = 0.4;
+      c.beginPath(); c.moveTo(cx, bodyBot); c.lineTo(cx, bodyBot + 4); c.stroke();
       break;
     }
     case 'skirt': {
+      const skirtBot = bodyBot + (kneeY - bodyBot) * 0.55;
       c.beginPath();
-      c.moveTo(cx - bodyW - 1, bodyBot - 3);
-      c.quadraticCurveTo(cx - bodyW - 10, bodyBot + 18, cx - bodyW + 3, bodyBot + 24);
-      c.quadraticCurveTo(cx, bodyBot + 26, cx + bodyW - 3, bodyBot + 24);
-      c.quadraticCurveTo(cx + bodyW + 10, bodyBot + 18, cx + bodyW + 1, bodyBot - 3);
-      c.closePath();
-      c.fill();
+      c.moveTo(cx - bodyW - 1, bodyBot - 2);
+      c.quadraticCurveTo(cx - bodyW - 8, (bodyBot + skirtBot) / 2, cx - bodyW + 2, skirtBot);
+      c.quadraticCurveTo(cx, skirtBot + 3, cx + bodyW - 2, skirtBot);
+      c.quadraticCurveTo(cx + bodyW + 8, (bodyBot + skirtBot) / 2, cx + bodyW + 1, bodyBot - 2);
+      c.closePath(); c.fill();
       break;
     }
     case 'shorts': {
-      // Left leg
+      const shortBot = bodyBot + (kneeY - bodyBot) * 0.3;
       c.beginPath();
-      c.moveTo(cx - bodyW - 1, bodyBot - 3);
-      c.quadraticCurveTo(cx - bodyW - 2, bodyBot + 6, cx - bodyW, bodyBot + 10);
-      c.quadraticCurveTo(cx - bodyW / 2, bodyBot + 12, cx - 2, bodyBot + 10);
-      c.quadraticCurveTo(cx - 1, bodyBot + 6, cx, bodyBot + 4);
-      c.closePath();
-      c.fill();
-      // Right leg
+      c.moveTo(cx - bodyW - 1, bodyBot - 2);
+      c.quadraticCurveTo(cx - bodyW - 2, bodyBot + 4, cx - bodyW, shortBot);
+      c.quadraticCurveTo(cx - bodyW / 2, shortBot + 2, cx - 2, shortBot);
+      c.quadraticCurveTo(cx - 1, bodyBot + 4, cx, bodyBot + 3);
+      c.closePath(); c.fill();
       c.beginPath();
-      c.moveTo(cx, bodyBot + 4);
-      c.quadraticCurveTo(cx + 1, bodyBot + 6, cx + 2, bodyBot + 10);
-      c.quadraticCurveTo(cx + bodyW / 2, bodyBot + 12, cx + bodyW, bodyBot + 10);
-      c.quadraticCurveTo(cx + bodyW + 2, bodyBot + 6, cx + bodyW + 1, bodyBot - 3);
-      c.closePath();
-      c.fill();
+      c.moveTo(cx, bodyBot + 3);
+      c.quadraticCurveTo(cx + 1, bodyBot + 4, cx + 2, shortBot);
+      c.quadraticCurveTo(cx + bodyW / 2, shortBot + 2, cx + bodyW, shortBot);
+      c.quadraticCurveTo(cx + bodyW + 2, bodyBot + 4, cx + bodyW + 1, bodyBot - 2);
+      c.closePath(); c.fill();
       break;
     }
     case 'leggings': {
-      // Left leg
       c.beginPath();
-      c.moveTo(cx - bodyW, bodyBot - 3);
-      c.quadraticCurveTo(cx - bodyW - 1, (bodyBot + legBot) / 2, cx - 12, legBot + 1);
-      c.quadraticCurveTo(cx - 8, legBot + 2, cx - 5, legBot + 1);
-      c.quadraticCurveTo(cx - 2, bodyBot + 8, cx, bodyBot + 6);
-      c.closePath();
-      c.fill();
-      // Right leg
+      c.moveTo(cx - bodyW, bodyBot - 2);
+      c.quadraticCurveTo(cx - bodyW - 1, midLeg, cx - 7, legBot + 1);
+      c.lineTo(cx - 3, legBot + 1);
+      c.quadraticCurveTo(cx - 1, bodyBot + 6, cx, bodyBot + 4);
+      c.closePath(); c.fill();
       c.beginPath();
-      c.moveTo(cx, bodyBot + 6);
-      c.quadraticCurveTo(cx + 2, bodyBot + 8, cx + 5, legBot + 1);
-      c.quadraticCurveTo(cx + 8, legBot + 2, cx + 12, legBot + 1);
-      c.quadraticCurveTo(cx + bodyW + 1, (bodyBot + legBot) / 2, cx + bodyW, bodyBot - 3);
-      c.closePath();
-      c.fill();
+      c.moveTo(cx, bodyBot + 4);
+      c.quadraticCurveTo(cx + 1, bodyBot + 6, cx + 3, legBot + 1);
+      c.lineTo(cx + 7, legBot + 1);
+      c.quadraticCurveTo(cx + bodyW + 1, midLeg, cx + bodyW, bodyBot - 2);
+      c.closePath(); c.fill();
       break;
     }
     case 'cargo_pants': {
-      // Left leg
       c.beginPath();
-      c.moveTo(cx - bodyW - 2, bodyBot - 3);
-      c.quadraticCurveTo(cx - bodyW - 4, (bodyBot + legBot) / 2, cx - 15, legBot);
-      c.quadraticCurveTo(cx - 9, legBot + 2, cx - 3, legBot);
-      c.quadraticCurveTo(cx - 1, bodyBot + 8, cx, bodyBot + 6);
-      c.closePath();
-      c.fill();
-      // Right leg
+      c.moveTo(cx - bodyW - 2, bodyBot - 2);
+      c.quadraticCurveTo(cx - bodyW - 3, midLeg, cx - 9, legBot);
+      c.lineTo(cx - 2, legBot);
+      c.quadraticCurveTo(cx - 1, bodyBot + 6, cx, bodyBot + 4);
+      c.closePath(); c.fill();
       c.beginPath();
-      c.moveTo(cx, bodyBot + 6);
-      c.quadraticCurveTo(cx + 1, bodyBot + 8, cx + 3, legBot);
-      c.quadraticCurveTo(cx + 9, legBot + 2, cx + 15, legBot);
-      c.quadraticCurveTo(cx + bodyW + 4, (bodyBot + legBot) / 2, cx + bodyW + 2, bodyBot - 3);
-      c.closePath();
-      c.fill();
-      // Cargo pockets
-      c.strokeStyle = _darken(color, 18); c.lineWidth = 0.6;
-      c.beginPath(); c.ellipse(cx - 10, bodyBot + 10, 5, 4, 0, 0, Math.PI * 2); c.stroke();
-      c.beginPath(); c.ellipse(cx + 10, bodyBot + 10, 5, 4, 0, 0, Math.PI * 2); c.stroke();
+      c.moveTo(cx, bodyBot + 4);
+      c.quadraticCurveTo(cx + 1, bodyBot + 6, cx + 2, legBot);
+      c.lineTo(cx + 9, legBot);
+      c.quadraticCurveTo(cx + bodyW + 3, midLeg, cx + bodyW + 2, bodyBot - 2);
+      c.closePath(); c.fill();
+      c.strokeStyle = _darken(color, 18); c.lineWidth = 0.4;
+      c.beginPath(); c.ellipse(cx - 6, kneeY - 10, 4, 3, 0, 0, Math.PI * 2); c.stroke();
+      c.beginPath(); c.ellipse(cx + 6, kneeY - 10, 4, 3, 0, 0, Math.PI * 2); c.stroke();
       break;
     }
     case 'flowing_skirt': {
+      const flowBot = legBot - 10;
       c.beginPath();
-      c.moveTo(cx - bodyW - 1, bodyBot - 3);
-      c.quadraticCurveTo(cx - bodyW - 18, bodyBot + 28, cx - bodyW + 6, y + h * 0.78);
-      c.quadraticCurveTo(cx, y + h * 0.80, cx + bodyW - 6, y + h * 0.78);
-      c.quadraticCurveTo(cx + bodyW + 18, bodyBot + 28, cx + bodyW + 1, bodyBot - 3);
-      c.closePath();
-      c.fill();
-      // Fold lines
-      c.strokeStyle = _darken(color, 12); c.lineWidth = 0.4;
+      c.moveTo(cx - bodyW - 1, bodyBot - 2);
+      c.quadraticCurveTo(cx - bodyW - 14, (bodyBot + flowBot) / 2, cx - bodyW + 4, flowBot);
+      c.quadraticCurveTo(cx, flowBot + 3, cx + bodyW - 4, flowBot);
+      c.quadraticCurveTo(cx + bodyW + 14, (bodyBot + flowBot) / 2, cx + bodyW + 1, bodyBot - 2);
+      c.closePath(); c.fill();
+      c.strokeStyle = _darken(color, 12); c.lineWidth = 0.3;
       for (let i = -2; i <= 2; i++) {
         c.beginPath();
-        c.moveTo(cx + i * 6, bodyBot);
-        c.quadraticCurveTo(cx + i * 7 + 2, bodyBot + 16, cx + i * 6.5, y + h * 0.77);
+        c.moveTo(cx + i * 4, bodyBot);
+        c.quadraticCurveTo(cx + i * 5 + 1, (bodyBot + flowBot) / 2, cx + i * 4.5, flowBot - 3);
         c.stroke();
       }
       break;
     }
     case 'armor_greaves': {
-      // Left leg
       c.beginPath();
-      c.moveTo(cx - bodyW - 2, bodyBot - 3);
-      c.quadraticCurveTo(cx - bodyW - 4, (bodyBot + legBot) / 2, cx - 15, legBot + 1);
-      c.quadraticCurveTo(cx - 9, legBot + 3, cx - 4, legBot + 1);
-      c.quadraticCurveTo(cx - 2, bodyBot + 8, cx, bodyBot + 6);
-      c.closePath();
-      c.fill();
-      // Right leg
+      c.moveTo(cx - bodyW - 2, bodyBot - 2);
+      c.quadraticCurveTo(cx - bodyW - 3, midLeg, cx - 9, legBot + 1);
+      c.lineTo(cx - 2, legBot + 1);
+      c.quadraticCurveTo(cx - 1, bodyBot + 6, cx, bodyBot + 4);
+      c.closePath(); c.fill();
       c.beginPath();
-      c.moveTo(cx, bodyBot + 6);
-      c.quadraticCurveTo(cx + 2, bodyBot + 8, cx + 4, legBot + 1);
-      c.quadraticCurveTo(cx + 9, legBot + 3, cx + 15, legBot + 1);
-      c.quadraticCurveTo(cx + bodyW + 4, (bodyBot + legBot) / 2, cx + bodyW + 2, bodyBot - 3);
-      c.closePath();
-      c.fill();
-      // Horizontal knee bands
-      c.strokeStyle = _darken(color, 22); c.lineWidth = 0.8;
-      const midLeg = (bodyBot + legBot) / 2;
-      c.beginPath(); c.moveTo(cx - 14, midLeg); c.quadraticCurveTo(cx - 9, midLeg + 1, cx - 4, midLeg); c.stroke();
-      c.beginPath(); c.moveTo(cx + 4, midLeg); c.quadraticCurveTo(cx + 9, midLeg + 1, cx + 14, midLeg); c.stroke();
+      c.moveTo(cx, bodyBot + 4);
+      c.quadraticCurveTo(cx + 1, bodyBot + 6, cx + 2, legBot + 1);
+      c.lineTo(cx + 9, legBot + 1);
+      c.quadraticCurveTo(cx + bodyW + 3, midLeg, cx + bodyW + 2, bodyBot - 2);
+      c.closePath(); c.fill();
+      c.strokeStyle = _darken(color, 22); c.lineWidth = 0.6;
+      c.beginPath(); c.moveTo(cx - 8, kneeY); c.quadraticCurveTo(cx - 5, kneeY + 1, cx - 2, kneeY); c.stroke();
+      c.beginPath(); c.moveTo(cx + 2, kneeY); c.quadraticCurveTo(cx + 5, kneeY + 1, cx + 8, kneeY); c.stroke();
       break;
     }
     case 'sweatpants': {
-      // Left leg
       c.beginPath();
-      c.moveTo(cx - bodyW, bodyBot - 3);
-      c.quadraticCurveTo(cx - bodyW - 2, (bodyBot + legBot) / 2, cx - 13, legBot);
-      c.quadraticCurveTo(cx - 8, legBot + 2, cx - 4, legBot);
-      c.quadraticCurveTo(cx - 2, bodyBot + 8, cx, bodyBot + 6);
-      c.closePath();
-      c.fill();
-      // Right leg
+      c.moveTo(cx - bodyW, bodyBot - 2);
+      c.quadraticCurveTo(cx - bodyW - 2, midLeg, cx - 8, legBot);
+      c.lineTo(cx - 2, legBot);
+      c.quadraticCurveTo(cx - 1, bodyBot + 6, cx, bodyBot + 4);
+      c.closePath(); c.fill();
       c.beginPath();
-      c.moveTo(cx, bodyBot + 6);
-      c.quadraticCurveTo(cx + 2, bodyBot + 8, cx + 4, legBot);
-      c.quadraticCurveTo(cx + 8, legBot + 2, cx + 13, legBot);
-      c.quadraticCurveTo(cx + bodyW + 2, (bodyBot + legBot) / 2, cx + bodyW, bodyBot - 3);
-      c.closePath();
-      c.fill();
-      // Ankle cuffs
-      c.strokeStyle = _darken(color, 18); c.lineWidth = 0.6;
-      c.beginPath(); c.ellipse(cx - 8, legBot - 1, 5, 2, 0, 0, Math.PI * 2); c.stroke();
-      c.beginPath(); c.ellipse(cx + 8, legBot - 1, 5, 2, 0, 0, Math.PI * 2); c.stroke();
+      c.moveTo(cx, bodyBot + 4);
+      c.quadraticCurveTo(cx + 1, bodyBot + 6, cx + 2, legBot);
+      c.lineTo(cx + 8, legBot);
+      c.quadraticCurveTo(cx + bodyW + 2, midLeg, cx + bodyW, bodyBot - 2);
+      c.closePath(); c.fill();
+      c.strokeStyle = _darken(color, 18); c.lineWidth = 0.4;
+      c.beginPath(); c.ellipse(cx - 5, legBot - 1, 4, 1.5, 0, 0, Math.PI * 2); c.stroke();
+      c.beginPath(); c.ellipse(cx + 5, legBot - 1, 4, 1.5, 0, 0, Math.PI * 2); c.stroke();
       break;
     }
     case 'pleated_skirt': {
+      const pleatBot = bodyBot + (kneeY - bodyBot) * 0.6;
       c.beginPath();
-      c.moveTo(cx - bodyW - 1, bodyBot - 3);
-      c.quadraticCurveTo(cx - bodyW - 4, bodyBot + 10, cx - bodyW - 5, bodyBot + 22);
-      c.quadraticCurveTo(cx, bodyBot + 24, cx + bodyW + 5, bodyBot + 22);
-      c.quadraticCurveTo(cx + bodyW + 4, bodyBot + 10, cx + bodyW + 1, bodyBot - 3);
-      c.closePath();
-      c.fill();
-      // Pleat lines
-      c.strokeStyle = _darken(color, 15); c.lineWidth = 0.4;
-      for (let i = -2; i <= 2; i++) {
+      c.moveTo(cx - bodyW - 1, bodyBot - 2);
+      c.quadraticCurveTo(cx - bodyW - 4, (bodyBot + pleatBot) / 2, cx - bodyW - 3, pleatBot);
+      c.quadraticCurveTo(cx, pleatBot + 3, cx + bodyW + 3, pleatBot);
+      c.quadraticCurveTo(cx + bodyW + 4, (bodyBot + pleatBot) / 2, cx + bodyW + 1, bodyBot - 2);
+      c.closePath(); c.fill();
+      c.strokeStyle = _darken(color, 15); c.lineWidth = 0.3;
+      for (let i = -3; i <= 3; i++) {
         c.beginPath();
-        c.moveTo(cx + i * 5, bodyBot);
-        c.quadraticCurveTo(cx + i * 5.2, bodyBot + 10, cx + i * 5.5, bodyBot + 20);
+        c.moveTo(cx + i * 3.5, bodyBot);
+        c.quadraticCurveTo(cx + i * 3.7, (bodyBot + pleatBot) / 2, cx + i * 3.8, pleatBot - 2);
         c.stroke();
       }
       break;
     }
     case 'bell_bottoms': {
-      // Left leg with flare
       c.beginPath();
-      c.moveTo(cx - bodyW, bodyBot - 3);
-      c.quadraticCurveTo(cx - bodyW - 1, bodyBot + 10, cx - 10, bodyBot + 20);
-      c.quadraticCurveTo(cx - 16, legBot, cx - 20, legBot + 2);
-      c.quadraticCurveTo(cx - 10, legBot + 3, cx - 2, legBot + 2);
-      c.quadraticCurveTo(cx - 1, bodyBot + 8, cx, bodyBot + 6);
-      c.closePath();
-      c.fill();
-      // Right leg with flare
+      c.moveTo(cx - bodyW, bodyBot - 2);
+      c.quadraticCurveTo(cx - bodyW - 1, kneeY, cx - 6, kneeY + 10);
+      c.quadraticCurveTo(cx - 10, legBot, cx - 14, legBot + 2);
+      c.lineTo(cx - 2, legBot + 2);
+      c.quadraticCurveTo(cx - 1, bodyBot + 6, cx, bodyBot + 4);
+      c.closePath(); c.fill();
       c.beginPath();
-      c.moveTo(cx, bodyBot + 6);
-      c.quadraticCurveTo(cx + 1, bodyBot + 8, cx + 2, legBot + 2);
-      c.quadraticCurveTo(cx + 10, legBot + 3, cx + 20, legBot + 2);
-      c.quadraticCurveTo(cx + 16, legBot, cx + 10, bodyBot + 20);
-      c.quadraticCurveTo(cx + bodyW + 1, bodyBot + 10, cx + bodyW, bodyBot - 3);
-      c.closePath();
-      c.fill();
+      c.moveTo(cx, bodyBot + 4);
+      c.quadraticCurveTo(cx + 1, bodyBot + 6, cx + 2, legBot + 2);
+      c.lineTo(cx + 14, legBot + 2);
+      c.quadraticCurveTo(cx + 10, legBot, cx + 6, kneeY + 10);
+      c.quadraticCurveTo(cx + bodyW + 1, kneeY, cx + bodyW, bodyBot - 2);
+      c.closePath(); c.fill();
       break;
     }
   }
 }
 
 BOTTOM_DEFS.forEach(d => {
-  defItem('bottom_'+d.id, d.name, 'bottom', d.tags, d.colors,
+  defItem('bottom_' + d.id, d.name, 'bottom', d.tags, d.colors,
     (c, char, x, y, w, h, colIdx) => {
       drawBottom(d.id, c, char, x, y, w, h, d.colors[colIdx % d.colors.length][0]);
     });
@@ -1298,8 +1252,8 @@ const DRESS_DEFS = [
 ];
 
 function drawDress(style, c, char, x, y, w, h, color) {
-  const { cx, headR, headY, bodyTop, bodyBot, bodyW, legBot, footY } = M(x, y, w, h);
-  const dG = c.createLinearGradient(cx - bodyW, bodyTop, cx + bodyW, legBot);
+  const { cx, headR, headY, bodyTop, waistY, bodyBot, bodyW, kneeY, legBot, footY } = M(x, y, w, h);
+  const dG = c.createLinearGradient(cx - bodyW, bodyTop, cx + bodyW, kneeY);
   dG.addColorStop(0, _lighten(color, 20));
   dG.addColorStop(0.5, color);
   dG.addColorStop(1, _darken(color, 15));
@@ -1310,108 +1264,131 @@ function drawDress(style, c, char, x, y, w, h, color) {
     case 'sundress': {
       // Fitted bodice
       c.beginPath();
-      c.moveTo(cx - bodyW, bodyTop + 5);
-      c.quadraticCurveTo(cx - bodyW - 1, bodyBot, cx - bodyW + 2, bodyBot);
-      c.quadraticCurveTo(cx, bodyBot + 2, cx + bodyW - 2, bodyBot);
-      c.quadraticCurveTo(cx + bodyW + 1, bodyBot, cx + bodyW, bodyTop + 5);
+      c.moveTo(cx - bodyW, bodyTop + 4);
+      c.bezierCurveTo(cx - bodyW - 1, bodyTop + (waistY - bodyTop) * 0.5,
+                      cx - bodyW * 0.7, waistY, cx - bodyW * 0.6, waistY);
+      c.bezierCurveTo(cx - bodyW * 0.7, waistY,
+                      cx - bodyW - 1, waistY + (bodyBot - waistY) * 0.5, cx - bodyW, bodyBot);
+      c.lineTo(cx + bodyW, bodyBot);
+      c.bezierCurveTo(cx + bodyW + 1, waistY + (bodyBot - waistY) * 0.5,
+                      cx + bodyW * 0.7, waistY, cx + bodyW * 0.6, waistY);
+      c.bezierCurveTo(cx + bodyW * 0.7, waistY,
+                      cx + bodyW + 1, bodyTop + (waistY - bodyTop) * 0.5, cx + bodyW, bodyTop + 4);
       c.closePath(); c.fill();
       // A-line skirt
       c.beginPath();
       c.moveTo(cx - bodyW - 1, bodyBot - 2);
-      c.quadraticCurveTo(cx - bodyW - 14, bodyBot + 22, cx - bodyW + 4, footY - 4);
-      c.quadraticCurveTo(cx, footY - 2, cx + bodyW - 4, footY - 4);
-      c.quadraticCurveTo(cx + bodyW + 14, bodyBot + 22, cx + bodyW + 1, bodyBot - 2);
+      c.quadraticCurveTo(cx - bodyW - 10, (bodyBot + kneeY) / 2, cx - bodyW + 3, kneeY);
+      c.quadraticCurveTo(cx, kneeY + 3, cx + bodyW - 3, kneeY);
+      c.quadraticCurveTo(cx + bodyW + 10, (bodyBot + kneeY) / 2, cx + bodyW + 1, bodyBot - 2);
       c.closePath(); c.fill();
-      // Thin straps
-      c.strokeStyle = _darken(color, 20); c.lineWidth = 1;
+      // Straps
+      c.strokeStyle = _darken(color, 20); c.lineWidth = 0.8;
       for (let s = -1; s <= 1; s += 2) {
-        c.beginPath(); c.moveTo(cx + s * 4, bodyTop + 5); c.lineTo(cx + s * 6, bodyTop - 4); c.stroke();
+        c.beginPath(); c.moveTo(cx + s * 3, bodyTop + 4); c.lineTo(cx + s * 4, bodyTop - 3); c.stroke();
       }
       break;
     }
     case 'ball_gown': {
-      // Fitted bodice with sweetheart neckline
+      // Fitted bodice
       c.beginPath();
-      c.moveTo(cx - bodyW - 2, bodyTop + 6);
-      c.quadraticCurveTo(cx - bodyW - 3, bodyBot, cx - bodyW + 1, bodyBot);
-      c.quadraticCurveTo(cx, bodyBot + 2, cx + bodyW - 1, bodyBot);
-      c.quadraticCurveTo(cx + bodyW + 3, bodyBot, cx + bodyW + 2, bodyTop + 6);
+      c.moveTo(cx - bodyW - 2, bodyTop + 5);
+      c.bezierCurveTo(cx - bodyW - 3, bodyTop + (waistY - bodyTop) * 0.5,
+                      cx - bodyW * 0.65, waistY, cx - bodyW * 0.5, waistY);
+      c.bezierCurveTo(cx - bodyW * 0.65, waistY,
+                      cx - bodyW - 2, waistY + (bodyBot - waistY) * 0.5, cx - bodyW - 1, bodyBot);
+      c.lineTo(cx + bodyW + 1, bodyBot);
+      c.bezierCurveTo(cx + bodyW + 2, waistY + (bodyBot - waistY) * 0.5,
+                      cx + bodyW * 0.65, waistY, cx + bodyW * 0.5, waistY);
+      c.bezierCurveTo(cx + bodyW * 0.65, waistY,
+                      cx + bodyW + 3, bodyTop + (waistY - bodyTop) * 0.5, cx + bodyW + 2, bodyTop + 5);
       c.closePath(); c.fill();
       // Wide ball gown skirt
       c.beginPath();
       c.moveTo(cx - bodyW - 1, bodyBot - 2);
-      c.quadraticCurveTo(cx - bodyW - 28, bodyBot + 30, cx - bodyW - 10, footY + 2);
-      c.quadraticCurveTo(cx, footY + 6, cx + bodyW + 10, footY + 2);
-      c.quadraticCurveTo(cx + bodyW + 28, bodyBot + 30, cx + bodyW + 1, bodyBot - 2);
+      c.quadraticCurveTo(cx - bodyW - 24, (bodyBot + footY) / 2, cx - bodyW - 8, footY + 2);
+      c.quadraticCurveTo(cx, footY + 5, cx + bodyW + 8, footY + 2);
+      c.quadraticCurveTo(cx + bodyW + 24, (bodyBot + footY) / 2, cx + bodyW + 1, bodyBot - 2);
       c.closePath(); c.fill();
-      // Neckline curve
-      c.strokeStyle = _darken(color, 22); c.lineWidth = 0.8;
-      c.beginPath(); c.arc(cx, bodyTop + 4, 7, 0.3, Math.PI - 0.3); c.stroke();
+      // Neckline
+      c.strokeStyle = _darken(color, 22); c.lineWidth = 0.6;
+      c.beginPath(); c.arc(cx, bodyTop + 3, 5, 0.3, Math.PI - 0.3); c.stroke();
       // Waist sash
       c.fillStyle = _darken(color, 30);
-      c.fillRect(cx - bodyW - 1, bodyBot - 5, bodyW * 2 + 2, 4);
+      c.fillRect(cx - bodyW - 1, bodyBot - 4, bodyW * 2 + 2, 3);
       break;
     }
     case 'cocktail_dress': {
       // Sleek fitted bodice
       c.beginPath();
-      c.moveTo(cx - bodyW + 1, bodyTop + 6);
-      c.quadraticCurveTo(cx - bodyW - 1, bodyBot, cx - bodyW + 2, bodyBot);
-      c.quadraticCurveTo(cx, bodyBot + 2, cx + bodyW - 2, bodyBot);
-      c.quadraticCurveTo(cx + bodyW + 1, bodyBot, cx + bodyW - 1, bodyTop + 6);
+      c.moveTo(cx - bodyW + 1, bodyTop + 5);
+      c.bezierCurveTo(cx - bodyW, bodyTop + (waistY - bodyTop) * 0.5,
+                      cx - bodyW * 0.65, waistY, cx - bodyW * 0.55, waistY);
+      c.bezierCurveTo(cx - bodyW * 0.65, waistY,
+                      cx - bodyW, waistY + (bodyBot - waistY) * 0.5, cx - bodyW + 1, bodyBot);
+      c.lineTo(cx + bodyW - 1, bodyBot);
+      c.bezierCurveTo(cx + bodyW, waistY + (bodyBot - waistY) * 0.5,
+                      cx + bodyW * 0.65, waistY, cx + bodyW * 0.55, waistY);
+      c.bezierCurveTo(cx + bodyW * 0.65, waistY,
+                      cx + bodyW, bodyTop + (waistY - bodyTop) * 0.5, cx + bodyW - 1, bodyTop + 5);
       c.closePath(); c.fill();
       // Knee-length pencil skirt
-      const kneeY = bodyBot + (legBot - bodyBot) * 0.7;
       c.beginPath();
       c.moveTo(cx - bodyW, bodyBot - 2);
-      c.quadraticCurveTo(cx - bodyW - 4, (bodyBot + kneeY) / 2, cx - bodyW + 2, kneeY);
-      c.quadraticCurveTo(cx, kneeY + 3, cx + bodyW - 2, kneeY);
-      c.quadraticCurveTo(cx + bodyW + 4, (bodyBot + kneeY) / 2, cx + bodyW, bodyBot - 2);
+      c.quadraticCurveTo(cx - bodyW - 3, (bodyBot + kneeY) / 2, cx - bodyW + 1, kneeY);
+      c.quadraticCurveTo(cx, kneeY + 3, cx + bodyW - 1, kneeY);
+      c.quadraticCurveTo(cx + bodyW + 3, (bodyBot + kneeY) / 2, cx + bodyW, bodyBot - 2);
       c.closePath(); c.fill();
       // Single strap
-      c.strokeStyle = _darken(color, 20); c.lineWidth = 1.2;
-      c.beginPath(); c.moveTo(cx - 3, bodyTop + 6); c.lineTo(cx - 5, bodyTop - 3); c.stroke();
+      c.strokeStyle = _darken(color, 20); c.lineWidth = 0.8;
+      c.beginPath(); c.moveTo(cx - 2, bodyTop + 5); c.lineTo(cx - 4, bodyTop - 2); c.stroke();
       break;
     }
     case 'kimono_dress': {
       const kimBot = footY + 2;
       c.beginPath();
-      c.moveTo(cx - bodyW - 6, bodyTop + 2);
-      c.quadraticCurveTo(cx - bodyW - 12, (bodyTop + kimBot) / 2, cx - bodyW - 4, kimBot);
-      c.quadraticCurveTo(cx, kimBot + 3, cx + bodyW + 4, kimBot);
-      c.quadraticCurveTo(cx + bodyW + 12, (bodyTop + kimBot) / 2, cx + bodyW + 6, bodyTop + 2);
+      c.moveTo(cx - bodyW - 5, bodyTop + 2);
+      c.quadraticCurveTo(cx - bodyW - 10, (bodyTop + kimBot) / 2, cx - bodyW - 3, kimBot);
+      c.quadraticCurveTo(cx, kimBot + 3, cx + bodyW + 3, kimBot);
+      c.quadraticCurveTo(cx + bodyW + 10, (bodyTop + kimBot) / 2, cx + bodyW + 5, bodyTop + 2);
       c.closePath(); c.fill();
       // Wide sleeves
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath();
-        c.ellipse(cx + s * (bodyW + 12), bodyTop + 18, 14, 10, s * 0.3, 0, Math.PI * 2);
+        c.ellipse(cx + s * (bodyW + 10), bodyTop + 14, 10, 7, s * 0.3, 0, Math.PI * 2);
         c.fill();
       }
       // Obi sash
       c.fillStyle = _darken(color, 30);
-      const obiY = midY - 2;
+      const obiY = waistY - 2;
       c.beginPath();
-      c.moveTo(cx - bodyW - 5, obiY);
-      c.quadraticCurveTo(cx, obiY + 3, cx + bodyW + 5, obiY);
-      c.quadraticCurveTo(cx + bodyW + 5, obiY + 8, cx + bodyW + 4, obiY + 8);
-      c.quadraticCurveTo(cx, obiY + 11, cx - bodyW - 4, obiY + 8);
-      c.quadraticCurveTo(cx - bodyW - 5, obiY + 8, cx - bodyW - 5, obiY);
+      c.moveTo(cx - bodyW - 4, obiY);
+      c.quadraticCurveTo(cx, obiY + 3, cx + bodyW + 4, obiY);
+      c.quadraticCurveTo(cx + bodyW + 4, obiY + 7, cx + bodyW + 3, obiY + 7);
+      c.quadraticCurveTo(cx, obiY + 10, cx - bodyW - 3, obiY + 7);
+      c.quadraticCurveTo(cx - bodyW - 4, obiY + 7, cx - bodyW - 4, obiY);
       c.closePath(); c.fill();
       break;
     }
     case 'fairy_dress': {
       // Bodice
       c.beginPath();
-      c.moveTo(cx - bodyW, bodyTop + 5);
-      c.quadraticCurveTo(cx - bodyW - 1, bodyBot, cx - bodyW + 2, bodyBot);
-      c.quadraticCurveTo(cx, bodyBot + 2, cx + bodyW - 2, bodyBot);
-      c.quadraticCurveTo(cx + bodyW + 1, bodyBot, cx + bodyW, bodyTop + 5);
+      c.moveTo(cx - bodyW, bodyTop + 4);
+      c.bezierCurveTo(cx - bodyW - 1, bodyTop + (waistY - bodyTop) * 0.5,
+                      cx - bodyW * 0.7, waistY, cx - bodyW * 0.6, waistY);
+      c.bezierCurveTo(cx - bodyW * 0.7, waistY,
+                      cx - bodyW - 1, waistY + (bodyBot - waistY) * 0.5, cx - bodyW, bodyBot);
+      c.lineTo(cx + bodyW, bodyBot);
+      c.bezierCurveTo(cx + bodyW + 1, waistY + (bodyBot - waistY) * 0.5,
+                      cx + bodyW * 0.7, waistY, cx + bodyW * 0.6, waistY);
+      c.bezierCurveTo(cx + bodyW * 0.7, waistY,
+                      cx + bodyW + 1, bodyTop + (waistY - bodyTop) * 0.5, cx + bodyW, bodyTop + 4);
       c.closePath(); c.fill();
       // Layered petal skirt
       c.save(); c.globalAlpha = 0.7;
       for (let layer = 0; layer < 3; layer++) {
-        const layerBot = bodyBot + (footY - bodyBot) * (0.6 + layer * 0.2);
-        const spread = 8 + layer * 6;
+        const layerBot = bodyBot + (footY - bodyBot) * (0.5 + layer * 0.2);
+        const spread = 6 + layer * 5;
         c.beginPath();
         c.moveTo(cx - bodyW - layer * 2, bodyBot - 2 + layer * 4);
         c.quadraticCurveTo(cx - bodyW - spread, (bodyBot + layerBot) / 2, cx - bodyW + 2 + layer, layerBot);
@@ -1420,13 +1397,13 @@ function drawDress(style, c, char, x, y, w, h, color) {
         c.closePath(); c.fill();
       }
       c.restore();
-      // Sparkle details
+      // Sparkles
       c.fillStyle = 'rgba(255,255,255,0.3)';
       const now = Date.now() / 800;
       for (let i = 0; i < 5; i++) {
-        const sx = cx + Math.sin(now + i * 1.5) * (bodyW + 5);
+        const sx = cx + Math.sin(now + i * 1.5) * (bodyW + 4);
         const sy = bodyBot + 5 + Math.cos(now + i * 2.1) * (footY - bodyBot - 10) * 0.5;
-        c.beginPath(); c.arc(sx, sy, 1.2, 0, Math.PI * 2); c.fill();
+        c.beginPath(); c.arc(sx, sy, 1, 0, Math.PI * 2); c.fill();
       }
       break;
     }
@@ -1434,7 +1411,7 @@ function drawDress(style, c, char, x, y, w, h, color) {
 }
 
 DRESS_DEFS.forEach(d => {
-  defItem('dress_'+d.id, d.name, 'dress', d.tags, d.colors,
+  defItem('dress_' + d.id, d.name, 'dress', d.tags, d.colors,
     (c, char, x, y, w, h, colIdx) => {
       drawDress(d.id, c, char, x, y, w, h, d.colors[colIdx % d.colors.length][0]);
     });
@@ -1453,8 +1430,8 @@ const SHOE_DEFS = [
 ];
 
 function drawShoes(style, c, char, x, y, w, h, color) {
-  const { cx, footY } = M(x, y, w, h);
-  const sG = c.createLinearGradient(cx, footY - 8, cx, footY + 5);
+  const { cx, footY, legBot } = M(x, y, w, h);
+  const sG = c.createLinearGradient(cx, footY - 6, cx, footY + 4);
   sG.addColorStop(0, _lighten(color, 20));
   sG.addColorStop(1, _darken(color, 15));
   c.fillStyle = sG;
@@ -1462,96 +1439,87 @@ function drawShoes(style, c, char, x, y, w, h, color) {
   switch(style) {
     case 'sneakers':
       for (let s = -1; s <= 1; s += 2) {
-        const fx = cx + s * 10;
+        const fx = cx + s * 5;
         c.fillStyle = sG;
-        c.beginPath(); c.ellipse(fx, footY, 10, 5, 0, 0, Math.PI * 2); c.fill();
-        // Sole line
+        c.beginPath(); c.ellipse(fx, footY, 7, 3.5, 0, 0, Math.PI * 2); c.fill();
         c.fillStyle = 'rgba(0,0,0,0.06)';
-        c.beginPath(); c.ellipse(fx, footY + 2, 10, 2.5, 0, 0, Math.PI); c.fill();
+        c.beginPath(); c.ellipse(fx, footY + 1.5, 7, 1.8, 0, 0, Math.PI); c.fill();
       }
       break;
     case 'boots':
       for (let s = -1; s <= 1; s += 2) {
-        const fx = cx + s * 10;
+        const fx = cx + s * 5;
         c.fillStyle = sG;
-        c.beginPath(); c.ellipse(fx, footY - 6, 9, 12, 0, 0, Math.PI * 2); c.fill();
-        c.beginPath(); c.ellipse(fx, footY + 5, 9, 4, 0, 0, Math.PI * 2); c.fill();
-        // Strap
-        c.strokeStyle = _darken(color, 18); c.lineWidth = 0.6;
-        c.beginPath(); c.moveTo(fx - 8, footY - 8); c.quadraticCurveTo(fx, footY - 7, fx + 8, footY - 8); c.stroke();
+        c.beginPath(); c.ellipse(fx, footY - 4, 6, 8, 0, 0, Math.PI * 2); c.fill();
+        c.beginPath(); c.ellipse(fx, footY + 3, 6, 3, 0, 0, Math.PI * 2); c.fill();
+        c.strokeStyle = _darken(color, 18); c.lineWidth = 0.4;
+        c.beginPath(); c.moveTo(fx - 5, footY - 5); c.quadraticCurveTo(fx, footY - 4, fx + 5, footY - 5); c.stroke();
       }
       break;
     case 'heels':
       for (let s = -1; s <= 1; s += 2) {
-        const fx = cx + s * 10;
+        const fx = cx + s * 5;
         c.fillStyle = sG;
-        c.beginPath(); c.ellipse(fx + s * 2, footY, 9, 4, 0, 0, Math.PI * 2); c.fill();
-        // Heel
-        c.beginPath(); c.ellipse(fx - s * 4, footY + 5, 2, 4, 0, 0, Math.PI * 2); c.fill();
+        c.beginPath(); c.ellipse(fx + s * 1.5, footY, 6, 3, 0, 0, Math.PI * 2); c.fill();
+        c.beginPath(); c.ellipse(fx - s * 2.5, footY + 3, 1.5, 3, 0, 0, Math.PI * 2); c.fill();
       }
       break;
     case 'sandals':
       for (let s = -1; s <= 1; s += 2) {
-        const fx = cx + s * 10;
+        const fx = cx + s * 5;
         c.fillStyle = sG;
-        c.beginPath(); c.ellipse(fx, footY + 1, 9, 3.5, 0, 0, Math.PI * 2); c.fill();
-        // Strap
-        c.strokeStyle = _darken(color, 15); c.lineWidth = 1;
-        c.beginPath(); c.moveTo(fx - 4, footY - 2); c.quadraticCurveTo(fx, footY - 6, fx + 4, footY - 2); c.stroke();
+        c.beginPath(); c.ellipse(fx, footY + 1, 6, 2.5, 0, 0, Math.PI * 2); c.fill();
+        c.strokeStyle = _darken(color, 15); c.lineWidth = 0.7;
+        c.beginPath(); c.moveTo(fx - 3, footY - 1); c.quadraticCurveTo(fx, footY - 4, fx + 3, footY - 1); c.stroke();
       }
       break;
     case 'armored_boots':
       for (let s = -1; s <= 1; s += 2) {
-        const fx = cx + s * 10;
+        const fx = cx + s * 5;
         c.fillStyle = sG;
         c.beginPath();
-        c.moveTo(fx - 9, footY - 16);
-        c.quadraticCurveTo(fx - 10, footY, fx - 10, footY + 4);
-        c.quadraticCurveTo(fx, footY + 6, fx + 10, footY + 4);
-        c.quadraticCurveTo(fx + 10, footY, fx + 9, footY - 16);
-        c.closePath();
-        c.fill();
-        // Band
-        c.strokeStyle = _darken(color, 20); c.lineWidth = 0.6;
-        c.beginPath(); c.moveTo(fx - 9, footY - 6); c.quadraticCurveTo(fx, footY - 5, fx + 9, footY - 6); c.stroke();
+        c.moveTo(fx - 6, footY - 12);
+        c.quadraticCurveTo(fx - 7, footY, fx - 7, footY + 3);
+        c.quadraticCurveTo(fx, footY + 5, fx + 7, footY + 3);
+        c.quadraticCurveTo(fx + 7, footY, fx + 6, footY - 12);
+        c.closePath(); c.fill();
+        c.strokeStyle = _darken(color, 20); c.lineWidth = 0.4;
+        c.beginPath(); c.moveTo(fx - 6, footY - 4); c.quadraticCurveTo(fx, footY - 3, fx + 6, footY - 4); c.stroke();
       }
       break;
     case 'slippers':
       for (let s = -1; s <= 1; s += 2) {
-        const fx = cx + s * 10;
+        const fx = cx + s * 5;
         c.fillStyle = sG;
-        c.beginPath(); c.ellipse(fx, footY, 10, 5.5, 0, 0, Math.PI * 2); c.fill();
-        // Fluffy rim
+        c.beginPath(); c.ellipse(fx, footY, 7, 4, 0, 0, Math.PI * 2); c.fill();
         c.fillStyle = 'rgba(255,255,255,0.18)';
-        c.beginPath(); c.ellipse(fx, footY - 2, 7, 3, 0, Math.PI, 0); c.fill();
+        c.beginPath(); c.ellipse(fx, footY - 1.5, 5, 2, 0, Math.PI, 0); c.fill();
       }
       break;
     case 'platforms':
       for (let s = -1; s <= 1; s += 2) {
-        const fx = cx + s * 10;
+        const fx = cx + s * 5;
         c.fillStyle = sG;
-        c.beginPath(); c.ellipse(fx, footY + 4, 10, 5, 0, 0, Math.PI * 2); c.fill();
-        c.beginPath(); c.ellipse(fx, footY - 1, 9, 4, 0, 0, Math.PI * 2); c.fill();
-        // Platform stripe
+        c.beginPath(); c.ellipse(fx, footY + 3, 7, 3.5, 0, 0, Math.PI * 2); c.fill();
+        c.beginPath(); c.ellipse(fx, footY - 1, 6, 3, 0, 0, Math.PI * 2); c.fill();
         c.fillStyle = 'rgba(255,255,255,0.08)';
-        c.beginPath(); c.ellipse(fx, footY + 4, 9, 1.5, 0, 0, Math.PI * 2); c.fill();
+        c.beginPath(); c.ellipse(fx, footY + 3, 6, 1.2, 0, 0, Math.PI * 2); c.fill();
       }
       break;
     case 'barefoot':
       for (let s = -1; s <= 1; s += 2) {
-        const fx = cx + s * 10;
-        c.strokeStyle = sG; c.lineWidth = 1.2;
-        c.beginPath(); c.ellipse(fx, footY, 8, 4, 0, 0, Math.PI * 2); c.stroke();
-        // Wrap straps
-        c.beginPath(); c.moveTo(fx, footY - 4); c.quadraticCurveTo(fx + 1, footY - 7, fx, footY - 10); c.stroke();
-        c.beginPath(); c.moveTo(fx - 4, footY - 6); c.quadraticCurveTo(fx, footY - 7, fx + 4, footY - 6); c.stroke();
+        const fx = cx + s * 5;
+        c.strokeStyle = sG; c.lineWidth = 0.8;
+        c.beginPath(); c.ellipse(fx, footY, 5.5, 3, 0, 0, Math.PI * 2); c.stroke();
+        c.beginPath(); c.moveTo(fx, footY - 3); c.quadraticCurveTo(fx + 0.5, footY - 5, fx, footY - 7); c.stroke();
+        c.beginPath(); c.moveTo(fx - 3, footY - 4); c.quadraticCurveTo(fx, footY - 5, fx + 3, footY - 4); c.stroke();
       }
       break;
   }
 }
 
 SHOE_DEFS.forEach(d => {
-  defItem('shoes_'+d.id, d.name, 'shoes', d.tags, d.colors,
+  defItem('shoes_' + d.id, d.name, 'shoes', d.tags, d.colors,
     (c, char, x, y, w, h, colIdx) => {
       drawShoes(d.id, c, char, x, y, w, h, d.colors[colIdx % d.colors.length][0]);
     });
@@ -1572,101 +1540,106 @@ const ACC_DEFS = [
 ];
 
 function drawAccessory(style, c, char, x, y, w, h, color) {
-  const { cx, headR, headY, bodyTop, bodyBot, bodyW } = M(x, y, w, h);
+  const { cx, headR, headY, bodyTop, waistY, bodyBot, bodyW } = M(x, y, w, h);
   c.fillStyle = color;
 
   switch(style) {
     case 'glasses':
-      c.strokeStyle=color; c.lineWidth=1.5;
-      const eyeY=headY-headR*0.05; const sp=headR*0.35;
-      c.beginPath();c.ellipse(cx-sp,eyeY,headR*0.22,headR*0.2,0,0,Math.PI*2);c.stroke();
-      c.beginPath();c.ellipse(cx+sp,eyeY,headR*0.22,headR*0.2,0,0,Math.PI*2);c.stroke();
-      c.beginPath();c.moveTo(cx-sp+headR*0.22,eyeY);c.lineTo(cx+sp-headR*0.22,eyeY);c.stroke();
-      c.beginPath();c.moveTo(cx-sp-headR*0.22,eyeY);c.lineTo(cx-headR-2,eyeY-2);c.stroke();
-      c.beginPath();c.moveTo(cx+sp+headR*0.22,eyeY);c.lineTo(cx+headR+2,eyeY-2);c.stroke();
+      c.strokeStyle = color; c.lineWidth = 0.8;
+      const eyeY2 = headY - headR * 0.05; const sp = headR * 0.35;
+      c.beginPath(); c.ellipse(cx - sp, eyeY2, headR * 0.22, headR * 0.2, 0, 0, Math.PI*2); c.stroke();
+      c.beginPath(); c.ellipse(cx + sp, eyeY2, headR * 0.22, headR * 0.2, 0, 0, Math.PI*2); c.stroke();
+      c.beginPath(); c.moveTo(cx - sp + headR * 0.22, eyeY2); c.lineTo(cx + sp - headR * 0.22, eyeY2); c.stroke();
+      c.beginPath(); c.moveTo(cx - sp - headR * 0.22, eyeY2); c.lineTo(cx - headR - 1, eyeY2 - 1); c.stroke();
+      c.beginPath(); c.moveTo(cx + sp + headR * 0.22, eyeY2); c.lineTo(cx + headR + 1, eyeY2 - 1); c.stroke();
       break;
     case 'crown':
       c.beginPath();
-      c.moveTo(cx-headR*0.55,headY-headR*0.7);
-      c.lineTo(cx-headR*0.55,headY-headR*1.1);
-      c.lineTo(cx-headR*0.28,headY-headR*0.85);
-      c.lineTo(cx,headY-headR*1.2);
-      c.lineTo(cx+headR*0.28,headY-headR*0.85);
-      c.lineTo(cx+headR*0.55,headY-headR*1.1);
-      c.lineTo(cx+headR*0.55,headY-headR*0.7);
+      c.moveTo(cx - headR * 0.55, headY - headR * 0.7);
+      c.lineTo(cx - headR * 0.55, headY - headR * 1.1);
+      c.lineTo(cx - headR * 0.28, headY - headR * 0.85);
+      c.lineTo(cx, headY - headR * 1.2);
+      c.lineTo(cx + headR * 0.28, headY - headR * 0.85);
+      c.lineTo(cx + headR * 0.55, headY - headR * 1.1);
+      c.lineTo(cx + headR * 0.55, headY - headR * 0.7);
       c.closePath(); c.fill();
-      c.fillStyle='#e74c3c';c.beginPath();c.arc(cx,headY-headR*1.05,2,0,Math.PI*2);c.fill();
+      c.fillStyle = '#e74c3c'; c.beginPath(); c.arc(cx, headY - headR * 1.05, 1.2, 0, Math.PI*2); c.fill();
       break;
     case 'necklace':
-      c.strokeStyle=color; c.lineWidth=1.5;
-      c.beginPath();c.arc(cx,bodyTop+3,10,0.3,Math.PI-0.3);c.stroke();
-      c.fillStyle=color;c.beginPath();c.arc(cx,bodyTop+12,3,0,Math.PI*2);c.fill();
+      c.strokeStyle = color; c.lineWidth = 1;
+      c.beginPath(); c.arc(cx, bodyTop + 2, 7, 0.3, Math.PI - 0.3); c.stroke();
+      c.fillStyle = color; c.beginPath(); c.arc(cx, bodyTop + 8, 2, 0, Math.PI*2); c.fill();
       break;
     case 'scarf':
       c.beginPath();
-      c.moveTo(cx-headR*0.7,headY+headR-1);
-      c.quadraticCurveTo(cx,headY+headR+5,cx+headR*0.7,headY+headR-1);
-      c.lineTo(cx+headR*0.75,headY+headR+4);
-      c.quadraticCurveTo(cx,headY+headR+10,cx-headR*0.75,headY+headR+4);
+      c.moveTo(cx - headR * 0.7, headY + headR - 1);
+      c.quadraticCurveTo(cx, headY + headR + 3, cx + headR * 0.7, headY + headR - 1);
+      c.lineTo(cx + headR * 0.75, headY + headR + 3);
+      c.quadraticCurveTo(cx, headY + headR + 7, cx - headR * 0.75, headY + headR + 3);
       c.closePath(); c.fill();
       c.beginPath();
-      c.moveTo(cx+headR*0.6,headY+headR);
-      c.quadraticCurveTo(cx+headR*0.8,bodyTop+18,cx+headR*0.65,bodyTop+28);
-      c.lineTo(cx+headR*0.5,bodyTop+26);
-      c.quadraticCurveTo(cx+headR*0.65,bodyTop+14,cx+headR*0.45,headY+headR+3);
+      c.moveTo(cx + headR * 0.6, headY + headR);
+      c.quadraticCurveTo(cx + headR * 0.8, bodyTop + 12, cx + headR * 0.65, bodyTop + 20);
+      c.lineTo(cx + headR * 0.5, bodyTop + 18);
+      c.quadraticCurveTo(cx + headR * 0.65, bodyTop + 10, cx + headR * 0.45, headY + headR + 2);
       c.fill();
       break;
     case 'extra_wings':
-      c.globalAlpha=0.45;
-      for(let s=-1;s<=1;s+=2){
-        c.beginPath();c.moveTo(cx+s*bodyW,bodyTop+8);
-        c.quadraticCurveTo(cx+s*(bodyW+40),bodyTop-20,cx+s*(bodyW+12),bodyTop+38);c.closePath();c.fill();
-        c.beginPath();c.moveTo(cx+s*bodyW,bodyTop+14);
-        c.quadraticCurveTo(cx+s*(bodyW+32),bodyTop+40,cx+s*(bodyW+8),bodyTop+48);c.closePath();c.fill();}
-      c.globalAlpha=1;
+      c.globalAlpha = 0.45;
+      for (let s = -1; s <= 1; s += 2) {
+        c.beginPath(); c.moveTo(cx + s * bodyW, bodyTop + 6);
+        c.quadraticCurveTo(cx + s * (bodyW + 32), bodyTop - 16, cx + s * (bodyW + 10), bodyTop + 30);
+        c.closePath(); c.fill();
+        c.beginPath(); c.moveTo(cx + s * bodyW, bodyTop + 12);
+        c.quadraticCurveTo(cx + s * (bodyW + 26), bodyTop + 32, cx + s * (bodyW + 6), bodyTop + 40);
+        c.closePath(); c.fill();
+      }
+      c.globalAlpha = 1;
       break;
     case 'cape':
-      c.globalAlpha=0.6;
+      c.globalAlpha = 0.6;
       c.beginPath();
-      c.moveTo(cx-bodyW+3,bodyTop+1);
-      c.quadraticCurveTo(cx-bodyW-15,bodyBot,cx-bodyW-8,y+h*0.78);
-      c.lineTo(cx+bodyW+8,y+h*0.78);
-      c.quadraticCurveTo(cx+bodyW+15,bodyBot,cx+bodyW-3,bodyTop+1);
+      c.moveTo(cx - bodyW + 2, bodyTop + 1);
+      c.quadraticCurveTo(cx - bodyW - 12, bodyBot, cx - bodyW - 6, y + h * 0.82);
+      c.lineTo(cx + bodyW + 6, y + h * 0.82);
+      c.quadraticCurveTo(cx + bodyW + 12, bodyBot, cx + bodyW - 2, bodyTop + 1);
       c.closePath(); c.fill();
-      c.globalAlpha=1;
-      c.fillStyle='#f4d03f';c.beginPath();c.arc(cx,bodyTop+3,3,0,Math.PI*2);c.fill();
+      c.globalAlpha = 1;
+      c.fillStyle = '#f4d03f'; c.beginPath(); c.arc(cx, bodyTop + 2, 2, 0, Math.PI*2); c.fill();
       break;
     case 'hat':
-      c.beginPath();c.ellipse(cx,headY-headR*0.55,headR*1.1,headR*0.15,0,0,Math.PI*2);c.fill();
+      c.beginPath(); c.ellipse(cx, headY - headR * 0.55, headR * 1.1, headR * 0.15, 0, 0, Math.PI*2); c.fill();
       c.beginPath();
-      c.moveTo(cx-headR*0.65,headY-headR*0.55);
-      c.quadraticCurveTo(cx,headY-headR*1.6,cx+headR*0.65,headY-headR*0.55);
+      c.moveTo(cx - headR * 0.65, headY - headR * 0.55);
+      c.quadraticCurveTo(cx, headY - headR * 1.6, cx + headR * 0.65, headY - headR * 0.55);
       c.fill();
-      c.fillStyle='rgba(0,0,0,0.15)';c.fillRect(cx-headR*0.65,headY-headR*0.65,headR*1.3,3);
+      c.fillStyle = 'rgba(0,0,0,0.15)'; c.fillRect(cx - headR * 0.65, headY - headR * 0.65, headR * 1.3, 2);
       break;
     case 'flower_crown':
-      const crY=headY-headR*0.8;
-      for(let i=-3;i<=3;i++){
-        const fx=cx+i*headR*0.26; const fy=crY+Math.abs(i)*1.5;
-        c.fillStyle=i%2===0?color:'#fff';c.beginPath();c.arc(fx,fy,4,0,Math.PI*2);c.fill();
-        c.fillStyle='#f1c40f';c.beginPath();c.arc(fx,fy,1.5,0,Math.PI*2);c.fill();}
-      c.strokeStyle='#27ae60';c.lineWidth=1.2;
-      c.beginPath();c.moveTo(cx-headR*0.8,crY+2);c.quadraticCurveTo(cx,crY-2,cx+headR*0.8,crY+2);c.stroke();
+      const crY = headY - headR * 0.8;
+      for (let i = -3; i <= 3; i++) {
+        const fx = cx + i * headR * 0.26; const fy = crY + Math.abs(i) * 0.8;
+        c.fillStyle = i % 2 === 0 ? color : '#fff'; c.beginPath(); c.arc(fx, fy, 2.5, 0, Math.PI*2); c.fill();
+        c.fillStyle = '#f1c40f'; c.beginPath(); c.arc(fx, fy, 1, 0, Math.PI*2); c.fill();
+      }
+      c.strokeStyle = '#27ae60'; c.lineWidth = 0.8;
+      c.beginPath(); c.moveTo(cx - headR * 0.8, crY + 1); c.quadraticCurveTo(cx, crY - 1, cx + headR * 0.8, crY + 1); c.stroke();
       break;
     case 'belt':
-      c.fillRect(cx-bodyW-2,bodyBot-5,bodyW*2+4,4);
-      c.strokeStyle='#f4d03f';c.lineWidth=1.2;c.strokeRect(cx-3.5,bodyBot-6,7,5.5);
+      c.fillRect(cx - bodyW - 1, waistY - 2, bodyW * 2 + 2, 3);
+      c.strokeStyle = '#f4d03f'; c.lineWidth = 0.8; c.strokeRect(cx - 2.5, waistY - 2.5, 5, 4);
       break;
     case 'wristbands':
-      for(let s=-1;s<=1;s+=2){
-        const wx=s===-1?cx-bodyW-11:cx+bodyW+11;
-        c.fillRect(wx-4,bodyBot-10,8,5);}
+      for (let s = -1; s <= 1; s += 2) {
+        const wx = s === -1 ? cx - bodyW - 8 : cx + bodyW + 8;
+        c.fillRect(wx - 3, bodyBot - 8, 6, 4);
+      }
       break;
   }
 }
 
 ACC_DEFS.forEach(d => {
-  defItem('acc_'+d.id, d.name, 'accessory', d.tags, d.colors,
+  defItem('acc_' + d.id, d.name, 'accessory', d.tags, d.colors,
     (c, char, x, y, w, h, colIdx) => {
       drawAccessory(d.id, c, char, x, y, w, h, d.colors[colIdx % d.colors.length][0]);
     });
@@ -1739,7 +1712,7 @@ function drawBG(style, c, w, h, color) {
 }
 
 BG_DEFS.forEach(d => {
-  defItem('bg_'+d.id, d.name, 'background', d.tags, d.colors,
+  defItem('bg_' + d.id, d.name, 'background', d.tags, d.colors,
     (c2, char, x, y, w, h, colIdx) => {
       drawBG(d.id, c2, 400, 600, d.colors[colIdx % d.colors.length][0]);
     });
@@ -1801,8 +1774,8 @@ function showAchievementPopup(id) {
   const def = ACHIEVE_DEFS.find(a => a.id === id);
   if (!def) return;
   achievementPopupIcon.textContent = def.icon;
-  achievementPopupTitle.textContent = t('duAch_'+id, def.title);
-  achievementPopupDesc.textContent = t('duAchD_'+id, def.desc);
+  achievementPopupTitle.textContent = t('duAch_' + id, def.title);
+  achievementPopupDesc.textContent = t('duAchD_' + id, def.desc);
   achievementPopup.classList.add('show');
   setTimeout(() => achievementPopup.classList.remove('show'), 3000);
 }
@@ -1812,9 +1785,30 @@ function renderAchievements() {
   ACHIEVE_DEFS.forEach(a => {
     const el = document.createElement('div');
     el.className = 'achievement-item' + (achievements[a.id] ? ' unlocked' : '');
-    el.innerHTML = `<span class="ach-icon">${a.icon}</span><span>${t('duAch_'+a.id, a.title)}</span>`;
+    el.innerHTML = `<span class="ach-icon">${a.icon}</span><span>${t('duAch_' + a.id, a.title)}</span>`;
     achievementsList.appendChild(el);
   });
+}
+
+/* ================================================================
+   STYLE THEMES (Theme Generator)
+   ================================================================ */
+const STYLE_THEMES = [
+  'Y2K', 'Dark Academia', 'Space Queen', 'Futuristic Explorer',
+  'Streetwear', 'Cottagecore', 'Cyberpunk', 'Fairy Tale',
+  'Goth Glam', 'Preppy', 'Boho Chic', 'Retro Disco',
+  'Pastel Dream', 'Punk Rock', 'Royal Elegance'
+];
+
+function suggestTheme() {
+  const theme = STYLE_THEMES[Math.floor(Math.random() * STYLE_THEMES.length)];
+  const overlay = document.getElementById('themeOverlay');
+  const nameEl = document.getElementById('themeOverlayName');
+  if (overlay && nameEl) {
+    nameEl.textContent = theme;
+    overlay.classList.add('visible');
+    setTimeout(() => overlay.classList.remove('visible'), 4000);
+  }
 }
 
 /* ================================================================
@@ -1825,37 +1819,38 @@ function render() {
   const char = CHARACTERS[currentCharIdx];
   const margin = 50;
   const charX = margin, charY = 30;
-  const charW = W - margin*2, charH = H - 60;
+  const charW = W - margin * 2, charH = H - 60;
 
   // Background
   if (equipped.background) {
     const bgItem = ITEMS.find(it => it.id === equipped.background.itemId);
     if (bgItem) bgItem.draw(ctx, char, charX, charY, charW, charH, equipped.background.colorIdx);
   } else {
-    // Default subtle gradient
+    // Default gradient for light theme
     const g = ctx.createLinearGradient(0, 0, 0, H);
-    g.addColorStop(0, '#2c2c3e'); g.addColorStop(1, '#1e1e30');
+    g.addColorStop(0, '#f8f4fa');
+    g.addColorStop(1, '#efe6f2');
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, W, H);
-    // Floor plane — darker gradient strip at bottom for grounding
-    const floorGrad = ctx.createLinearGradient(0, H*0.82, 0, H);
+    // Floor plane
+    const floorGrad = ctx.createLinearGradient(0, H * 0.82, 0, H);
     floorGrad.addColorStop(0, 'rgba(0,0,0,0)');
-    floorGrad.addColorStop(0.3, 'rgba(0,0,0,0.08)');
-    floorGrad.addColorStop(1, 'rgba(0,0,0,0.2)');
+    floorGrad.addColorStop(0.3, 'rgba(0,0,0,0.04)');
+    floorGrad.addColorStop(1, 'rgba(0,0,0,0.1)');
     ctx.fillStyle = floorGrad;
-    ctx.fillRect(0, H*0.82, W, H*0.18);
-    // Faint decorative sparkle dots
+    ctx.fillRect(0, H * 0.82, W, H * 0.18);
+    // Faint sparkle dots
     const now = Date.now() / 2000;
-    ctx.fillStyle = 'rgba(255,255,255,0.04)';
+    ctx.fillStyle = 'rgba(200,180,220,0.06)';
     for (let i = 0; i < 12; i++) {
-      const sx = (Math.sin(now + i*2.1) * 0.4 + 0.5) * W;
-      const sy = (Math.cos(now*0.7 + i*1.8) * 0.4 + 0.5) * H;
-      const sr = 1 + Math.sin(now*1.5 + i) * 0.5;
-      ctx.beginPath(); ctx.arc(sx, sy, sr, 0, Math.PI*2); ctx.fill();
+      const sx = (Math.sin(now + i * 2.1) * 0.4 + 0.5) * W;
+      const sy = (Math.cos(now * 0.7 + i * 1.8) * 0.4 + 0.5) * H;
+      const sr = 1 + Math.sin(now * 1.5 + i) * 0.5;
+      ctx.beginPath(); ctx.arc(sx, sy, sr, 0, Math.PI * 2); ctx.fill();
     }
   }
 
-  // Draw cape/wings behind character
+  // 1. Cape/wings behind character
   if (equipped.accessory) {
     const accItem = ITEMS.find(it => it.id === equipped.accessory.itemId);
     if (accItem && (accItem.id === 'acc_cape' || accItem.id === 'acc_extra_wings')) {
@@ -1863,40 +1858,38 @@ function render() {
     }
   }
 
-  // Character base
+  // 2. Character base
   drawCharacter(ctx, charX, charY, charW, charH, char);
 
-  // Hair (behind head items drawn separately — for now draw on top)
-  if (equipped.hair) {
-    const item = ITEMS.find(it => it.id === equipped.hair.itemId);
-    if (item) item.draw(ctx, char, charX, charY, charW, charH, equipped.hair.colorIdx);
-  }
-
-  // Dress OR top+bottom
+  // 3. Bottom OR Dress
   if (equipped.dress) {
     const item = ITEMS.find(it => it.id === equipped.dress.itemId);
     if (item) item.draw(ctx, char, charX, charY, charW, charH, equipped.dress.colorIdx);
   } else {
-    // Bottom (drawn before top so top overlaps waist)
     if (equipped.bottom) {
       const item = ITEMS.find(it => it.id === equipped.bottom.itemId);
       if (item) item.draw(ctx, char, charX, charY, charW, charH, equipped.bottom.colorIdx);
     }
-
-    // Top
+    // 4. Top (if not using dress)
     if (equipped.top) {
       const item = ITEMS.find(it => it.id === equipped.top.itemId);
       if (item) item.draw(ctx, char, charX, charY, charW, charH, equipped.top.colorIdx);
     }
   }
 
-  // Shoes
+  // 5. Shoes
   if (equipped.shoes) {
     const item = ITEMS.find(it => it.id === equipped.shoes.itemId);
     if (item) item.draw(ctx, char, charX, charY, charW, charH, equipped.shoes.colorIdx);
   }
 
-  // Accessory (non-cape/wings)
+  // 6. Hair (AFTER clothing so it falls over tops/dresses)
+  if (equipped.hair) {
+    const item = ITEMS.find(it => it.id === equipped.hair.itemId);
+    if (item) item.draw(ctx, char, charX, charY, charW, charH, equipped.hair.colorIdx);
+  }
+
+  // 7. Accessories (non-cape/wings)
   if (equipped.accessory) {
     const accItem = ITEMS.find(it => it.id === equipped.accessory.itemId);
     if (accItem && accItem.id !== 'acc_cape' && accItem.id !== 'acc_extra_wings') {
@@ -1919,9 +1912,8 @@ function buildCharSelect() {
     mini.width = 48; mini.height = 48;
     const mc = mini.getContext('2d');
     mc.clearRect(0, 0, 48, 48);
-    // Draw proper mini character (scaled drawCharacter)
     mc.save();
-    mc.scale(48/150, 48/230);
+    mc.scale(48 / 150, 48 / 230);
     drawCharacter(mc, 0, 5, 150, 220, char);
     mc.restore();
 
@@ -1953,10 +1945,10 @@ function trackCharDressed() {
 function buildCategoryTabs() {
   categoryTabsEl.innerHTML = '';
   const labels = {
-    hair: t('duCatHair','Hair'), top: t('duCatTop','Top'),
-    bottom: t('duCatBottom','Bottom'), dress: t('duCatDress','Dress'),
-    shoes: t('duCatShoes','Shoes'),
-    accessory: t('duCatAccessory','Accessory'), background: t('duCatBG','Background'),
+    hair: t('duCatHair', 'Hair'), top: t('duCatTop', 'Top'),
+    bottom: t('duCatBottom', 'Bottom'), dress: t('duCatDress', 'Dress'),
+    shoes: t('duCatShoes', 'Shoes'),
+    accessory: t('duCatAccessory', 'Accessory'), background: t('duCatBG', 'Background'),
   };
   CATEGORIES.forEach(cat => {
     const btn = document.createElement('button');
@@ -1983,7 +1975,6 @@ function renderItemGrid() {
     const card = document.createElement('div');
     card.className = 'item-card' + (isEquipped ? ' equipped' : '') + (locked ? ' locked' : '');
 
-    // Mini preview
     const mini = document.createElement('canvas');
     mini.width = 56; mini.height = 56;
     const mc = mini.getContext('2d');
@@ -1991,7 +1982,6 @@ function renderItemGrid() {
     drawItemPreview(mc, item, colorIdx);
     card.appendChild(mini);
 
-    // Premium badge
     if (item.premium) {
       const badge = document.createElement('div');
       badge.className = 'premium-badge';
@@ -1999,13 +1989,11 @@ function renderItemGrid() {
       card.appendChild(badge);
     }
 
-    // Name
     const nameEl = document.createElement('div');
     nameEl.className = 'item-name';
-    nameEl.textContent = t('duItem_'+item.id, item.name);
+    nameEl.textContent = t('duItem_' + item.id, item.name);
     card.appendChild(nameEl);
 
-    // Color swatches if equipped
     if (isEquipped && !locked && item.colors.length > 1) {
       const swatches = document.createElement('div');
       swatches.className = 'color-swatches';
@@ -2017,7 +2005,6 @@ function renderItemGrid() {
           e.stopPropagation();
           Audio.init(); Audio.resume(); Audio.colorChange();
           equipped[item.category].colorIdx = ci;
-          // Track color cycling
           if (!colorCycleCount[item.id]) colorCycleCount[item.id] = 0;
           colorCycleCount[item.id]++;
           if (colorCycleCount[item.id] >= item.colors.length) checkAchievement('color_lover');
@@ -2042,7 +2029,6 @@ function renderItemGrid() {
         equipped[item.category] = { itemId: item.id, colorIdx: 0 };
         Audio.equip();
         trackCategoryUsed(item.category);
-        // Mutual exclusion: dress <-> top/bottom
         if (item.category === 'dress') {
           delete equipped.top;
           delete equipped.bottom;
@@ -2063,14 +2049,13 @@ function drawItemPreview(mc, item, colorIdx) {
   mc.clearRect(0, 0, 56, 56);
   mc.save();
   if (item.category === 'background') {
-    mc.scale(56/400, 56/600);
+    mc.scale(56 / 400, 56 / 600);
     item.draw(mc, CHARACTERS[currentCharIdx], 0, 0, 400, 600, colorIdx);
   } else {
-    mc.scale(56/200, 56/300);
+    mc.scale(56 / 200, 56 / 300);
     const char = CHARACTERS[currentCharIdx];
-    // Draw a mini silhouette
     mc.fillStyle = 'rgba(255,255,255,0.05)';
-    mc.beginPath(); mc.ellipse(100, 140, 35, 70, 0, 0, Math.PI*2); mc.fill();
+    mc.beginPath(); mc.ellipse(100, 140, 35, 70, 0, 0, Math.PI * 2); mc.fill();
     item.draw(mc, char, 25, 15, 150, 240, colorIdx);
   }
   mc.restore();
@@ -2085,8 +2070,6 @@ function trackCategoryUsed(cat) {
 }
 
 function checkFullOutfit() {
-  // With dress category, a "full outfit" means all non-exclusive slots are filled
-  // Either: hair+dress+shoes+acc+bg (5) or hair+top+bottom+shoes+acc+bg (6)
   const hasDress = !!equipped.dress;
   const hasTopBot = !!equipped.top && !!equipped.bottom;
   const hasCore = !!equipped.hair && !!equipped.shoes && !!equipped.accessory && !!equipped.background;
@@ -2098,15 +2081,13 @@ function checkFullOutfit() {
    ================================================================ */
 function randomizeOutfit() {
   Audio.init(); Audio.resume(); Audio.randomize();
-  // 40% chance to use a dress instead of top+bottom
   const useDress = Math.random() < 0.4;
   CATEGORIES.forEach(cat => {
-    // Skip dress when using top+bottom, skip top/bottom when using dress
     if (useDress && (cat === 'top' || cat === 'bottom')) { delete equipped[cat]; return; }
     if (!useDress && cat === 'dress') { delete equipped[cat]; return; }
     const catItems = ITEMS.filter(it => it.category === cat);
-    const item = catItems[Math.floor(Math.random()*catItems.length)];
-    const ci = Math.floor(Math.random()*item.colors.length);
+    const item = catItems[Math.floor(Math.random() * catItems.length)];
+    const ci = Math.floor(Math.random() * item.colors.length);
     equipped[cat] = { itemId: item.id, colorIdx: ci };
     trackCategoryUsed(cat);
   });
@@ -2120,7 +2101,7 @@ function saveOutfit() {
   const charId = CHARACTERS[currentCharIdx].id;
   const key = SAVE_KEY + '_' + charId;
   const saved = loadJSON(key, []);
-  if (saved.length >= 10) saved.shift(); // Keep max 10
+  if (saved.length >= 10) saved.shift();
   saved.push({ equipped: JSON.parse(JSON.stringify(equipped)), ts: Date.now() });
   saveJSON(key, saved);
   stats.outfitsSaved = (stats.outfitsSaved || 0) + 1;
@@ -2144,20 +2125,19 @@ function showLoadModal() {
 
       const mini = document.createElement('canvas');
       mini.width = 80; mini.height = 120;
-      // Render preview
       const mc = mini.getContext('2d');
-      mc.scale(80/400, 120/600);
+      mc.scale(80 / 400, 120 / 600);
       const oldEquipped = equipped;
       equipped = outfit.equipped;
-      mc.fillStyle = '#1e1e30'; mc.fillRect(0,0,400,600);
+      mc.fillStyle = '#f8f4fa'; mc.fillRect(0, 0, 400, 600);
       renderToCtx(mc);
       equipped = oldEquipped;
-      mc.setTransform(1,0,0,1,0,0);
+      mc.setTransform(1, 0, 0, 1, 0, 0);
 
       slot.appendChild(mini);
       const label = document.createElement('div');
       label.className = 'outfit-label';
-      label.textContent = '#' + (i+1);
+      label.textContent = '#' + (i + 1);
       slot.appendChild(label);
 
       slot.onclick = () => {
@@ -2177,26 +2157,33 @@ function renderToCtx(c) {
   const W = 400, H = 600;
   const char = CHARACTERS[currentCharIdx];
   const margin = 50, charX = margin, charY = 30;
-  const charW = W - margin*2, charH = H - 60;
+  const charW = W - margin * 2, charH = H - 60;
 
   if (equipped.background) {
     const bgItem = ITEMS.find(it => it.id === equipped.background.itemId);
     if (bgItem) bgItem.draw(c, char, charX, charY, charW, charH, equipped.background.colorIdx);
   }
+  // Cape/wings behind
   if (equipped.accessory) {
     const accItem = ITEMS.find(it => it.id === equipped.accessory.itemId);
     if (accItem && (accItem.id === 'acc_cape' || accItem.id === 'acc_extra_wings'))
       accItem.draw(c, char, charX, charY, charW, charH, equipped.accessory.colorIdx);
   }
+  // Base character
   drawCharacter(c, charX, charY, charW, charH, char);
-  if (equipped.hair) { const it = ITEMS.find(i2=>i2.id===equipped.hair.itemId); if(it) it.draw(c,char,charX,charY,charW,charH,equipped.hair.colorIdx); }
+  // Bottom/Dress
   if (equipped.dress) {
-    const it = ITEMS.find(i2=>i2.id===equipped.dress.itemId); if(it) it.draw(c,char,charX,charY,charW,charH,equipped.dress.colorIdx);
+    const it = ITEMS.find(i2 => i2.id === equipped.dress.itemId);
+    if (it) it.draw(c, char, charX, charY, charW, charH, equipped.dress.colorIdx);
   } else {
-    if (equipped.bottom) { const it = ITEMS.find(i2=>i2.id===equipped.bottom.itemId); if(it) it.draw(c,char,charX,charY,charW,charH,equipped.bottom.colorIdx); }
-    if (equipped.top) { const it = ITEMS.find(i2=>i2.id===equipped.top.itemId); if(it) it.draw(c,char,charX,charY,charW,charH,equipped.top.colorIdx); }
+    if (equipped.bottom) { const it = ITEMS.find(i2 => i2.id === equipped.bottom.itemId); if (it) it.draw(c, char, charX, charY, charW, charH, equipped.bottom.colorIdx); }
+    if (equipped.top) { const it = ITEMS.find(i2 => i2.id === equipped.top.itemId); if (it) it.draw(c, char, charX, charY, charW, charH, equipped.top.colorIdx); }
   }
-  if (equipped.shoes) { const it = ITEMS.find(i2=>i2.id===equipped.shoes.itemId); if(it) it.draw(c,char,charX,charY,charW,charH,equipped.shoes.colorIdx); }
+  // Shoes
+  if (equipped.shoes) { const it = ITEMS.find(i2 => i2.id === equipped.shoes.itemId); if (it) it.draw(c, char, charX, charY, charW, charH, equipped.shoes.colorIdx); }
+  // Hair (after clothing)
+  if (equipped.hair) { const it = ITEMS.find(i2 => i2.id === equipped.hair.itemId); if (it) it.draw(c, char, charX, charY, charW, charH, equipped.hair.colorIdx); }
+  // Accessories (non-cape/wings)
   if (equipped.accessory) {
     const accItem = ITEMS.find(it => it.id === equipped.accessory.itemId);
     if (accItem && accItem.id !== 'acc_cape' && accItem.id !== 'acc_extra_wings')
@@ -2226,7 +2213,7 @@ function startChallenge() {
   Audio.init(); Audio.resume(); Audio.challengeStart();
   challengeActive = true;
   equipped = {};
-  currentChallengeTheme = CHALLENGE_THEMES[Math.floor(Math.random()*CHALLENGE_THEMES.length)];
+  currentChallengeTheme = CHALLENGE_THEMES[Math.floor(Math.random() * CHALLENGE_THEMES.length)];
   challengeTimer = 60;
 
   hudScore.style.display = 'flex';
@@ -2247,8 +2234,7 @@ function startChallenge() {
     }
   }, 1000);
 
-  // Show theme as overlay briefly
-  challengeTheme.textContent = t('duTheme_'+currentChallengeTheme.id, currentChallengeTheme.name);
+  challengeTheme.textContent = t('duTheme_' + currentChallengeTheme.id, currentChallengeTheme.name);
   challengeOverlay.classList.add('visible');
   challengeStars.style.display = 'none';
   challengeScoreDisplay.style.display = 'none';
@@ -2263,50 +2249,46 @@ function endChallenge() {
   challengeActive = false;
   Audio.challengeEnd();
 
-  // Calculate score
   const score = calculateScore();
   const stars = score > 25 ? 3 : score > 15 ? 2 : score > 5 ? 1 : 0;
 
-  // Update stats
   stats.challengesCompleted = (stats.challengesCompleted || 0) + 1;
   saveJSON(STATS_KEY, stats);
 
-  // Show results
-  challengeTheme.textContent = t('duTheme_'+currentChallengeTheme.id, currentChallengeTheme.name);
-  challengeScoreDisplay.textContent = t('score','Score') + ': ' + score;
+  challengeTheme.textContent = t('duTheme_' + currentChallengeTheme.id, currentChallengeTheme.name);
+  challengeScoreDisplay.textContent = t('score', 'Score') + ': ' + score;
   challengeScoreDisplay.style.display = 'block';
   challengeStars.style.display = 'flex';
   challengeCloseBtn.style.display = 'block';
 
-  // Animate stars
-  ['star1','star2','star3'].forEach((id, i) => {
+  ['star1', 'star2', 'star3'].forEach((id, i) => {
     const el = document.getElementById(id);
     el.classList.remove('earned');
     if (i < stars) {
       setTimeout(() => {
         el.classList.add('earned');
         Audio.starEarn();
-      }, 500 + i*400);
+      }, 500 + i * 400);
     }
   });
 
   challengeOverlay.classList.add('visible');
   hudTimer.style.display = 'none';
 
-  // Award coins for challenge
   let coinReward = 10;
   if (stars >= 3) coinReward += 5;
   addCoins(coinReward);
 
-  // Achievements
   checkAchievement('challenge_1');
   if (stars >= 3) checkAchievement('three_stars');
   if (stats.challengesCompleted >= 10) checkAchievement('challenge_10');
   if (score >= 28) checkAchievement('high_scorer');
 
-  // Submit to leaderboard
   if (typeof Leaderboard !== 'undefined') {
     Leaderboard.submitScore('dress-up', score);
+  }
+  if (typeof Arcade !== 'undefined') {
+    Arcade.onGameOver('dress-up', score);
   }
 }
 
@@ -2322,23 +2304,21 @@ function calculateScore() {
     item.tags.forEach(tag => {
       if (targetTags.includes(tag)) score += 3;
       else {
-        // Check partial matches (related tags)
         const related = {
-          casual:['simple','sporty'], elegant:['formal','fancy'], cool:['punk','retro'],
-          natural:['cute'], magic:['fantasy','magical'], summer:['casual','beach'],
-          warm:['cozy','winter'], medieval:['warrior'], royal:['elegant','fancy'],
-          fancy:['elegant'], punk:['cool','retro'], hero:['warrior','cool'],
-          warrior:['medieval','hero'], fantasy:['magic','magical'], scifi:['space','cool'],
+          casual: ['simple', 'sporty'], elegant: ['formal', 'fancy'], cool: ['punk', 'retro'],
+          natural: ['cute'], magic: ['fantasy', 'magical'], summer: ['casual', 'beach'],
+          warm: ['cozy', 'winter'], medieval: ['warrior'], royal: ['elegant', 'fancy'],
+          fancy: ['elegant'], punk: ['cool', 'retro'], hero: ['warrior', 'cool'],
+          warrior: ['medieval', 'hero'], fantasy: ['magic', 'magical'], scifi: ['space', 'cool'],
         };
         if (related[tag] && related[tag].some(r => targetTags.includes(r))) score += 1;
       }
     });
   });
 
-  // All slots bonus (dress replaces top+bottom, so 5 or 6 slots filled counts)
   const hasDress = !!equipped.dress;
   const hasTopBot = !!equipped.top && !!equipped.bottom;
-  const coreSlots = ['hair','shoes','accessory','background'].filter(c => equipped[c]).length;
+  const coreSlots = ['hair', 'shoes', 'accessory', 'background'].filter(c2 => equipped[c2]).length;
   if (coreSlots >= 4 && (hasDress || hasTopBot)) score += 5;
 
   scoreDisplay.textContent = score;
@@ -2356,13 +2336,12 @@ function startRunway() {
   if (runwayActive || challengeActive) return;
   Audio.init(); Audio.resume();
   runwayActive = true;
-  runwayOffset = -450; // start off-screen left
+  runwayOffset = -450;
   canvas.parentElement.classList.add('runway-active');
 
   function animateRunway() {
-    runwayOffset += 4; // speed
+    runwayOffset += 4;
     if (runwayOffset > 500) {
-      // Animation complete
       runwayActive = false;
       runwayOffset = 0;
       canvas.parentElement.classList.remove('runway-active');
@@ -2370,26 +2349,23 @@ function startRunway() {
       return;
     }
 
-    // Render with offset
     const W = canvas.width, H = canvas.height;
     const char = CHARACTERS[currentCharIdx];
     const margin = 50;
     const charW = W - margin * 2, charH = H - 60;
-    // Map offset: -450 -> far left, 0 -> center, 500 -> far right
     const charX = margin + runwayOffset;
     const charY = 30;
 
-    // Clear and draw background
     if (equipped.background) {
       const bgItem = ITEMS.find(it => it.id === equipped.background.itemId);
       if (bgItem) bgItem.draw(ctx, char, margin, charY, charW, charH, equipped.background.colorIdx);
     } else {
       const g = ctx.createLinearGradient(0, 0, 0, H);
-      g.addColorStop(0, '#2c2c3e'); g.addColorStop(1, '#1e1e30');
+      g.addColorStop(0, '#f8f4fa'); g.addColorStop(1, '#efe6f2');
       ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
     }
 
-    // Spotlight effect
+    // Spotlight
     ctx.save();
     const spotX = charX + charW / 2;
     const spot = ctx.createRadialGradient(spotX, H * 0.4, 20, spotX, H * 0.4, 200);
@@ -2399,21 +2375,23 @@ function startRunway() {
     ctx.fillRect(0, 0, W, H);
     ctx.restore();
 
-    // Draw cape/wings behind
+    // Cape/wings
     if (equipped.accessory) {
       const accItem = ITEMS.find(it => it.id === equipped.accessory.itemId);
       if (accItem && (accItem.id === 'acc_cape' || accItem.id === 'acc_extra_wings'))
         accItem.draw(ctx, char, charX, charY, charW, charH, equipped.accessory.colorIdx);
     }
     drawCharacter(ctx, charX, charY, charW, charH, char);
-    if (equipped.hair) { const it = ITEMS.find(i2=>i2.id===equipped.hair.itemId); if(it) it.draw(ctx,char,charX,charY,charW,charH,equipped.hair.colorIdx); }
+    // Bottom/Dress
     if (equipped.dress) {
-      const it = ITEMS.find(i2=>i2.id===equipped.dress.itemId); if(it) it.draw(ctx,char,charX,charY,charW,charH,equipped.dress.colorIdx);
+      const it = ITEMS.find(i2 => i2.id === equipped.dress.itemId); if (it) it.draw(ctx, char, charX, charY, charW, charH, equipped.dress.colorIdx);
     } else {
-      if (equipped.bottom) { const it = ITEMS.find(i2=>i2.id===equipped.bottom.itemId); if(it) it.draw(ctx,char,charX,charY,charW,charH,equipped.bottom.colorIdx); }
-      if (equipped.top) { const it = ITEMS.find(i2=>i2.id===equipped.top.itemId); if(it) it.draw(ctx,char,charX,charY,charW,charH,equipped.top.colorIdx); }
+      if (equipped.bottom) { const it = ITEMS.find(i2 => i2.id === equipped.bottom.itemId); if (it) it.draw(ctx, char, charX, charY, charW, charH, equipped.bottom.colorIdx); }
+      if (equipped.top) { const it = ITEMS.find(i2 => i2.id === equipped.top.itemId); if (it) it.draw(ctx, char, charX, charY, charW, charH, equipped.top.colorIdx); }
     }
-    if (equipped.shoes) { const it = ITEMS.find(i2=>i2.id===equipped.shoes.itemId); if(it) it.draw(ctx,char,charX,charY,charW,charH,equipped.shoes.colorIdx); }
+    if (equipped.shoes) { const it = ITEMS.find(i2 => i2.id === equipped.shoes.itemId); if (it) it.draw(ctx, char, charX, charY, charW, charH, equipped.shoes.colorIdx); }
+    // Hair after clothing
+    if (equipped.hair) { const it = ITEMS.find(i2 => i2.id === equipped.hair.itemId); if (it) it.draw(ctx, char, charX, charY, charW, charH, equipped.hair.colorIdx); }
     if (equipped.accessory) {
       const accItem = ITEMS.find(it => it.id === equipped.accessory.itemId);
       if (accItem && accItem.id !== 'acc_cape' && accItem.id !== 'acc_extra_wings')
@@ -2441,7 +2419,6 @@ function initMusicSelector() {
     if (songId === 'none') BGMusic.stop();
     else BGMusic.play(songId);
   };
-  // Auto-play saved music on first interaction
   if (saved !== 'none') {
     const startMusic = () => {
       Audio.init(); Audio.resume();
@@ -2466,6 +2443,10 @@ document.getElementById('challengeBtn').onclick = startChallenge;
 document.getElementById('screenshotBtn').onclick = takeScreenshot;
 document.getElementById('runwayBtn').onclick = startRunway;
 
+// Theme button
+const themeBtn = document.getElementById('themeBtn');
+if (themeBtn) themeBtn.onclick = suggestTheme;
+
 // Modal close
 loadModalClose.onclick = () => loadModal.classList.remove('visible');
 loadModal.onclick = (e) => { if (e.target === loadModal) loadModal.classList.remove('visible'); };
@@ -2480,8 +2461,7 @@ challengeCloseBtn.onclick = () => {
 document.getElementById('muteButton').onclick = () => {
   Audio.init();
   const m = Audio.toggle();
-  document.getElementById('muteButton').textContent = m ? t('unmute','Unmute') : t('duMute','Mute');
-  // Stop/resume background music
+  document.getElementById('muteButton').textContent = m ? t('unmute', 'Unmute') : t('duMute', 'Mute');
   if (m) {
     BGMusic.stop();
   } else {
@@ -2494,7 +2474,7 @@ document.getElementById('muteButton').onclick = () => {
 // Fullscreen
 document.getElementById('fullscreenButton').onclick = () => {
   const gc = document.getElementById('gameContainer');
-  if (!document.fullscreenElement) gc.requestFullscreen().catch(()=>{});
+  if (!document.fullscreenElement) gc.requestFullscreen().catch(() => {});
   else document.exitFullscreen();
 };
 
@@ -2561,7 +2541,7 @@ if (premiumModal) {
 // First init
 Audio.init();
 if (Audio.isMuted()) {
-  document.getElementById('muteButton').textContent = t('unmute','Unmute');
+  document.getElementById('muteButton').textContent = t('unmute', 'Unmute');
 }
 
 buildCharSelect();

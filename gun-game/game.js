@@ -956,6 +956,10 @@ function triggerVictory() {
   saveBestScore();
   const totalScore = gameState.score + gunState.totalDestroyed * 2;
   if (typeof Leaderboard !== 'undefined') Leaderboard.submitScore('gun-game', totalScore);
+  if (typeof Arcade !== 'undefined') {
+    Arcade.onGameOver('gun-game', totalScore);
+    document.body.appendChild(Arcade.createScoreCard('gun-game', totalScore, Number(localStorage.getItem('gunGameBest'))||0));
+  }
 }
 
 /* --- Update projectiles --- */
@@ -1908,6 +1912,10 @@ const update = (deltaSeconds) => {
       Audio.stopDrone();
       const totalScore = gameState.score + gunState.totalDestroyed * 2;
       if (typeof Leaderboard !== 'undefined') Leaderboard.submitScore('gun-game', totalScore);
+      if (typeof Arcade !== 'undefined') {
+        Arcade.onGameOver('gun-game', totalScore);
+        document.body.appendChild(Arcade.createScoreCard('gun-game', totalScore, Number(localStorage.getItem('gunGameBest'))||0));
+      }
       ggAchStats.gamesPlayed++;
       if (totalScore > ggAchStats.bestScore) ggAchStats.bestScore = totalScore;
       saveGGAch();

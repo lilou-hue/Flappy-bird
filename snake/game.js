@@ -1409,6 +1409,10 @@ function die() {
   if (typeof Leaderboard !== 'undefined' && state.score > 0) {
     Leaderboard.submitScore('snake', state.score).then(() => Leaderboard.refresh('snake'));
   }
+  if (typeof Arcade !== 'undefined') {
+    Arcade.onGameOver('snake', state.score);
+    document.body.appendChild(Arcade.createScoreCard('snake', state.score, state.best));
+  }
 
   checkSnAch();
   showSnAchPopup();
