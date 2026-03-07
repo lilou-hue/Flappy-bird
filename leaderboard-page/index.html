@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Leaderboard - SlayPlay</title>
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../arcade.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+    .arc-lb-wrap {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 1rem;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body class="arc-page">
+  <script src="../arcade.js"></script>
+  <script src="../i18n.js"></script>
+
+  <div class="arc-page__container">
+    <h1 class="arc-page__title">Leaderboard</h1>
+    <p class="arc-page__subtitle">See how you stack up</p>
+
+    <div class="arc-tabs" id="lbTabs">
+      <button class="arc-tab arc-tab--active" data-tab="coins">Most Coins</button>
+      <button class="arc-tab" data-tab="score">Highest Score</button>
+      <button class="arc-tab" data-tab="games">Most Games</button>
+      <button class="arc-tab" data-tab="streak">Longest Streak</button>
+    </div>
+
+    <div class="arc-lb-wrap">
+      <table class="arc-lb-table" id="lbTable">
+        <thead>
+          <tr>
+            <th class="arc-lb-rank">#</th>
+            <th>Player</th>
+            <th class="arc-lb-score">Score</th>
+          </tr>
+        </thead>
+        <tbody id="lbBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      Arcade.injectNavHUD();
+
+      var currentTab = 'coins';
+      var localNickname = localStorage.getItem('arcade_nickname') || 'You';
+
+      /* Deterministic mock entries seeded from tab name */
+      function mulberry32(seed) {
+        return function () {
+          seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+          var t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+          t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+          return ((t ^ t >>> 14) >>> 0) / 4294967296;
+        };
+      }
+
+      var mockNames = [
+        'PixelKing', 'NeonQueen', 'GlitchWiz', 'ByteBlast', 'CyberFox',
+        'TurboNova', 'ZapMaster', 'CosmicAce', 'BlazeStar', 'StormRider',
+        'VoidWalker', 'IronPulse', 'ShadowByte', 'QuantumKid', 'RogueWave',
+        'FluxDemon', 'NovaDrift', 'PixelPunk', 'SkullGrin', 'TechNinja',
+      ];
+
+      function generateEntries(tab) {
+        var seed = 0;
+        for (var i = 0; i < tab.length; i++) seed = ((seed << 5) - seed + tab.charCodeAt(i)) | 0;
+        var rng = mulberry32(seed);
+
+        var entries = [];
+        var ranges = { coins: [50, 5000], score: [100, 20000], games: [5, 500], streak: [1, 60] };
+        var range = ranges[tab];
+
+        for (var j = 0; j < 15; j++) {
+          entries.push({
+            name: mockNames[Math.floor(rng() * mockNames.length)],
+            value: Math.floor(rng() * (range[1] - range[0]) + range[0]),
+          });
+        }
+
+        /* Add local player */
+        var profile = Arcade.getProfileData();
+        var localVal = 0;
+        if (tab === 'coins') localVal = profile.totalCoinsEarned;
+        else if (tab === 'score') {
+          var keys = ['flappyBest','snakeBest','tetrisBest','luminaBest','phantomRoadBest','methaneDriftBest','gunGameBest','astroMinerBest','starFuryBest','inkognitoBest','stackTowerBest','neonPongBest','beatDropBest'];
+          keys.forEach(function (k) { localVal += Number(localStorage.getItem(k)) || 0; });
+        }
+        else if (tab === 'games') localVal = profile.totalGamesPlayed;
+        else if (tab === 'streak') localVal = profile.longestStreak;
+
+        entries.push({ name: localNickname, value: localVal, isLocal: true });
+
+        entries.sort(function (a, b) { return b.value - a.value; });
+        return entries;
+      }
+
+      function render() {
+        var entries = generateEntries(currentTab);
+        var body = document.getElementById('lbBody');
+        var labels = { coins: ' coins', score: ' pts', games: ' games', streak: ' days' };
+
+        body.innerHTML = entries.map(function (e, i) {
+          var rank = i + 1;
+          var rankStr = rank === 1 ? '\uD83D\uDC51 1' : String(rank);
+          var cls = e.isLocal ? ' class="arc-lb-me"' : '';
+          return '<tr' + cls + '>' +
+            '<td class="arc-lb-rank">' + rankStr + '</td>' +
+            '<td>' + e.name + (e.isLocal ? ' (you)' : '') + '</td>' +
+            '<td class="arc-lb-score">' + e.value.toLocaleString() + labels[currentTab] + '</td>' +
+          '</tr>';
+        }).join('');
+      }
+
+      document.getElementById('lbTabs').addEventListener('click', function (e) {
+        if (!e.target.dataset.tab) return;
+        currentTab = e.target.dataset.tab;
+        document.querySelectorAll('.arc-tab').forEach(function (t) { t.classList.remove('arc-tab--active'); });
+        e.target.classList.add('arc-tab--active');
+        render();
+      });
+
+      render();
+    })();
+  </script>
+</body>
+</html>

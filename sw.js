@@ -1,10 +1,15 @@
-const CACHE_NAME = 'slayplay-v3';
+const CACHE_NAME = 'slayplay-v4';
 
 const PRECACHE_URLS = [
   '/',
   '/i18n.js',
   '/leaderboard.js',
   '/leaderboard.css',
+  '/arcade.js',
+  '/arcade.css',
+  '/shop/',
+  '/achievements/',
+  '/leaderboard-page/',
   '/icon.svg',
   '/profile/',
   '/flappy-bird/',

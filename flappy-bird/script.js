@@ -1402,6 +1402,10 @@ const update = (deltaSeconds) => {
       if (typeof Leaderboard !== 'undefined') {
         Leaderboard.submitScore('flappy-bird', gameState.score).then(() => Leaderboard.refresh('flappy-bird'));
       }
+      if (typeof Arcade !== 'undefined') {
+        const arcResult = Arcade.onGameOver('flappy-bird', gameState.score);
+        document.body.appendChild(Arcade.createScoreCard('flappy-bird', gameState.score, gameState.best));
+      }
     }
     if (!feathersSpawned) {
       spawnFeatherParticles();

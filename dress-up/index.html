@@ -45,24 +45,9 @@
       <button id="fullscreenButton" class="hud__button" type="button" aria-label="Toggle fullscreen">&#x26F6;</button>
     </div>
 
-    <!-- Main Game Panel -->
+    <!-- Main Game Panel: Wardrobe LEFT | Avatar RIGHT -->
     <section class="game__panel">
-      <!-- Canvas Column -->
-      <div class="canvas-wrap">
-        <canvas id="gameCanvas" width="400" height="600" aria-label="Dress-Up Character"></canvas>
-        <div class="challenge-overlay" id="challengeOverlay">
-          <div class="challenge-theme" id="challengeTheme"></div>
-          <div class="challenge-stars" id="challengeStars">
-            <span class="star" id="star1">&#9733;</span>
-            <span class="star" id="star2">&#9733;</span>
-            <span class="star" id="star3">&#9733;</span>
-          </div>
-          <div class="challenge-score-display" id="challengeScoreDisplay"></div>
-          <button class="action-btn primary" id="challengeCloseBtn" data-i18n="duContinue">Continue</button>
-        </div>
-      </div>
-
-      <!-- Controls Column -->
+      <!-- Wardrobe / Controls (LEFT) -->
       <div class="controls">
         <!-- Character Selection -->
         <div class="char-select" id="charSelect"></div>
@@ -81,8 +66,29 @@
           <button class="action-btn" id="clearBtn" data-i18n="duClear">Clear</button>
           <button class="action-btn primary" id="challengeBtn" data-i18n="duChallenge">Challenge</button>
           <button class="action-btn" id="screenshotBtn" data-i18n="duScreenshot">Screenshot</button>
-          <button class="action-btn" id="shopBtn">Shop</button>
           <button class="action-btn" id="runwayBtn" data-i18n="duRunway">Runway</button>
+          <button class="action-btn" id="themeBtn">Theme</button>
+          <button class="action-btn" id="shopBtn">Shop</button>
+        </div>
+      </div>
+
+      <!-- Avatar Display (RIGHT) -->
+      <div class="canvas-wrap">
+        <canvas id="gameCanvas" width="400" height="600" aria-label="Dress-Up Character"></canvas>
+        <div class="challenge-overlay" id="challengeOverlay">
+          <div class="challenge-theme" id="challengeTheme"></div>
+          <div class="challenge-stars" id="challengeStars">
+            <span class="star" id="star1">&#9733;</span>
+            <span class="star" id="star2">&#9733;</span>
+            <span class="star" id="star3">&#9733;</span>
+          </div>
+          <div class="challenge-score-display" id="challengeScoreDisplay"></div>
+          <button class="action-btn primary" id="challengeCloseBtn" data-i18n="duContinue">Continue</button>
+        </div>
+        <!-- Theme suggestion overlay -->
+        <div class="theme-overlay" id="themeOverlay">
+          <div class="theme-overlay__label">Style Challenge</div>
+          <div class="theme-overlay__name" id="themeOverlayName"></div>
         </div>
       </div>
     </section>
@@ -173,9 +179,12 @@
   <!-- Scripts -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <link rel="stylesheet" href="../arcade.css">
+  <script src="../arcade.js"></script>
   <script src="../leaderboard.js"></script>
   <script src="../i18n.js"></script>
   <script src="audio.js"></script>
   <script src="game.js"></script>
+  <script>if(typeof Arcade!=='undefined')Arcade.injectNavHUD();</script>
 </body>
 </html>

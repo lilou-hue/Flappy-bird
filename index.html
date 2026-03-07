@@ -15,6 +15,7 @@
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#302b63">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/arcade.css">
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
@@ -461,6 +462,9 @@
       </div>
       <p class="tagline" data-i18n="pickAGame">Pick a game. Start slaying.</p>
       <nav class="nav-bar">
+        <a href="/achievements/" class="nav-pill">&#x1F3C6; Achievements</a>
+        <a href="/shop/" class="nav-pill">&#x1F6D2; Shop</a>
+        <a href="/leaderboard-page/" class="nav-pill">&#x1F4CA; Leaderboard</a>
         <a href="/profile/" class="nav-pill" data-i18n="profileLink">&#x1F464; Profile</a>
       </nav>
     </header>
@@ -486,6 +490,41 @@
         <div class="stat-card__value" id="statStreak">0</div>
         <div class="stat-card__label">Day Streak</div>
       </div>
+    </div>
+
+    <!-- Arcade: Coin balance + Random Game -->
+    <div style="display:flex; align-items:center; justify-content:center; gap:1rem; flex-wrap:wrap; max-width:760px; width:100%; margin-bottom:1.5rem; position:relative; z-index:1;" id="arcadeBar">
+      <div class="arc-nav__coins" style="font-size:1rem; padding:0.5rem 1.2rem;">
+        <span class="arc-coin-icon" style="font-size:1.2rem;">&#x1FA99;</span>
+        <span class="arc-coin-value">0</span> coins
+      </div>
+      <button class="arc-random-btn" id="randomGameBtn" onclick="window.location.href=Arcade.getRandomGame()">
+        <span class="arc-random-btn__dice">&#x1F3B2;</span> Random Game
+      </button>
+    </div>
+
+    <!-- Arcade: Daily Challenges -->
+    <div class="arc-challenges" id="dailyChallenges">
+      <div class="arc-challenges__title">&#x1F3AF; Daily Challenges</div>
+      <div class="arc-challenges__grid" id="challengeGrid"></div>
+    </div>
+
+    <!-- Arcade: Achievements Preview -->
+    <div class="arc-ach-preview" id="achPreview">
+      <div class="arc-ach-preview__title">
+        <span>&#x1F3C6; Achievements</span>
+        <a href="/achievements/" class="arc-ach-preview__link">View All</a>
+      </div>
+      <div class="arc-ach-preview__scroll" id="achPreviewScroll"></div>
+    </div>
+
+    <!-- Arcade: Leaderboard Preview -->
+    <div class="arc-lb-preview" id="lbPreview">
+      <div class="arc-lb-preview__title">
+        <span>&#x1F4CA; Top Players</span>
+        <a href="/leaderboard-page/" class="arc-lb-preview__link">View All</a>
+      </div>
+      <div class="arc-lb-preview__list" id="lbPreviewList"></div>
     </div>
 
     <div class="games-grid">
@@ -2380,6 +2419,58 @@
           document.getElementById('statAchievements').textContent = totalAch;
           document.getElementById('statCombinedBest').textContent = combinedBest.toLocaleString();
           document.getElementById('statStreak').textContent = streak;
+        }
+      })();
+    </script>
+    <script src="/arcade.js"></script>
+    <script>
+      /* ── Arcade Platform Init ── */
+      (function () {
+        /* Check streak on homepage load */
+        var streakResult = Arcade.checkStreak();
+
+        /* Render daily challenges */
+        var challenges = Arcade.getDailyChallenges();
+        var cGrid = document.getElementById('challengeGrid');
+        if (cGrid) {
+          cGrid.innerHTML = challenges.map(function (c) {
+            return '<div class="arc-challenge-card' + (c.completed ? ' arc-challenge-card--done' : '') + '">' +
+              '<div class="arc-challenge-card__desc">' + c.desc + '</div>' +
+              '<div class="arc-challenge-card__footer">' +
+                '<span class="arc-challenge-card__reward">&#x1FA99; +' + c.reward + '</span>' +
+                '<span class="arc-challenge-card__status">' + (c.completed ? '&#x2705;' : '&#x23F3;') + '</span>' +
+              '</div>' +
+            '</div>';
+          }).join('');
+        }
+
+        /* Render achievements preview */
+        var achs = Arcade.getArcadeAchievements();
+        var achScroll = document.getElementById('achPreviewScroll');
+        if (achScroll) {
+          achScroll.innerHTML = achs.map(function (a) {
+            var cls = a.unlocked ? 'arc-ach-mini arc-ach-mini--unlocked' : 'arc-ach-mini arc-ach-mini--locked';
+            return '<div class="' + cls + '">' +
+              '<span class="arc-ach-mini__icon">' + a.icon + '</span>' +
+              '<span class="arc-ach-mini__name">' + a.name + '</span>' +
+            '</div>';
+          }).join('');
+        }
+
+        /* Render leaderboard preview (top 3 by coins) */
+        var mockNames = ['PixelKing', 'NeonQueen', 'GlitchWiz'];
+        var mockCoins = [2450, 1820, 1350];
+        var rankIcons = ['\uD83E\uDD47', '\uD83E\uDD48', '\uD83E\uDD49'];
+        var lbList = document.getElementById('lbPreviewList');
+        if (lbList) {
+          var profile = Arcade.getProfileData();
+          lbList.innerHTML = mockNames.map(function (name, i) {
+            return '<div class="arc-lb-preview__entry">' +
+              '<div class="arc-lb-preview__rank">' + rankIcons[i] + '</div>' +
+              '<div class="arc-lb-preview__name">' + name + '</div>' +
+              '<div class="arc-lb-preview__score">&#x1FA99; ' + mockCoins[i] + '</div>' +
+            '</div>';
+          }).join('');
         }
       })();
     </script>

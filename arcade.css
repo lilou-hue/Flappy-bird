@@ -1,0 +1,970 @@
+/* ═══════════════════════════════════════════════════════════════
+   arcade.css  –  SlayPlay Arcade Platform Shared Styles
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Nav HUD ── */
+.arc-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9990;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1.2rem;
+  background: rgba(9, 9, 11, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-size: 0.88rem;
+}
+
+.arc-nav__left,
+.arc-nav__right {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.arc-nav__link {
+  color: #a1a1aa;
+  text-decoration: none;
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  transition: color 0.2s, background 0.2s;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.arc-nav__link:hover {
+  color: #fafafa;
+  background: rgba(255,255,255,0.06);
+}
+
+.arc-nav__link--active {
+  color: #c084fc;
+  background: rgba(192,132,252,0.1);
+}
+
+.arc-nav__link--home {
+  font-size: 1.15rem;
+  padding: 0.3rem 0.6rem;
+}
+
+.arc-nav__coins {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: rgba(250,204,21,0.1);
+  border: 1px solid rgba(250,204,21,0.2);
+  color: #facc15;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.arc-coin-icon {
+  font-size: 1rem;
+}
+
+.arc-nav__streak {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  color: #fb923c;
+  font-weight: 600;
+  padding: 0.3rem 0.5rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Compact nav on game pages */
+.arc-nav--compact {
+  padding: 0.4rem 0.8rem;
+  justify-content: space-between;
+}
+
+/* Body padding to account for fixed nav */
+body:has(.arc-nav) {
+  padding-top: 3rem;
+}
+
+/* ── Score Card Overlay ── */
+.arc-scorecard {
+  position: fixed;
+  inset: 0;
+  z-index: 9995;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  font-family: "Space Grotesk", system-ui, sans-serif;
+}
+
+.arc-scorecard--show {
+  opacity: 1;
+}
+
+.arc-scorecard__card {
+  background: linear-gradient(145deg, #1a1a2e, #16162a);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 24px;
+  padding: 2rem 1.8rem;
+  max-width: 360px;
+  width: 90%;
+  text-align: center;
+  transform: scale(0.9) translateY(20px);
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 25px 60px rgba(0,0,0,0.5), 0 0 80px rgba(192,132,252,0.08);
+}
+
+.arc-scorecard--show .arc-scorecard__card {
+  transform: scale(1) translateY(0);
+}
+
+.arc-scorecard__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fafafa;
+  margin-bottom: 0.25rem;
+}
+
+.arc-scorecard__newbest {
+  display: inline-block;
+  background: linear-gradient(135deg, #facc15, #fb923c);
+  color: #09090b;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.2rem 0.8rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
+  animation: arcPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes arcPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.arc-scorecard__scores {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin: 1.2rem 0;
+}
+
+.arc-scorecard__score-label {
+  font-size: 0.72rem;
+  color: #a1a1aa;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.2rem;
+}
+
+.arc-scorecard__score-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #fafafa;
+  font-variant-numeric: tabular-nums;
+}
+
+.arc-scorecard__coins {
+  background: rgba(255,255,255,0.03);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.2rem;
+}
+
+.arc-scorecard__coins-row {
+  display: flex;
+  justify-content: space-between;
+  color: #a1a1aa;
+  font-size: 0.82rem;
+  padding: 0.2rem 0;
+}
+
+.arc-scorecard__coins-row--bonus {
+  color: #facc15;
+}
+
+.arc-scorecard__coins-total {
+  display: flex;
+  justify-content: space-between;
+  color: #facc15;
+  font-weight: 700;
+  font-size: 0.92rem;
+  padding-top: 0.5rem;
+  margin-top: 0.3rem;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.arc-scorecard__actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.arc-scorecard__btn {
+  padding: 0.55rem 1.1rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.05);
+  color: #fafafa;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.arc-scorecard__btn:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.2);
+  transform: translateY(-1px);
+}
+
+.arc-scorecard__btn--again {
+  background: linear-gradient(135deg, #c084fc, #a855f7);
+  border-color: transparent;
+  color: #fff;
+}
+
+.arc-scorecard__btn--again:hover {
+  background: linear-gradient(135deg, #d8b4fe, #c084fc);
+}
+
+.arc-scorecard__btn--share {
+  background: rgba(255,255,255,0.05);
+}
+
+.arc-scorecard__btn--home {
+  background: rgba(255,255,255,0.05);
+}
+
+/* ── Achievement Popup Toast ── */
+.arc-ach-toast {
+  position: fixed;
+  top: 4.5rem;
+  right: 1rem;
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: linear-gradient(135deg, #1a1a2e, #1e1b4b);
+  border: 1px solid rgba(192,132,252,0.3);
+  border-radius: 14px;
+  padding: 0.8rem 1.2rem;
+  min-width: 240px;
+  max-width: 340px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 30px rgba(192,132,252,0.1);
+  transform: translateX(120%);
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-family: "Space Grotesk", system-ui, sans-serif;
+}
+
+.arc-ach-toast--show {
+  transform: translateX(0);
+}
+
+.arc-ach-toast__icon {
+  font-size: 1.8rem;
+  flex-shrink: 0;
+}
+
+.arc-ach-toast__title {
+  font-size: 0.68rem;
+  color: #c084fc;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+.arc-ach-toast__name {
+  font-size: 0.95rem;
+  color: #fafafa;
+  font-weight: 600;
+}
+
+.arc-ach-toast__reward {
+  font-size: 0.78rem;
+  color: #facc15;
+  font-weight: 500;
+}
+
+/* ── Daily Challenge Cards ── */
+.arc-challenges {
+  max-width: 760px;
+  width: 100%;
+  margin-bottom: 1.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.arc-challenges__title {
+  font-size: 1rem;
+  color: #fafafa;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.arc-challenges__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.arc-challenge-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px;
+  padding: 0.85rem;
+  backdrop-filter: blur(12px);
+  transition: border-color 0.2s;
+}
+
+.arc-challenge-card--done {
+  border-color: rgba(34,197,94,0.3);
+  background: rgba(34,197,94,0.05);
+}
+
+.arc-challenge-card__desc {
+  font-size: 0.82rem;
+  color: #e4e4e7;
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.arc-challenge-card__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.arc-challenge-card__reward {
+  font-size: 0.78rem;
+  color: #facc15;
+  font-weight: 600;
+}
+
+.arc-challenge-card__status {
+  font-size: 0.82rem;
+}
+
+/* ── Random Game Button ── */
+.arc-random-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.8rem;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #c084fc, #f472b6);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+  animation: arcGlow 2s ease-in-out infinite;
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes arcGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(192,132,252,0.3), 0 4px 15px rgba(0,0,0,0.3); }
+  50% { box-shadow: 0 0 35px rgba(192,132,252,0.5), 0 4px 20px rgba(0,0,0,0.3); }
+}
+
+.arc-random-btn:hover {
+  transform: translateY(-2px) scale(1.03);
+}
+
+.arc-random-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.arc-random-btn__dice {
+  font-size: 1.3rem;
+  animation: arcDiceSpin 3s linear infinite;
+  display: inline-block;
+}
+
+@keyframes arcDiceSpin {
+  0%, 85%, 100% { transform: rotate(0deg); }
+  90% { transform: rotate(360deg); }
+}
+
+/* ── Shop ── */
+.arc-shop-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.arc-shop-item {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 16px;
+  padding: 1.2rem 1rem;
+  text-align: center;
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.arc-shop-item:hover {
+  border-color: rgba(192,132,252,0.2);
+  transform: translateY(-2px);
+}
+
+.arc-shop-item__icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.arc-shop-item__name {
+  font-size: 0.9rem;
+  color: #fafafa;
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+}
+
+.arc-shop-item__cost {
+  font-size: 0.82rem;
+  color: #facc15;
+  margin-bottom: 0.75rem;
+}
+
+.arc-shop-btn {
+  padding: 0.4rem 1.2rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: linear-gradient(135deg, #c084fc, #a855f7);
+  color: #fff;
+  transition: all 0.2s;
+}
+
+.arc-shop-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(192,132,252,0.3);
+}
+
+.arc-shop-btn--owned {
+  background: rgba(34,197,94,0.15);
+  border-color: rgba(34,197,94,0.3);
+  color: #22c55e;
+  cursor: default;
+}
+
+.arc-shop-btn--equipped {
+  background: rgba(250,204,21,0.15);
+  border-color: rgba(250,204,21,0.3);
+  color: #facc15;
+}
+
+.arc-shop-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ── Shop Category Tabs ── */
+.arc-tabs {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 1.5rem;
+  justify-content: center;
+}
+
+.arc-tab {
+  padding: 0.45rem 1.2rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.04);
+  color: #a1a1aa;
+  transition: all 0.2s;
+}
+
+.arc-tab:hover {
+  color: #fafafa;
+  border-color: rgba(255,255,255,0.15);
+}
+
+.arc-tab--active {
+  color: #c084fc;
+  background: rgba(192,132,252,0.1);
+  border-color: rgba(192,132,252,0.3);
+}
+
+/* ── Achievements Grid ── */
+.arc-ach-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+
+.arc-ach-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px;
+  padding: 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  transition: border-color 0.2s;
+}
+
+.arc-ach-card--unlocked {
+  border-color: rgba(192,132,252,0.25);
+  background: rgba(192,132,252,0.04);
+}
+
+.arc-ach-card--locked {
+  opacity: 0.5;
+  filter: grayscale(0.6);
+}
+
+.arc-ach-card__icon {
+  font-size: 1.8rem;
+  flex-shrink: 0;
+}
+
+.arc-ach-card__name {
+  font-size: 0.88rem;
+  color: #fafafa;
+  font-weight: 600;
+  margin-bottom: 0.15rem;
+}
+
+.arc-ach-card__desc {
+  font-size: 0.76rem;
+  color: #a1a1aa;
+  line-height: 1.35;
+}
+
+.arc-ach-card__reward {
+  font-size: 0.72rem;
+  color: #facc15;
+  margin-top: 0.2rem;
+}
+
+/* ── Achievements Progress Bar ── */
+.arc-progress {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto 1.5rem;
+  text-align: center;
+}
+
+.arc-progress__label {
+  font-size: 0.85rem;
+  color: #a1a1aa;
+  margin-bottom: 0.4rem;
+}
+
+.arc-progress__bar {
+  height: 8px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.arc-progress__fill {
+  height: 100%;
+  background: linear-gradient(90deg, #c084fc, #f472b6);
+  border-radius: 999px;
+  transition: width 0.5s ease;
+}
+
+/* ── Leaderboard Page ── */
+.arc-lb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.arc-lb-table th {
+  text-align: left;
+  font-size: 0.72rem;
+  color: #71717a;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.arc-lb-table td {
+  padding: 0.6rem 0.75rem;
+  color: #e4e4e7;
+  font-size: 0.88rem;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+
+.arc-lb-table tr:hover td {
+  background: rgba(255,255,255,0.02);
+}
+
+.arc-lb-table .arc-lb-me td {
+  background: rgba(192,132,252,0.08);
+  color: #c084fc;
+  font-weight: 600;
+}
+
+.arc-lb-table .arc-lb-rank {
+  width: 3rem;
+  text-align: center;
+}
+
+.arc-lb-table .arc-lb-score {
+  text-align: right;
+  font-weight: 600;
+}
+
+/* ── Equipped Items Display ── */
+.arc-equipped {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.arc-equipped__slot {
+  background: rgba(255,255,255,0.04);
+  border: 1px dashed rgba(255,255,255,0.12);
+  border-radius: 14px;
+  padding: 0.75rem 1.2rem;
+  text-align: center;
+  min-width: 100px;
+}
+
+.arc-equipped__slot--filled {
+  border-style: solid;
+  border-color: rgba(192,132,252,0.3);
+}
+
+.arc-equipped__label {
+  font-size: 0.68rem;
+  color: #71717a;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.25rem;
+}
+
+.arc-equipped__icon {
+  font-size: 1.5rem;
+}
+
+/* ── Streak Calendar ── */
+.arc-streak-cal {
+  display: flex;
+  gap: 0.4rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.arc-streak-dot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  border: 2px solid rgba(255,255,255,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  color: #71717a;
+}
+
+.arc-streak-dot--active {
+  background: rgba(192,132,252,0.2);
+  border-color: #c084fc;
+  color: #c084fc;
+}
+
+.arc-streak-dot--today {
+  border-color: #facc15;
+  color: #facc15;
+  box-shadow: 0 0 10px rgba(250,204,21,0.3);
+}
+
+/* ── Shared page layout (shop, achievements, leaderboard pages) ── */
+.arc-page {
+  min-height: 100vh;
+  background: #09090b;
+  color: #fafafa;
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  padding: 1rem;
+}
+
+.arc-page__container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding-top: 3.5rem;
+}
+
+.arc-page__title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, #c084fc, #f472b6, #fb923c);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.arc-page__subtitle {
+  text-align: center;
+  color: #a1a1aa;
+  font-size: 0.9rem;
+  margin-bottom: 2rem;
+}
+
+/* ── Coin Balance Header ── */
+.arc-coin-header {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.arc-coin-header__balance {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(250,204,21,0.08);
+  border: 1px solid rgba(250,204,21,0.2);
+  color: #facc15;
+  padding: 0.6rem 1.4rem;
+  border-radius: 999px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Achievements Preview (homepage) ── */
+.arc-ach-preview {
+  max-width: 760px;
+  width: 100%;
+  margin-bottom: 1.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.arc-ach-preview__title {
+  font-size: 1rem;
+  color: #fafafa;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.arc-ach-preview__link {
+  font-size: 0.82rem;
+  color: #c084fc;
+  text-decoration: none;
+}
+
+.arc-ach-preview__link:hover {
+  text-decoration: underline;
+}
+
+.arc-ach-preview__scroll {
+  display: flex;
+  gap: 0.6rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+
+.arc-ach-preview__scroll::-webkit-scrollbar {
+  height: 4px;
+}
+
+.arc-ach-preview__scroll::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+}
+
+.arc-ach-mini {
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 12px;
+  padding: 0.6rem 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 160px;
+}
+
+.arc-ach-mini--unlocked {
+  border-color: rgba(192,132,252,0.25);
+}
+
+.arc-ach-mini--locked {
+  opacity: 0.45;
+  filter: grayscale(0.5);
+}
+
+.arc-ach-mini__icon {
+  font-size: 1.3rem;
+}
+
+.arc-ach-mini__name {
+  font-size: 0.78rem;
+  color: #fafafa;
+  font-weight: 500;
+}
+
+/* ── Leaderboard Preview (homepage) ── */
+.arc-lb-preview {
+  max-width: 760px;
+  width: 100%;
+  margin-bottom: 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+.arc-lb-preview__title {
+  font-size: 1rem;
+  color: #fafafa;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.arc-lb-preview__link {
+  font-size: 0.82rem;
+  color: #c084fc;
+  text-decoration: none;
+}
+
+.arc-lb-preview__link:hover {
+  text-decoration: underline;
+}
+
+.arc-lb-preview__list {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.arc-lb-preview__entry {
+  flex: 1;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px;
+  padding: 0.85rem;
+  text-align: center;
+}
+
+.arc-lb-preview__rank {
+  font-size: 1.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.arc-lb-preview__name {
+  font-size: 0.85rem;
+  color: #fafafa;
+  font-weight: 600;
+  margin-bottom: 0.15rem;
+}
+
+.arc-lb-preview__score {
+  font-size: 0.78rem;
+  color: #facc15;
+}
+
+/* ── Responsive ── */
+@media (max-width: 680px) {
+  .arc-nav:not(.arc-nav--compact) {
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 0.4rem 0.6rem;
+  }
+
+  .arc-nav__left {
+    gap: 0.15rem;
+  }
+
+  .arc-nav__link {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.78rem;
+  }
+
+  body:has(.arc-nav:not(.arc-nav--compact)) {
+    padding-top: 5rem;
+  }
+
+  .arc-challenges__grid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .arc-scorecard__card {
+    padding: 1.5rem 1.2rem;
+  }
+
+  .arc-shop-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .arc-ach-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .arc-lb-preview__list {
+    flex-direction: column;
+  }
+
+  .arc-lb-preview__entry {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-align: left;
+  }
+}
+
+@media (max-width: 400px) {
+  .arc-nav__link {
+    font-size: 0;
+    padding: 0.3rem 0.4rem;
+  }
+
+  /* Show only first emoji/letter on very small screens */
+  .arc-nav__link::before {
+    font-size: 1rem;
+  }
+
+  .arc-nav__link[href="/"]::before { content: "\\1F3AE"; font-size: 1rem; }
+  .arc-nav__link[href="/achievements/"]::before { content: "\\1F3C6"; font-size: 1rem; }
+  .arc-nav__link[href="/shop/"]::before { content: "\\1F6D2"; font-size: 1rem; }
+  .arc-nav__link[href="/leaderboard-page/"]::before { content: "\\1F4CA"; font-size: 1rem; }
+  .arc-nav__link[href="/profile/"]::before { content: "\\1F464"; font-size: 1rem; }
+}

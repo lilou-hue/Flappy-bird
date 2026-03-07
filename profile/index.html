@@ -12,6 +12,8 @@
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Player Profile</title>
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../arcade.css">
     <style>
       :root { font-family: "Segoe UI", "Trebuchet MS", system-ui, sans-serif; color-scheme: dark; }
       * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -291,6 +293,9 @@
       </div>
     </div>
 
+    <!-- Arcade: Coin Balance & Equipped Items -->
+    <div id="arcadeProfileSection" style="max-width:600px; width:100%; margin-bottom:1.5rem;"></div>
+
     <div class="scores-grid" id="scoresGrid"></div>
 
     <div class="ach-section">
@@ -300,7 +305,53 @@
       <div class="ach-grid" id="achGrid"></div>
     </div>
 
+    <script src="../arcade.js"></script>
     <script src="../i18n.js"></script>
+    <script>
+    /* Arcade profile section */
+    (function () {
+      if (typeof Arcade === 'undefined') return;
+      Arcade.injectNavHUD();
+      var p = Arcade.getProfileData();
+      var streak = p.streak;
+      var section = document.getElementById('arcadeProfileSection');
+      if (!section) return;
+
+      /* Coin balance */
+      var coinHtml = '<div class="arc-coin-header" style="margin-bottom:1rem;">' +
+        '<div class="arc-coin-header__balance">&#x1FA99; <span class="arc-coin-value">' + p.coins + '</span> coins' +
+        '<span style="margin-left:0.75rem;font-size:0.8rem;color:#a1a1aa;">(' + p.totalCoinsEarned + ' earned / ' + p.totalCoinsSpent + ' spent)</span></div>' +
+      '</div>';
+
+      /* Equipped items */
+      var items = Arcade.getShopItems();
+      var slots = ['badge', 'theme', 'frame'];
+      var equippedHtml = '<div class="arc-equipped">' + slots.map(function (cat) {
+        var eqId = p['equipped' + cat.charAt(0).toUpperCase() + cat.slice(1)];
+        var item = eqId ? items.find(function (i) { return i.id === eqId; }) : null;
+        return '<div class="arc-equipped__slot' + (item ? ' arc-equipped__slot--filled' : '') + '">' +
+          '<div class="arc-equipped__label">' + cat + '</div>' +
+          '<div class="arc-equipped__icon">' + (item ? item.icon : '-') + '</div>' +
+        '</div>';
+      }).join('') + '</div>';
+
+      /* Streak calendar (7-day visualization) */
+      var days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+      var todayIdx = new Date().getDay();
+      var streakHtml = '<div style="text-align:center;margin-bottom:0.5rem;font-size:0.82rem;color:#a1a1aa;">Play Streak: ' + streak + ' day' + (streak !== 1 ? 's' : '') + '</div>' +
+        '<div class="arc-streak-cal">' + days.map(function (d, i) {
+        var isToday = i === todayIdx;
+        var isActive = streak > 0 && ((todayIdx - i + 7) % 7) < streak;
+        var cls = 'arc-streak-dot' + (isActive ? ' arc-streak-dot--active' : '') + (isToday ? ' arc-streak-dot--today' : '');
+        return '<div class="' + cls + '">' + d + '</div>';
+      }).join('') + '</div>';
+
+      /* Favorite game */
+      var favHtml = '<div style="text-align:center;margin:1rem 0;font-size:0.88rem;color:#a1a1aa;">Favorite Game: <strong style="color:#c084fc;">' + p.favoriteGame + '</strong></div>';
+
+      section.innerHTML = coinHtml + equippedHtml + streakHtml + favHtml;
+    })();
+    </script>
     <script>
     (function() {
       const games = [

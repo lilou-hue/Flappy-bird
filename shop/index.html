@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shop - SlayPlay</title>
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../arcade.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+  </style>
+</head>
+<body class="arc-page">
+  <script src="../arcade.js"></script>
+  <script src="../i18n.js"></script>
+
+  <div class="arc-page__container">
+    <h1 class="arc-page__title">Arcade Shop</h1>
+    <p class="arc-page__subtitle">Spend your hard-earned coins on badges, themes, and frames</p>
+
+    <div class="arc-coin-header">
+      <div class="arc-coin-header__balance">
+        <span>&#x1FA99;</span> <span class="arc-coin-value">0</span> coins
+      </div>
+    </div>
+
+    <div class="arc-equipped" id="equippedDisplay"></div>
+
+    <div class="arc-tabs" id="shopTabs">
+      <button class="arc-tab arc-tab--active" data-cat="badge">Badges</button>
+      <button class="arc-tab" data-cat="theme">Themes</button>
+      <button class="arc-tab" data-cat="frame">Frames</button>
+    </div>
+
+    <div class="arc-shop-grid" id="shopGrid"></div>
+  </div>
+
+  <script>
+    (function () {
+      Arcade.injectNavHUD();
+
+      var currentCat = 'badge';
+
+      function renderEquipped() {
+        var data = Arcade.getProfileData();
+        var el = document.getElementById('equippedDisplay');
+        var items = Arcade.getShopItems();
+        var slots = ['badge', 'theme', 'frame'];
+        el.innerHTML = slots.map(function (cat) {
+          var eqId = data['equipped' + cat.charAt(0).toUpperCase() + cat.slice(1)];
+          var item = eqId ? items.find(function (i) { return i.id === eqId; }) : null;
+          return '<div class="arc-equipped__slot' + (item ? ' arc-equipped__slot--filled' : '') + '">' +
+            '<div class="arc-equipped__label">' + cat + '</div>' +
+            '<div class="arc-equipped__icon">' + (item ? item.icon : '-') + '</div>' +
+          '</div>';
+        }).join('');
+      }
+
+      function renderShop() {
+        var grid = document.getElementById('shopGrid');
+        var items = Arcade.getShopItems().filter(function (i) { return i.cat === currentCat; });
+        var coins = Arcade.getCoins();
+
+        grid.innerHTML = items.map(function (item) {
+          var btnClass = 'arc-shop-btn';
+          var btnText = item.cost + ' coins';
+          var disabled = '';
+
+          if (item.equipped) {
+            btnClass += ' arc-shop-btn--equipped';
+            btnText = 'Equipped';
+          } else if (item.purchased) {
+            btnClass += ' arc-shop-btn--owned';
+            btnText = 'Equip';
+          } else if (coins < item.cost) {
+            disabled = ' disabled';
+          }
+
+          return '<div class="arc-shop-item" data-id="' + item.id + '">' +
+            '<div class="arc-shop-item__icon">' + item.icon + '</div>' +
+            '<div class="arc-shop-item__name">' + item.name + '</div>' +
+            '<div class="arc-shop-item__cost">&#x1FA99; ' + item.cost + '</div>' +
+            '<button class="' + btnClass + '"' + disabled + '>' + btnText + '</button>' +
+          '</div>';
+        }).join('');
+
+        grid.querySelectorAll('.arc-shop-item').forEach(function (el) {
+          el.querySelector('button').addEventListener('click', function () {
+            var id = el.dataset.id;
+            var item = Arcade.getShopItems().find(function (i) { return i.id === id; });
+            if (item.purchased) {
+              Arcade.equipItem(id);
+            } else {
+              var result = Arcade.purchaseItem(id);
+              if (!result.success) return;
+            }
+            renderShop();
+            renderEquipped();
+          });
+        });
+      }
+
+      document.getElementById('shopTabs').addEventListener('click', function (e) {
+        if (!e.target.dataset.cat) return;
+        currentCat = e.target.dataset.cat;
+        document.querySelectorAll('.arc-tab').forEach(function (t) { t.classList.remove('arc-tab--active'); });
+        e.target.classList.add('arc-tab--active');
+        renderShop();
+      });
+
+      renderEquipped();
+      renderShop();
+    })();
+  </script>
+</body>
+</html>
