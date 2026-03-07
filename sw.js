@@ -1,4 +1,4 @@
-const CACHE_NAME = 'slayplay-v2';
+const CACHE_NAME = 'slayplay-v3';
 
 const PRECACHE_URLS = [
   '/',
@@ -8,12 +8,11 @@ const PRECACHE_URLS = [
   '/icon.svg',
   '/profile/',
   '/flappy-bird/',
-  '/flappy-bird/game.js',
+  '/flappy-bird/script.js',
   '/flappy-bird/audio.js',
   '/flappy-bird/style.css',
   '/snake/',
   '/snake/game.js',
-  '/snake/audio.js',
   '/snake/styles.css',
   '/tetris/',
   '/tetris/game.js',
@@ -24,7 +23,6 @@ const PRECACHE_URLS = [
   '/lumina/styles.css',
   '/phantom-road/',
   '/phantom-road/game.js',
-  '/phantom-road/audio.js',
   '/phantom-road/styles.css',
   '/methane-drift/',
   '/methane-drift/game.js',
