@@ -13,6 +13,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Unicorn Fart Clicker</title>
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="../shop.css" />
     <script src="../i18n.js"></script>
   </head>
   <body>
@@ -20,6 +21,7 @@
     <button id="ucMuteBtn" class="uc-mute-btn" type="button" aria-label="Toggle sound">&#x1F50A;</button>
     <button id="fullscreenButton" class="uc-fullscreen-btn" type="button" aria-label="Toggle fullscreen" data-i18n-aria="fullscreen">&#x26F6;</button>
     <button id="leaderboardToggle" class="lb-toggle-btn" type="button" aria-label="Toggle leaderboard">&#x1F3C6;</button>
+    <button id="shopBtn" class="uc-fullscreen-btn" type="button" aria-label="Premium shop" style="right:130px">&#x1F6CD;</button>
     <canvas id="gameCanvas" width="480" height="640"></canvas>
     <!-- Achievement popup -->
     <div class="achievement-popup" id="achievementPopup">
@@ -42,6 +44,7 @@
     <script src="../arcade.js"></script>
     <script src="../leaderboard.js"></script>
     <script src="audio.js"></script>
+    <script src="../shop.js"></script>
     <script src="game.js"></script>
     <script>if(typeof Arcade!=='undefined')Arcade.injectNavHUD();</script>
   </body>

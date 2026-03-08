@@ -2696,3 +2696,21 @@ if (typeof Leaderboard !== 'undefined') {
   }
 }
 requestAnimationFrame(loop);
+
+// ── Ko-fi Shop ──
+if (typeof Shop !== 'undefined') {
+  Shop.init({
+    gameId: 'gun-game',
+    buttonTarget: '#shopBtn',
+    bundles: [
+      { id: 'gunpremium', name: 'Gun Premium', desc: 'Crimson & Arctic visual themes', price: '~$1',
+        kofiUrl: 'https://ko-fi.com/s/GUN_PREMIUM_ID', items: ['gg_crimson', 'gg_arctic'] },
+    ],
+    codes: { 'GUNPRO2026': 'gunpremium' },
+    onUnlock: function (itemIds) {
+      var arr; try { arr = JSON.parse(localStorage.getItem('ggShopUnlocked')) || []; } catch(e) { arr = []; }
+      itemIds.forEach(function (id) { if (arr.indexOf(id) === -1) arr.push(id); });
+      localStorage.setItem('ggShopUnlocked', JSON.stringify(arr));
+    }
+  });
+}

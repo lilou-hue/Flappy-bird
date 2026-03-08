@@ -13,6 +13,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Snake</title>
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="../shop.css" />
     <script src="../i18n.js"></script>
   </head>
   <body>
@@ -38,6 +39,7 @@
           <button id="leaderboardToggle" class="hud__mute lb-toggle-btn" type="button" aria-label="Toggle leaderboard" data-i18n-aria="lbToggle">&#x1F3C6;</button>
           <button id="restartButton" class="hud__button" type="button" data-i18n="restart">Restart</button>
           <button id="shrinkModeButton" class="hud__button" type="button" data-i18n="snakeShrinkMode">Shrink</button>
+          <button id="shopBtn" class="hud__button" type="button">Shop</button>
         </div>
 
         <!-- Settings bar -->
@@ -50,6 +52,8 @@
               <option value="ocean" data-i18n="themeOcean">Ocean Blue</option>
               <option value="sunset" data-i18n="themeSunset">Sunset</option>
               <option value="retro" data-i18n="themeRetro">Retro</option>
+              <option value="midnight">Midnight</option>
+              <option value="sakura">Sakura</option>
             </select>
           </div>
           <div class="setting-group">
@@ -60,6 +64,7 @@
               <option value="ice" data-i18n="skinIce">Ice</option>
               <option value="rainbow" data-i18n="skinRainbow">Rainbow</option>
               <option value="pixel" data-i18n="skinPixel">Pixel</option>
+              <option value="dragon">Dragon</option>
             </select>
           </div>
         </div>
@@ -111,6 +116,7 @@
     <link rel="stylesheet" href="../arcade.css">
     <script src="../arcade.js"></script>
     <script src="../leaderboard.js"></script>
+    <script src="../shop.js"></script>
     <script src="game.js"></script>
     <script>if(typeof Arcade!=='undefined')Arcade.injectNavHUD();</script>
   </body>

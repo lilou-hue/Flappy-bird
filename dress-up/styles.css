@@ -692,73 +692,7 @@ body {
   color: var(--du-text);
 }
 
-/* ── Shop Modal ── */
-.shop-modal {
-  max-width: 520px;
-  text-align: center;
-}
-.shop-bundles {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-.shop-bundle {
-  border: 1px solid rgba(200,160,190,0.15);
-  border-radius: 14px;
-  background: rgba(254,240,245,0.5);
-  padding: 12px 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.shop-bundle__name {
-  font-weight: 700;
-  font-size: 0.95rem;
-  color: var(--du-accent);
-}
-.shop-bundle__desc {
-  font-size: 0.72rem;
-  color: var(--du-muted);
-  line-height: 1.3;
-}
-.shop-bundle__price {
-  font-weight: 700;
-  font-size: 0.85rem;
-  color: var(--du-gold);
-}
-.shop-bundle__link {
-  display: inline-block;
-  text-decoration: none;
-  font-size: 0.75rem;
-  padding: 6px 10px;
-  margin-top: auto;
-}
-.shop-redeem {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-  margin-bottom: 10px;
-}
-.shop-redeem__input {
-  flex: 1;
-  max-width: 220px;
-  padding: 8px 12px;
-  border: 1px solid rgba(200,160,190,0.2);
-  border-radius: 10px;
-  background: rgba(254,240,245,0.5);
-  color: var(--du-text);
-  font-family: inherit;
-  font-size: 0.85rem;
-}
-.shop-redeem__input::placeholder { color: var(--du-muted); }
-.shop-status {
-  font-size: 0.8rem;
-  min-height: 1.2em;
-  margin-bottom: 6px;
-}
-.shop-status.success { color: #27ae60; }
-.shop-status.error { color: #e74c3c; }
+/* Shop styles now in shared ../shop.css */
 
 /* ── Theme Overlay ── */
 .theme-overlay {

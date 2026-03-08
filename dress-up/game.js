@@ -69,53 +69,8 @@ const PREMIUM_COST = {
   hair:25, top:30, bottom:25, dress:30, shoes:25, accessory:30, background:35
 };
 
-/* ── Ko-fi Bundle Codes ── */
-const BUNDLE_CODES = {
-  'FANTASY2026': {
-    name: 'Fantasy Bundle',
-    items: ['top_armor','top_wizard_robe','bottom_armor_greaves','shoes_armored_boots','acc_crown','bg_castle']
-  },
-  'GLAM2026': {
-    name: 'Glam Bundle',
-    items: ['top_corset','top_kimono','bottom_flowing_skirt','shoes_heels','hair_long_flowing','bg_rainbow','dress_ball_gown']
-  },
-  'ADVENTURE2026': {
-    name: 'Adventure Bundle',
-    items: ['acc_cape','acc_extra_wings','hair_braids','hair_curly','shoes_platforms','bg_space','dress_fairy_dress']
-  },
-  'SLAYPASS2026': {
-    name: 'Premium Pass',
-    items: Array.from(PREMIUM_IDS)
-  }
-};
-
-function redeemCode(code) {
-  const statusEl = document.getElementById('shopStatus');
-  const upper = code.trim().toUpperCase();
-  const bundle = BUNDLE_CODES[upper];
-  if (!bundle) {
-    statusEl.textContent = 'Invalid code. Please check and try again.';
-    statusEl.className = 'shop-status error';
-    return false;
-  }
-  let newCount = 0;
-  bundle.items.forEach(function (id) {
-    if (!unlockedPremium.includes(id)) {
-      unlockedPremium.push(id);
-      newCount++;
-    }
-  });
-  saveUnlocked();
-  renderItemGrid();
-  render();
-  if (newCount > 0) {
-    statusEl.textContent = bundle.name + ' redeemed! ' + newCount + ' item(s) unlocked.';
-  } else {
-    statusEl.textContent = bundle.name + ' — all items already unlocked!';
-  }
-  statusEl.className = 'shop-status success';
-  return true;
-}
+/* ── Ko-fi Shop (shared module) ── */
+// Shop.init() called at bottom of file after render functions are defined
 
 /* ── Coins Economy ── */
 let coins = 0;
@@ -2497,34 +2452,35 @@ if (typeof I18N !== 'undefined') {
   }
 }
 
-// Shop modal
-const shopModal = document.getElementById('shopModal');
-const shopCloseBtn = document.getElementById('shopModalClose');
-const shopRedeemBtn = document.getElementById('shopRedeemBtn');
-const shopCodeInput = document.getElementById('shopCodeInput');
-
-document.getElementById('shopBtn').onclick = function () {
-  document.getElementById('shopStatus').textContent = '';
-  document.getElementById('shopStatus').className = 'shop-status';
-  shopCodeInput.value = '';
-  shopModal.classList.add('visible');
-};
-if (shopCloseBtn) {
-  shopCloseBtn.onclick = function () { shopModal.classList.remove('visible'); };
-}
-if (shopModal) {
-  shopModal.onclick = function (e) {
-    if (e.target === shopModal) shopModal.classList.remove('visible');
-  };
-}
-if (shopRedeemBtn) {
-  shopRedeemBtn.onclick = function () { redeemCode(shopCodeInput.value); };
-}
-if (shopCodeInput) {
-  shopCodeInput.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') redeemCode(shopCodeInput.value);
-  });
-}
+// Shop (shared module)
+Shop.init({
+  gameId: 'dress-up',
+  buttonTarget: '#shopBtn',
+  bundles: [
+    { id: 'fantasy', name: 'Fantasy Bundle', desc: 'Armor, Wizard Robe, Armor Greaves, Armored Boots, Crown, Castle BG', price: '~$2',
+      kofiUrl: 'https://ko-fi.com/s/FANTASY_PRODUCT_ID', items: ['top_armor','top_wizard_robe','bottom_armor_greaves','shoes_armored_boots','acc_crown','bg_castle'] },
+    { id: 'glam', name: 'Glam Bundle', desc: 'Corset, Kimono, Flowing Skirt, Heels, Long Flowing Hair, Rainbow BG, Ball Gown', price: '~$2',
+      kofiUrl: 'https://ko-fi.com/s/GLAM_PRODUCT_ID', items: ['top_corset','top_kimono','bottom_flowing_skirt','shoes_heels','hair_long_flowing','bg_rainbow','dress_ball_gown'] },
+    { id: 'adventure', name: 'Adventure Bundle', desc: 'Cape, Extra Wings, Braids, Curly Hair, Platforms, Space BG, Fairy Dress', price: '~$2',
+      kofiUrl: 'https://ko-fi.com/s/ADVENTURE_PRODUCT_ID', items: ['acc_cape','acc_extra_wings','hair_braids','hair_curly','shoes_platforms','bg_space','dress_fairy_dress'] },
+    { id: 'premiumpass', name: 'Premium Pass', desc: 'ALL premium items unlocked!', price: '~$4',
+      kofiUrl: 'https://ko-fi.com/s/PREMIUMPASS_PRODUCT_ID', items: Array.from(PREMIUM_IDS) },
+  ],
+  codes: {
+    'FANTASY2026': 'fantasy',
+    'GLAM2026': 'glam',
+    'ADVENTURE2026': 'adventure',
+    'SLAYPASS2026': '__all__'
+  },
+  onUnlock: function (itemIds) {
+    itemIds.forEach(function (id) {
+      if (!unlockedPremium.includes(id)) unlockedPremium.push(id);
+    });
+    saveUnlocked();
+    renderItemGrid();
+    render();
+  }
+});
 
 // Premium modal close
 const premiumModal = document.getElementById('premiumModal');

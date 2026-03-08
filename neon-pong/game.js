@@ -29,18 +29,32 @@ const THEMES = {
   retro:     { name: () => I18N.t('npThemeRetro')     || 'Retro',     bg: '#1a1a2e', bg2: '#0a0a1e', playerColor: '#55efc4', aiColor: '#55efc4', ballColor: '#55efc4', lineColor: 'rgba(85,239,196,0.12)' },
   synthwave: { name: () => I18N.t('npThemeSynthwave') || 'Synthwave', bg: '#2d1b3d', bg2: '#10061a', playerColor: '#a29bfe', aiColor: '#fd79a8', ballColor: '#dfe6e9', lineColor: 'rgba(162,155,254,0.12)' },
   minimal:   { name: () => I18N.t('npThemeMinimal')   || 'Minimal',   bg: '#1a1a2e', bg2: '#111', playerColor: '#dfe6e9', aiColor: '#b2bec3', ballColor: '#dfe6e9', lineColor: 'rgba(255,255,255,0.06)' },
+  cyberpunk: { name: () => 'Cyberpunk', bg: '#0a0a18', bg2: '#060610', playerColor: '#00ff88', aiColor: '#ff0066', ballColor: '#ffff00', lineColor: 'rgba(0,255,136,0.12)', premium: true },
+  sunset:    { name: () => 'Sunset',    bg: '#1a1008', bg2: '#100a04', playerColor: '#ff8c00', aiColor: '#ff4500', ballColor: '#ffd700', lineColor: 'rgba(255,140,0,0.12)', premium: true },
 };
+
+const NP_PREMIUM_ITEMS = ['cyberpunk', 'sunset'];
+function _npShopUnlocked() {
+  try { return JSON.parse(localStorage.getItem('npShopUnlocked')) || []; } catch(e) { return []; }
+}
 
 let currentTheme = localStorage.getItem('neonPongTheme') || 'neon';
 
 const themeSelect = document.getElementById('themeSelect');
 for (const [key, th] of Object.entries(THEMES)) {
   const opt = document.createElement('option');
-  opt.value = key; opt.textContent = th.name();
+  var label = th.name();
+  if (th.premium && _npShopUnlocked().indexOf(key) === -1) label += ' \uD83D\uDD12';
+  opt.value = key; opt.textContent = label;
   if (key === currentTheme) opt.selected = true;
   themeSelect.appendChild(opt);
 }
 themeSelect.addEventListener('change', () => {
+  if (THEMES[themeSelect.value] && THEMES[themeSelect.value].premium && _npShopUnlocked().indexOf(themeSelect.value) === -1) {
+    themeSelect.value = currentTheme;
+    if (typeof Shop !== 'undefined') Shop.open();
+    return;
+  }
   currentTheme = themeSelect.value;
   localStorage.setItem('neonPongTheme', currentTheme);
   document.body.className = currentTheme === 'neon' ? '' : `theme-${currentTheme}`;
@@ -839,3 +853,21 @@ function loop(timestamp) {
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
+
+// ── Ko-fi Shop ──
+if (typeof Shop !== 'undefined') {
+  Shop.init({
+    gameId: 'neon-pong',
+    buttonTarget: '#shopBtn',
+    bundles: [
+      { id: 'pongpremium', name: 'Pong Premium', desc: 'Cyberpunk & Sunset themes', price: '~$1',
+        kofiUrl: 'https://ko-fi.com/s/PONG_PREMIUM_ID', items: ['cyberpunk', 'sunset'] },
+    ],
+    codes: { 'PONGPRO2026': 'pongpremium' },
+    onUnlock: function (itemIds) {
+      var arr = _npShopUnlocked();
+      itemIds.forEach(function (id) { if (arr.indexOf(id) === -1) arr.push(id); });
+      localStorage.setItem('npShopUnlocked', JSON.stringify(arr));
+    }
+  });
+}

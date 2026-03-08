@@ -114,7 +114,30 @@
       colors: { I: '#3388aa', O: '#aa8833', T: '#7744aa', S: '#338844', Z: '#aa3344', J: '#3355aa', L: '#aa6633', G: '#666666' },
       glows:  { I: 'rgba(51,136,170,0.4)', O: 'rgba(170,136,51,0.4)', T: 'rgba(119,68,170,0.4)', S: 'rgba(51,136,68,0.4)', Z: 'rgba(170,51,68,0.4)', J: 'rgba(51,85,170,0.4)', L: 'rgba(170,102,51,0.4)', G: 'rgba(102,102,102,0.3)' },
     },
+    frost: {
+      name: () => 'Frost',
+      bg: '#0a1420', field: '#081018',
+      gridColor: 'rgba(100,200,255,0.06)', borderColor: 'rgba(100,200,255,0.3)',
+      textColor: '#b0d8ff', accentColor: '#60c0ff',
+      colors: { I: '#80d8ff', O: '#b0e0ff', T: '#a0c0e0', S: '#60d0d0', Z: '#90a0d0', J: '#70b0e0', L: '#a0d0e0', G: '#607080' },
+      glows:  { I: 'rgba(128,216,255,0.5)', O: 'rgba(176,224,255,0.4)', T: 'rgba(160,192,224,0.4)', S: 'rgba(96,208,208,0.4)', Z: 'rgba(144,160,208,0.4)', J: 'rgba(112,176,224,0.4)', L: 'rgba(160,208,224,0.4)', G: 'rgba(96,112,128,0.3)' },
+      premium: true,
+    },
+    candy: {
+      name: () => 'Candy',
+      bg: '#1a0818', field: '#140610',
+      gridColor: 'rgba(255,100,200,0.06)', borderColor: 'rgba(255,100,200,0.3)',
+      textColor: '#ffc0e0', accentColor: '#ff69b4',
+      colors: { I: '#ff69b4', O: '#ffdd44', T: '#cc66ff', S: '#66ff99', Z: '#ff6666', J: '#6699ff', L: '#ffaa33', G: '#666666' },
+      glows:  { I: 'rgba(255,105,180,0.5)', O: 'rgba(255,221,68,0.5)', T: 'rgba(204,102,255,0.5)', S: 'rgba(102,255,153,0.5)', Z: 'rgba(255,102,102,0.5)', J: 'rgba(102,153,255,0.5)', L: 'rgba(255,170,51,0.5)', G: 'rgba(102,102,102,0.3)' },
+      premium: true,
+    },
   };
+
+  const TETRIS_PREMIUM_ITEMS = ['frost', 'candy', 'hologram'];
+  function _tetrisShopUnlocked() {
+    try { return JSON.parse(localStorage.getItem('tetrisShopUnlocked')) || []; } catch(e) { return []; }
+  }
 
   /* ── Block Skins ──────────────────────────────────────────────────── */
   function lightenColor(hex, amt) {
@@ -218,7 +241,32 @@
         ctx.restore();
       }
     },
+    hologram: {
+      name: () => 'Hologram',
+      premium: true,
+      drawBlock(x, y, color, glow, dimmed, ctx) {
+        const margin = 1, bx = x+margin, by = y+margin, bs = CELL-margin*2, r = 3;
+        ctx.save();
+        ctx.globalAlpha = dimmed ? 0.4 : 0.7;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        if (!dimmed) { ctx.shadowBlur = 12; ctx.shadowColor = glow || color; }
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(bx, by, bs, bs, r); else ctx.rect(bx, by, bs, bs);
+        ctx.stroke();
+        ctx.fillStyle = (glow || color).replace('0.5', '0.15');
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.globalAlpha = 1;
+        ctx.restore();
+      }
+    },
   };
+
+  function _isTetrisPremiumUnlocked(id) {
+    if (TETRIS_PREMIUM_ITEMS.indexOf(id) === -1) return true;
+    return _tetrisShopUnlocked().indexOf(id) !== -1;
+  }
 
   let currentThemeName = localStorage.getItem('tetrisTheme') || 'classic';
   let currentSkinName = localStorage.getItem('tetrisSkin') || 'standard';
@@ -230,22 +278,36 @@
   const skinSelect = document.getElementById('skinSelect');
   for (const key in TETRIS_THEMES) {
     const opt = document.createElement('option');
-    opt.value = key; opt.textContent = TETRIS_THEMES[key].name();
+    var label = TETRIS_THEMES[key].name();
+    if (TETRIS_THEMES[key].premium && !_isTetrisPremiumUnlocked(key)) label += ' \uD83D\uDD12';
+    opt.value = key; opt.textContent = label;
     if (key === currentThemeName) opt.selected = true;
     themeSelect.appendChild(opt);
   }
   for (const key in TETRIS_SKINS) {
     const opt = document.createElement('option');
-    opt.value = key; opt.textContent = TETRIS_SKINS[key].name();
+    var slabel = TETRIS_SKINS[key].name();
+    if (TETRIS_SKINS[key].premium && !_isTetrisPremiumUnlocked(key)) slabel += ' \uD83D\uDD12';
+    opt.value = key; opt.textContent = slabel;
     if (key === currentSkinName) opt.selected = true;
     skinSelect.appendChild(opt);
   }
   themeSelect.addEventListener('change', () => {
+    if (TETRIS_THEMES[themeSelect.value] && TETRIS_THEMES[themeSelect.value].premium && !_isTetrisPremiumUnlocked(themeSelect.value)) {
+      themeSelect.value = currentThemeName;
+      if (typeof Shop !== 'undefined') Shop.open();
+      return;
+    }
     currentThemeName = themeSelect.value;
     currentTheme = TETRIS_THEMES[currentThemeName] || TETRIS_THEMES.classic;
     localStorage.setItem('tetrisTheme', currentThemeName);
   });
   skinSelect.addEventListener('change', () => {
+    if (TETRIS_SKINS[skinSelect.value] && TETRIS_SKINS[skinSelect.value].premium && !_isTetrisPremiumUnlocked(skinSelect.value)) {
+      skinSelect.value = currentSkinName;
+      if (typeof Shop !== 'undefined') Shop.open();
+      return;
+    }
     currentSkinName = skinSelect.value;
     currentSkin = TETRIS_SKINS[currentSkinName] || TETRIS_SKINS.standard;
     localStorage.setItem('tetrisSkin', currentSkinName);
@@ -2049,5 +2111,23 @@
       lbToggleBtn.addEventListener('click', () => { lbPanel.classList.toggle('lb-visible'); });
       lbPanel.addEventListener('click', (e) => { if (e.target === lbPanel) lbPanel.classList.remove('lb-visible'); });
     }
+  }
+
+  // ── Ko-fi Shop ──
+  if (typeof Shop !== 'undefined') {
+    Shop.init({
+      gameId: 'tetris',
+      buttonTarget: '#shopBtn',
+      bundles: [
+        { id: 'tetrispremium', name: 'Tetris Premium', desc: 'Frost & Candy themes + Hologram skin', price: '~$2',
+          kofiUrl: 'https://ko-fi.com/s/TETRIS_PREMIUM_ID', items: ['frost', 'candy', 'hologram'] },
+      ],
+      codes: { 'TETRISPRO2026': 'tetrispremium' },
+      onUnlock: function (itemIds) {
+        var arr = _tetrisShopUnlocked();
+        itemIds.forEach(function (id) { if (arr.indexOf(id) === -1) arr.push(id); });
+        localStorage.setItem('tetrisShopUnlocked', JSON.stringify(arr));
+      }
+    });
   }
 })();

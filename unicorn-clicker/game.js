@@ -3958,5 +3958,42 @@
   });
 
   window.addEventListener('beforeunload', save);
+
+  // ── Ko-fi Shop ──
+  if (typeof Shop !== 'undefined') {
+    const allSkinKeys = SKINS.filter(s => s.cost > 0).map(s => s.key);
+    const allCosmeticIds = [];
+    ['hats','trails','auras'].forEach(cat => {
+      COSMETICS[cat].forEach(c => allCosmeticIds.push(cat + '_' + c.id));
+    });
+
+    Shop.init({
+      gameId: 'unicorn-clicker',
+      buttonTarget: '#shopBtn',
+      bundles: [
+        { id: 'skins', name: 'Skin Pack', desc: 'Tuna, Volleyball, Spidermonkey & Chewbacca skins', price: '~$2',
+          kofiUrl: 'https://ko-fi.com/s/UC_SKINS_ID', items: allSkinKeys },
+        { id: 'cosmetics', name: 'Cosmetics Pack', desc: 'All hats, trails & auras', price: '~$2',
+          kofiUrl: 'https://ko-fi.com/s/UC_COSMETICS_ID', items: allCosmeticIds },
+        { id: 'unicornpass', name: 'Unicorn Pass', desc: 'All skins + all cosmetics', price: '~$3',
+          kofiUrl: 'https://ko-fi.com/s/UC_PASS_ID', items: allSkinKeys.concat(allCosmeticIds) },
+      ],
+      codes: {
+        'UCSKINS2026': 'skins',
+        'UCCOSMETICS2026': 'cosmetics',
+        'UCPASS2026': '__all__'
+      },
+      onUnlock: function (itemIds) {
+        itemIds.forEach(function (id) {
+          // Skin keys
+          if (SKINS.some(s => s.key === id)) {
+            if (!state.unlockedSkins.includes(id)) state.unlockedSkins.push(id);
+          }
+        });
+        save();
+      }
+    });
+  }
+
   requestAnimationFrame(loop);
 })();

@@ -1789,3 +1789,21 @@ function init() {
 }
 
 init();
+
+// ── Ko-fi Shop ──
+if (typeof Shop !== 'undefined') {
+  Shop.init({
+    gameId: 'astro-miner',
+    buttonTarget: '#shopBtn',
+    bundles: [
+      { id: 'astropremium', name: 'Astro Premium', desc: 'Nebula & Solar visual themes', price: '~$1',
+        kofiUrl: 'https://ko-fi.com/s/ASTRO_PREMIUM_ID', items: ['am_nebula', 'am_solar'] },
+    ],
+    codes: { 'ASTROPRO2026': 'astropremium' },
+    onUnlock: function (itemIds) {
+      var arr; try { arr = JSON.parse(localStorage.getItem('amShopUnlocked')) || []; } catch(e) { arr = []; }
+      itemIds.forEach(function (id) { if (arr.indexOf(id) === -1) arr.push(id); });
+      localStorage.setItem('amShopUnlocked', JSON.stringify(arr));
+    }
+  });
+}

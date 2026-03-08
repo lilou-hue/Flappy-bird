@@ -2413,3 +2413,21 @@ if (typeof Leaderboard !== 'undefined') {
 }
 
 requestAnimationFrame(gameLoop);
+
+// ── Ko-fi Shop ──
+if (typeof Shop !== 'undefined') {
+  Shop.init({
+    gameId: 'star-fury',
+    buttonTarget: '#shopBtn',
+    bundles: [
+      { id: 'furypremium', name: 'Fury Premium', desc: 'Inferno & Void visual themes', price: '~$1',
+        kofiUrl: 'https://ko-fi.com/s/FURY_PREMIUM_ID', items: ['sf_inferno', 'sf_void'] },
+    ],
+    codes: { 'FURYPRO2026': 'furypremium' },
+    onUnlock: function (itemIds) {
+      var arr; try { arr = JSON.parse(localStorage.getItem('sfShopUnlocked')) || []; } catch(e) { arr = []; }
+      itemIds.forEach(function (id) { if (arr.indexOf(id) === -1) arr.push(id); });
+      localStorage.setItem('sfShopUnlocked', JSON.stringify(arr));
+    }
+  });
+}

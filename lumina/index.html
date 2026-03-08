@@ -13,6 +13,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Lumina</title>
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="../shop.css" />
     <script src="../i18n.js"></script>
   </head>
   <body>
@@ -38,6 +39,7 @@
           <button id="fullscreenButton" class="hud__mute" type="button" aria-label="Toggle fullscreen">&#x26F6;</button>
           <button id="restartButton" class="hud__button" type="button" data-i18n="restart">Restart</button>
           <button id="colorblindButton" class="hud__button" type="button" data-i18n="luminaColorblind">Colorblind</button>
+          <button id="shopBtn" class="hud__button" type="button">Shop</button>
         </div>
 
         <!-- Settings bar -->
@@ -50,6 +52,8 @@
               <option value="arctic" data-i18n="lumThemeArctic">Arctic</option>
               <option value="toxic" data-i18n="lumThemeToxic">Toxic</option>
               <option value="void" data-i18n="lumThemeVoid">Void</option>
+              <option value="crystal">Crystal</option>
+              <option value="magma">Magma</option>
             </select>
           </div>
           <div class="setting-group">
@@ -60,6 +64,7 @@
               <option value="frost" data-i18n="lumSkinFrost">Frost</option>
               <option value="prism" data-i18n="lumSkinPrism">Prism</option>
               <option value="shadow" data-i18n="lumSkinShadow">Shadow</option>
+              <option value="prismx">Prism X</option>
             </select>
           </div>
         </div>
@@ -112,6 +117,7 @@
     <link rel="stylesheet" href="../arcade.css">
     <script src="../arcade.js"></script>
     <script src="../leaderboard.js"></script>
+    <script src="../shop.js"></script>
     <script src="game.js"></script>
     <script>if(typeof Arcade!=='undefined')Arcade.injectNavHUD();</script>
   </body>

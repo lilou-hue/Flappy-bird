@@ -1865,3 +1865,21 @@ if (typeof Leaderboard !== 'undefined') {
     lbPanel.addEventListener('click', (e) => { if (e.target === lbPanel) lbPanel.classList.remove('lb-visible'); });
   }
 }
+
+// ── Ko-fi Shop ──
+if (typeof Shop !== 'undefined') {
+  Shop.init({
+    gameId: 'flappy-bird',
+    buttonTarget: '#shopBtn',
+    bundles: [
+      { id: 'flappypremium', name: 'Flappy Premium', desc: 'Sunset & Night visual themes', price: '~$1',
+        kofiUrl: 'https://ko-fi.com/s/FLAPPY_PREMIUM_ID', items: ['fb_sunset', 'fb_night'] },
+    ],
+    codes: { 'FLAPPYPRO2026': 'flappypremium' },
+    onUnlock: function (itemIds) {
+      var arr; try { arr = JSON.parse(localStorage.getItem('fbShopUnlocked')) || []; } catch(e) { arr = []; }
+      itemIds.forEach(function (id) { if (arr.indexOf(id) === -1) arr.push(id); });
+      localStorage.setItem('fbShopUnlocked', JSON.stringify(arr));
+    }
+  });
+}

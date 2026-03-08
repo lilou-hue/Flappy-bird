@@ -1807,4 +1807,22 @@
 
   requestAnimationFrame(gameLoop);
 
+  // ── Ko-fi Shop ──
+  if (typeof Shop !== 'undefined') {
+    Shop.init({
+      gameId: 'inkognito',
+      buttonTarget: '#shopBtn',
+      bundles: [
+        { id: 'inkpremium', name: 'Ink Premium', desc: 'Midnight & Pastel visual themes', price: '~$1',
+          kofiUrl: 'https://ko-fi.com/s/INK_PREMIUM_ID', items: ['ink_midnight', 'ink_pastel'] },
+      ],
+      codes: { 'INKPRO2026': 'inkpremium' },
+      onUnlock: function (itemIds) {
+        var arr; try { arr = JSON.parse(localStorage.getItem('inkShopUnlocked')) || []; } catch(e) { arr = []; }
+        itemIds.forEach(function (id) { if (arr.indexOf(id) === -1) arr.push(id); });
+        localStorage.setItem('inkShopUnlocked', JSON.stringify(arr));
+      }
+    });
+  }
+
 })();

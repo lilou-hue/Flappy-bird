@@ -29,7 +29,14 @@ const THEMES = {
   sunset: { name: () => I18N.t('stThemeSunset') || 'Sunset', bg: '#2d1b3d', bg2: '#1a0a18', starColor: 'rgba(255,180,200,0.3)', blockSat: 60, blockLight: 68, accent: '#fd79a8' },
   ice:    { name: () => I18N.t('stThemeIce')    || 'Ice',    bg: '#1a1a2e', bg2: '#0a0a1e', starColor: 'rgba(162,155,254,0.3)', blockSat: 55, blockLight: 70, accent: '#a29bfe' },
   retro:  { name: () => I18N.t('stThemeRetro')  || 'Retro',  bg: '#2d1b2d', bg2: '#100a10', starColor: 'rgba(250,177,160,0.3)', blockSat: 65, blockLight: 60, accent: '#fab1a0' },
+  aurora: { name: () => 'Aurora', bg: '#0a1a2e', bg2: '#061018', starColor: 'rgba(100,255,218,0.3)', blockSat: 75, blockLight: 70, accent: '#64ffda', premium: true },
+  lava:   { name: () => 'Lava',   bg: '#2a0a0a', bg2: '#180404', starColor: 'rgba(255,100,50,0.3)',  blockSat: 80, blockLight: 60, accent: '#ff6432', premium: true },
 };
+
+const ST_PREMIUM_ITEMS = ['aurora', 'lava'];
+function _stShopUnlocked() {
+  try { return JSON.parse(localStorage.getItem('stShopUnlocked')) || []; } catch(e) { return []; }
+}
 
 let currentTheme = localStorage.getItem('stackTowerTheme') || 'neon';
 
@@ -38,11 +45,18 @@ const themeSelect = document.getElementById('themeSelect');
 for (const [key, th] of Object.entries(THEMES)) {
   const opt = document.createElement('option');
   opt.value = key;
-  opt.textContent = th.name();
+  var label = th.name();
+  if (th.premium && _stShopUnlocked().indexOf(key) === -1) label += ' \uD83D\uDD12';
+  opt.textContent = label;
   if (key === currentTheme) opt.selected = true;
   themeSelect.appendChild(opt);
 }
 themeSelect.addEventListener('change', () => {
+  if (THEMES[themeSelect.value] && THEMES[themeSelect.value].premium && _stShopUnlocked().indexOf(themeSelect.value) === -1) {
+    themeSelect.value = currentTheme;
+    if (typeof Shop !== 'undefined') Shop.open();
+    return;
+  }
   currentTheme = themeSelect.value;
   localStorage.setItem('stackTowerTheme', currentTheme);
   document.body.className = currentTheme === 'neon' ? '' : `theme-${currentTheme}`;
@@ -586,3 +600,21 @@ function loop(timestamp) {
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
+
+// ── Ko-fi Shop ──
+if (typeof Shop !== 'undefined') {
+  Shop.init({
+    gameId: 'stack-tower',
+    buttonTarget: '#shopBtn',
+    bundles: [
+      { id: 'towerpremium', name: 'Tower Premium', desc: 'Aurora & Lava themes', price: '~$1',
+        kofiUrl: 'https://ko-fi.com/s/TOWER_PREMIUM_ID', items: ['aurora', 'lava'] },
+    ],
+    codes: { 'TOWERPRO2026': 'towerpremium' },
+    onUnlock: function (itemIds) {
+      var arr = _stShopUnlocked();
+      itemIds.forEach(function (id) { if (arr.indexOf(id) === -1) arr.push(id); });
+      localStorage.setItem('stShopUnlocked', JSON.stringify(arr));
+    }
+  });
+}

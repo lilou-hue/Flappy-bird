@@ -13,6 +13,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Astro Miner</title>
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="../shop.css" />
   </head>
   <body>
     <main class="layout">
@@ -40,6 +41,7 @@
         <button id="leaderboardToggle" class="lb-toggle-btn" type="button" aria-label="Toggle leaderboard">&#x1F3C6;</button>
         <button id="fullscreenBtn" class="fullscreen-btn" type="button" aria-label="Toggle fullscreen" data-i18n="mdFullscreen">Fullscreen</button>
         <button id="restartBtn" class="restart-btn" hidden data-i18n="mdPlayAgain">Play Again</button>
+        <button id="shopBtn" class="mute-btn" type="button">Shop</button>
         <!-- Achievements panel -->
         <div class="achievements-panel" id="achievementsPanel">
           <button class="achievements-toggle" id="achievementsToggle" type="button" data-i18n="achievements">Achievements</button>
@@ -65,6 +67,7 @@
     <script src="../arcade.js"></script>
     <script src="../leaderboard.js"></script>
     <script src="audio.js"></script>
+    <script src="../shop.js"></script>
     <script src="game.js"></script>
     <script>if(typeof Arcade!=='undefined')Arcade.injectNavHUD();</script>
   </body>

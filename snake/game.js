@@ -172,7 +172,66 @@ const THEMES = {
     scoreColor: "#00ff00",
     dangerGlow: "rgba(255,0,0,0.3)",
   },
+  midnight: {
+    bg: "#0a0a1a",
+    gridColor: "rgba(100,100,200,0.04)",
+    wallColor: [80, 80, 200],
+    wallGlow: "rgba(80,80,200,0.3)",
+    vignetteColor: "rgba(0,0,0,0.5)",
+    headGrad: ["#6c5ce7", "#4834d4"],
+    headGlow: "rgba(108,92,231,0.6)",
+    bodyStart: [108, 92, 231],
+    bodyEnd: [72, 52, 212],
+    foodNormal: { inner: "#dfe6e9", outer: "#b2bec3", glow: "rgba(223,230,233,0.5)" },
+    foodGolden: { color: "#ffd700", glow: "rgba(255,215,0,0.7)" },
+    foodSpeed: { inner: "#00cec9", outer: "#009688", glow: "rgba(0,206,201,0.5)" },
+    foodPoison: { inner: "#d63031", outer: "#b71540", glow: "rgba(214,48,49,0.5)" },
+    foodGhost: { inner: "#dfe6e9", outer: "#b2bec3", glow: "rgba(223,230,233,0.4)" },
+    foodFreeze: { inner: "#74b9ff", outer: "#0984e3", glow: "rgba(116,185,255,0.5)" },
+    particleEat: "#dfe6e9",
+    dustColor: "rgba(108,92,231,0.5)",
+    dustGlow: "rgba(108,92,231,0.3)",
+    eyeColor: "#ffffff",
+    pupilColor: "#0a0a1a",
+    tongueColor: "#ff4757",
+    textColor: "#dfe6e9",
+    scoreColor: "#dfe6e9",
+    dangerGlow: "rgba(255,71,87,0.3)",
+    premium: true,
+  },
+  sakura: {
+    bg: "#1a0a10",
+    gridColor: "rgba(255,150,180,0.04)",
+    wallColor: [255, 150, 180],
+    wallGlow: "rgba(255,150,180,0.3)",
+    vignetteColor: "rgba(0,0,0,0.45)",
+    headGrad: ["#fd79a8", "#e84393"],
+    headGlow: "rgba(253,121,168,0.6)",
+    bodyStart: [253, 121, 168],
+    bodyEnd: [232, 67, 147],
+    foodNormal: { inner: "#ffeaa7", outer: "#fdcb6e", glow: "rgba(255,234,167,0.5)" },
+    foodGolden: { color: "#ffd700", glow: "rgba(255,215,0,0.7)" },
+    foodSpeed: { inner: "#55efc4", outer: "#00b894", glow: "rgba(85,239,196,0.5)" },
+    foodPoison: { inner: "#a29bfe", outer: "#6c5ce7", glow: "rgba(162,155,254,0.5)" },
+    foodGhost: { inner: "#dfe6e9", outer: "#b2bec3", glow: "rgba(223,230,233,0.4)" },
+    foodFreeze: { inner: "#81ecec", outer: "#00cec9", glow: "rgba(129,236,236,0.5)" },
+    particleEat: "#ffeaa7",
+    dustColor: "rgba(253,121,168,0.5)",
+    dustGlow: "rgba(253,121,168,0.3)",
+    eyeColor: "#ffffff",
+    pupilColor: "#1a0a10",
+    tongueColor: "#e17055",
+    textColor: "#ffeaa7",
+    scoreColor: "#ffeaa7",
+    dangerGlow: "rgba(225,112,85,0.3)",
+    premium: true,
+  },
 };
+
+const SNAKE_PREMIUM_ITEMS = ['midnight', 'sakura', 'dragon'];
+function _snakeShopUnlocked() {
+  try { return JSON.parse(localStorage.getItem('snakeShopUnlocked')) || []; } catch(e) { return []; }
+}
 
 let currentTheme = THEMES.neon;
 
@@ -328,6 +387,57 @@ const SKINS = {
       ctx.strokeStyle = `rgba(${Math.max(0,cr-50)},${Math.max(0,cg-50)},${Math.max(0,cb-50)},${alpha})`;
       ctx.lineWidth = 1;
       ctx.strokeRect(cx - half, cy - half, bodySize, bodySize);
+    },
+  },
+  dragon: {
+    name: "Dragon",
+    premium: true,
+    drawHead(cx, cy, half, headSize, dir) {
+      const grad = ctx.createRadialGradient(cx - 2, cy - 2, 2, cx, cy, half);
+      grad.addColorStop(0, "#ff6b35");
+      grad.addColorStop(1, "#c0392b");
+      ctx.fillStyle = grad;
+      ctx.shadowBlur = 14;
+      ctx.shadowColor = "rgba(255,107,53,0.7)";
+      if (ctx.roundRect) {
+        ctx.beginPath();
+        ctx.roundRect(cx - half, cy - half, headSize, headSize, 5);
+        ctx.fill();
+      } else {
+        ctx.fillRect(cx - half, cy - half, headSize, headSize);
+      }
+      // Horns
+      ctx.fillStyle = "#ffd700";
+      ctx.beginPath();
+      ctx.moveTo(cx - half + 2, cy - half);
+      ctx.lineTo(cx - half + 5, cy - half - 6);
+      ctx.lineTo(cx - half + 8, cy - half);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(cx + half - 8, cy - half);
+      ctx.lineTo(cx + half - 5, cy - half - 6);
+      ctx.lineTo(cx + half - 2, cy - half);
+      ctx.fill();
+    },
+    drawBody(cx, cy, half, bodySize, cr, cg, cb, alpha) {
+      const r = Math.round(lerp(255, 180, alpha));
+      const g = Math.round(lerp(107, 40, alpha));
+      const b = Math.round(lerp(53, 20, alpha));
+      ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
+      ctx.shadowBlur = 6;
+      ctx.shadowColor = `rgba(255,${g},0,0.3)`;
+      if (ctx.roundRect) {
+        ctx.beginPath();
+        ctx.roundRect(cx - half, cy - half, bodySize, bodySize, 3);
+        ctx.fill();
+      } else {
+        ctx.fillRect(cx - half, cy - half, bodySize, bodySize);
+      }
+      // Scale pattern
+      ctx.fillStyle = `rgba(255,215,0,${alpha * 0.2})`;
+      ctx.beginPath();
+      ctx.arc(cx, cy, half * 0.4, 0, Math.PI * 2);
+      ctx.fill();
     },
   },
 };
@@ -961,13 +1071,28 @@ document.addEventListener("visibilitychange", () => {
 
 /* ── Theme & Skin Switching ───────────────────────────────── */
 
+function _isSnakePremiumUnlocked(id) {
+  if (SNAKE_PREMIUM_ITEMS.indexOf(id) === -1) return true;
+  return _snakeShopUnlocked().indexOf(id) !== -1;
+}
+
 function applyTheme(name) {
+  if (THEMES[name] && THEMES[name].premium && !_isSnakePremiumUnlocked(name)) {
+    themeSelect.value = localStorage.getItem("snakeTheme") || "neon";
+    if (typeof Shop !== 'undefined') Shop.open();
+    return;
+  }
   currentTheme = THEMES[name] || THEMES.neon;
   document.body.className = name === "neon" ? "" : `theme-${name}`;
   localStorage.setItem("snakeTheme", name);
 }
 
 function applySkin(name) {
+  if (SKINS[name] && SKINS[name].premium && !_isSnakePremiumUnlocked(name)) {
+    skinSelect.value = localStorage.getItem("snakeSkin") || "classic";
+    if (typeof Shop !== 'undefined') Shop.open();
+    return;
+  }
   currentSkin = SKINS[name] || SKINS.classic;
   localStorage.setItem("snakeSkin", name);
 }
@@ -2348,4 +2473,32 @@ if (typeof Leaderboard !== 'undefined') {
       if (e.target === lbPanel) lbPanel.classList.remove('lb-visible');
     });
   }
+}
+
+// ── Ko-fi Shop ──
+if (typeof Shop !== 'undefined') {
+  Shop.init({
+    gameId: 'snake',
+    buttonTarget: '#shopBtn',
+    bundles: [
+      { id: 'snakepremium', name: 'Snake Premium', desc: 'Midnight & Sakura themes + Dragon skin', price: '~$2',
+        kofiUrl: 'https://ko-fi.com/s/SNAKE_PREMIUM_ID', items: ['midnight', 'sakura', 'dragon'] },
+    ],
+    codes: {
+      'SNAKEPRO2026': 'snakepremium',
+    },
+    onUnlock: function (itemIds) {
+      var arr = _snakeShopUnlocked();
+      itemIds.forEach(function (id) { if (arr.indexOf(id) === -1) arr.push(id); });
+      localStorage.setItem('snakeShopUnlocked', JSON.stringify(arr));
+    }
+  });
+
+  // Mark locked options in dropdowns
+  var unlocked = _snakeShopUnlocked();
+  document.querySelectorAll('#themeSelect option, #skinSelect option').forEach(function(opt) {
+    if (SNAKE_PREMIUM_ITEMS.indexOf(opt.value) !== -1 && unlocked.indexOf(opt.value) === -1) {
+      opt.textContent = opt.textContent + ' 🔒';
+    }
+  });
 }

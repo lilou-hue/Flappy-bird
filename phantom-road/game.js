@@ -327,12 +327,17 @@ const POWERUP_TYPES = [
   { type: "slowmo", color: "#44ff88", glow: "#22dd66", get label() { return _t('prSlowmo'); }, duration: 4 },
 ];
 
+// ── Shop unlocks (shared module) ─────────────────────────
+function _prShopUnlocked() {
+  try { return JSON.parse(localStorage.getItem('prShopUnlocked')) || []; } catch(e) { return []; }
+}
+
 // ── Vehicle Skins ────────────────────────────────────────
 const VEHICLE_SKINS = [
   { id: 'sedan', name: 'Sedan', color: '#3388ff', unlocked: () => true },
-  { id: 'sports', name: 'Sports', color: '#ff3344', unlocked: () => (localStorage.getItem('prBestScore') || 0) >= 100 },
-  { id: 'truck', name: 'Truck', color: '#33cc55', unlocked: () => (localStorage.getItem('prTotalCoins') || 0) >= 200 },
-  { id: 'neon', name: 'Neon', color: '#ff44ff', unlocked: () => (localStorage.getItem('prPoliceEvasions') || 0) >= 3 },
+  { id: 'sports', name: 'Sports', color: '#ff3344', unlocked: () => (localStorage.getItem('prBestScore') || 0) >= 100 || _prShopUnlocked().includes('sports') },
+  { id: 'truck', name: 'Truck', color: '#33cc55', unlocked: () => (localStorage.getItem('prTotalCoins') || 0) >= 200 || _prShopUnlocked().includes('truck') },
+  { id: 'neon', name: 'Neon', color: '#ff44ff', unlocked: () => (localStorage.getItem('prPoliceEvasions') || 0) >= 3 || _prShopUnlocked().includes('neon') },
 ];
 
 // ── Skin selector button ─────────────────────────────────
@@ -2843,4 +2848,30 @@ if (typeof Leaderboard !== 'undefined') {
     lbToggleBtn.addEventListener('click', () => { lbPanel.classList.toggle('lb-visible'); });
     lbPanel.addEventListener('click', (e) => { if (e.target === lbPanel) lbPanel.classList.remove('lb-visible'); });
   }
+}
+
+// ── Ko-fi Shop ──
+if (typeof Shop !== 'undefined') {
+  Shop.init({
+    gameId: 'phantom-road',
+    buttonTarget: '#shopBtn',
+    bundles: [
+      { id: 'speed', name: 'Speed Pack', desc: 'Sports car + Truck skins', price: '~$2',
+        kofiUrl: 'https://ko-fi.com/s/PR_SPEED_ID', items: ['sports', 'truck'] },
+      { id: 'neon', name: 'Neon Racer', desc: 'Neon skin', price: '~$1',
+        kofiUrl: 'https://ko-fi.com/s/PR_NEON_ID', items: ['neon'] },
+      { id: 'roadpass', name: 'Road Pass', desc: 'All 3 premium skins', price: '~$3',
+        kofiUrl: 'https://ko-fi.com/s/PR_ROADPASS_ID', items: ['sports', 'truck', 'neon'] },
+    ],
+    codes: {
+      'PRSPEED2026': 'speed',
+      'PRNEON2026': 'neon',
+      'PRPASS2026': '__all__'
+    },
+    onUnlock: function (itemIds) {
+      var arr = _prShopUnlocked();
+      itemIds.forEach(function (id) { if (arr.indexOf(id) === -1) arr.push(id); });
+      localStorage.setItem('prShopUnlocked', JSON.stringify(arr));
+    }
+  });
 }

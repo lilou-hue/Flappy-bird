@@ -47,18 +47,32 @@ const THEMES = {
   vapor:      { name: () => I18N.t('bdThemeVapor')      || 'Vapor',      bg: '#2d1b3d', bg2: '#1a0a28', laneBg: 'rgba(162,155,254,0.04)' },
   monochrome: { name: () => I18N.t('bdThemeMonochrome') || 'Monochrome', bg: '#1a1a2e', bg2: '#0a0a1e', laneBg: 'rgba(255,255,255,0.02)' },
   sakura:     { name: () => I18N.t('bdThemeSakura')     || 'Sakura',     bg: '#2d1020', bg2: '#1a0a18', laneBg: 'rgba(255,150,180,0.04)' },
+  midnight:   { name: () => 'Midnight',  bg: '#08081a', bg2: '#040410', laneBg: 'rgba(80,80,200,0.03)', premium: true },
+  tropical:   { name: () => 'Tropical',  bg: '#0a2018', bg2: '#061410', laneBg: 'rgba(0,255,150,0.03)', premium: true },
 };
+
+const BD_PREMIUM_ITEMS = ['midnight', 'tropical'];
+function _bdShopUnlocked() {
+  try { return JSON.parse(localStorage.getItem('bdShopUnlocked')) || []; } catch(e) { return []; }
+}
 
 let currentTheme = localStorage.getItem('beatDropTheme') || 'neon';
 
 const themeSelect = document.getElementById('themeSelect');
 for (const [key, th] of Object.entries(THEMES)) {
   const opt = document.createElement('option');
-  opt.value = key; opt.textContent = th.name();
+  var label = th.name();
+  if (th.premium && _bdShopUnlocked().indexOf(key) === -1) label += ' \uD83D\uDD12';
+  opt.value = key; opt.textContent = label;
   if (key === currentTheme) opt.selected = true;
   themeSelect.appendChild(opt);
 }
 themeSelect.addEventListener('change', () => {
+  if (THEMES[themeSelect.value] && THEMES[themeSelect.value].premium && _bdShopUnlocked().indexOf(themeSelect.value) === -1) {
+    themeSelect.value = currentTheme;
+    if (typeof Shop !== 'undefined') Shop.open();
+    return;
+  }
   currentTheme = themeSelect.value;
   localStorage.setItem('beatDropTheme', currentTheme);
   document.body.className = currentTheme === 'neon' ? '' : `theme-${currentTheme}`;
@@ -847,3 +861,21 @@ function loop(timestamp) {
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
+
+// ── Ko-fi Shop ──
+if (typeof Shop !== 'undefined') {
+  Shop.init({
+    gameId: 'beat-drop',
+    buttonTarget: '#shopBtn',
+    bundles: [
+      { id: 'beatpremium', name: 'Beat Premium', desc: 'Midnight & Tropical themes', price: '~$1',
+        kofiUrl: 'https://ko-fi.com/s/BEAT_PREMIUM_ID', items: ['midnight', 'tropical'] },
+    ],
+    codes: { 'BEATPRO2026': 'beatpremium' },
+    onUnlock: function (itemIds) {
+      var arr = _bdShopUnlocked();
+      itemIds.forEach(function (id) { if (arr.indexOf(id) === -1) arr.push(id); });
+      localStorage.setItem('bdShopUnlocked', JSON.stringify(arr));
+    }
+  });
+}

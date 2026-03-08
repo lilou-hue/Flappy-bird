@@ -88,6 +88,27 @@
     ],
   };
 
+  // Premium zone sets
+  ZONE_SETS.crystal = [
+    { name: "Crystal Gate",    crystal: [200,220,255], ambient: [40,50,80],   wall: [60,70,100],  bg: [8,10,22] },
+    { name: "Diamond Vein",    crystal: [180,240,255], ambient: [35,55,90],   wall: [55,75,110],  bg: [6,10,28] },
+    { name: "Quartz Hollow",   crystal: [220,200,255], ambient: [50,40,85],   wall: [70,60,105],  bg: [10,8,25] },
+    { name: "Gem Core",        crystal: [160,255,240], ambient: [30,70,65],   wall: [50,90,85],   bg: [5,18,16] },
+    { name: "Prismatic Heart",  crystal: [255,200,220], ambient: [80,40,50],   wall: [100,60,70],  bg: [22,8,12] },
+  ];
+  ZONE_SETS.magma = [
+    { name: "Ash Tunnel",      crystal: [255,140,40],  ambient: [70,25,8],    wall: [90,40,15],   bg: [22,8,3] },
+    { name: "Cinder Depths",   crystal: [255,100,30],  ambient: [80,20,5],    wall: [100,35,10],  bg: [26,6,2] },
+    { name: "Molten River",    crystal: [255,200,50],  ambient: [75,50,10],   wall: [95,65,20],   bg: [24,14,4] },
+    { name: "Slag Cavern",     crystal: [255,80,60],   ambient: [85,15,10],   wall: [105,30,20],  bg: [28,5,5] },
+    { name: "Pyroclast Core",  crystal: [255,60,20],   ambient: [90,10,5],    wall: [110,25,10],  bg: [30,4,2] },
+  ];
+
+  const LUMINA_PREMIUM_ITEMS = ['crystal', 'magma', 'prismx'];
+  function _luminaShopUnlocked() {
+    try { return JSON.parse(localStorage.getItem('luminaShopUnlocked')) || []; } catch(e) { return []; }
+  }
+
   let ZONES = ZONE_SETS.default;
   let currentThemeName = "default";
 
@@ -227,6 +248,28 @@
         c.fillStyle = "rgba(255,100,255,0.9)";
         c.beginPath(); c.arc(-4, -2, 2, 0, Math.PI * 2); c.fill();
         c.beginPath(); c.arc(4, -2, 2, 0, Math.PI * 2); c.fill();
+      }
+    },
+    prismx: {
+      name: "Prism X",
+      premium: true,
+      draw(c, pal, pulseScale) {
+        const t = performance.now() / 1000;
+        // Rainbow refracting crystal
+        const og = c.createRadialGradient(0, 0, 0, 0, 0, 30);
+        og.addColorStop(0, `hsla(${(t * 60) % 360},100%,70%,0.6)`);
+        og.addColorStop(1, "rgba(0,0,0,0)");
+        c.fillStyle = og; c.fillRect(-30, -30, 60, 60);
+        // Diamond body
+        c.beginPath();
+        c.moveTo(0, -14); c.lineTo(12, 0); c.lineTo(0, 14); c.lineTo(-12, 0);
+        c.closePath();
+        const dg = c.createLinearGradient(-12, -14, 12, 14);
+        dg.addColorStop(0, `hsla(${(t * 40) % 360},90%,70%,0.9)`);
+        dg.addColorStop(0.5, `hsla(${(t * 40 + 120) % 360},90%,70%,0.9)`);
+        dg.addColorStop(1, `hsla(${(t * 40 + 240) % 360},90%,70%,0.9)`);
+        c.fillStyle = dg; c.fill();
+        c.strokeStyle = "rgba(255,255,255,0.5)"; c.lineWidth = 1; c.stroke();
       }
     },
   };
@@ -806,13 +849,27 @@
   fullscreenBtn.addEventListener("click", toggleFullscreen);
 
   // Theme & Skin
+  function _isLuminaPremiumUnlocked(id) {
+    if (LUMINA_PREMIUM_ITEMS.indexOf(id) === -1) return true;
+    return _luminaShopUnlocked().indexOf(id) !== -1;
+  }
   function applyTheme(name) {
+    if (ZONE_SETS[name] && LUMINA_PREMIUM_ITEMS.indexOf(name) !== -1 && !_isLuminaPremiumUnlocked(name)) {
+      themeSelect.value = currentThemeName;
+      if (typeof Shop !== 'undefined') Shop.open();
+      return;
+    }
     ZONES = ZONE_SETS[name] || ZONE_SETS.default;
     currentThemeName = name;
     document.body.className = name === "default" ? "" : `theme-${name}`;
     localStorage.setItem("luminaTheme", name);
   }
   function applySkin(name) {
+    if (PLAYER_SKINS[name] && PLAYER_SKINS[name].premium && !_isLuminaPremiumUnlocked(name)) {
+      skinSelect.value = currentSkinName;
+      if (typeof Shop !== 'undefined') Shop.open();
+      return;
+    }
     currentSkin = PLAYER_SKINS[name] || PLAYER_SKINS.classic;
     currentSkinName = name;
     localStorage.setItem("luminaSkin", name);
@@ -1643,5 +1700,30 @@
       lbToggleBtn.addEventListener('click', () => { lbPanel.classList.toggle('lb-visible'); });
       lbPanel.addEventListener('click', (e) => { if (e.target === lbPanel) lbPanel.classList.remove('lb-visible'); });
     }
+  }
+
+  // ── Ko-fi Shop ──
+  if (typeof Shop !== 'undefined') {
+    Shop.init({
+      gameId: 'lumina',
+      buttonTarget: '#shopBtn',
+      bundles: [
+        { id: 'luminapremium', name: 'Lumina Premium', desc: 'Crystal & Magma zone sets + Prism X skin', price: '~$2',
+          kofiUrl: 'https://ko-fi.com/s/LUMINA_PREMIUM_ID', items: ['crystal', 'magma', 'prismx'] },
+      ],
+      codes: { 'LUMINAPRO2026': 'luminapremium' },
+      onUnlock: function (itemIds) {
+        var arr = _luminaShopUnlocked();
+        itemIds.forEach(function (id) { if (arr.indexOf(id) === -1) arr.push(id); });
+        localStorage.setItem('luminaShopUnlocked', JSON.stringify(arr));
+      }
+    });
+    // Mark locked options
+    var lunl = _luminaShopUnlocked();
+    document.querySelectorAll('#themeSelect option, #skinSelect option').forEach(function(opt) {
+      if (LUMINA_PREMIUM_ITEMS.indexOf(opt.value) !== -1 && lunl.indexOf(opt.value) === -1) {
+        opt.textContent = opt.textContent + ' \uD83D\uDD12';
+      }
+    });
   }
 })();

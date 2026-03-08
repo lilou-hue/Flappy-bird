@@ -675,9 +675,14 @@ function getActiveSkin() {
   return CONFIG.skins[progress.selectedSkin] || CONFIG.skins.default;
 }
 
+function _mdShopUnlocked() {
+  try { return JSON.parse(localStorage.getItem('mdShopUnlocked')) || []; } catch(e) { return []; }
+}
+
 function isSkinUnlocked(skinId) {
   if (skinId === 'default') return true;
   if (progress.unlockedSkins && progress.unlockedSkins.includes(skinId)) return true;
+  if (_mdShopUnlocked().includes(skinId)) return true;
   const req = CONFIG.skinUnlocks[skinId];
   if (!req) return false;
   if (req.type === 'score') return progress.bestScore >= req.value;
@@ -3968,4 +3973,37 @@ if (typeof Leaderboard !== 'undefined') {
     lbToggleBtn.addEventListener('click', () => { lbPanel.classList.toggle('lb-visible'); });
     lbPanel.addEventListener('click', (e) => { if (e.target === lbPanel) lbPanel.classList.remove('lb-visible'); });
   }
+}
+
+// ── Ko-fi Shop ──
+if (typeof Shop !== 'undefined') {
+  Shop.init({
+    gameId: 'methane-drift',
+    buttonTarget: '#shopBtn',
+    bundles: [
+      { id: 'elemental', name: 'Elemental Pack', desc: 'Ember, Solar Wind & Deep Current skins', price: '~$2',
+        kofiUrl: 'https://ko-fi.com/s/MD_ELEMENTAL_ID', items: ['ember', 'solar', 'deep'] },
+      { id: 'shadow', name: 'Shadow Pack', desc: 'Void Walker & Spectral skins', price: '~$2',
+        kofiUrl: 'https://ko-fi.com/s/MD_SHADOW_ID', items: ['void', 'spectral'] },
+      { id: 'driftpass', name: 'Drift Pass', desc: 'All 5 premium skins', price: '~$3',
+        kofiUrl: 'https://ko-fi.com/s/MD_DRIFTPASS_ID', items: ['ember', 'solar', 'deep', 'void', 'spectral'] },
+    ],
+    codes: {
+      'MDELEM2026': 'elemental',
+      'MDSHADOW2026': 'shadow',
+      'MDPASS2026': '__all__'
+    },
+    onUnlock: function (itemIds) {
+      var arr = _mdShopUnlocked();
+      itemIds.forEach(function (id) { if (arr.indexOf(id) === -1) arr.push(id); });
+      localStorage.setItem('mdShopUnlocked', JSON.stringify(arr));
+      // Also add to progress.unlockedSkins
+      if (progress && progress.unlockedSkins) {
+        itemIds.forEach(function (id) {
+          if (progress.unlockedSkins.indexOf(id) === -1) progress.unlockedSkins.push(id);
+        });
+        saveProgress();
+      }
+    }
+  });
 }

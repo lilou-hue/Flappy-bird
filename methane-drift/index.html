@@ -13,6 +13,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Methane Drift</title>
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="../shop.css" />
   </head>
   <body>
     <main class="layout">
@@ -37,6 +38,7 @@
         <button id="restartBtn" class="restart-btn" hidden data-i18n="mdPlayAgain">Play Again</button>
         <button id="symbiosisBtn" class="symbiosis-action-btn" hidden aria-label="Activate Shield" data-i18n="mdShieldBtnLabel">Shield</button>
         <button id="ghostToggleButton" class="hud__button" type="button" data-i18n="mdGhostToggle">Ghost</button>
+        <button id="shopBtn" class="hud__button" type="button">Shop</button>
         <!-- Achievements panel -->
         <div class="achievements-panel" id="achievementsPanel">
           <button class="achievements-toggle" id="achievementsToggle" type="button" data-i18n="achievements">Achievements</button>
@@ -62,6 +64,7 @@
     <script src="../arcade.js"></script>
     <script src="../leaderboard.js"></script>
     <script src="audio.js"></script>
+    <script src="../shop.js"></script>
     <script src="game.js"></script>
     <script>if(typeof Arcade!=='undefined')Arcade.injectNavHUD();</script>
   </body>
