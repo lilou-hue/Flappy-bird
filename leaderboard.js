@@ -213,10 +213,26 @@ const Leaderboard = (() => {
     return d.innerHTML;
   }
 
+  /* ── Fetch ALL scores for a game (for ranking computation) ── */
+  function getAllScores(gameId) {
+    initFirebase();
+    if (!db) return Promise.resolve([]);
+    return db.ref('leaderboards/' + gameId)
+      .orderByChild('score')
+      .once('value')
+      .then(snap => {
+        const entries = [];
+        snap.forEach(child => { entries.push(child.val()); });
+        entries.sort((a, b) => b.score - a.score);
+        return entries;
+      });
+  }
+
   /* ── Public API ────────────────────────────────────────── */
   return {
     submitScore,
     getTopScores,
+    getAllScores,
     renderLeaderboard,
     createPanel,
     promptNickname,

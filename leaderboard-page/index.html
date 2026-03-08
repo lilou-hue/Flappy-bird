@@ -43,7 +43,7 @@
     <p class="arc-page__subtitle">See how you stack up</p>
 
     <div class="arc-tabs" id="lbTabs">
-      <button class="arc-tab arc-tab--active" data-tab="all">All Games</button>
+      <button class="arc-tab arc-tab--active" data-tab="all">Overall Ranking</button>
       <button class="arc-tab" data-tab="flappy-bird">Flappy Bird</button>
       <button class="arc-tab" data-tab="snake">Snake</button>
       <button class="arc-tab" data-tab="tetris">Tetris</button>
@@ -105,6 +105,27 @@
         return html;
       }
 
+      function buildAvgTable(rows) {
+        if (!rows.length) return '<p class="arc-lb-loading">No scores yet. Play some games!</p>';
+        var html = '<table class="arc-lb-table"><thead><tr>' +
+          '<th class="arc-lb-rank">#</th><th>Player</th>' +
+          '<th class="arc-lb-score">Avg Position</th><th class="arc-lb-score">Games</th>' +
+          '</tr></thead><tbody>';
+        rows.forEach(function (r, i) {
+          var isMe = r.nickname === localNickname;
+          var rankStr = i === 0 ? '\uD83D\uDC51 1' : String(i + 1);
+          var cls = isMe ? ' class="arc-lb-me"' : '';
+          html += '<tr' + cls + '>' +
+            '<td class="arc-lb-rank">' + rankStr + '</td>' +
+            '<td>' + escapeHtml(r.nickname) + (isMe ? ' (you)' : '') + '</td>' +
+            '<td class="arc-lb-score">' + r.avg.toFixed(1) + '</td>' +
+            '<td class="arc-lb-score">' + r.gamesPlayed + '/' + GAME_IDS.length + '</td>' +
+          '</tr>';
+        });
+        html += '</tbody></table>';
+        return html;
+      }
+
       function renderSingleGame(gameId) {
         var content = document.getElementById('lbContent');
         content.innerHTML = '<p class="arc-lb-loading">Loading scores…</p>';
@@ -120,7 +141,7 @@
         content.innerHTML = '<p class="arc-lb-loading">Loading scores…</p>';
 
         var promises = GAME_IDS.map(function (id) {
-          return Leaderboard.getTopScores(id).then(function (scores) {
+          return Leaderboard.getAllScores(id).then(function (scores) {
             return { id: id, scores: scores };
           }).catch(function () {
             return { id: id, scores: [] };
@@ -128,16 +149,49 @@
         });
 
         Promise.all(promises).then(function (results) {
-          var html = '';
+          // For each game, compute each player's best rank (deduped by nickname)
+          // ranks maps nickname -> array of rank positions
+          var ranks = {};
+
           results.forEach(function (r) {
             if (!r.scores.length) return;
-            html += '<div class="arc-lb-game-section">' +
-              '<h3>' + GAME_NAMES[r.id] + '</h3>' +
-              buildTable(r.scores) +
-            '</div>';
+            // Dedupe: keep best score per player
+            var bestByPlayer = {};
+            r.scores.forEach(function (entry) {
+              if (!bestByPlayer[entry.nickname] || entry.score > bestByPlayer[entry.nickname]) {
+                bestByPlayer[entry.nickname] = entry.score;
+              }
+            });
+            // Sort players by their best score descending
+            var sorted = Object.keys(bestByPlayer).map(function (name) {
+              return { nickname: name, score: bestByPlayer[name] };
+            }).sort(function (a, b) { return b.score - a.score; });
+
+            // Assign ranks (1-based)
+            sorted.forEach(function (entry, idx) {
+              if (!ranks[entry.nickname]) ranks[entry.nickname] = [];
+              ranks[entry.nickname].push(idx + 1);
+            });
           });
-          if (!html) html = '<p class="arc-lb-loading">No scores yet. Play some games!</p>';
-          content.innerHTML = html;
+
+          // Compute average position per player
+          var rows = Object.keys(ranks).map(function (name) {
+            var positions = ranks[name];
+            var sum = positions.reduce(function (a, b) { return a + b; }, 0);
+            return {
+              nickname: name,
+              avg: sum / positions.length,
+              gamesPlayed: positions.length
+            };
+          });
+
+          // Sort: lower average = better; tie-break by more games played
+          rows.sort(function (a, b) {
+            if (a.avg !== b.avg) return a.avg - b.avg;
+            return b.gamesPlayed - a.gamesPlayed;
+          });
+
+          content.innerHTML = buildAvgTable(rows);
         });
       }
 
