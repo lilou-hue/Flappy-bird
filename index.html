@@ -2457,18 +2457,20 @@
           }).join('');
         }
 
-        /* Render leaderboard preview (top 3 by coins) */
-        var mockNames = ['PixelKing', 'NeonQueen', 'GlitchWiz'];
-        var mockCoins = [2450, 1820, 1350];
-        var rankIcons = ['\uD83E\uDD47', '\uD83E\uDD48', '\uD83E\uDD49'];
+        /* Render leaderboard preview (your stats) */
         var lbList = document.getElementById('lbPreviewList');
         if (lbList) {
           var profile = Arcade.getProfileData();
-          lbList.innerHTML = mockNames.map(function (name, i) {
+          var stats = [
+            { label: 'Total Coins', icon: '\uD83E\uDD47', value: '\uD83E\uDE99 ' + (profile.totalCoinsEarned || 0).toLocaleString() },
+            { label: 'Games Played', icon: '\uD83E\uDD48', value: '\uD83C\uDFAE ' + (profile.totalGamesPlayed || 0).toLocaleString() },
+            { label: 'Longest Streak', icon: '\uD83E\uDD49', value: '\uD83D\uDD25 ' + (profile.longestStreak || 0) + ' days' },
+          ];
+          lbList.innerHTML = stats.map(function (s) {
             return '<div class="arc-lb-preview__entry">' +
-              '<div class="arc-lb-preview__rank">' + rankIcons[i] + '</div>' +
-              '<div class="arc-lb-preview__name">' + name + '</div>' +
-              '<div class="arc-lb-preview__score">&#x1FA99; ' + mockCoins[i] + '</div>' +
+              '<div class="arc-lb-preview__rank">' + s.icon + '</div>' +
+              '<div class="arc-lb-preview__name">' + s.label + '</div>' +
+              '<div class="arc-lb-preview__score">' + s.value + '</div>' +
             '</div>';
           }).join('');
         }

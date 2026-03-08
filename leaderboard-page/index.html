@@ -53,71 +53,30 @@
       var currentTab = 'coins';
       var localNickname = localStorage.getItem('arcade_nickname') || 'You';
 
-      /* Deterministic mock entries seeded from tab name */
-      function mulberry32(seed) {
-        return function () {
-          seed |= 0; seed = seed + 0x6D2B79F5 | 0;
-          var t = Math.imul(seed ^ seed >>> 15, 1 | seed);
-          t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
-          return ((t ^ t >>> 14) >>> 0) / 4294967296;
-        };
-      }
-
-      var mockNames = [
-        'PixelKing', 'NeonQueen', 'GlitchWiz', 'ByteBlast', 'CyberFox',
-        'TurboNova', 'ZapMaster', 'CosmicAce', 'BlazeStar', 'StormRider',
-        'VoidWalker', 'IronPulse', 'ShadowByte', 'QuantumKid', 'RogueWave',
-        'FluxDemon', 'NovaDrift', 'PixelPunk', 'SkullGrin', 'TechNinja',
-      ];
-
-      function generateEntries(tab) {
-        var seed = 0;
-        for (var i = 0; i < tab.length; i++) seed = ((seed << 5) - seed + tab.charCodeAt(i)) | 0;
-        var rng = mulberry32(seed);
-
-        var entries = [];
-        var ranges = { coins: [50, 5000], score: [100, 20000], games: [5, 500], streak: [1, 60] };
-        var range = ranges[tab];
-
-        for (var j = 0; j < 15; j++) {
-          entries.push({
-            name: mockNames[Math.floor(rng() * mockNames.length)],
-            value: Math.floor(rng() * (range[1] - range[0]) + range[0]),
-          });
-        }
-
-        /* Add local player */
+      function getLocalValue(tab) {
         var profile = Arcade.getProfileData();
-        var localVal = 0;
-        if (tab === 'coins') localVal = profile.totalCoinsEarned;
-        else if (tab === 'score') {
+        if (tab === 'coins') return profile.totalCoinsEarned;
+        if (tab === 'score') {
           var keys = ['flappyBest','snakeBest','tetrisBest','luminaBest','phantomRoadBest','methaneDriftBest','gunGameBest','astroMinerBest','starFuryBest','inkognitoBest','stackTowerBest','neonPongBest','beatDropBest'];
-          keys.forEach(function (k) { localVal += Number(localStorage.getItem(k)) || 0; });
+          var total = 0;
+          keys.forEach(function (k) { total += Number(localStorage.getItem(k)) || 0; });
+          return total;
         }
-        else if (tab === 'games') localVal = profile.totalGamesPlayed;
-        else if (tab === 'streak') localVal = profile.longestStreak;
-
-        entries.push({ name: localNickname, value: localVal, isLocal: true });
-
-        entries.sort(function (a, b) { return b.value - a.value; });
-        return entries;
+        if (tab === 'games') return profile.totalGamesPlayed;
+        if (tab === 'streak') return profile.longestStreak;
+        return 0;
       }
 
       function render() {
-        var entries = generateEntries(currentTab);
         var body = document.getElementById('lbBody');
         var labels = { coins: ' coins', score: ' pts', games: ' games', streak: ' days' };
+        var val = getLocalValue(currentTab);
 
-        body.innerHTML = entries.map(function (e, i) {
-          var rank = i + 1;
-          var rankStr = rank === 1 ? '\uD83D\uDC51 1' : String(rank);
-          var cls = e.isLocal ? ' class="arc-lb-me"' : '';
-          return '<tr' + cls + '>' +
-            '<td class="arc-lb-rank">' + rankStr + '</td>' +
-            '<td>' + e.name + (e.isLocal ? ' (you)' : '') + '</td>' +
-            '<td class="arc-lb-score">' + e.value.toLocaleString() + labels[currentTab] + '</td>' +
-          '</tr>';
-        }).join('');
+        body.innerHTML = '<tr class="arc-lb-me">' +
+          '<td class="arc-lb-rank">\uD83D\uDC51 1</td>' +
+          '<td>' + localNickname + ' (you)</td>' +
+          '<td class="arc-lb-score">' + val.toLocaleString() + labels[currentTab] + '</td>' +
+        '</tr>';
       }
 
       document.getElementById('lbTabs').addEventListener('click', function (e) {
