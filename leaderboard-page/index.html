@@ -15,10 +15,27 @@
       padding: 1rem;
       overflow-x: auto;
     }
+    .arc-lb-game-section { margin-bottom: 1.5rem; }
+    .arc-lb-game-section h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1rem;
+      color: rgba(255,255,255,0.7);
+      margin: 0 0 0.5rem;
+      padding-left: 0.25rem;
+    }
+    .arc-lb-loading {
+      text-align: center;
+      color: rgba(255,255,255,0.4);
+      padding: 2rem 0;
+      font-family: 'Space Grotesk', sans-serif;
+    }
   </style>
 </head>
 <body class="arc-page">
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="../arcade.js"></script>
+  <script src="../leaderboard.js"></script>
   <script src="../i18n.js"></script>
 
   <div class="arc-page__container">
@@ -26,23 +43,24 @@
     <p class="arc-page__subtitle">See how you stack up</p>
 
     <div class="arc-tabs" id="lbTabs">
-      <button class="arc-tab arc-tab--active" data-tab="coins">Most Coins</button>
-      <button class="arc-tab" data-tab="score">Highest Score</button>
-      <button class="arc-tab" data-tab="games">Most Games</button>
-      <button class="arc-tab" data-tab="streak">Longest Streak</button>
+      <button class="arc-tab arc-tab--active" data-tab="all">All Games</button>
+      <button class="arc-tab" data-tab="flappy-bird">Flappy Bird</button>
+      <button class="arc-tab" data-tab="snake">Snake</button>
+      <button class="arc-tab" data-tab="tetris">Tetris</button>
+      <button class="arc-tab" data-tab="lumina">Lumina</button>
+      <button class="arc-tab" data-tab="phantom-road">Phantom Road</button>
+      <button class="arc-tab" data-tab="methane-drift">Methane Drift</button>
+      <button class="arc-tab" data-tab="gun-game">Gun Game</button>
+      <button class="arc-tab" data-tab="astro-miner">Astro Miner</button>
+      <button class="arc-tab" data-tab="star-fury">Star Fury</button>
+      <button class="arc-tab" data-tab="inkognito">Inkognito</button>
+      <button class="arc-tab" data-tab="stack-tower">Stack Tower</button>
+      <button class="arc-tab" data-tab="neon-pong">Neon Pong</button>
+      <button class="arc-tab" data-tab="beat-drop">Beat Drop</button>
     </div>
 
-    <div class="arc-lb-wrap">
-      <table class="arc-lb-table" id="lbTable">
-        <thead>
-          <tr>
-            <th class="arc-lb-rank">#</th>
-            <th>Player</th>
-            <th class="arc-lb-score">Score</th>
-          </tr>
-        </thead>
-        <tbody id="lbBody"></tbody>
-      </table>
+    <div class="arc-lb-wrap" id="lbContent">
+      <p class="arc-lb-loading">Loading scores…</p>
     </div>
   </div>
 
@@ -50,33 +68,85 @@
     (function () {
       Arcade.injectNavHUD();
 
-      var currentTab = 'coins';
+      var currentTab = 'all';
       var localNickname = localStorage.getItem('arcade_nickname') || 'You';
 
-      function getLocalValue(tab) {
-        var profile = Arcade.getProfileData();
-        if (tab === 'coins') return profile.totalCoinsEarned;
-        if (tab === 'score') {
-          var keys = ['flappyBest','snakeBest','tetrisBest','luminaBest','phantomRoadBest','methaneDriftBest','gunGameBest','astroMinerBest','starFuryBest','inkognitoBest','stackTowerBest','neonPongBest','beatDropBest'];
-          var total = 0;
-          keys.forEach(function (k) { total += Number(localStorage.getItem(k)) || 0; });
-          return total;
-        }
-        if (tab === 'games') return profile.totalGamesPlayed;
-        if (tab === 'streak') return profile.longestStreak;
-        return 0;
+      var GAME_NAMES = {
+        'flappy-bird': 'Flappy Bird', 'snake': 'Snake', 'tetris': 'Tetris',
+        'lumina': 'Lumina', 'phantom-road': 'Phantom Road', 'methane-drift': 'Methane Drift',
+        'gun-game': 'Gun Game', 'astro-miner': 'Astro Miner', 'star-fury': 'Star Fury',
+        'inkognito': 'Inkognito', 'stack-tower': 'Stack Tower', 'neon-pong': 'Neon Pong',
+        'beat-drop': 'Beat Drop'
+      };
+      var GAME_IDS = Object.keys(GAME_NAMES);
+
+      function escapeHtml(str) {
+        var d = document.createElement('div');
+        d.textContent = str;
+        return d.innerHTML;
+      }
+
+      function buildTable(scores) {
+        if (!scores.length) return '<p class="arc-lb-loading">No scores yet.</p>';
+        var html = '<table class="arc-lb-table"><thead><tr>' +
+          '<th class="arc-lb-rank">#</th><th>Player</th><th class="arc-lb-score">Score</th>' +
+          '</tr></thead><tbody>';
+        scores.forEach(function (e, i) {
+          var isMe = e.nickname === localNickname;
+          var rankStr = i === 0 ? '\uD83D\uDC51 1' : String(i + 1);
+          var cls = isMe ? ' class="arc-lb-me"' : '';
+          html += '<tr' + cls + '>' +
+            '<td class="arc-lb-rank">' + rankStr + '</td>' +
+            '<td>' + escapeHtml(e.nickname) + (isMe ? ' (you)' : '') + '</td>' +
+            '<td class="arc-lb-score">' + e.score.toLocaleString() + '</td>' +
+          '</tr>';
+        });
+        html += '</tbody></table>';
+        return html;
+      }
+
+      function renderSingleGame(gameId) {
+        var content = document.getElementById('lbContent');
+        content.innerHTML = '<p class="arc-lb-loading">Loading scores…</p>';
+        Leaderboard.getTopScores(gameId).then(function (scores) {
+          content.innerHTML = buildTable(scores);
+        }).catch(function () {
+          content.innerHTML = '<p class="arc-lb-loading">Could not load leaderboard.</p>';
+        });
+      }
+
+      function renderAllGames() {
+        var content = document.getElementById('lbContent');
+        content.innerHTML = '<p class="arc-lb-loading">Loading scores…</p>';
+
+        var promises = GAME_IDS.map(function (id) {
+          return Leaderboard.getTopScores(id).then(function (scores) {
+            return { id: id, scores: scores };
+          }).catch(function () {
+            return { id: id, scores: [] };
+          });
+        });
+
+        Promise.all(promises).then(function (results) {
+          var html = '';
+          results.forEach(function (r) {
+            if (!r.scores.length) return;
+            html += '<div class="arc-lb-game-section">' +
+              '<h3>' + GAME_NAMES[r.id] + '</h3>' +
+              buildTable(r.scores) +
+            '</div>';
+          });
+          if (!html) html = '<p class="arc-lb-loading">No scores yet. Play some games!</p>';
+          content.innerHTML = html;
+        });
       }
 
       function render() {
-        var body = document.getElementById('lbBody');
-        var labels = { coins: ' coins', score: ' pts', games: ' games', streak: ' days' };
-        var val = getLocalValue(currentTab);
-
-        body.innerHTML = '<tr class="arc-lb-me">' +
-          '<td class="arc-lb-rank">\uD83D\uDC51 1</td>' +
-          '<td>' + localNickname + ' (you)</td>' +
-          '<td class="arc-lb-score">' + val.toLocaleString() + labels[currentTab] + '</td>' +
-        '</tr>';
+        if (currentTab === 'all') {
+          renderAllGames();
+        } else {
+          renderSingleGame(currentTab);
+        }
       }
 
       document.getElementById('lbTabs').addEventListener('click', function (e) {

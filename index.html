@@ -2422,6 +2422,9 @@
         }
       })();
     </script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <script src="/leaderboard.js"></script>
     <script src="/arcade.js"></script>
     <script>
       /* ── Arcade Platform Init ── */
@@ -2457,22 +2460,42 @@
           }).join('');
         }
 
-        /* Render leaderboard preview (your stats) */
+        /* Render leaderboard preview (top 3 real players across all games) */
         var lbList = document.getElementById('lbPreviewList');
-        if (lbList) {
-          var profile = Arcade.getProfileData();
-          var stats = [
-            { label: 'Total Coins', icon: '\uD83E\uDD47', value: '\uD83E\uDE99 ' + (profile.totalCoinsEarned || 0).toLocaleString() },
-            { label: 'Games Played', icon: '\uD83E\uDD48', value: '\uD83C\uDFAE ' + (profile.totalGamesPlayed || 0).toLocaleString() },
-            { label: 'Longest Streak', icon: '\uD83E\uDD49', value: '\uD83D\uDD25 ' + (profile.longestStreak || 0) + ' days' },
-          ];
-          lbList.innerHTML = stats.map(function (s) {
-            return '<div class="arc-lb-preview__entry">' +
-              '<div class="arc-lb-preview__rank">' + s.icon + '</div>' +
-              '<div class="arc-lb-preview__name">' + s.label + '</div>' +
-              '<div class="arc-lb-preview__score">' + s.value + '</div>' +
-            '</div>';
-          }).join('');
+        if (lbList && typeof Leaderboard !== 'undefined') {
+          lbList.innerHTML = '<div style="color:rgba(255,255,255,0.4);padding:0.5rem;font-size:0.85rem;">Loading…</div>';
+          var gameIds = ['flappy-bird','snake','tetris','lumina','phantom-road','methane-drift','gun-game','astro-miner','star-fury','inkognito','stack-tower','neon-pong','beat-drop'];
+          Promise.all(gameIds.map(function (id) {
+            return Leaderboard.getTopScores(id).catch(function () { return []; });
+          })).then(function (results) {
+            /* Aggregate best score per player across all games */
+            var playerBest = {};
+            results.forEach(function (scores) {
+              scores.forEach(function (e) {
+                if (!playerBest[e.nickname] || e.score > playerBest[e.nickname]) {
+                  playerBest[e.nickname] = e.score;
+                }
+              });
+            });
+            var sorted = Object.keys(playerBest).map(function (name) {
+              return { name: name, score: playerBest[name] };
+            }).sort(function (a, b) { return b.score - a.score; }).slice(0, 3);
+
+            if (!sorted.length) {
+              lbList.innerHTML = '<div style="color:rgba(255,255,255,0.4);padding:0.5rem;font-size:0.85rem;">No scores yet. Play some games!</div>';
+              return;
+            }
+            var rankIcons = ['\uD83E\uDD47', '\uD83E\uDD48', '\uD83E\uDD49'];
+            var nick = localStorage.getItem('arcade_nickname') || '';
+            lbList.innerHTML = sorted.map(function (p, i) {
+              var isMe = p.name === nick;
+              return '<div class="arc-lb-preview__entry' + (isMe ? ' arc-lb-me' : '') + '">' +
+                '<div class="arc-lb-preview__rank">' + rankIcons[i] + '</div>' +
+                '<div class="arc-lb-preview__name">' + p.name + (isMe ? ' (you)' : '') + '</div>' +
+                '<div class="arc-lb-preview__score">' + p.score.toLocaleString() + ' pts</div>' +
+              '</div>';
+            }).join('');
+          });
         }
       })();
     </script>
