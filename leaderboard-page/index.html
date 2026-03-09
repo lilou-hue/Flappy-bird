@@ -69,7 +69,7 @@
       Arcade.injectNavHUD();
 
       var currentTab = 'all';
-      var localNickname = localStorage.getItem('arcade_nickname') || 'You';
+      var localNickname = localStorage.getItem('arcade_nickname') || '';
 
       var GAME_NAMES = {
         'flappy-bird': 'Flappy Bird', 'snake': 'Snake', 'tetris': 'Tetris',
@@ -155,9 +155,10 @@
 
           results.forEach(function (r) {
             if (!r.scores.length) return;
-            // Dedupe: keep best score per player
+            // Dedupe: keep best score per player, skip invalid entries
             var bestByPlayer = {};
             r.scores.forEach(function (entry) {
+              if (!entry.nickname || typeof entry.score !== 'number') return;
               if (!bestByPlayer[entry.nickname] || entry.score > bestByPlayer[entry.nickname]) {
                 bestByPlayer[entry.nickname] = entry.score;
               }
@@ -192,6 +193,8 @@
           });
 
           content.innerHTML = buildAvgTable(rows);
+        }).catch(function () {
+          content.innerHTML = '<p class="arc-lb-loading">Could not load leaderboard.</p>';
         });
       }
 
