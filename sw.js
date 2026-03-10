@@ -1,4 +1,4 @@
-const CACHE_NAME = 'slayplay-v5';
+const CACHE_NAME = 'slayplay-v6';
 
 const PRECACHE_URLS = [
   '/',
@@ -67,6 +67,10 @@ const PRECACHE_URLS = [
   '/star-fury/game.js',
   '/star-fury/audio.js',
   '/star-fury/styles.css',
+  '/rivals/',
+  '/rivals/game.js',
+  '/rivals/audio.js',
+  '/rivals/styles.css',
 ];
 
 const NETWORK_FIRST_HOSTS = [

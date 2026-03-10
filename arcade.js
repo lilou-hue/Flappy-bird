@@ -22,6 +22,7 @@
     'stack-tower':    { name: 'Stack Tower',         bestKey: 'stackTowerBest',   thresholds: [10, 25, 50] },
     'neon-pong':      { name: 'Neon Pong',           bestKey: 'neonPongBest',     thresholds: [3, 7, 15] },
     'beat-drop':      { name: 'Beat Drop',           bestKey: 'beatDropBest',     thresholds: [500, 2000, 5000] },
+    'rivals':         { name: 'Rivals',              bestKey: 'rivalsBest',       thresholds: [5, 15, 30] },
   };
 
   const GAME_IDS = Object.keys(GAMES);
