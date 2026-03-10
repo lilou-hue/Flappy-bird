@@ -274,6 +274,120 @@ function drawCharacter(c, x, y, w, h, char) {
   const blushColor = char.blush || '#ff7090';
   const accentColor = char.accent || '#f0a0c0';
 
+  // ── Back hair (behind body) ──
+  if (!isWolf && !isCat) {
+    c.save();
+    const hc = char.hair;
+    if (char.id === 'human_girl') {
+      // Lumi: wavy hair falling to mid-back, honey-highlighted ends
+      const backHairGrad = c.createLinearGradient(cx, headY, cx, bodyBot - 10);
+      backHairGrad.addColorStop(0, hc);
+      backHairGrad.addColorStop(0.7, hc);
+      backHairGrad.addColorStop(1, _lighten(hc, 25));
+      c.fillStyle = backHairGrad;
+      c.beginPath();
+      c.moveTo(cx - headR * 0.75, headY - headR * 0.1);
+      c.quadraticCurveTo(cx - headR * 0.9, headY + headR * 1.5, cx - headR * 0.5, bodyTop + (waistY - bodyTop) * 0.7);
+      c.quadraticCurveTo(cx - headR * 0.3, bodyTop + (waistY - bodyTop) * 0.9, cx - headR * 0.1, bodyTop + (waistY - bodyTop) * 0.85);
+      c.lineTo(cx + headR * 0.1, bodyTop + (waistY - bodyTop) * 0.85);
+      c.quadraticCurveTo(cx + headR * 0.3, bodyTop + (waistY - bodyTop) * 0.9, cx + headR * 0.5, bodyTop + (waistY - bodyTop) * 0.7);
+      c.quadraticCurveTo(cx + headR * 0.9, headY + headR * 1.5, cx + headR * 0.75, headY - headR * 0.1);
+      c.closePath(); c.fill();
+      // Hair strand texture
+      c.save(); c.strokeStyle = _darken(hc, 12); c.lineWidth = 0.4; c.globalAlpha = 0.15;
+      for (let i = -2; i <= 2; i++) {
+        c.beginPath();
+        c.moveTo(cx + i * headR * 0.2, headY + headR * 0.5);
+        c.quadraticCurveTo(cx + i * headR * 0.22 + (i > 0 ? 2 : -2), bodyTop, cx + i * headR * 0.18, bodyTop + (waistY - bodyTop) * 0.5);
+        c.stroke();
+      }
+      c.restore();
+    } else if (char.id === 'human_boy') {
+      // Fenn: short, no back-hair needed
+    } else if (isElf) {
+      // Sylvie: very long golden hair in side braid, past waist
+      const braidGrad = c.createLinearGradient(cx, headY, cx + headR, bodyBot + 10);
+      braidGrad.addColorStop(0, hc);
+      braidGrad.addColorStop(0.5, hc);
+      braidGrad.addColorStop(1, _lighten(hc, 15));
+      c.fillStyle = braidGrad;
+      // Main back hair mass
+      c.beginPath();
+      c.moveTo(cx - headR * 0.8, headY - headR * 0.15);
+      c.quadraticCurveTo(cx - headR * 1.0, headY + headR * 1.8, cx - headR * 0.4, bodyBot + 5);
+      c.lineTo(cx + headR * 0.2, bodyBot + 5);
+      c.quadraticCurveTo(cx + headR * 0.85, headY + headR * 1.5, cx + headR * 0.8, headY - headR * 0.15);
+      c.closePath(); c.fill();
+      // Side braid (right side, drapes over shoulder area)
+      c.fillStyle = hc;
+      const braidX = cx + headR * 0.6;
+      c.beginPath();
+      c.moveTo(braidX, headY + headR * 0.4);
+      c.quadraticCurveTo(braidX + 4, bodyTop + 5, braidX + 2, waistY + 5);
+      c.quadraticCurveTo(braidX + 3, bodyBot, braidX + 1, bodyBot + 12);
+      c.lineTo(braidX - 3, bodyBot + 12);
+      c.quadraticCurveTo(braidX - 1, bodyBot, braidX - 2, waistY + 5);
+      c.quadraticCurveTo(braidX - 3, bodyTop + 5, braidX - 4, headY + headR * 0.4);
+      c.closePath(); c.fill();
+      // Braid cross-hatching
+      c.save(); c.strokeStyle = _darken(hc, 15); c.lineWidth = 0.4; c.globalAlpha = 0.2;
+      for (let i = 0; i < 8; i++) {
+        const by = headY + headR * 0.8 + i * ((bodyBot + 10 - headY - headR * 0.8) / 8);
+        c.beginPath();
+        c.moveTo(braidX - 3, by);
+        c.lineTo(braidX + 3, by + 4);
+        c.stroke();
+        c.beginPath();
+        c.moveTo(braidX + 3, by);
+        c.lineTo(braidX - 3, by + 4);
+        c.stroke();
+      }
+      c.restore();
+      // Living vine woven through braid
+      c.save(); c.strokeStyle = '#6ab878'; c.lineWidth = 0.5; c.globalAlpha = 0.5; c.lineCap = 'round';
+      c.beginPath();
+      c.moveTo(braidX, headY + headR * 0.5);
+      for (let i = 0; i < 6; i++) {
+        const vy = headY + headR * 0.5 + i * ((bodyBot + 8 - headY - headR * 0.5) / 6);
+        c.quadraticCurveTo(braidX + (i % 2 === 0 ? 4 : -4), vy + 6, braidX, vy + 12);
+      }
+      c.stroke();
+      // Tiny leaves on vine
+      c.fillStyle = '#7ec88a'; c.globalAlpha = 0.45;
+      for (let i = 0; i < 4; i++) {
+        const ly = headY + headR + i * ((bodyBot - headY - headR) / 4) + 8;
+        const lx = braidX + (i % 2 === 0 ? 3 : -3);
+        c.beginPath();
+        c.ellipse(lx, ly, 2, 1, i % 2 === 0 ? 0.4 : -0.4, 0, Math.PI * 2);
+        c.fill();
+      }
+      c.restore();
+    } else if (isFairy) {
+      // Petal: coral-pink voluminous hair to shoulders
+      const backHairGrad = c.createLinearGradient(cx, headY - headR, cx, bodyTop + 15);
+      backHairGrad.addColorStop(0, hc);
+      backHairGrad.addColorStop(1, _lighten(hc, 10));
+      c.fillStyle = backHairGrad;
+      c.beginPath();
+      c.moveTo(cx - headR * 0.85, headY);
+      c.quadraticCurveTo(cx - headR * 1.0, headY + headR * 1.2, cx - headR * 0.6, bodyTop + 12);
+      c.quadraticCurveTo(cx - headR * 0.3, bodyTop + 18, cx, bodyTop + 15);
+      c.quadraticCurveTo(cx + headR * 0.3, bodyTop + 18, cx + headR * 0.6, bodyTop + 12);
+      c.quadraticCurveTo(cx + headR * 1.0, headY + headR * 1.2, cx + headR * 0.85, headY);
+      c.closePath(); c.fill();
+      // Rose-gold shimmer streaks
+      c.save(); c.strokeStyle = '#f4c8a0'; c.lineWidth = 0.5; c.globalAlpha = 0.12;
+      for (let i = -2; i <= 2; i++) {
+        c.beginPath();
+        c.moveTo(cx + i * headR * 0.25, headY + headR * 0.3);
+        c.quadraticCurveTo(cx + i * headR * 0.28, bodyTop, cx + i * headR * 0.22, bodyTop + 10);
+        c.stroke();
+      }
+      c.restore();
+    }
+    c.restore();
+  }
+
   // ── Tail (behind body) ──
   if (isWolf) {
     c.save(); c.lineCap = 'round';
@@ -843,16 +957,31 @@ function drawCharacter(c, x, y, w, h, char) {
       c.beginPath(); c.arc(ex, eyeY, iR * 0.38, 0, Math.PI * 2); c.fill();
     }
 
-    // 3-point highlight system
+    // Highlight system (star-shaped for Petal, 3-point for others)
     c.fillStyle = '#fff';
-    // Main highlight (large, upper-right)
-    c.beginPath(); c.arc(ex + eyeW * 0.2, eyeY - eyeH * 0.24, eyeW * 0.26, 0, Math.PI * 2); c.fill();
-    // Secondary highlight (medium, lower-left)
-    c.beginPath(); c.arc(ex - eyeW * 0.12, eyeY + eyeH * 0.14, eyeW * 0.14, 0, Math.PI * 2); c.fill();
-    // Tiny sparkle highlight
-    c.save(); c.globalAlpha = 0.6;
-    c.beginPath(); c.arc(ex + eyeW * 0.05, eyeY - eyeH * 0.08, eyeW * 0.06, 0, Math.PI * 2); c.fill();
-    c.restore();
+    if (isFairy) {
+      // Star-shaped main highlight
+      const shx = ex + eyeW * 0.18, shy = eyeY - eyeH * 0.22, shr = eyeW * 0.22;
+      c.beginPath();
+      for (let i = 0; i < 4; i++) {
+        const a = -Math.PI / 4 + i * Math.PI / 2;
+        c.moveTo(shx, shy);
+        c.lineTo(shx + Math.cos(a) * shr * 1.6, shy + Math.sin(a) * shr * 1.6);
+      }
+      c.lineWidth = eyeW * 0.1; c.lineCap = 'round'; c.strokeStyle = '#fff'; c.stroke();
+      c.beginPath(); c.arc(shx, shy, shr * 0.7, 0, Math.PI * 2); c.fill();
+      // Secondary circular highlight
+      c.beginPath(); c.arc(ex - eyeW * 0.12, eyeY + eyeH * 0.14, eyeW * 0.12, 0, Math.PI * 2); c.fill();
+    } else {
+      // Main highlight (large, upper-right)
+      c.beginPath(); c.arc(ex + eyeW * 0.2, eyeY - eyeH * 0.24, eyeW * 0.26, 0, Math.PI * 2); c.fill();
+      // Secondary highlight (medium, lower-left)
+      c.beginPath(); c.arc(ex - eyeW * 0.12, eyeY + eyeH * 0.14, eyeW * 0.14, 0, Math.PI * 2); c.fill();
+      // Tiny sparkle highlight
+      c.save(); c.globalAlpha = 0.6;
+      c.beginPath(); c.arc(ex + eyeW * 0.05, eyeY - eyeH * 0.08, eyeW * 0.06, 0, Math.PI * 2); c.fill();
+      c.restore();
+    }
 
     // Thicker upper eyelid line
     c.strokeStyle = lashColor; c.lineWidth = 1.1; c.lineCap = 'round'; c.globalAlpha = 0.55;
@@ -966,6 +1095,341 @@ function drawCharacter(c, x, y, w, h, char) {
     c.restore();
   }
 
+  // ── Fenn freckles ──
+  if (isBoy) {
+    c.save(); c.fillStyle = '#c8a080'; c.globalAlpha = 0.25;
+    const frecklePositions = [
+      [-0.25, 0.18], [-0.15, 0.22], [-0.32, 0.25], [-0.08, 0.26],
+      [0.25, 0.18], [0.15, 0.22], [0.32, 0.25], [0.08, 0.26],
+      [-0.2, 0.3], [0.2, 0.3]
+    ];
+    for (const [fx, fy] of frecklePositions) {
+      c.beginPath();
+      c.arc(cx + headR * fx, headY + headR * fy, 0.5, 0, Math.PI * 2);
+      c.fill();
+    }
+    c.restore();
+  }
+
+  // ── Petal beauty mark ──
+  if (isFairy) {
+    c.save(); c.fillStyle = '#8a5060'; c.globalAlpha = 0.35;
+    c.beginPath();
+    c.arc(cx - eyeSp + eyeW * 0.3, eyeY + eyeH + 3.5, 0.6, 0, Math.PI * 2);
+    c.fill(); c.restore();
+  }
+
+  // ── Front hair (over face) ──
+  if (!isWolf && !isCat) {
+    c.save();
+    const hc = char.hair;
+    if (char.id === 'human_girl') {
+      // Lumi: side-parted bangs + face-framing curls + twisted loop bun
+      // Bangs — soft, swept to the side
+      c.fillStyle = hc;
+      c.beginPath();
+      c.moveTo(cx - headR * 0.75, headY - headR * 0.6);
+      c.quadraticCurveTo(cx - headR * 0.5, headY - headR * 1.05, cx - headR * 0.1, headY - headR * 0.95);
+      c.quadraticCurveTo(cx + headR * 0.2, headY - headR * 0.9, cx + headR * 0.55, headY - headR * 0.85);
+      c.quadraticCurveTo(cx + headR * 0.8, headY - headR * 0.75, cx + headR * 0.82, headY - headR * 0.35);
+      // Connect along forehead curve
+      c.quadraticCurveTo(cx + headR * 0.6, headY - headR * 0.55, cx + headR * 0.3, headY - headR * 0.5);
+      c.quadraticCurveTo(cx, headY - headR * 0.55, cx - headR * 0.4, headY - headR * 0.45);
+      c.quadraticCurveTo(cx - headR * 0.65, headY - headR * 0.4, cx - headR * 0.75, headY - headR * 0.3);
+      c.closePath(); c.fill();
+      // Side hair panels (covering temples)
+      c.fillStyle = hc;
+      for (let s = -1; s <= 1; s += 2) {
+        c.beginPath();
+        c.moveTo(cx + s * headR * 0.78, headY - headR * 0.4);
+        c.quadraticCurveTo(cx + s * headR * 0.95, headY + headR * 0.2, cx + s * headR * 0.85, headY + headR * 0.7);
+        c.quadraticCurveTo(cx + s * headR * 0.7, headY + headR * 0.9, cx + s * headR * 0.55, headY + headR * 0.85);
+        c.quadraticCurveTo(cx + s * headR * 0.7, headY + headR * 0.3, cx + s * headR * 0.65, headY - headR * 0.3);
+        c.closePath(); c.fill();
+      }
+      // Face-framing curls (two thin pieces that curl inward at jaw)
+      c.save(); c.strokeStyle = hc; c.lineWidth = 2; c.lineCap = 'round';
+      for (let s = -1; s <= 1; s += 2) {
+        c.beginPath();
+        c.moveTo(cx + s * headR * 0.72, headY + headR * 0.1);
+        c.quadraticCurveTo(cx + s * headR * 0.78, headY + headR * 0.6, cx + s * headR * 0.5, headY + headR * 1.05);
+        c.stroke();
+      }
+      c.restore();
+      // Twisted loop bun at nape
+      const bunY = headY - headR * 0.65;
+      c.fillStyle = _darken(hc, 8);
+      c.beginPath(); c.ellipse(cx + headR * 0.05, bunY, headR * 0.3, headR * 0.25, 0.1, 0, Math.PI * 2); c.fill();
+      c.fillStyle = hc;
+      c.beginPath(); c.ellipse(cx - headR * 0.05, bunY - headR * 0.08, headR * 0.22, headR * 0.2, -0.15, 0, Math.PI * 2); c.fill();
+      // Tiny braid woven into bun
+      c.save(); c.strokeStyle = _lighten(hc, 15); c.lineWidth = 0.6; c.globalAlpha = 0.3;
+      c.beginPath();
+      c.moveTo(cx - headR * 0.15, bunY + headR * 0.15);
+      c.quadraticCurveTo(cx + headR * 0.1, bunY - headR * 0.1, cx + headR * 0.2, bunY + headR * 0.1);
+      c.stroke(); c.restore();
+      // Gold star clip
+      const starX = cx + headR * 0.25, starY = bunY - headR * 0.05;
+      c.save(); c.fillStyle = '#d4a030'; c.globalAlpha = 0.85;
+      c.beginPath();
+      for (let i = 0; i < 5; i++) {
+        const a = -Math.PI / 2 + i * Math.PI * 2 / 5;
+        const ra = -Math.PI / 2 + (i + 0.5) * Math.PI * 2 / 5;
+        if (i === 0) c.moveTo(starX + Math.cos(a) * 2.2, starY + Math.sin(a) * 2.2);
+        else c.lineTo(starX + Math.cos(a) * 2.2, starY + Math.sin(a) * 2.2);
+        c.lineTo(starX + Math.cos(ra) * 1.0, starY + Math.sin(ra) * 1.0);
+      }
+      c.closePath(); c.fill();
+      // Star highlight
+      c.fillStyle = '#f0d060'; c.globalAlpha = 0.4;
+      c.beginPath(); c.arc(starX - 0.3, starY - 0.3, 0.8, 0, Math.PI * 2); c.fill();
+      c.restore();
+      // Hair strand highlights
+      c.save(); c.strokeStyle = _lighten(hc, 20); c.lineWidth = 0.4; c.globalAlpha = 0.12;
+      c.beginPath(); c.moveTo(cx - headR * 0.3, headY - headR * 0.8);
+      c.quadraticCurveTo(cx - headR * 0.1, headY - headR * 0.6, cx, headY - headR * 0.5);
+      c.stroke(); c.restore();
+    } else if (char.id === 'human_boy') {
+      // Fenn: tousled medium bangs, cowlick tuft, natural layers
+      c.fillStyle = hc;
+      // Main hair mass on top
+      c.beginPath();
+      c.moveTo(cx - headR * 0.8, headY - headR * 0.35);
+      c.quadraticCurveTo(cx - headR * 0.7, headY - headR * 1.0, cx - headR * 0.2, headY - headR * 0.95);
+      c.quadraticCurveTo(cx, headY - headR * 1.05, cx + headR * 0.15, headY - headR * 1.0);
+      c.quadraticCurveTo(cx + headR * 0.5, headY - headR * 0.95, cx + headR * 0.75, headY - headR * 0.85);
+      c.quadraticCurveTo(cx + headR * 0.9, headY - headR * 0.7, cx + headR * 0.85, headY - headR * 0.3);
+      // Forehead line with uneven bangs
+      c.quadraticCurveTo(cx + headR * 0.6, headY - headR * 0.5, cx + headR * 0.3, headY - headR * 0.42);
+      c.quadraticCurveTo(cx + headR * 0.1, headY - headR * 0.55, cx - headR * 0.1, headY - headR * 0.48);
+      c.quadraticCurveTo(cx - headR * 0.4, headY - headR * 0.4, cx - headR * 0.65, headY - headR * 0.35);
+      c.closePath(); c.fill();
+      // Side pieces covering temples
+      for (let s = -1; s <= 1; s += 2) {
+        c.beginPath();
+        c.moveTo(cx + s * headR * 0.8, headY - headR * 0.4);
+        c.quadraticCurveTo(cx + s * headR * 0.9, headY, cx + s * headR * 0.82, headY + headR * 0.3);
+        c.quadraticCurveTo(cx + s * headR * 0.7, headY + headR * 0.1, cx + s * headR * 0.65, headY - headR * 0.25);
+        c.closePath(); c.fill();
+      }
+      // Cowlick tuft at crown
+      c.save(); c.fillStyle = hc;
+      c.beginPath();
+      c.moveTo(cx + headR * 0.05, headY - headR * 1.0);
+      c.quadraticCurveTo(cx + headR * 0.15, headY - headR * 1.25, cx + headR * 0.08, headY - headR * 1.3);
+      c.quadraticCurveTo(cx - headR * 0.05, headY - headR * 1.2, cx - headR * 0.05, headY - headR * 1.0);
+      c.closePath(); c.fill();
+      c.restore();
+      // Hair texture/strand lines
+      c.save(); c.strokeStyle = _darken(hc, 12); c.lineWidth = 0.4; c.globalAlpha = 0.15;
+      c.beginPath(); c.moveTo(cx - headR * 0.4, headY - headR * 0.9);
+      c.quadraticCurveTo(cx - headR * 0.2, headY - headR * 0.7, cx - headR * 0.3, headY - headR * 0.45);
+      c.stroke();
+      c.beginPath(); c.moveTo(cx + headR * 0.2, headY - headR * 0.95);
+      c.quadraticCurveTo(cx + headR * 0.35, headY - headR * 0.7, cx + headR * 0.25, headY - headR * 0.5);
+      c.stroke();
+      c.restore();
+      // Brass goggles pushed up on forehead
+      c.save();
+      const gogY = headY - headR * 0.55;
+      // Strap
+      c.strokeStyle = '#8b6914'; c.lineWidth = 1.2; c.globalAlpha = 0.7;
+      c.beginPath();
+      c.moveTo(cx - headR * 0.55, gogY + 2);
+      c.quadraticCurveTo(cx, gogY - 1, cx + headR * 0.55, gogY + 2);
+      c.stroke();
+      // Lens frames
+      for (let s = -1; s <= 1; s += 2) {
+        const lx = cx + s * headR * 0.22;
+        // Brass rim
+        c.strokeStyle = '#b8860b'; c.lineWidth = 1.0; c.globalAlpha = 0.75;
+        c.beginPath(); c.arc(lx, gogY, headR * 0.15, 0, Math.PI * 2); c.stroke();
+        // Green-tinted lens
+        c.fillStyle = 'rgba(77,184,130,0.12)';
+        c.globalAlpha = 0.6;
+        c.beginPath(); c.arc(lx, gogY, headR * 0.13, 0, Math.PI * 2); c.fill();
+        // Lens glint
+        c.fillStyle = '#fff'; c.globalAlpha = 0.25;
+        c.beginPath(); c.arc(lx - headR * 0.04, gogY - headR * 0.04, headR * 0.04, 0, Math.PI * 2); c.fill();
+      }
+      // Bridge between lenses
+      c.strokeStyle = '#b8860b'; c.lineWidth = 0.8; c.globalAlpha = 0.7;
+      c.beginPath();
+      c.moveTo(cx - headR * 0.08, gogY);
+      c.quadraticCurveTo(cx, gogY - 1, cx + headR * 0.08, gogY);
+      c.stroke();
+      c.restore();
+    } else if (isElf) {
+      // Sylvie: wispy bangs, platinum-streaked, floating wisps
+      c.fillStyle = hc;
+      // Hair top/bangs — soft, parted, wispy
+      c.beginPath();
+      c.moveTo(cx - headR * 0.8, headY - headR * 0.3);
+      c.quadraticCurveTo(cx - headR * 0.75, headY - headR * 0.95, cx - headR * 0.3, headY - headR * 0.98);
+      c.quadraticCurveTo(cx, headY - headR * 1.02, cx + headR * 0.3, headY - headR * 0.98);
+      c.quadraticCurveTo(cx + headR * 0.75, headY - headR * 0.95, cx + headR * 0.8, headY - headR * 0.3);
+      // Forehead with wispy gaps
+      c.quadraticCurveTo(cx + headR * 0.5, headY - headR * 0.55, cx + headR * 0.2, headY - headR * 0.45);
+      c.quadraticCurveTo(cx, headY - headR * 0.52, cx - headR * 0.15, headY - headR * 0.48);
+      c.quadraticCurveTo(cx - headR * 0.5, headY - headR * 0.4, cx - headR * 0.7, headY - headR * 0.32);
+      c.closePath(); c.fill();
+      // Side panels
+      for (let s = -1; s <= 1; s += 2) {
+        c.beginPath();
+        c.moveTo(cx + s * headR * 0.82, headY - headR * 0.3);
+        c.quadraticCurveTo(cx + s * headR * 0.9, headY + headR * 0.3, cx + s * headR * 0.75, headY + headR * 0.7);
+        c.quadraticCurveTo(cx + s * headR * 0.6, headY + headR * 0.4, cx + s * headR * 0.6, headY - headR * 0.15);
+        c.closePath(); c.fill();
+      }
+      // Platinum highlight streaks near face
+      c.save(); c.strokeStyle = _lighten(hc, 35); c.lineWidth = 0.6; c.globalAlpha = 0.3; c.lineCap = 'round';
+      c.beginPath();
+      c.moveTo(cx - headR * 0.4, headY - headR * 0.85);
+      c.quadraticCurveTo(cx - headR * 0.45, headY - headR * 0.4, cx - headR * 0.5, headY + headR * 0.2);
+      c.stroke();
+      c.beginPath();
+      c.moveTo(cx + headR * 0.3, headY - headR * 0.88);
+      c.quadraticCurveTo(cx + headR * 0.35, headY - headR * 0.5, cx + headR * 0.38, headY - headR * 0.1);
+      c.stroke();
+      c.restore();
+      // Floating hair wisps (gentle breeze effect)
+      c.save(); c.strokeStyle = hc; c.lineWidth = 0.5; c.globalAlpha = 0.2; c.lineCap = 'round';
+      const now = Date.now() / 2000;
+      for (let i = 0; i < 3; i++) {
+        const wx = cx + (i - 1) * headR * 0.4 + Math.sin(now + i) * 2;
+        const wy = headY - headR * 0.7 - i * 2;
+        c.beginPath();
+        c.moveTo(wx, wy);
+        c.quadraticCurveTo(wx + Math.sin(now + i * 1.3) * 4, wy - 5, wx + Math.sin(now + i * 0.7) * 3, wy - 9);
+        c.stroke();
+      }
+      c.restore();
+      // Dewdrop pendant (at neck level)
+      c.save();
+      const pdX = cx, pdY = neckTop - 1;
+      // Thin chain
+      c.strokeStyle = '#c0c0c0'; c.lineWidth = 0.3; c.globalAlpha = 0.3;
+      c.beginPath(); c.moveTo(cx - headR * 0.2, headY + headR * 0.9);
+      c.quadraticCurveTo(cx, headY + headR * 1.05, cx + headR * 0.2, headY + headR * 0.9);
+      c.stroke();
+      // Crystal dewdrop
+      c.globalAlpha = 0.5;
+      const dewGrad = c.createRadialGradient(pdX - 0.5, pdY - 1, 0.3, pdX, pdY, 2);
+      dewGrad.addColorStop(0, 'rgba(255,255,255,0.8)');
+      dewGrad.addColorStop(0.5, 'rgba(200,230,255,0.4)');
+      dewGrad.addColorStop(1, 'rgba(180,210,240,0.2)');
+      c.fillStyle = dewGrad;
+      c.beginPath(); c.arc(pdX, pdY, 1.8, 0, Math.PI * 2); c.fill();
+      // Tiny rainbow refraction
+      c.globalAlpha = 0.15;
+      const rainbowColors = ['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#9b59b6'];
+      for (let i = 0; i < 5; i++) {
+        c.fillStyle = rainbowColors[i];
+        c.beginPath(); c.arc(pdX + Math.cos(now * 2 + i * 1.2) * 3, pdY + Math.sin(now * 2 + i * 1.2) * 3, 0.4, 0, Math.PI * 2);
+        c.fill();
+      }
+      c.restore();
+      // Gold ear wrap with leaf charm (left ear)
+      c.save();
+      const earWrapX = cx - headR * 0.88;
+      const earWrapY = headY - headR * 0.05;
+      c.strokeStyle = '#d4a030'; c.lineWidth = 0.8; c.globalAlpha = 0.6; c.lineCap = 'round';
+      c.beginPath(); c.arc(earWrapX, earWrapY, 2, -0.5, Math.PI * 0.8); c.stroke();
+      // Tiny hanging leaf
+      c.fillStyle = '#7ec88a'; c.globalAlpha = 0.5;
+      c.beginPath();
+      c.ellipse(earWrapX - 1, earWrapY + 3.5, 1.2, 2, -0.2, 0, Math.PI * 2);
+      c.fill();
+      c.restore();
+    } else if (isFairy) {
+      // Petal: messy space buns + layered wavy bangs
+      c.fillStyle = hc;
+      // Main hair top + bangs (tousled, slightly asymmetric)
+      c.beginPath();
+      c.moveTo(cx - headR * 0.82, headY - headR * 0.3);
+      c.quadraticCurveTo(cx - headR * 0.8, headY - headR * 0.95, cx - headR * 0.3, headY - headR * 0.92);
+      c.quadraticCurveTo(cx, headY - headR * 1.0, cx + headR * 0.25, headY - headR * 0.95);
+      c.quadraticCurveTo(cx + headR * 0.75, headY - headR * 0.9, cx + headR * 0.85, headY - headR * 0.3);
+      // Bangs — messy, pieces going different directions
+      c.quadraticCurveTo(cx + headR * 0.55, headY - headR * 0.5, cx + headR * 0.35, headY - headR * 0.38);
+      c.quadraticCurveTo(cx + headR * 0.15, headY - headR * 0.5, cx - headR * 0.05, headY - headR * 0.42);
+      c.quadraticCurveTo(cx - headR * 0.25, headY - headR * 0.38, cx - headR * 0.45, headY - headR * 0.45);
+      c.quadraticCurveTo(cx - headR * 0.7, headY - headR * 0.38, cx - headR * 0.82, headY - headR * 0.3);
+      c.closePath(); c.fill();
+      // Side hair panels
+      for (let s = -1; s <= 1; s += 2) {
+        c.beginPath();
+        c.moveTo(cx + s * headR * 0.85, headY - headR * 0.3);
+        c.quadraticCurveTo(cx + s * headR * 0.95, headY + headR * 0.3, cx + s * headR * 0.8, headY + headR * 0.8);
+        c.quadraticCurveTo(cx + s * headR * 0.65, headY + headR * 0.5, cx + s * headR * 0.65, headY - headR * 0.15);
+        c.closePath(); c.fill();
+      }
+      // Space buns (two messy buns on top)
+      for (let s = -1; s <= 1; s += 2) {
+        const bx = cx + s * headR * 0.42;
+        const by = headY - headR * 0.95;
+        // Bun base
+        c.fillStyle = _darken(hc, 5);
+        c.beginPath(); c.arc(bx, by, headR * 0.22, 0, Math.PI * 2); c.fill();
+        // Bun highlight
+        c.fillStyle = _lighten(hc, 12);
+        c.beginPath(); c.arc(bx - 1, by - 1, headR * 0.12, 0, Math.PI * 2); c.fill();
+        // Golden flower pin
+        c.save(); c.fillStyle = '#d4a030'; c.globalAlpha = 0.75;
+        const pinX = bx + s * headR * 0.12;
+        const pinY = by - headR * 0.08;
+        for (let p = 0; p < 5; p++) {
+          const pa = p * Math.PI * 2 / 5;
+          c.beginPath();
+          c.ellipse(pinX + Math.cos(pa) * 1.2, pinY + Math.sin(pa) * 1.2, 0.8, 0.4, pa, 0, Math.PI * 2);
+          c.fill();
+        }
+        c.fillStyle = '#f0d060'; c.beginPath(); c.arc(pinX, pinY, 0.6, 0, Math.PI * 2); c.fill();
+        c.restore();
+      }
+      // Golden sparkle particles clinging to hair
+      c.save(); c.fillStyle = '#ffd700'; c.globalAlpha = 0.3;
+      const sparklePos = [[-0.3, -0.8], [0.4, -0.7], [-0.5, -0.5], [0.6, -0.3], [-0.15, -0.9], [0.2, -0.85]];
+      for (const [spx, spy] of sparklePos) {
+        c.beginPath(); c.arc(cx + headR * spx, headY + headR * spy, 0.5, 0, Math.PI * 2); c.fill();
+      }
+      c.restore();
+      // Rose-gold shimmer streaks
+      c.save(); c.strokeStyle = '#f4c0a0'; c.lineWidth = 0.4; c.globalAlpha = 0.15;
+      c.beginPath();
+      c.moveTo(cx - headR * 0.3, headY - headR * 0.85);
+      c.quadraticCurveTo(cx - headR * 0.35, headY - headR * 0.5, cx - headR * 0.4, headY + headR * 0.3);
+      c.stroke(); c.restore();
+    }
+    c.restore();
+  }
+
+  // ── Mika gold circlet ──
+  if (isCat) {
+    c.save();
+    // Thin gold band behind ears
+    c.strokeStyle = '#d4a030'; c.lineWidth = 0.8; c.globalAlpha = 0.6; c.lineCap = 'round';
+    c.beginPath();
+    c.moveTo(cx - headR * 0.55, headY - headR * 0.4);
+    c.quadraticCurveTo(cx, headY - headR * 0.65, cx + headR * 0.55, headY - headR * 0.4);
+    c.stroke();
+    // Amethyst drop on forehead
+    c.fillStyle = '#9b59b6'; c.globalAlpha = 0.55;
+    c.beginPath();
+    c.moveTo(cx, headY - headR * 0.62);
+    c.lineTo(cx - 1.2, headY - headR * 0.52);
+    c.lineTo(cx, headY - headR * 0.42);
+    c.lineTo(cx + 1.2, headY - headR * 0.52);
+    c.closePath(); c.fill();
+    // Gem highlight
+    c.fillStyle = '#d8b0e8'; c.globalAlpha = 0.3;
+    c.beginPath(); c.arc(cx - 0.3, headY - headR * 0.55, 0.5, 0, Math.PI * 2); c.fill();
+    // Gold ear cuff (left ear)
+    c.strokeStyle = '#d4a030'; c.lineWidth = 0.7; c.globalAlpha = 0.5;
+    c.beginPath(); c.arc(cx - headR * 0.5, headY - headR * 0.65, 1.5, 0, Math.PI * 1.2); c.stroke();
+    c.restore();
+  }
+
   // ── Fairy/Elf glow ──
   if (isFairy || isElf) {
     const glow = c.createRadialGradient(cx, headY, headR * 0.3, cx, headY, headR * 1.8);
@@ -1031,6 +1495,61 @@ function drawCharacter(c, x, y, w, h, char) {
         c.restore();
       }
     }
+  }
+
+  // ── Lumi's floating starlight motes ──
+  if (char.id === 'human_girl') {
+    const now = Date.now() / 900;
+    c.save();
+    for (let i = 0; i < 3; i++) {
+      const mx = cx + Math.sin(now * 0.6 + i * 2.2) * (headR * 1.2 + i * 5);
+      const my = headY - headR * 0.5 + Math.cos(now * 0.4 + i * 1.8) * (headR * 1.5);
+      const ma = 0.15 + Math.sin(now * 0.8 + i * 1.5) * 0.1;
+      const mr = 1.0 + Math.sin(now + i * 0.9) * 0.3;
+      // Warm glow halo
+      const moteGlow = c.createRadialGradient(mx, my, 0, mx, my, mr * 3);
+      moteGlow.addColorStop(0, `rgba(255,220,160,${ma * 0.5})`);
+      moteGlow.addColorStop(1, 'rgba(255,220,160,0)');
+      c.fillStyle = moteGlow;
+      c.beginPath(); c.arc(mx, my, mr * 3, 0, Math.PI * 2); c.fill();
+      // Bright core
+      c.fillStyle = `rgba(255,240,200,${ma})`;
+      c.beginPath(); c.arc(mx, my, mr, 0, Math.PI * 2); c.fill();
+      // White center
+      c.fillStyle = `rgba(255,255,255,${ma * 0.8})`;
+      c.beginPath(); c.arc(mx, my, mr * 0.4, 0, Math.PI * 2); c.fill();
+    }
+    c.restore();
+  }
+
+  // ── Petal's orbiting sparkle ──
+  if (isFairy) {
+    const now = Date.now() / 1500;
+    const orbitR = headR * 1.6;
+    const ox = cx + Math.cos(now) * orbitR;
+    const oy = headY - headR * 0.3 + Math.sin(now) * orbitR * 0.4;
+    c.save();
+    // Sparkle trail
+    for (let t = 0; t < 5; t++) {
+      const trailAngle = now - t * 0.15;
+      const tx = cx + Math.cos(trailAngle) * orbitR;
+      const ty = headY - headR * 0.3 + Math.sin(trailAngle) * orbitR * 0.4;
+      const ta = 0.08 - t * 0.015;
+      c.fillStyle = `rgba(255,215,0,${ta})`;
+      c.beginPath(); c.arc(tx, ty, 0.5 - t * 0.05, 0, Math.PI * 2); c.fill();
+    }
+    // Main orbiting mote
+    const sparkGlow = c.createRadialGradient(ox, oy, 0, ox, oy, 3);
+    sparkGlow.addColorStop(0, 'rgba(255,215,0,0.4)');
+    sparkGlow.addColorStop(0.5, 'rgba(255,215,0,0.1)');
+    sparkGlow.addColorStop(1, 'rgba(255,215,0,0)');
+    c.fillStyle = sparkGlow;
+    c.beginPath(); c.arc(ox, oy, 3, 0, Math.PI * 2); c.fill();
+    c.fillStyle = 'rgba(255,240,180,0.6)';
+    c.beginPath(); c.arc(ox, oy, 0.8, 0, Math.PI * 2); c.fill();
+    c.fillStyle = 'rgba(255,255,255,0.7)';
+    c.beginPath(); c.arc(ox, oy, 0.3, 0, Math.PI * 2); c.fill();
+    c.restore();
   }
 
   // ── Ground shadow (enhanced) ──
