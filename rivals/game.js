@@ -8,9 +8,10 @@
 /* ── Constants ─────────────────────────────────────────────────── */
 var W = 360, H = 640;
 var FIXED_DT = 1/60; // fixed physics timestep
-var GRAVITY = 0.45, JUMP_VEL = -9, DOUBLE_JUMP_VEL = -7.5;
-var MOVE_ACCEL = 0.55, MAX_SPEED = 3.2, FRICTION = 0.78;
-var CROUCH_SPEED = 1.6, WALL_SLIDE_SPEED = 1.5;
+var GRAVITY = 0.42, JUMP_VEL = -9.5, DOUBLE_JUMP_VEL = -8;
+var MOVE_ACCEL = 1.1, MAX_SPEED = 4.8, FRICTION = 0.82;
+var CROUCH_SPEED = 2.0, WALL_SLIDE_SPEED = 1.5;
+var DASH_SPEED = 9, DASH_DURATION = 0.12, DASH_COOLDOWN = 0.8;
 var PLAYER_W = 18, PLAYER_H = 38, PLAYER_HEAD = 8;
 var CROUCH_H = 24;
 var ROUNDS_TO_WIN = 5;
@@ -32,12 +33,12 @@ var fullscreenBtn = document.getElementById('fullscreenButton');
 
 /* ── Weapons ───────────────────────────────────────────────────── */
 var WEAPONS = {
-  pistol:    { cat: 'secondary', cost: 0,   dmg: 20, rate: 3,   ammo: Infinity, speed: 8, spread: 0.03, color: '#ffdd44', name: 'Pistol', trailLen: 6 },
-  smg:       { cat: 'primary',   cost: 200, dmg: 15, rate: 8,   ammo: 30,  speed: 9,  spread: 0.08, color: '#44ddff', name: 'SMG', trailLen: 5 },
-  shotgun:   { cat: 'primary',   cost: 300, dmg: 8,  rate: 1,   ammo: 8,   speed: 7,  spread: 0.15, color: '#ff8844', name: 'Shotgun', pellets: 6, trailLen: 3 },
-  rifle:     { cat: 'primary',   cost: 400, dmg: 30, rate: 4,   ammo: 25,  speed: 10, spread: 0.02, color: '#88ff44', name: 'Rifle', trailLen: 8 },
-  sniper:    { cat: 'primary',   cost: 500, dmg: 90, rate: 0.7, ammo: 5,   speed: 14, spread: 0.005,color: '#ff44ff', name: 'Sniper', trailLen: 18 },
-  knife:     { cat: 'melee',     cost: 0,   dmg: 50, rate: 2,   ammo: Infinity, range: 30, color: '#cccccc', name: 'Knife' }
+  pistol:    { cat: 'secondary', cost: 0,   dmg: 22, rate: 2.2, ammo: Infinity, speed: 6.5,spread: 0.06, bloom: 0.03, color: '#ffdd44', name: 'Pistol', trailLen: 6, bulletDrop: 0.08 },
+  smg:       { cat: 'primary',   cost: 200, dmg: 12, rate: 5.5, ammo: 30,  speed: 7,  spread: 0.12, bloom: 0.04, color: '#44ddff', name: 'SMG', trailLen: 5, bulletDrop: 0.06 },
+  shotgun:   { cat: 'primary',   cost: 300, dmg: 9,  rate: 0.9, ammo: 8,   speed: 6,  spread: 0.2,  bloom: 0,    color: '#ff8844', name: 'Shotgun', pellets: 6, trailLen: 3, bulletDrop: 0.12 },
+  rifle:     { cat: 'primary',   cost: 400, dmg: 28, rate: 2.8, ammo: 25,  speed: 8,  spread: 0.04, bloom: 0.035,color: '#88ff44', name: 'Rifle', trailLen: 8, bulletDrop: 0.04 },
+  sniper:    { cat: 'primary',   cost: 500, dmg: 85, rate: 0.6, ammo: 5,   speed: 16, spread: 0.01, bloom: 0.08, color: '#ff44ff', name: 'Sniper', trailLen: 18, bulletDrop: 0.01 },
+  knife:     { cat: 'melee',     cost: 0,   dmg: 55, rate: 2,   ammo: Infinity, range: 35, color: '#cccccc', name: 'Knife' }
 };
 var UTILITY = {
   grenade:   { cost: 100, dmg: 60,  radius: 60, name: 'Grenade' },
@@ -156,8 +157,13 @@ function createPlayer(id, x, facingRight) {
     _jumpHeld: false,
     _switchHeld: false,
     _utilHeld: false,
-    landSquash: 0, // squash-stretch on landing
-    hitFlash: 0    // white flash on taking damage
+    _dashHeld: false,
+    landSquash: 0,
+    hitFlash: 0,
+    dashTimer: 0,    // time left in active dash
+    dashCooldown: 0, // cooldown before next dash
+    dashDir: 0,      // -1 or 1
+    bloomAccum: 0    // accuracy bloom from sustained fire
   };
 }
 
@@ -277,6 +283,7 @@ function updateInputs() {
     p1.input.shoot = keys['f'] || keys['F'] || keys['j'] || keys['J'] || touchState.p1.shoot;
     p1.input.switchWeapon = keys['r'] || keys['R'];
     p1.input.useUtility = keys['g'] || keys['G'];
+    p1.input.dash = keys['Shift'] || keys['e'] || keys['E'];
   }
   if (p2 && numPlayers === 2) {
     if (inputMode === 'keyboard') {
@@ -285,8 +292,9 @@ function updateInputs() {
       p2.input.up = keys['ArrowUp'];
       p2.input.down = keys['ArrowDown'];
       p2.input.shoot = keys['Enter'];
-      p2.input.switchWeapon = keys['Shift'];
+      p2.input.switchWeapon = keys['Backspace'];
       p2.input.useUtility = keys['/'];
+      p2.input.dash = keys['Shift'];
     } else if (inputMode === 'touch') {
       p2.input.left = touchState.p2.left;
       p2.input.right = touchState.p2.right;
@@ -370,6 +378,7 @@ function resetPlayersForRound() {
     p.jumps = 0; p.crouching = false;
     p.fireTimer = 0; p.recoilTimer = 0;
     p.healTimer = 0; p.flashTimer = 0;
+    p.dashTimer = 0; p.dashCooldown = 0; p.bloomAccum = 0;
     p.facingRight = i === 0;
     p.landSquash = 0; p.hitFlash = 0;
     if (p.primary) p.ammo[p.primary] = WEAPONS[p.primary].ammo;
@@ -544,6 +553,7 @@ function updateBot(dt) {
   bot.input.left = false; bot.input.right = false;
   bot.input.up = false; bot.input.down = false;
   bot.input.shoot = false; bot.input.useUtility = false;
+  bot.input.dash = false;
 
   switch (botState) {
     case 'patrol':
@@ -560,6 +570,8 @@ function updateBot(dt) {
       bot.facingRight = dx > 0;
       if (dy < -40 && bot.onGround) bot.input.up = true;
       if (!isPlatformBelow(bot.x + (bot.input.right ? 20 : -20), bot.y + bot.h + 5) && bot.onGround) bot.input.up = true;
+      // Dash to close distance
+      if (dist > 120 && Math.random() < 0.08 && bot.dashCooldown <= 0) bot.input.dash = true;
       break;
 
     case 'attack':
@@ -583,6 +595,8 @@ function updateBot(dt) {
       else bot.input.right = true;
       bot.input.down = true;
       if (canSee) bot.input.shoot = true;
+      // Dash away when in danger
+      if (dist < 80 && Math.random() < 0.12 && bot.dashCooldown <= 0) bot.input.dash = true;
       // Use medkit if available and low HP
       if (bot.hp < 40 && bot.utility.indexOf('medkit') !== -1) {
         bot.input.useUtility = true;
@@ -646,17 +660,37 @@ function updatePlayer(p, dt) {
   var ph = p.crouching ? CROUCH_H : PLAYER_H;
   var maxSpd = p.crouching ? CROUCH_SPEED : MAX_SPEED;
 
-  // Horizontal movement with dt scaling
-  var accel = MOVE_ACCEL * (dt / FIXED_DT);
-  if (p.input.left) p.vx -= accel;
-  if (p.input.right) p.vx += accel;
-  if (!p.input.left && !p.input.right) {
-    var fric = 1 - (1 - FRICTION) * (dt / FIXED_DT);
-    p.vx *= Math.max(0, fric);
+  // Dash
+  if (p.dashCooldown > 0) p.dashCooldown -= dt;
+  if (p.dashTimer > 0) {
+    // Active dash — override movement
+    p.vx = p.dashDir * DASH_SPEED;
+    p.dashTimer -= dt;
+    if (p.dashTimer <= 0) p.dashTimer = 0;
+  } else {
+    // Dash trigger
+    if (p.input.dash && !p._dashHeld && p.dashCooldown <= 0) {
+      var ddir = p.input.right ? 1 : (p.input.left ? -1 : (p.facingRight ? 1 : -1));
+      p.dashDir = ddir;
+      p.dashTimer = DASH_DURATION;
+      p.dashCooldown = DASH_COOLDOWN;
+      spawnParticles(p.x + p.w/2, p.y + ph/2, '#ffffff', 5, 3, 0);
+      Audio.jump();
+    }
+    p._dashHeld = p.input.dash;
+
+    // Normal horizontal movement
+    var accel = MOVE_ACCEL * (dt / FIXED_DT);
+    if (p.input.left) p.vx -= accel;
+    if (p.input.right) p.vx += accel;
+    if (!p.input.left && !p.input.right) {
+      var fric = 1 - (1 - FRICTION) * (dt / FIXED_DT);
+      p.vx *= Math.max(0, fric);
+    }
+    if (p.vx > maxSpd) p.vx = maxSpd;
+    if (p.vx < -maxSpd) p.vx = -maxSpd;
+    if (Math.abs(p.vx) < 0.08) p.vx = 0;
   }
-  if (p.vx > maxSpd) p.vx = maxSpd;
-  if (p.vx < -maxSpd) p.vx = -maxSpd;
-  if (Math.abs(p.vx) < 0.08) p.vx = 0;
 
   // Facing
   if (p.input.left) p.facingRight = false;
@@ -667,6 +701,12 @@ function updatePlayer(p, dt) {
 
   // Gravity with dt scaling
   p.vy += GRAVITY * (dt / FIXED_DT);
+
+  // Bloom decay (accuracy recovers when not shooting)
+  if (p.fireTimer <= 0) {
+    p.bloomAccum *= (1 - 3 * dt); // fast decay when not firing
+  }
+  if (p.bloomAccum < 0.001) p.bloomAccum = 0;
 
   // Wall slide
   if (!p.onGround && Math.abs(p.vx) > 0) {
@@ -840,15 +880,30 @@ function handleShooting(p, dt) {
   var by = p.y + PLAYER_HEAD + 4;
   var dir = p.facingRight ? 1 : -1;
 
+  // Total spread = base spread + bloom + movement penalty
+  var totalSpread = w.spread + p.bloomAccum;
+  // Moving adds spread (except shotgun which doesn't care)
+  if (Math.abs(p.vx) > 1 && p.weapon !== 'shotgun') totalSpread += 0.04;
+  // Airborne adds more spread
+  if (!p.onGround) totalSpread += 0.06;
+  // Crouching reduces spread
+  if (p.crouching) totalSpread *= 0.6;
+
+  var drop = w.bulletDrop || 0;
+
   if (w.pellets) {
     for (var i = 0; i < w.pellets; i++) {
-      var angle = (Math.random() - 0.5) * w.spread * 2;
-      bullets.push({ x: bx, y: by, vx: dir * w.speed * Math.cos(angle), vy: w.speed * Math.sin(angle) * (Math.random()-0.5), dmg: w.dmg, owner: p.id, color: w.color, life: 0.5, trail: w.trailLen || 3, prevX: bx, prevY: by });
+      var angle = (Math.random() - 0.5) * totalSpread * 2;
+      bullets.push({ x: bx, y: by, vx: dir * w.speed * Math.cos(angle), vy: w.speed * Math.sin(angle) * (Math.random()-0.5), dmg: w.dmg, owner: p.id, color: w.color, life: 0.45, trail: w.trailLen || 3, prevX: bx, prevY: by, drop: drop });
     }
   } else {
-    var angle2 = (Math.random() - 0.5) * w.spread;
-    bullets.push({ x: bx, y: by, vx: dir * w.speed, vy: w.speed * angle2, dmg: w.dmg, owner: p.id, color: w.color, life: 0.8, isSniper: p.weapon === 'sniper', trail: w.trailLen || 6, prevX: bx, prevY: by });
+    var angle2 = (Math.random() - 0.5) * totalSpread;
+    bullets.push({ x: bx, y: by, vx: dir * w.speed, vy: w.speed * angle2, dmg: w.dmg, owner: p.id, color: w.color, life: 0.7, isSniper: p.weapon === 'sniper', trail: w.trailLen || 6, prevX: bx, prevY: by, drop: drop });
   }
+
+  // Accumulate bloom
+  p.bloomAccum += w.bloom || 0;
+  if (p.bloomAccum > 0.3) p.bloomAccum = 0.3; // cap
 
   spawnParticles(bx, by, '#ffff44', 4, 3, -1);
   Audio.shoot(p.weapon);
@@ -867,6 +922,8 @@ function updateBullets(dt) {
     b.prevY = b.y;
     b.x += b.vx * (dt / FIXED_DT);
     b.y += b.vy * (dt / FIXED_DT);
+    // Bullet drop (gravity on bullets)
+    if (b.drop) b.vy += b.drop * (dt / FIXED_DT);
     b.life -= dt;
 
     if (b.x < -10 || b.x > W + 10 || b.y < -10 || b.y > H + 10 || b.life <= 0) {
@@ -1198,6 +1255,15 @@ function drawPlayer(p) {
     ctx.globalAlpha = Math.max(0.3, 1 - p.flashTimer * 0.3);
   }
 
+  // Dash afterimage
+  if (p.dashTimer > 0) {
+    ctx.globalAlpha = 0.2;
+    ctx.fillStyle = p.color;
+    ctx.fillRect(px + 2 - p.dashDir * 8, py + PLAYER_HEAD * 2, p.w - 4, ph - PLAYER_HEAD * 2);
+    ctx.fillRect(px + 2 - p.dashDir * 16, py + PLAYER_HEAD * 2, p.w - 4, ph - PLAYER_HEAD * 2);
+    ctx.globalAlpha = 1;
+  }
+
   // Landing squash-stretch
   var scaleX = 1, scaleY = 1;
   if (p.landSquash > 0) {
@@ -1444,10 +1510,15 @@ function drawHUD() {
       ctx.fillText(p1.utility.map(function(u) { return UTILITY[u].name.charAt(0); }).join(''), 240, H - 10);
     }
 
+    // Dash indicator
+    var dashReady = p1.dashCooldown <= 0 && p1.dashTimer <= 0;
+    ctx.fillStyle = dashReady ? '#44ccff' : '#334455';
+    ctx.fillText('DASH', 300, H - 10);
+
     ctx.fillStyle = '#556677';
     ctx.font = '9px monospace';
     ctx.textAlign = 'right';
-    ctx.fillText('[R]switch [G]utility', W - 5, H - 10);
+    ctx.fillText('[R]sw [G]util [Shift]dash', W - 5, H - 10);
   }
 }
 
