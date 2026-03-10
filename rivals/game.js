@@ -7,17 +7,19 @@
 
 /* ── Constants ─────────────────────────────────────────────────── */
 var W = 360, H = 640;
+var FIXED_DT = 1/60; // fixed physics timestep
 var GRAVITY = 0.45, JUMP_VEL = -9, DOUBLE_JUMP_VEL = -7.5;
-var MOVE_ACCEL = 0.8, MAX_SPEED = 3.5, FRICTION = 0.82;
-var CROUCH_SPEED = 1.8, WALL_SLIDE_SPEED = 1.5;
+var MOVE_ACCEL = 0.55, MAX_SPEED = 3.2, FRICTION = 0.78;
+var CROUCH_SPEED = 1.6, WALL_SLIDE_SPEED = 1.5;
 var PLAYER_W = 18, PLAYER_H = 38, PLAYER_HEAD = 8;
 var CROUCH_H = 24;
 var ROUNDS_TO_WIN = 5;
-var BUY_TIME = 10; // seconds
+var BUY_TIME = 10;
 var MAX_CREDITS = 3000;
 var START_CREDITS = 800;
 var KILL_REWARD = 200, WIN_REWARD = 300, LOSS_REWARD = 150;
 var HP_MAX = 100;
+var COUNTDOWN_TIME = 3; // seconds before round starts
 
 /* ── Canvas & Context ──────────────────────────────────────────── */
 var canvas = document.getElementById('gameCanvas');
@@ -30,11 +32,11 @@ var fullscreenBtn = document.getElementById('fullscreenButton');
 
 /* ── Weapons ───────────────────────────────────────────────────── */
 var WEAPONS = {
-  pistol:    { cat: 'secondary', cost: 0,   dmg: 20, rate: 3,   ammo: Infinity, speed: 8, spread: 0.03, color: '#ffdd44', name: 'Pistol' },
-  smg:       { cat: 'primary',   cost: 200, dmg: 15, rate: 8,   ammo: 30,  speed: 9,  spread: 0.08, color: '#44ddff', name: 'SMG' },
-  shotgun:   { cat: 'primary',   cost: 300, dmg: 8,  rate: 1,   ammo: 8,   speed: 7,  spread: 0.15, color: '#ff8844', name: 'Shotgun', pellets: 6 },
-  rifle:     { cat: 'primary',   cost: 400, dmg: 30, rate: 4,   ammo: 25,  speed: 10, spread: 0.02, color: '#88ff44', name: 'Rifle' },
-  sniper:    { cat: 'primary',   cost: 500, dmg: 90, rate: 0.7, ammo: 5,   speed: 14, spread: 0.005,color: '#ff44ff', name: 'Sniper' },
+  pistol:    { cat: 'secondary', cost: 0,   dmg: 20, rate: 3,   ammo: Infinity, speed: 8, spread: 0.03, color: '#ffdd44', name: 'Pistol', trailLen: 6 },
+  smg:       { cat: 'primary',   cost: 200, dmg: 15, rate: 8,   ammo: 30,  speed: 9,  spread: 0.08, color: '#44ddff', name: 'SMG', trailLen: 5 },
+  shotgun:   { cat: 'primary',   cost: 300, dmg: 8,  rate: 1,   ammo: 8,   speed: 7,  spread: 0.15, color: '#ff8844', name: 'Shotgun', pellets: 6, trailLen: 3 },
+  rifle:     { cat: 'primary',   cost: 400, dmg: 30, rate: 4,   ammo: 25,  speed: 10, spread: 0.02, color: '#88ff44', name: 'Rifle', trailLen: 8 },
+  sniper:    { cat: 'primary',   cost: 500, dmg: 90, rate: 0.7, ammo: 5,   speed: 14, spread: 0.005,color: '#ff44ff', name: 'Sniper', trailLen: 18 },
   knife:     { cat: 'melee',     cost: 0,   dmg: 50, rate: 2,   ammo: Infinity, range: 30, color: '#cccccc', name: 'Knife' }
 };
 var UTILITY = {
@@ -49,21 +51,20 @@ var BUY_ITEMS = PRIMARY_LIST.concat(UTILITY_LIST);
 /* ── Maps ──────────────────────────────────────────────────────── */
 var MAPS = [
   { name: 'Warehouse', bg: '#0d1117', platforms: [
-    { x: 0, y: 580, w: 360, h: 60 },     // ground
+    { x: 0, y: 580, w: 360, h: 60 },
     { x: 40, y: 460, w: 80, h: 14 },
     { x: 240, y: 460, w: 80, h: 14 },
     { x: 130, y: 380, w: 100, h: 14 },
     { x: 20, y: 310, w: 70, h: 14 },
     { x: 270, y: 310, w: 70, h: 14 },
     { x: 140, y: 250, w: 80, h: 14 },
-    // cover crates
     { x: 90, y: 556, w: 24, h: 24 },
     { x: 246, y: 556, w: 24, h: 24 }
   ]},
   { name: 'Rooftops', bg: '#0a0e1a', platforms: [
     { x: 0, y: 590, w: 120, h: 50 },
     { x: 240, y: 590, w: 120, h: 50 },
-    { x: 130, y: 580, w: 100, h: 10 },    // thin bridge
+    { x: 130, y: 580, w: 100, h: 10 },
     { x: 30, y: 480, w: 90, h: 14 },
     { x: 240, y: 480, w: 90, h: 14 },
     { x: 140, y: 430, w: 80, h: 14 },
@@ -74,7 +75,7 @@ var MAPS = [
     { x: 240, y: 200, w: 60, h: 14 }
   ]},
   { name: 'Bunker', bg: '#0e0c14', platforms: [
-    { x: 0, y: 580, w: 360, h: 60 },     // ground
+    { x: 0, y: 580, w: 360, h: 60 },
     { x: 0, y: 440, w: 100, h: 14 },
     { x: 260, y: 440, w: 100, h: 14 },
     { x: 100, y: 490, w: 160, h: 14 },
@@ -84,21 +85,21 @@ var MAPS = [
     { x: 0, y: 230, w: 80, h: 14 },
     { x: 280, y: 230, w: 80, h: 14 },
     { x: 140, y: 180, w: 80, h: 14 },
-    // walls
     { x: 150, y: 440, w: 10, h: 50 },
     { x: 200, y: 440, w: 10, h: 50 }
   ]}
 ];
 
 /* ── Game State ────────────────────────────────────────────────── */
-var state = 'menu'; // menu, mode_select, buy_phase, playing, round_end, match_end
+var state = 'menu'; // menu, mode_select, buy_phase, countdown, playing, round_end, match_end
 var numPlayers = 1;
-var inputMode = 'keyboard'; // keyboard, touch, mixed
+var inputMode = 'keyboard';
 var currentMap = null;
 var roundNum = 0;
 var p1Score = 0, p2Score = 0;
 var roundWinner = 0;
 var buyTimer = 0;
+var countdownTimer = 0;
 var roundEndTimer = 0;
 var matchKills = 0;
 var bestKills = parseInt(localStorage.getItem('rivalsBest')) || 0;
@@ -108,6 +109,22 @@ var bullets = [];
 var grenades = [];
 var screenShake = 0;
 var flashAlpha = 0;
+var killFeed = [];     // { text, color, timer }
+var dmgNumbers = [];   // { x, y, text, color, vy, timer }
+var deadBodies = [];   // { x, y, w, h, color, vx, vy, rot, rotV, alpha }
+var accumulator = 0;   // for fixed timestep
+
+/* ── Cached background ─────────────────────────────────────────── */
+var bgCanvas = null, bgCtx = null, bgMapName = '';
+var bgStars = [];
+for (var si = 0; si < 50; si++) {
+  bgStars.push({ x: Math.random() * W, y: Math.random() * H * 0.7, s: 0.5 + Math.random() * 1.5, b: 0.3 + Math.random() * 0.7, phase: Math.random() * Math.PI * 2 });
+}
+var BG_BUILDINGS = [
+  { x: 10, w: 30, h: 120 }, { x: 50, w: 25, h: 80 }, { x: 90, w: 40, h: 150 },
+  { x: 140, w: 20, h: 100 }, { x: 175, w: 35, h: 130 }, { x: 220, w: 28, h: 90 },
+  { x: 260, w: 45, h: 160 }, { x: 310, w: 30, h: 110 }
+];
 
 /* ── Players ───────────────────────────────────────────────────── */
 function createPlayer(id, x, facingRight) {
@@ -118,6 +135,7 @@ function createPlayer(id, x, facingRight) {
     hp: HP_MAX,
     alive: true,
     onGround: false,
+    wasOnGround: false,
     jumps: 0,
     crouching: false,
     facingRight: facingRight,
@@ -125,16 +143,21 @@ function createPlayer(id, x, facingRight) {
     primary: null,
     ammo: {},
     fireTimer: 0,
+    recoilTimer: 0,
     utility: [],
     credits: START_CREDITS,
     color: id === 1 ? '#4488ff' : '#ff4444',
     headColor: id === 1 ? '#6699ff' : '#ff6666',
-    // Input state
+    eyeColor: id === 1 ? '#ffffff' : '#ffffff',
     input: { left: false, right: false, up: false, down: false, shoot: false, switchWeapon: false, useUtility: false },
-    // animation
     walkFrame: 0,
     healTimer: 0,
-    flashTimer: 0
+    flashTimer: 0,
+    _jumpHeld: false,
+    _switchHeld: false,
+    _utilHeld: false,
+    landSquash: 0, // squash-stretch on landing
+    hitFlash: 0    // white flash on taking damage
   };
 }
 
@@ -168,9 +191,7 @@ var touchButtons = [];
 function setupTouchControls() {
   touchButtons = [];
   if (inputMode === 'keyboard') return;
-
   var btnH = 50, btnW = 55, margin = 6, bottomY = H - btnH - margin;
-  // P1 touch (left half)
   if (inputMode === 'touch' || inputMode === 'mixed_p1touch') {
     touchButtons.push({ id: 'p1', action: 'left',  x: margin, y: bottomY, w: btnW, h: btnH, label: '<' });
     touchButtons.push({ id: 'p1', action: 'right', x: margin + btnW + 4, y: bottomY, w: btnW, h: btnH, label: '>' });
@@ -178,7 +199,6 @@ function setupTouchControls() {
     touchButtons.push({ id: 'p1', action: 'shoot', x: margin, y: bottomY - (btnH+4)*2, w: btnW*2+4, h: btnH, label: 'FIRE' });
     touchButtons.push({ id: 'p1', action: 'down',  x: margin + btnW*2 + 12, y: bottomY, w: btnW-10, h: btnH, label: 'v' });
   }
-  // P2 touch (right half or full if 1P touch)
   if (inputMode === 'touch' && numPlayers === 2) {
     var rx = W/2 + margin;
     touchButtons.push({ id: 'p2', action: 'left',  x: rx, y: bottomY, w: btnW, h: btnH, label: '<' });
@@ -214,7 +234,6 @@ function handleTouchStart(e) {
 
 function handleTouchEnd(e) {
   e.preventDefault();
-  // Simple reset: check which buttons no longer have a touch
   var active = {};
   for (var t = 0; t < e.touches.length; t++) {
     var pos = canvasTouchPos(e.touches[t]);
@@ -225,7 +244,6 @@ function handleTouchEnd(e) {
       }
     }
   }
-  // Reset all not active
   for (var b2 = 0; b2 < touchButtons.length; b2++) {
     var btn2 = touchButtons[b2];
     if (!active[btn2.id + '_' + btn2.action]) {
@@ -239,7 +257,6 @@ canvas.addEventListener('touchmove', function(e) { e.preventDefault(); handleTou
 canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
 canvas.addEventListener('touchcancel', handleTouchEnd, { passive: false });
 
-/* Also handle mouse clicks on canvas for menu/buy */
 canvas.addEventListener('click', function(e) {
   Audio.init(); Audio.resume();
   var rect = canvas.getBoundingClientRect();
@@ -253,7 +270,6 @@ canvas.addEventListener('click', function(e) {
 /* ── P1/P2 Input Mapping ──────────────────────────────────────── */
 function updateInputs() {
   if (p1) {
-    // Keyboard P1: WASD + F shoot + G utility + R switch
     p1.input.left = keys['a'] || keys['A'] || keys['ArrowLeft'] || touchState.p1.left;
     p1.input.right = keys['d'] || keys['D'] || keys['ArrowRight'] || touchState.p1.right;
     p1.input.up = keys['w'] || keys['W'] || keys[' '] || keys['ArrowUp'] || touchState.p1.up;
@@ -278,9 +294,7 @@ function updateInputs() {
       p2.input.down = touchState.p2.down;
       p2.input.shoot = touchState.p2.shoot;
     }
-    // In 2P keyboard mode, P1 uses WASD+F, P2 uses arrows+Enter
     if (inputMode === 'keyboard' && numPlayers === 2) {
-      // Override P1 to WASD only
       p1.input.left = keys['a'] || keys['A'] || touchState.p1.left;
       p1.input.right = keys['d'] || keys['D'] || touchState.p1.right;
       p1.input.up = keys['w'] || keys['W'] || keys[' '] || touchState.p1.up;
@@ -301,9 +315,7 @@ function handleMenuKey(e) {
   }
 }
 function handleMenuTouch(pos) {
-  // 1P button
   if (pos.x > 80 && pos.x < 280 && pos.y > 340 && pos.y < 390) { numPlayers = 1; inputMode = 'keyboard'; startMatch(); }
-  // 2P button
   if (pos.x > 80 && pos.x < 280 && pos.y > 410 && pos.y < 460) { numPlayers = 2; state = 'mode_select'; modeSel = 0; }
 }
 
@@ -331,6 +343,7 @@ function handleModeTouch(pos) {
 /* ── Match / Round Management ──────────────────────────────────── */
 function startMatch() {
   currentMap = MAPS[Math.floor(Math.random() * MAPS.length)];
+  bgMapName = ''; // force bg recache
   roundNum = 0; p1Score = 0; p2Score = 0; matchKills = 0;
   p1 = createPlayer(1, 60, true);
   p2 = createPlayer(2, 280, false);
@@ -353,14 +366,17 @@ function resetPlayersForRound() {
     p.x = spawns[i].x; p.y = spawns[i].y;
     p.vx = 0; p.vy = 0;
     p.hp = HP_MAX; p.alive = true;
-    p.onGround = false; p.jumps = 0; p.crouching = false;
-    p.fireTimer = 0; p.healTimer = 0; p.flashTimer = 0;
+    p.onGround = false; p.wasOnGround = false;
+    p.jumps = 0; p.crouching = false;
+    p.fireTimer = 0; p.recoilTimer = 0;
+    p.healTimer = 0; p.flashTimer = 0;
     p.facingRight = i === 0;
-    // Reset ammo for current weapons
+    p.landSquash = 0; p.hitFlash = 0;
     if (p.primary) p.ammo[p.primary] = WEAPONS[p.primary].ammo;
     p.weapon = p.primary || 'pistol';
   });
   bullets = []; grenades = []; particles = [];
+  killFeed = []; dmgNumbers = []; deadBodies = [];
 }
 
 function getSpawns() {
@@ -371,9 +387,13 @@ function getSpawns() {
   ];
 }
 
+function startCountdown() {
+  state = 'countdown';
+  countdownTimer = COUNTDOWN_TIME;
+}
+
 function startPlaying() {
   state = 'playing';
-  Audio.roundStart();
 }
 
 function endRound(winner) {
@@ -404,18 +424,16 @@ function endMatch() {
   }
   achStats.matchesPlayed++;
   if (winner === 1) achStats.matchesWon++;
-  // Update best
   if (matchKills > bestKills) {
     bestKills = matchKills;
     localStorage.setItem('rivalsBest', bestKills);
   }
   bestEl.textContent = bestKills;
   scoreEl.textContent = matchKills;
-
-  // Leaderboard + Arcade integration
   if (typeof Leaderboard !== 'undefined') Leaderboard.submitScore('rivals', matchKills);
   if (typeof Arcade !== 'undefined') Arcade.onGameOver('rivals', matchKills);
-
+  // Check comeback: p1 won match while p2 had 4 rounds
+  if (p1Score >= ROUNDS_TO_WIN && p2Score === 4) achStats.comebacks++;
   Audio.gameOver();
   checkAch();
   saveAch();
@@ -426,14 +444,31 @@ function startMenu() {
   p1 = null; p2 = null;
 }
 
+/* ── Kill Feed ─────────────────────────────────────────────────── */
+function addKillFeed(text, color) {
+  killFeed.unshift({ text: text, color: color, timer: 3 });
+  if (killFeed.length > 4) killFeed.pop();
+}
+
+/* ── Damage Numbers ────────────────────────────────────────────── */
+function addDmgNumber(x, y, dmg, isHeadshot) {
+  dmgNumbers.push({
+    x: x + (Math.random() - 0.5) * 10,
+    y: y,
+    text: (isHeadshot ? 'HS ' : '') + dmg,
+    color: isHeadshot ? '#ff4444' : '#ffffff',
+    vy: -2,
+    timer: 1,
+    size: isHeadshot ? 14 : 11
+  });
+}
+
 /* ── Buy Phase ─────────────────────────────────────────────────── */
 var buyCursor = { p1: 0, p2: 0 };
-var buyJustPressed = {};
 
 function handleBuyKey(e) {
   var cursor = 'p1';
   var p = p1;
-  // In 2P keyboard, arrows control P2 buy cursor
   if (numPlayers === 2 && (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'Enter')) {
     cursor = 'p2'; p = p2;
   }
@@ -445,12 +480,10 @@ function handleBuyKey(e) {
 }
 
 function handleBuyTouch(pos) {
-  // Buy items are drawn as a list; detect which was tapped
   for (var i = 0; i < BUY_ITEMS.length; i++) {
-    var iy = 180 + i * 48;
+    var iy = 160 + i * 48; // matches draw positions now
     if (pos.x > 30 && pos.x < 330 && pos.y > iy && pos.y < iy + 40) {
       buyItem(p1, BUY_ITEMS[i]);
-      Audio.buy();
     }
   }
 }
@@ -460,7 +493,7 @@ function buyItem(p, itemId) {
     var w = WEAPONS[itemId];
     if (w.cost > p.credits) return;
     if (w.cat === 'primary') {
-      if (p.primary === itemId) return; // already owned
+      if (p.primary === itemId) return;
       p.primary = itemId;
       p.weapon = itemId;
       p.ammo[itemId] = w.ammo;
@@ -475,7 +508,6 @@ function buyItem(p, itemId) {
     p.credits -= u.cost;
     Audio.buy();
   }
-  // Check max credits achievement
   if (p === p1 && p.credits >= MAX_CREDITS) {
     achStats.maxCreditsReached = true;
     checkAch();
@@ -486,7 +518,8 @@ function buyItem(p, itemId) {
 var botState = 'patrol';
 var botPatrolDir = 1;
 var botThinkTimer = 0;
-var botReactionTime = 0.5; // seconds, decreases with rounds
+var botReactionTime = 0.5;
+var botUtilTimer = 0;
 
 function updateBot(dt) {
   if (numPlayers !== 1 || !p2 || !p2.alive || state !== 'playing') return;
@@ -496,14 +529,13 @@ function updateBot(dt) {
   botThinkTimer = botReactionTime;
 
   var bot = p2, target = p1;
-  if (!target.alive) { bot.input = { left: false, right: false, up: false, down: false, shoot: false }; return; }
+  if (!target.alive) { bot.input = { left: false, right: false, up: false, down: false, shoot: false, switchWeapon: false, useUtility: false }; return; }
 
   var dx = target.x - bot.x;
   var dy = target.y - bot.y;
   var dist = Math.sqrt(dx * dx + dy * dy);
   var canSee = hasLineOfSight(bot, target);
 
-  // Decide state
   if (bot.hp < 30 && dist < 150) botState = 'cover';
   else if (canSee && dist < getWeaponRange(bot.weapon)) botState = 'attack';
   else if (canSee) botState = 'chase';
@@ -511,7 +543,7 @@ function updateBot(dt) {
 
   bot.input.left = false; bot.input.right = false;
   bot.input.up = false; bot.input.down = false;
-  bot.input.shoot = false;
+  bot.input.shoot = false; bot.input.useUtility = false;
 
   switch (botState) {
     case 'patrol':
@@ -519,7 +551,6 @@ function updateBot(dt) {
       else bot.input.left = true;
       if (bot.x < 30) botPatrolDir = 1;
       if (bot.x > W - 50) botPatrolDir = -1;
-      // Random jump
       if (Math.random() < 0.05) bot.input.up = true;
       break;
 
@@ -527,42 +558,44 @@ function updateBot(dt) {
       if (dx > 20) bot.input.right = true;
       else if (dx < -20) bot.input.left = true;
       bot.facingRight = dx > 0;
-      // Jump to reach higher platforms
       if (dy < -40 && bot.onGround) bot.input.up = true;
-      // Jump over gaps
       if (!isPlatformBelow(bot.x + (bot.input.right ? 20 : -20), bot.y + bot.h + 5) && bot.onGround) bot.input.up = true;
       break;
 
     case 'attack':
       bot.facingRight = dx > 0;
       bot.input.shoot = true;
-      // Strafe slightly
       if (Math.random() < 0.3) {
         if (Math.random() < 0.5) bot.input.left = true;
         else bot.input.right = true;
       }
-      // Crouch sometimes
       if (Math.random() < 0.1) bot.input.down = true;
+      // Bot uses utility items
+      botUtilTimer -= dt;
+      if (bot.utility.length > 0 && botUtilTimer <= 0 && dist < 150 && Math.random() < 0.15) {
+        bot.input.useUtility = true;
+        botUtilTimer = 3; // cooldown
+      }
       break;
 
     case 'cover':
-      // Move away from target, crouch
       if (dx > 0) bot.input.left = true;
       else bot.input.right = true;
       bot.input.down = true;
-      // Still shoot if facing
       if (canSee) bot.input.shoot = true;
+      // Use medkit if available and low HP
+      if (bot.hp < 40 && bot.utility.indexOf('medkit') !== -1) {
+        bot.input.useUtility = true;
+      }
       break;
   }
 
-  // Difficulty scaling
   botReactionTime = Math.max(0.1, 0.5 - roundNum * 0.05);
 }
 
 function botBuy() {
   if (numPlayers !== 1 || !p2) return;
   var bot = p2;
-  // Buy best affordable primary
   var primaries = ['sniper', 'rifle', 'shotgun', 'smg'];
   for (var i = 0; i < primaries.length; i++) {
     if (bot.credits >= WEAPONS[primaries[i]].cost && bot.primary !== primaries[i]) {
@@ -570,8 +603,8 @@ function botBuy() {
       break;
     }
   }
-  // Buy utility
   if (bot.credits >= 100 && bot.utility.length < 2) buyItem(bot, 'grenade');
+  if (bot.credits >= 150 && bot.utility.length < 2) buyItem(bot, 'medkit');
   if (bot.credits >= 50 && bot.utility.length < 2) buyItem(bot, 'flashbang');
 }
 
@@ -613,13 +646,17 @@ function updatePlayer(p, dt) {
   var ph = p.crouching ? CROUCH_H : PLAYER_H;
   var maxSpd = p.crouching ? CROUCH_SPEED : MAX_SPEED;
 
-  // Horizontal movement
-  if (p.input.left) p.vx -= MOVE_ACCEL;
-  if (p.input.right) p.vx += MOVE_ACCEL;
-  if (!p.input.left && !p.input.right) p.vx *= FRICTION;
+  // Horizontal movement with dt scaling
+  var accel = MOVE_ACCEL * (dt / FIXED_DT);
+  if (p.input.left) p.vx -= accel;
+  if (p.input.right) p.vx += accel;
+  if (!p.input.left && !p.input.right) {
+    var fric = 1 - (1 - FRICTION) * (dt / FIXED_DT);
+    p.vx *= Math.max(0, fric);
+  }
   if (p.vx > maxSpd) p.vx = maxSpd;
   if (p.vx < -maxSpd) p.vx = -maxSpd;
-  if (Math.abs(p.vx) < 0.1) p.vx = 0;
+  if (Math.abs(p.vx) < 0.08) p.vx = 0;
 
   // Facing
   if (p.input.left) p.facingRight = false;
@@ -628,8 +665,8 @@ function updatePlayer(p, dt) {
   // Crouching
   p.crouching = p.input.down && p.onGround;
 
-  // Gravity
-  p.vy += GRAVITY;
+  // Gravity with dt scaling
+  p.vy += GRAVITY * (dt / FIXED_DT);
 
   // Wall slide
   if (!p.onGround && Math.abs(p.vx) > 0) {
@@ -645,7 +682,7 @@ function updatePlayer(p, dt) {
     }
     if (touchingWall && p.vy > 0) {
       p.vy = Math.min(p.vy, WALL_SLIDE_SPEED);
-      p.jumps = Math.min(p.jumps, 1); // Allow wall jump
+      p.jumps = Math.min(p.jumps, 1);
     }
   }
 
@@ -660,13 +697,18 @@ function updatePlayer(p, dt) {
       p.vy = DOUBLE_JUMP_VEL;
       p.jumps = 2;
       Audio.jump();
+      // Double-jump dust puff
+      spawnParticles(p.x + p.w/2, p.y + ph, '#aabbcc', 4, 3, -1);
     }
   }
   p._jumpHeld = p.input.up;
 
+  // Remember ground state before collision
+  p.wasOnGround = p.onGround;
+
   // Apply velocity
-  p.x += p.vx;
-  p.y += p.vy;
+  p.x += p.vx * (dt / FIXED_DT);
+  p.y += p.vy * (dt / FIXED_DT);
 
   // Platform collision
   p.onGround = false;
@@ -675,16 +717,29 @@ function updatePlayer(p, dt) {
     resolveCollision(p, plat, ph);
   }
 
+  // Landing detection — spawn dust + squash
+  if (p.onGround && !p.wasOnGround && p.vy <= 0.5) {
+    var landSpeed = Math.abs(p.vy);
+    if (landSpeed > 2) {
+      p.landSquash = Math.min(0.35, landSpeed * 0.03);
+      spawnParticles(p.x + p.w/2, p.y + ph, '#8899aa', 3 + Math.floor(landSpeed), 4, 0.5);
+    }
+  }
+
   // Screen bounds
   if (p.x < 0) { p.x = 0; p.vx = 0; }
   if (p.x + p.w > W) { p.x = W - p.w; p.vx = 0; }
   if (p.y + ph > H) { p.y = H - ph; p.vy = 0; p.onGround = true; p.jumps = 0; }
 
   // Walk animation
-  if (Math.abs(p.vx) > 0.5 && p.onGround) p.walkFrame += 0.15;
+  if (Math.abs(p.vx) > 0.5 && p.onGround) p.walkFrame += 0.15 * (dt / FIXED_DT);
 
-  // Fire timer
+  // Timers
   if (p.fireTimer > 0) p.fireTimer -= dt;
+  if (p.recoilTimer > 0) p.recoilTimer -= dt;
+  if (p.landSquash > 0) p.landSquash *= 0.85;
+  if (p.landSquash < 0.01) p.landSquash = 0;
+  if (p.hitFlash > 0) p.hitFlash -= dt;
 
   // Heal timer
   if (p.healTimer > 0) {
@@ -692,13 +747,14 @@ function updatePlayer(p, dt) {
     if (p.healTimer <= 0) {
       p.hp = Math.min(HP_MAX, p.hp + 50);
       Audio.heal();
+      addDmgNumber(p.x + p.w/2, p.y, 50, false);
     }
   }
 
   // Flash timer
   if (p.flashTimer > 0) p.flashTimer -= dt;
 
-  // Weapon switching (cycle: primary → pistol → knife)
+  // Weapon switching
   if (p.input.switchWeapon && !p._switchHeld) {
     var weapons = ['pistol', 'knife'];
     if (p.primary) weapons.unshift(p.primary);
@@ -723,7 +779,6 @@ function resolveCollision(p, plat, ph) {
   if (px + pw <= plat.x || px >= plat.x + plat.w) return;
   if (py + ph <= plat.y || py >= plat.y + plat.h) return;
 
-  // Overlap amounts
   var overlapLeft = (px + pw) - plat.x;
   var overlapRight = (plat.x + plat.w) - px;
   var overlapTop = (py + ph) - plat.y;
@@ -756,27 +811,26 @@ function handleShooting(p, dt) {
   if (!w) return;
 
   if (w.cat === 'melee') {
-    // Knife attack
     var target = p === p1 ? p2 : p1;
-    if (target.alive) {
+    if (target && target.alive) {
       var dx = target.x + target.w/2 - (p.x + p.w/2);
       var dy = target.y + target.h/2 - (p.y + p.h/2);
       var dist = Math.sqrt(dx*dx + dy*dy);
       if (dist < w.range && ((p.facingRight && dx > 0) || (!p.facingRight && dx < 0))) {
-        damagePlayer(target, w.dmg, p, true);
+        damagePlayer(target, w.dmg, p, false);
         Audio.shoot('knife');
-        // Knife particles
-        spawnParticles(target.x + target.w/2, target.y + target.h/2, '#cccccc', 5);
+        spawnParticles(target.x + target.w/2, target.y + target.h/2, '#cccccc', 5, 4, -1);
       }
     }
     p.fireTimer = 1 / w.rate;
+    p.recoilTimer = 0.1;
     return;
   }
 
   // Check ammo
   if (w.ammo !== Infinity) {
     if (!p.ammo[p.weapon] || p.ammo[p.weapon] <= 0) {
-      p.weapon = 'pistol'; // Auto-switch to pistol
+      p.weapon = 'pistol';
       return;
     }
     p.ammo[p.weapon]--;
@@ -787,34 +841,35 @@ function handleShooting(p, dt) {
   var dir = p.facingRight ? 1 : -1;
 
   if (w.pellets) {
-    // Shotgun
     for (var i = 0; i < w.pellets; i++) {
       var angle = (Math.random() - 0.5) * w.spread * 2;
-      bullets.push({ x: bx, y: by, vx: dir * w.speed * Math.cos(angle), vy: w.speed * Math.sin(angle) * (Math.random()-0.5), dmg: w.dmg, owner: p.id, color: w.color, life: 0.5 });
+      bullets.push({ x: bx, y: by, vx: dir * w.speed * Math.cos(angle), vy: w.speed * Math.sin(angle) * (Math.random()-0.5), dmg: w.dmg, owner: p.id, color: w.color, life: 0.5, trail: w.trailLen || 3, prevX: bx, prevY: by });
     }
   } else {
     var angle2 = (Math.random() - 0.5) * w.spread;
-    bullets.push({ x: bx, y: by, vx: dir * w.speed, vy: w.speed * angle2, dmg: w.dmg, owner: p.id, color: w.color, life: 0.8, isSniper: p.weapon === 'sniper' });
+    bullets.push({ x: bx, y: by, vx: dir * w.speed, vy: w.speed * angle2, dmg: w.dmg, owner: p.id, color: w.color, life: 0.8, isSniper: p.weapon === 'sniper', trail: w.trailLen || 6, prevX: bx, prevY: by });
   }
 
-  // Muzzle flash
-  spawnParticles(bx, by, '#ffff44', 3);
+  spawnParticles(bx, by, '#ffff44', 4, 3, -1);
   Audio.shoot(p.weapon);
   p.fireTimer = 1 / w.rate;
+  p.recoilTimer = 0.12;
 
-  // Screen shake for heavy weapons
   if (p.weapon === 'sniper' || p.weapon === 'shotgun') screenShake = 4;
+  else if (p.weapon === 'rifle') screenShake = 1.5;
+  else screenShake = Math.max(screenShake, 0.8);
 }
 
 function updateBullets(dt) {
   for (var i = bullets.length - 1; i >= 0; i--) {
     var b = bullets[i];
-    b.x += b.vx;
-    b.y += b.vy;
+    b.prevX = b.x;
+    b.prevY = b.y;
+    b.x += b.vx * (dt / FIXED_DT);
+    b.y += b.vy * (dt / FIXED_DT);
     b.life -= dt;
 
-    // Out of bounds or expired
-    if (b.x < 0 || b.x > W || b.y < 0 || b.y > H || b.life <= 0) {
+    if (b.x < -10 || b.x > W + 10 || b.y < -10 || b.y > H + 10 || b.life <= 0) {
       bullets.splice(i, 1);
       continue;
     }
@@ -824,7 +879,7 @@ function updateBullets(dt) {
     for (var j = 0; j < currentMap.platforms.length; j++) {
       var pl = currentMap.platforms[j];
       if (b.x > pl.x && b.x < pl.x + pl.w && b.y > pl.y && b.y < pl.y + pl.h) {
-        spawnParticles(b.x, b.y, '#888888', 3);
+        spawnParticles(b.x, b.y, '#888888', 3, 3, -1);
         hitPlatform = true;
         break;
       }
@@ -838,13 +893,13 @@ function updateBullets(dt) {
       if (!t || !t.alive || t.id === b.owner) continue;
       var th = t.crouching ? CROUCH_H : PLAYER_H;
       if (b.x > t.x && b.x < t.x + t.w && b.y > t.y && b.y < t.y + th) {
-        // Headshot check (top 25% of body)
         var isHeadshot = b.y < t.y + th * 0.25;
-        var dmg = isHeadshot ? b.dmg * 2 : b.dmg;
+        var dmg = isHeadshot ? Math.round(b.dmg * 2) : b.dmg;
+        addDmgNumber(b.x, b.y, dmg, isHeadshot);
         damagePlayer(t, dmg, getPlayerById(b.owner), isHeadshot && b.isSniper);
-        spawnParticles(b.x, b.y, t.color, 6);
+        spawnParticles(b.x, b.y, t.color, 6, 4, -2);
         Audio.hit();
-        screenShake = 2;
+        screenShake = isHeadshot ? 4 : 2;
         bullets.splice(i, 1);
         break;
       }
@@ -853,32 +908,45 @@ function updateBullets(dt) {
 }
 
 function damagePlayer(target, dmg, attacker, isSniperHeadshot) {
-  if (target.flashTimer > 0) return; // Invulnerable during flash stun? No, just blinded
   target.hp -= dmg;
+  target.hitFlash = 0.12;
+
   if (target.hp <= 0) {
     target.hp = 0;
     target.alive = false;
-    // Kill reward
+
+    // Create dead body ragdoll
+    var ph = target.crouching ? CROUCH_H : PLAYER_H;
+    deadBodies.push({
+      x: target.x, y: target.y, w: target.w, h: ph,
+      color: target.color, headColor: target.headColor,
+      vx: (attacker && attacker.facingRight ? 2 : -2) + (Math.random() - 0.5),
+      vy: -3 - Math.random() * 2,
+      rot: 0, rotV: (Math.random() - 0.5) * 0.3,
+      alpha: 1
+    });
+
     if (attacker) {
       attacker.credits = Math.min(MAX_CREDITS, attacker.credits + KILL_REWARD);
+      var weaponName = WEAPONS[attacker.weapon] ? WEAPONS[attacker.weapon].name : attacker.weapon;
+      var killerName = attacker === p1 ? 'P1' : (numPlayers === 1 ? 'Bot' : 'P2');
+      var victimName = target === p1 ? 'P1' : (numPlayers === 1 ? 'Bot' : 'P2');
+      addKillFeed(killerName + ' [' + weaponName + '] ' + victimName, attacker.color);
+
       if (attacker === p1) {
         matchKills++;
         scoreEl.textContent = matchKills;
         achStats.totalKills++;
-        // Check specific kill achievements
         if (attacker.weapon === 'knife') achStats.knifeKills++;
         if (isSniperHeadshot) achStats.sniperHeadshots++;
       }
     }
     Audio.kill();
-    spawnParticles(target.x + target.w/2, target.y + target.h/2, target.color, 15);
+    spawnParticles(target.x + target.w/2, target.y + ph/2, target.color, 18, 5, -3);
     screenShake = 6;
 
-    // Round over
     var winner = target === p2 ? 1 : 2;
-    // Check flawless
     if (winner === 1 && p1.hp === HP_MAX) achStats.flawlessRounds++;
-    // Check eco ace
     if (winner === 1 && p1.weapon === 'pistol' && !p1.primary) achStats.ecoRounds++;
 
     endRound(winner);
@@ -898,7 +966,6 @@ function useUtility(p, item) {
     Audio.heal();
     return;
   }
-  // Throw grenade/flashbang
   var dir = p.facingRight ? 1 : -1;
   grenades.push({
     x: p.x + p.w/2, y: p.y,
@@ -913,9 +980,9 @@ function useUtility(p, item) {
 function updateGrenades(dt) {
   for (var i = grenades.length - 1; i >= 0; i--) {
     var g = grenades[i];
-    g.vy += GRAVITY * 0.5;
-    g.x += g.vx;
-    g.y += g.vy;
+    g.vy += GRAVITY * 0.5 * (dt / FIXED_DT);
+    g.x += g.vx * (dt / FIXED_DT);
+    g.y += g.vy * (dt / FIXED_DT);
     g.timer -= dt;
 
     // Bounce off platforms
@@ -927,32 +994,31 @@ function updateGrenades(dt) {
         g.y = pl.y;
       }
     }
-
-    // Floor bounce
     if (g.y > H - 60) { g.y = H - 60; g.vy = -Math.abs(g.vy) * 0.4; g.vx *= 0.7; }
 
     if (g.timer <= 0) {
-      // Explode
       var util = UTILITY[g.type];
       if (g.type === 'grenade') {
         Audio.explode();
-        spawnParticles(g.x, g.y, '#ff8800', 20);
+        spawnParticles(g.x, g.y, '#ff8800', 24, 6, -3);
+        spawnParticles(g.x, g.y, '#ffcc00', 12, 4, -2);
         screenShake = 8;
-        // Damage players in radius
         [p1, p2].forEach(function(p) {
           if (!p || !p.alive) return;
           var dx = p.x + p.w/2 - g.x;
           var dy = p.y + p.h/2 - g.y;
           var dist = Math.sqrt(dx*dx + dy*dy);
           if (dist < util.radius) {
-            var dmg = util.dmg * (1 - dist / util.radius);
-            damagePlayer(p, Math.round(dmg), getPlayerById(g.owner), false);
-            // Grenade kill tracking
-            if (p !== getPlayerById(g.owner) && p.hp <= 0) achStats.grenadeKills++;
+            var dmg = Math.round(util.dmg * (1 - dist / util.radius));
+            addDmgNumber(p.x + p.w/2, p.y, dmg, false);
+            var wasAlive = p.alive;
+            damagePlayer(p, dmg, getPlayerById(g.owner), false);
+            if (wasAlive && !p.alive && p.id !== g.owner) achStats.grenadeKills++;
           }
         });
       } else if (g.type === 'flashbang') {
         Audio.flashbang();
+        spawnParticles(g.x, g.y, '#ffffff', 10, 3, -1);
         [p1, p2].forEach(function(p) {
           if (!p || !p.alive) return;
           var dx = p.x + p.w/2 - g.x;
@@ -970,12 +1036,14 @@ function updateGrenades(dt) {
 }
 
 /* ── Particles ─────────────────────────────────────────────────── */
-function spawnParticles(x, y, color, count) {
+function spawnParticles(x, y, color, count, speed, baseVy) {
+  speed = speed || 4;
+  baseVy = baseVy || -1;
   for (var i = 0; i < count; i++) {
     particles.push({
       x: x, y: y,
-      vx: (Math.random() - 0.5) * 6,
-      vy: (Math.random() - 0.5) * 6 - 2,
+      vx: (Math.random() - 0.5) * speed,
+      vy: baseVy + (Math.random() - 0.5) * speed * 0.8,
       life: 0.3 + Math.random() * 0.5,
       color: color,
       size: 1.5 + Math.random() * 2.5
@@ -986,63 +1054,129 @@ function spawnParticles(x, y, color, count) {
 function updateParticles(dt) {
   for (var i = particles.length - 1; i >= 0; i--) {
     var p = particles[i];
-    p.x += p.vx;
-    p.y += p.vy;
-    p.vy += GRAVITY * 0.3;
+    p.x += p.vx * (dt / FIXED_DT);
+    p.y += p.vy * (dt / FIXED_DT);
+    p.vy += GRAVITY * 0.3 * (dt / FIXED_DT);
     p.life -= dt;
-    p.size *= 0.97;
+    p.size *= (1 - 0.03 * (dt / FIXED_DT));
     if (p.life <= 0 || p.size < 0.3) particles.splice(i, 1);
   }
 }
 
-/* ── Rendering ─────────────────────────────────────────────────── */
-var bgStars = [];
-for (var si = 0; si < 40; si++) {
-  bgStars.push({ x: Math.random() * W, y: Math.random() * H * 0.6, s: 0.5 + Math.random() * 1.5, b: 0.3 + Math.random() * 0.7 });
+/* ── Dead Bodies ───────────────────────────────────────────────── */
+function updateDeadBodies(dt) {
+  for (var i = deadBodies.length - 1; i >= 0; i--) {
+    var b = deadBodies[i];
+    b.vy += GRAVITY * 0.6 * (dt / FIXED_DT);
+    b.x += b.vx * (dt / FIXED_DT);
+    b.y += b.vy * (dt / FIXED_DT);
+    b.rot += b.rotV * (dt / FIXED_DT);
+    b.alpha -= dt * 0.4;
+    // Stop at ground
+    if (b.y + b.h > H - 60) {
+      b.y = H - 60 - b.h;
+      b.vy = 0; b.vx *= 0.5;
+      b.rotV *= 0.5;
+    }
+    if (b.alpha <= 0) deadBodies.splice(i, 1);
+  }
 }
 
-function drawBackground() {
-  // Gradient sky
-  var grad = ctx.createLinearGradient(0, 0, 0, H);
+/* ── Damage Numbers & Kill Feed ────────────────────────────────── */
+function updateDmgNumbers(dt) {
+  for (var i = dmgNumbers.length - 1; i >= 0; i--) {
+    var d = dmgNumbers[i];
+    d.y += d.vy * (dt / FIXED_DT);
+    d.vy -= 0.05 * (dt / FIXED_DT);
+    d.timer -= dt;
+    if (d.timer <= 0) dmgNumbers.splice(i, 1);
+  }
+}
+
+function updateKillFeed(dt) {
+  for (var i = killFeed.length - 1; i >= 0; i--) {
+    killFeed[i].timer -= dt;
+    if (killFeed[i].timer <= 0) killFeed.splice(i, 1);
+  }
+}
+
+/* ── Rendering ─────────────────────────────────────────────────── */
+function cacheBg() {
+  if (bgCanvas && bgMapName === (currentMap ? currentMap.name : '')) return;
+  bgMapName = currentMap ? currentMap.name : '';
+  bgCanvas = document.createElement('canvas');
+  bgCanvas.width = W; bgCanvas.height = H;
+  bgCtx = bgCanvas.getContext('2d');
+
+  var grad = bgCtx.createLinearGradient(0, 0, 0, H);
   grad.addColorStop(0, '#080c18');
   grad.addColorStop(0.5, '#0d1520');
   grad.addColorStop(1, currentMap ? currentMap.bg : '#0d1117');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, W, H);
+  bgCtx.fillStyle = grad;
+  bgCtx.fillRect(0, 0, W, H);
 
-  // Parallax city silhouette
-  ctx.fillStyle = '#0a0e18';
   // Buildings
-  var buildings = [
-    { x: 10, w: 30, h: 120 }, { x: 50, w: 25, h: 80 }, { x: 90, w: 40, h: 150 },
-    { x: 140, w: 20, h: 100 }, { x: 175, w: 35, h: 130 }, { x: 220, w: 28, h: 90 },
-    { x: 260, w: 45, h: 160 }, { x: 310, w: 30, h: 110 }
-  ];
-  for (var i = 0; i < buildings.length; i++) {
-    var b = buildings[i];
-    ctx.fillRect(b.x, H - 60 - b.h, b.w, b.h);
+  bgCtx.fillStyle = '#0a0e18';
+  for (var i = 0; i < BG_BUILDINGS.length; i++) {
+    var b = BG_BUILDINGS[i];
+    bgCtx.fillRect(b.x, H - 60 - b.h, b.w, b.h);
   }
-  ctx.fillStyle = '#0c1220';
-  for (var j = 0; j < buildings.length; j++) {
-    var b2 = buildings[j];
-    ctx.fillRect(b2.x + 5, H - 60 - b2.h * 0.7, b2.w + 10, b2.h * 0.7);
+  bgCtx.fillStyle = '#0c1220';
+  for (var j = 0; j < BG_BUILDINGS.length; j++) {
+    var b2 = BG_BUILDINGS[j];
+    bgCtx.fillRect(b2.x + 5, H - 60 - b2.h * 0.7, b2.w + 10, b2.h * 0.7);
   }
+
+  // Building windows (subtle dots)
+  bgCtx.fillStyle = '#1a2030';
+  for (var k = 0; k < BG_BUILDINGS.length; k++) {
+    var bk = BG_BUILDINGS[k];
+    for (var wy = H - 60 - bk.h + 10; wy < H - 70; wy += 16) {
+      for (var wx = bk.x + 4; wx < bk.x + bk.w - 4; wx += 8) {
+        if (Math.random() > 0.4) {
+          bgCtx.fillStyle = Math.random() > 0.7 ? '#2a3548' : '#151c28';
+          bgCtx.fillRect(wx, wy, 3, 4);
+        }
+      }
+    }
+  }
+}
+
+function drawBackground(time) {
+  cacheBg();
+  ctx.drawImage(bgCanvas, 0, 0);
+
+  // Twinkling stars (drawn live for animation)
+  for (var i = 0; i < bgStars.length; i++) {
+    var s = bgStars[i];
+    var twinkle = 0.3 + 0.7 * Math.abs(Math.sin(time * 0.001 + s.phase));
+    ctx.globalAlpha = s.b * twinkle;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(s.x, s.y, s.s, s.s);
+  }
+  ctx.globalAlpha = 1;
 }
 
 function drawPlatforms() {
   if (!currentMap) return;
   for (var i = 0; i < currentMap.platforms.length; i++) {
     var p = currentMap.platforms[i];
-    // Main platform body
-    ctx.fillStyle = '#1a2030';
+    // Platform body with slight gradient
+    var pg = ctx.createLinearGradient(p.x, p.y, p.x, p.y + p.h);
+    pg.addColorStop(0, '#222c3c');
+    pg.addColorStop(1, '#161e2c');
+    ctx.fillStyle = pg;
     ctx.fillRect(p.x, p.y, p.w, p.h);
     // Top edge highlight
-    ctx.fillStyle = '#2a3548';
+    ctx.fillStyle = '#3a4860';
     ctx.fillRect(p.x, p.y, p.w, 2);
+    // Bottom shadow
+    ctx.fillStyle = '#0a0e16';
+    ctx.fillRect(p.x, p.y + p.h - 1, p.w, 1);
     // Side edges
-    ctx.fillStyle = '#151c28';
-    ctx.fillRect(p.x, p.y, 1, p.h);
-    ctx.fillRect(p.x + p.w - 1, p.y, 1, p.h);
+    ctx.fillStyle = '#1a2230';
+    ctx.fillRect(p.x, p.y + 2, 1, p.h - 3);
+    ctx.fillRect(p.x + p.w - 1, p.y + 2, 1, p.h - 3);
   }
 }
 
@@ -1052,39 +1186,69 @@ function drawPlayer(p) {
   var cx = p.x + p.w / 2;
   var px = p.x, py = p.y;
 
-  // Flash effect (white out when flashbanged)
-  if (p.flashTimer > 0) {
-    ctx.globalAlpha = 0.5;
+  ctx.save();
+
+  // Hit flash (white overlay)
+  if (p.hitFlash > 0) {
+    ctx.globalAlpha = 0.4 + p.hitFlash * 4;
   }
 
+  // Flash effect (blinded)
+  if (p.flashTimer > 0) {
+    ctx.globalAlpha = Math.max(0.3, 1 - p.flashTimer * 0.3);
+  }
+
+  // Landing squash-stretch
+  var scaleX = 1, scaleY = 1;
+  if (p.landSquash > 0) {
+    scaleX = 1 + p.landSquash * 0.8;
+    scaleY = 1 - p.landSquash;
+  }
+
+  ctx.translate(cx, py + ph);
+  ctx.scale(scaleX, scaleY);
+  ctx.translate(-cx, -(py + ph));
+
   // Body
-  ctx.fillStyle = p.color;
+  ctx.fillStyle = p.hitFlash > 0 ? '#ffffff' : p.color;
   ctx.fillRect(px + 2, py + PLAYER_HEAD * 2, p.w - 4, ph - PLAYER_HEAD * 2);
 
   // Head
-  ctx.fillStyle = p.headColor;
+  ctx.fillStyle = p.hitFlash > 0 ? '#ffffff' : p.headColor;
   ctx.beginPath();
   ctx.arc(cx, py + PLAYER_HEAD, PLAYER_HEAD, 0, Math.PI * 2);
   ctx.fill();
 
-  // Weapon
+  // Eyes
+  var eyeDir = p.facingRight ? 1 : -1;
+  ctx.fillStyle = p.eyeColor;
+  ctx.fillRect(cx + eyeDir * 2, py + PLAYER_HEAD - 2, 2, 2);
+  if (!p.crouching) {
+    // Pupil
+    ctx.fillStyle = '#111111';
+    ctx.fillRect(cx + eyeDir * 2.5 + eyeDir * 0.5, py + PLAYER_HEAD - 1.5, 1, 1);
+  }
+
+  // Weapon with recoil
+  var recoilOff = p.recoilTimer > 0 ? (p.facingRight ? -3 : 3) * (p.recoilTimer / 0.12) : 0;
   var wx = p.facingRight ? px + p.w : px;
   var wy = py + PLAYER_HEAD + 6;
   var wLen = p.weapon === 'knife' ? 10 : (p.weapon === 'sniper' ? 20 : 14);
   var wDir = p.facingRight ? 1 : -1;
   ctx.strokeStyle = WEAPONS[p.weapon] ? WEAPONS[p.weapon].color : '#888';
-  ctx.lineWidth = 2;
+  ctx.lineWidth = p.weapon === 'sniper' ? 2.5 : 2;
   ctx.beginPath();
-  ctx.moveTo(wx, wy);
-  ctx.lineTo(wx + wDir * wLen, wy);
+  ctx.moveTo(wx + recoilOff, wy);
+  ctx.lineTo(wx + wDir * wLen + recoilOff, wy);
   ctx.stroke();
 
-  // Legs (walking animation)
-  ctx.strokeStyle = p.color;
+  // Legs
+  ctx.strokeStyle = p.hitFlash > 0 ? '#ffffff' : p.color;
   ctx.lineWidth = 2;
   var legY = py + ph;
   var legOff = Math.sin(p.walkFrame) * 3;
-  if (!p.onGround || Math.abs(p.vx) < 0.5) legOff = 0;
+  if (!p.onGround) legOff = 2; // legs slightly apart when airborne
+  else if (Math.abs(p.vx) < 0.5) legOff = 0;
   ctx.beginPath();
   ctx.moveTo(cx - 3, legY - 4);
   ctx.lineTo(cx - 5, legY + legOff);
@@ -1092,58 +1256,137 @@ function drawPlayer(p) {
   ctx.lineTo(cx + 5, legY - legOff);
   ctx.stroke();
 
-  ctx.globalAlpha = 1;
+  ctx.restore();
 
   // HP bar above head
   var barW = 24, barH = 3;
   var barX = cx - barW / 2, barY = py - 8;
   ctx.fillStyle = '#331111';
   ctx.fillRect(barX, barY, barW, barH);
-  ctx.fillStyle = p.hp > 60 ? '#44cc44' : (p.hp > 30 ? '#cccc44' : '#cc4444');
-  ctx.fillRect(barX, barY, barW * (p.hp / HP_MAX), barH);
+  var hpFrac = p.hp / HP_MAX;
+  ctx.fillStyle = hpFrac > 0.6 ? '#44cc44' : (hpFrac > 0.3 ? '#cccc44' : '#cc4444');
+  ctx.fillRect(barX, barY, barW * hpFrac, barH);
+  // HP bar border
+  ctx.strokeStyle = '#22334488';
+  ctx.lineWidth = 0.5;
+  ctx.strokeRect(barX, barY, barW, barH);
 
   // Heal indicator
   if (p.healTimer > 0) {
     ctx.fillStyle = '#44ff88';
-    ctx.font = '10px monospace';
+    ctx.font = 'bold 10px monospace';
     ctx.textAlign = 'center';
     ctx.fillText('+', cx, py - 14);
+    // Heal particles
+    if (Math.random() < 0.15) {
+      spawnParticles(cx, py + ph/2, '#44ff88', 1, 2, -1.5);
+    }
+  }
+}
+
+function drawDeadBodies() {
+  for (var i = 0; i < deadBodies.length; i++) {
+    var b = deadBodies[i];
+    ctx.save();
+    ctx.globalAlpha = b.alpha;
+    ctx.translate(b.x + b.w/2, b.y + b.h/2);
+    ctx.rotate(b.rot);
+    // Body
+    ctx.fillStyle = b.color;
+    ctx.fillRect(-b.w/2 + 2, -b.h/2 + PLAYER_HEAD, b.w - 4, b.h - PLAYER_HEAD);
+    // Head
+    ctx.fillStyle = b.headColor;
+    ctx.beginPath();
+    ctx.arc(0, -b.h/2 + PLAYER_HEAD, PLAYER_HEAD, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
   }
 }
 
 function drawBullets() {
   for (var i = 0; i < bullets.length; i++) {
     var b = bullets[i];
+    // Bullet trail
+    ctx.strokeStyle = b.color;
+    ctx.globalAlpha = 0.3;
+    ctx.lineWidth = b.isSniper ? 1.5 : 1;
+    ctx.beginPath();
+    ctx.moveTo(b.prevX, b.prevY);
+    ctx.lineTo(b.x, b.y);
+    ctx.stroke();
+    // Bullet head
+    ctx.globalAlpha = 1;
     ctx.fillStyle = b.color;
     if (b.isSniper) {
-      ctx.fillRect(b.x - 4, b.y - 1, 8, 2);
+      ctx.fillRect(b.x - 5, b.y - 1, 10, 2);
     } else {
       ctx.fillRect(b.x - 2, b.y - 1, 4, 2);
     }
   }
+  ctx.globalAlpha = 1;
 }
 
 function drawGrenades() {
   for (var i = 0; i < grenades.length; i++) {
     var g = grenades[i];
+    // Trail
+    ctx.globalAlpha = 0.3;
+    ctx.fillStyle = g.type === 'grenade' ? '#ff8800' : '#ffffff';
+    ctx.beginPath();
+    ctx.arc(g.x - g.vx * 0.5, g.y - g.vy * 0.5, 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(g.x - g.vx, g.y - g.vy, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+    // Body
+    ctx.globalAlpha = 1;
     ctx.fillStyle = g.type === 'grenade' ? '#ff6600' : '#ffffff';
     ctx.beginPath();
     ctx.arc(g.x, g.y, 4, 0, Math.PI * 2);
     ctx.fill();
-    // Trail
-    ctx.fillStyle = g.type === 'grenade' ? '#ff880044' : '#ffffff44';
-    ctx.beginPath();
-    ctx.arc(g.x - g.vx, g.y - g.vy, 2, 0, Math.PI * 2);
-    ctx.fill();
+    // Fuse indicator (blinks faster as timer decreases)
+    if (g.timer < 0.5 && Math.sin(g.timer * 30) > 0) {
+      ctx.fillStyle = '#ff0000';
+      ctx.beginPath();
+      ctx.arc(g.x, g.y, 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 }
 
 function drawParticles() {
   for (var i = 0; i < particles.length; i++) {
     var p = particles[i];
-    ctx.globalAlpha = Math.min(1, p.life * 2);
+    ctx.globalAlpha = Math.min(1, p.life * 2.5);
     ctx.fillStyle = p.color;
     ctx.fillRect(p.x - p.size/2, p.y - p.size/2, p.size, p.size);
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawDmgNumbers() {
+  for (var i = 0; i < dmgNumbers.length; i++) {
+    var d = dmgNumbers[i];
+    ctx.globalAlpha = Math.min(1, d.timer * 2);
+    ctx.fillStyle = d.color;
+    ctx.font = 'bold ' + d.size + 'px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(d.text, d.x, d.y);
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawKillFeed() {
+  ctx.textAlign = 'right';
+  ctx.font = '9px monospace';
+  for (var i = 0; i < killFeed.length; i++) {
+    var k = killFeed[i];
+    ctx.globalAlpha = Math.min(1, k.timer);
+    ctx.fillStyle = '#0a0e18cc';
+    var tw = ctx.measureText(k.text).width + 8;
+    ctx.fillRect(W - tw - 6, 38 + i * 16, tw + 4, 14);
+    ctx.fillStyle = k.color;
+    ctx.fillText(k.text, W - 8, 48 + i * 16);
   }
   ctx.globalAlpha = 1;
 }
@@ -1156,24 +1399,20 @@ function drawHUD() {
   ctx.font = 'bold 12px monospace';
   ctx.textAlign = 'left';
 
-  // Round info
   ctx.fillStyle = '#8899aa';
   ctx.fillText('Round ' + roundNum + '/' + ROUNDS_TO_WIN, 8, 14);
 
-  // Scores
   ctx.fillStyle = '#4488ff';
   ctx.fillText('P1: ' + p1Score, 130, 14);
   ctx.fillStyle = '#ff4444';
   ctx.fillText((numPlayers === 1 ? 'Bot' : 'P2') + ': ' + p2Score, 210, 14);
 
-  // Credits
   ctx.fillStyle = '#ffcc00';
   ctx.font = '10px monospace';
   ctx.fillText('$' + (p1 ? p1.credits : 0), 130, 27);
   ctx.fillStyle = '#ffaa00';
   ctx.fillText('$' + (p2 ? p2.credits : 0), 210, 27);
 
-  // Kills
   ctx.fillStyle = '#aabbcc';
   ctx.font = '10px monospace';
   ctx.textAlign = 'right';
@@ -1187,27 +1426,24 @@ function drawHUD() {
     ctx.font = '11px monospace';
     ctx.textAlign = 'left';
 
-    // Weapon name
     var wName = WEAPONS[p1.weapon] ? WEAPONS[p1.weapon].name : p1.weapon;
     ctx.fillStyle = WEAPONS[p1.weapon] ? WEAPONS[p1.weapon].color : '#888';
     ctx.fillText(wName, 8, H - 10);
 
-    // Ammo
     if (p1.weapon !== 'knife') {
-      var ammoText = WEAPONS[p1.weapon].ammo === Infinity ? 'INF' : (p1.ammo[p1.weapon] || 0) + '';
-      ctx.fillStyle = '#aabbcc';
-      ctx.fillText('Ammo: ' + ammoText, 80, H - 10);
+      var ammoCount = WEAPONS[p1.weapon].ammo === Infinity ? 'INF' : (p1.ammo[p1.weapon] || 0) + '';
+      ctx.fillStyle = (p1.ammo[p1.weapon] && p1.ammo[p1.weapon] <= 5) ? '#ff4444' : '#aabbcc';
+      ctx.fillText('Ammo: ' + ammoCount, 80, H - 10);
     }
 
-    // HP
     ctx.fillStyle = p1.hp > 60 ? '#44cc44' : (p1.hp > 30 ? '#cccc44' : '#cc4444');
     ctx.fillText('HP: ' + p1.hp, 170, H - 10);
 
-    // Utility count
-    ctx.fillStyle = '#888';
-    ctx.fillText('Util: ' + (p1.utility.length), 240, H - 10);
+    if (p1.utility.length > 0) {
+      ctx.fillStyle = '#88aacc';
+      ctx.fillText(p1.utility.map(function(u) { return UTILITY[u].name.charAt(0); }).join(''), 240, H - 10);
+    }
 
-    // Weapon switch hint
     ctx.fillStyle = '#556677';
     ctx.font = '9px monospace';
     ctx.textAlign = 'right';
@@ -1217,7 +1453,6 @@ function drawHUD() {
 
 /* ── Buy Phase Rendering ───────────────────────────────────────── */
 function drawBuyPhase() {
-  // Dark overlay
   ctx.fillStyle = '#000000cc';
   ctx.fillRect(0, 0, W, H);
 
@@ -1228,14 +1463,12 @@ function drawBuyPhase() {
 
   ctx.fillStyle = '#ffcc00';
   ctx.font = '14px monospace';
-  ctx.fillText('Round ' + roundNum + ' — ' + Math.ceil(buyTimer) + 's', W/2, 75);
+  ctx.fillText('Round ' + roundNum + ' \u2014 ' + Math.ceil(buyTimer) + 's', W/2, 75);
 
-  // P1 credits
   ctx.fillStyle = '#88ccff';
   ctx.font = '12px monospace';
   ctx.fillText('Credits: $' + (p1 ? p1.credits : 0), W/2, 100);
 
-  // Draw current loadout
   if (p1) {
     ctx.fillStyle = '#667788';
     ctx.font = '10px monospace';
@@ -1246,7 +1479,6 @@ function drawBuyPhase() {
     }
   }
 
-  // Item list
   ctx.textAlign = 'left';
   for (var i = 0; i < BUY_ITEMS.length; i++) {
     var itemId = BUY_ITEMS[i];
@@ -1255,7 +1487,6 @@ function drawBuyPhase() {
     var iy = 160 + i * 48;
     var selected = buyCursor.p1 === i;
 
-    // Background
     ctx.fillStyle = selected ? '#1a2538' : '#0d1320';
     ctx.fillRect(30, iy, 300, 40);
     if (selected) {
@@ -1264,7 +1495,6 @@ function drawBuyPhase() {
       ctx.strokeRect(30, iy, 300, 40);
     }
 
-    // Item info
     var affordable = p1 && item.cost <= p1.credits;
     var owned = isWeapon && p1 && p1.primary === itemId;
 
@@ -1295,20 +1525,40 @@ function drawBuyPhase() {
     }
   }
 
-  // Instructions
   ctx.textAlign = 'center';
   ctx.fillStyle = '#556677';
   ctx.font = '10px monospace';
-  ctx.fillText('W/S to browse, F to buy — auto-starts in ' + Math.ceil(buyTimer) + 's', W/2, H - 20);
+  ctx.fillText('W/S to browse, F to buy', W/2, H - 20);
+}
+
+/* ── Countdown Rendering ──────────────────────────────────────── */
+function drawCountdown() {
+  var num = Math.ceil(countdownTimer);
+  if (num <= 0) num = 'GO!';
+
+  ctx.textAlign = 'center';
+  ctx.fillStyle = num === 'GO!' ? '#44ff44' : '#ff6b35';
+  ctx.font = 'bold ' + (num === 'GO!' ? 48 : 64) + 'px monospace';
+
+  // Pulsing scale effect
+  var pulse = 1 + (countdownTimer % 1) * 0.15;
+  ctx.save();
+  ctx.translate(W/2, H/2 - 40);
+  ctx.scale(pulse, pulse);
+  ctx.fillText('' + num, 0, 0);
+  ctx.restore();
+
+  ctx.fillStyle = '#8899aa';
+  ctx.font = '12px monospace';
+  ctx.fillText('Get ready!', W/2, H/2 + 20);
 }
 
 /* ── Screen States ─────────────────────────────────────────────── */
-function drawMenu() {
-  drawBackground();
+function drawMenu(time) {
+  drawBackground(time);
 
   ctx.textAlign = 'center';
 
-  // Title
   ctx.fillStyle = '#ff6b35';
   ctx.font = 'bold 36px monospace';
   ctx.fillText('RIVALS', W/2, 180);
@@ -1320,12 +1570,30 @@ function drawMenu() {
   ctx.font = '10px monospace';
   ctx.fillText('Round-based combat with economy', W/2, 235);
 
-  // Animated character silhouettes
-  var t = Date.now() / 1000;
-  ctx.fillStyle = '#4488ff44';
-  ctx.fillRect(100 + Math.sin(t) * 10, 270, PLAYER_W, PLAYER_H);
-  ctx.fillStyle = '#ff444444';
-  ctx.fillRect(230 + Math.sin(t + 1) * 10, 270, PLAYER_W, PLAYER_H);
+  // Animated characters
+  var t = time / 1000;
+  // P1 idle bob
+  var p1y = 270 + Math.sin(t * 2) * 3;
+  ctx.fillStyle = '#4488ff';
+  ctx.fillRect(103, p1y + 16, 14, 22);
+  ctx.beginPath(); ctx.arc(110, p1y + 8, 8, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(112, p1y + 6, 2, 2); // eye
+  // weapon
+  ctx.strokeStyle = '#ffdd44';
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(117, p1y + 14); ctx.lineTo(131, p1y + 14); ctx.stroke();
+
+  // P2 idle bob
+  var p2y = 270 + Math.sin(t * 2 + 1) * 3;
+  ctx.fillStyle = '#ff4444';
+  ctx.fillRect(237, p2y + 16, 14, 22);
+  ctx.beginPath(); ctx.arc(244, p2y + 8, 8, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(240, p2y + 6, 2, 2); // eye
+  ctx.strokeStyle = '#44ddff';
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(237, p2y + 14); ctx.lineTo(223, p2y + 14); ctx.stroke();
 
   // Buttons
   var btns = ['1 PLAYER', '2 PLAYERS'];
@@ -1341,7 +1609,6 @@ function drawMenu() {
     ctx.fillText(btns[i], W/2, by + 30);
   }
 
-  // Controls hint
   ctx.fillStyle = '#445566';
   ctx.font = '10px monospace';
   ctx.fillText('W/S to select, F or Space to start', W/2, 520);
@@ -1402,9 +1669,24 @@ function drawRoundEnd() {
   ctx.font = 'bold 22px monospace';
   ctx.fillText(winText, W/2, 300);
 
+  // Score pips
   ctx.fillStyle = '#aabbcc';
   ctx.font = '14px monospace';
-  ctx.fillText('P1: ' + p1Score + '  —  ' + (numPlayers === 1 ? 'Bot' : 'P2') + ': ' + p2Score, W/2, 340);
+  ctx.fillText('P1: ' + p1Score + '  \u2014  ' + (numPlayers === 1 ? 'Bot' : 'P2') + ': ' + p2Score, W/2, 340);
+
+  // Round score pips (visual dots)
+  for (var i = 0; i < ROUNDS_TO_WIN; i++) {
+    ctx.fillStyle = i < p1Score ? '#4488ff' : '#1a2030';
+    ctx.beginPath();
+    ctx.arc(W/2 - 50 + i * 12, 365, 4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  for (var j = 0; j < ROUNDS_TO_WIN; j++) {
+    ctx.fillStyle = j < p2Score ? '#ff4444' : '#1a2030';
+    ctx.beginPath();
+    ctx.arc(W/2 + 50 - j * 12, 365, 4, 0, Math.PI * 2);
+    ctx.fill();
+  }
 }
 
 function drawMatchEnd() {
@@ -1430,7 +1712,7 @@ function drawMatchEnd() {
   ctx.fillText('Final Score: ' + p1Score + ' - ' + p2Score, W/2, 300);
   ctx.fillText('Total Kills: ' + matchKills, W/2, 330);
 
-  if (matchKills >= bestKills) {
+  if (matchKills >= bestKills && matchKills > 0) {
     ctx.fillStyle = '#ffcc00';
     ctx.fillText('NEW BEST!', W/2, 360);
   }
@@ -1443,13 +1725,16 @@ function drawMatchEnd() {
 /* ── Touch Control Overlay ─────────────────────────────────────── */
 function drawTouchControls() {
   if (inputMode === 'keyboard' || state !== 'playing') return;
-  ctx.globalAlpha = 0.3;
+  ctx.globalAlpha = 0.25;
   for (var i = 0; i < touchButtons.length; i++) {
     var btn = touchButtons[i];
-    ctx.fillStyle = '#ffffff';
+    var pressed = touchState[btn.id] && touchState[btn.id][btn.action];
+    ctx.fillStyle = pressed ? '#ffffff44' : '#ffffff11';
+    ctx.fillRect(btn.x, btn.y, btn.w, btn.h);
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 1;
     ctx.strokeRect(btn.x, btn.y, btn.w, btn.h);
+    ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 14px monospace';
     ctx.textAlign = 'center';
     ctx.fillText(btn.label, btn.x + btn.w/2, btn.y + btn.h/2 + 5);
@@ -1459,15 +1744,14 @@ function drawTouchControls() {
 
 /* ── Main Game Loop ────────────────────────────────────────────── */
 var lastTime = 0;
-var dt = 0;
 
 function gameLoop(timestamp) {
   requestAnimationFrame(gameLoop);
 
-  dt = Math.min((timestamp - lastTime) / 1000, 0.05);
+  var frameDt = Math.min((timestamp - lastTime) / 1000, 0.05);
   lastTime = timestamp;
 
-  // Screen shake offset
+  // Screen shake
   var shakeX = 0, shakeY = 0;
   if (screenShake > 0) {
     shakeX = (Math.random() - 0.5) * screenShake;
@@ -1481,7 +1765,7 @@ function gameLoop(timestamp) {
 
   switch (state) {
     case 'menu':
-      drawMenu();
+      drawMenu(timestamp);
       break;
 
     case 'mode_select':
@@ -1489,58 +1773,89 @@ function gameLoop(timestamp) {
       break;
 
     case 'buy_phase':
-      drawBackground();
+      drawBackground(timestamp);
       drawPlatforms();
       drawPlayer(p1);
       drawPlayer(p2);
       drawBuyPhase();
 
-      buyTimer -= dt;
+      buyTimer -= frameDt;
       if (buyTimer <= 0) {
         if (numPlayers === 1) botBuy();
+        startCountdown();
+      }
+      break;
+
+    case 'countdown':
+      drawBackground(timestamp);
+      drawPlatforms();
+      drawPlayer(p1);
+      drawPlayer(p2);
+      drawHUD();
+      drawCountdown();
+
+      countdownTimer -= frameDt;
+      if (countdownTimer <= 0) {
         startPlaying();
       }
       break;
 
     case 'playing':
-      updateInputs();
-      updatePlayer(p1, dt);
-      if (numPlayers === 2) updatePlayer(p2, dt);
-      else updateBot(dt);
-      if (numPlayers === 1 && p2 && p2.alive) {
-        // Apply bot inputs
-        updatePlayer(p2, dt);
+      // Fixed timestep physics
+      accumulator += frameDt;
+      while (accumulator >= FIXED_DT) {
+        updateInputs();
+        updatePlayer(p1, FIXED_DT);
+        if (numPlayers === 2) {
+          updatePlayer(p2, FIXED_DT);
+        } else {
+          updateBot(FIXED_DT);
+          if (p2 && p2.alive) updatePlayer(p2, FIXED_DT);
+        }
+        updateBullets(FIXED_DT);
+        updateGrenades(FIXED_DT);
+        accumulator -= FIXED_DT;
+        // Break out if state changed (round ended)
+        if (state !== 'playing') break;
       }
-      updateBullets(dt);
-      updateGrenades(dt);
-      updateParticles(dt);
 
-      drawBackground();
+      updateParticles(frameDt);
+      updateDeadBodies(frameDt);
+      updateDmgNumbers(frameDt);
+      updateKillFeed(frameDt);
+
+      drawBackground(timestamp);
       drawPlatforms();
+      drawDeadBodies();
       drawBullets();
       drawPlayer(p1);
       drawPlayer(p2);
       drawGrenades();
       drawParticles();
+      drawDmgNumbers();
       drawHUD();
+      drawKillFeed();
       drawTouchControls();
 
       // Flash overlay
       if (flashAlpha > 0) {
         ctx.fillStyle = 'rgba(255,255,255,' + flashAlpha + ')';
         ctx.fillRect(0, 0, W, H);
-        flashAlpha -= dt * 2;
+        flashAlpha -= frameDt * 2;
+        if (flashAlpha < 0) flashAlpha = 0;
       }
       break;
 
     case 'round_end':
-      drawBackground();
+      drawBackground(timestamp);
       drawPlatforms();
+      drawDeadBodies();
+      updateDeadBodies(frameDt);
       drawParticles();
-      updateParticles(dt);
+      updateParticles(frameDt);
       drawRoundEnd();
 
-      roundEndTimer -= dt;
+      roundEndTimer -= frameDt;
       if (roundEndTimer <= 0) {
         if (p1Score >= ROUNDS_TO_WIN || p2Score >= ROUNDS_TO_WIN) {
           endMatch();
@@ -1626,18 +1941,6 @@ function saveAch() {
 }
 
 function checkAch() {
-  // Comeback check
-  if (state === 'round_end' || state === 'match_end') {
-    if (p1Score >= ROUNDS_TO_WIN && p2Score === 4 && p1Score - p2Score === 1) {
-      // Actually need to check if p1 was ever down 1-4
-    }
-  }
-  // Check comeback: if p1 wins match and was down 1-4 at some point
-  if (state === 'match_end' && p1Score >= ROUNDS_TO_WIN) {
-    // We track this in endRound — if p2Score was 4 and p1Score < p2Score at some point
-    if (p2Score === 4) achStats.comebacks++;
-  }
-
   for (var i = 0; i < RIVALS_ACHIEVEMENTS.length; i++) {
     var a = RIVALS_ACHIEVEMENTS[i];
     if (!achUnlocked.has(a.id) && a.check(achStats)) {
@@ -1683,7 +1986,6 @@ function renderAchList() {
 loadAch();
 bestEl.textContent = bestKills;
 
-// Achievements panel toggle
 var achToggle = document.getElementById('achievementsToggle');
 if (achToggle) {
   achToggle.addEventListener('click', function() {
@@ -1692,7 +1994,6 @@ if (achToggle) {
   });
 }
 
-// Mute button
 if (muteBtn) {
   muteBtn.addEventListener('click', function() {
     Audio.init(); Audio.resume();
@@ -1700,7 +2001,6 @@ if (muteBtn) {
   });
 }
 
-// Restart button
 if (restartBtn) {
   restartBtn.addEventListener('click', function() {
     Audio.init(); Audio.resume();
@@ -1708,7 +2008,6 @@ if (restartBtn) {
   });
 }
 
-// Fullscreen
 if (fullscreenBtn) {
   fullscreenBtn.addEventListener('click', function() {
     var el = document.getElementById('gameContainer') || document.documentElement;
@@ -1720,7 +2019,6 @@ if (fullscreenBtn) {
   });
 }
 
-// Leaderboard panel
 var lbPanel = document.getElementById('leaderboardPanel');
 if (lbPanel && typeof Leaderboard !== 'undefined') {
   lbPanel.appendChild(Leaderboard.createPanel('rivals'));
@@ -1732,17 +2030,14 @@ if (lbToggle && lbPanel) {
   });
 }
 
-// Arcade restart event
 document.addEventListener('arcade-restart', function() { startMenu(); });
 
-// i18n
 if (typeof I18N !== 'undefined') {
   var header = document.querySelector('.game__header');
   if (header) I18N.createSelector(header);
   I18N.applyDOM();
 }
 
-// Shop
 if (typeof Shop !== 'undefined') {
   Shop.init({
     gameId: 'rivals',
@@ -1764,7 +2059,6 @@ if (typeof Shop !== 'undefined') {
   });
 }
 
-// Start game loop
 requestAnimationFrame(gameLoop);
 
 })();
