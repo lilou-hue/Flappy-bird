@@ -93,6 +93,13 @@
         { icon: '&#x1F52B;', name: 'Gun Game', key: 'gunGameAch', total: 8, href: '/gun-game/' },
         { icon: '&#x1F984;', name: 'Unicorn Clicker', key: 'unicornAch', total: 9, href: '/unicorn-clicker/' },
         { icon: '&#x26CF;', name: 'Astro Miner', key: 'astroMinerAch', total: 9, href: '/astro-miner/' },
+        { icon: '&#x1F680;', name: 'Star Fury', key: 'starFuryAch', total: 10, href: '/star-fury/' },
+        { icon: '&#x1F3B5;', name: 'Beat Drop', key: 'beatDropAch', total: 8, href: '/beat-drop/' },
+        { icon: '&#x1F3D3;', name: 'Neon Pong', key: 'neonPongAch', total: 8, href: '/neon-pong/' },
+        { icon: '&#x1F50D;', name: 'Inkognito', key: 'inkognitoAch', total: 8, href: '/inkognito/' },
+        { icon: '&#x1F3D7;', name: 'Stack Tower', key: 'stackTowerAch', total: 8, href: '/stack-tower/' },
+        { icon: '&#x1F457;', name: 'Dress-Up', key: 'dressUpAchievements', total: 10, href: '/dress-up/' },
+        { icon: '&#x1F52B;', name: 'Rivals', key: 'rivalsAch', total: 10, href: '/rivals/' },
       ];
 
       var gameGrid = document.getElementById('gameAchGrid');
@@ -103,8 +110,11 @@
         if (data) {
           if (g.key === 'methaneDriftProgress' && data.achievements) {
             count = Object.values(data.achievements).filter(Boolean).length;
-          } else if (data.unlocked) {
+          } else if (Array.isArray(data.unlocked)) {
             count = data.unlocked.length;
+          } else if (typeof data === 'object' && !Array.isArray(data)) {
+            /* Dress-Up style: plain object { id: true } */
+            count = Object.values(data).filter(Boolean).length;
           }
         }
         return '<a href="' + g.href + '" class="arc-game-ach-link">' +

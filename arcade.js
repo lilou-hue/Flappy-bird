@@ -64,6 +64,20 @@
     { type: 'beat_best', tpl: 'Beat your best in {game}',        targets: [1] },
   ];
 
+  /* ── i18n helper ── */
+  function t(key, fallback) {
+    if (typeof I18N !== 'undefined' && I18N.t) {
+      var v = I18N.t(key);
+      if (v && v !== key) return v;
+    }
+    return fallback;
+  }
+
+  /* ── Analytics helper ── */
+  function track(event, params) {
+    if (typeof gtag === 'function') gtag('event', event, params || {});
+  }
+
   /* ── Helpers ── */
   function today() { return new Date().toISOString().slice(0, 10); }
 
@@ -174,6 +188,7 @@
         ach.unlockedAt[a.id] = Date.now();
         newlyUnlocked.push(a);
         addCoins(a.reward);
+        track('achievement_unlock', { achievement_id: a.id, achievement_name: a.name });
       }
     });
 
@@ -244,6 +259,7 @@
         state = getState();
         state.challengesCompleted = (state.challengesCompleted || 0) + 1;
         setState(state);
+        track('challenge_complete', { challenge_type: c.type, challenge_desc: c.desc, reward: c.reward });
       });
     }
     return completed;
@@ -308,6 +324,9 @@
 
     /* Check achievements */
     var newAchievements = checkAchievements();
+
+    /* Analytics */
+    track('game_over', { game_id: gameId, score: score, is_new_best: isNewBest, coins_earned: coinsEarned });
 
     /* Show achievement popups */
     newAchievements.forEach(function (a, i) {
@@ -399,6 +418,7 @@
     shop = getShop();
     shop.purchased.push(id);
     setShop(shop);
+    track('shop_purchase', { item_id: id, item_name: item.name, item_cost: item.cost });
     return { success: true };
   }
 
@@ -484,9 +504,9 @@
     toast.innerHTML =
       '<div class="arc-ach-toast__icon">' + ach.icon + '</div>' +
       '<div class="arc-ach-toast__body">' +
-        '<div class="arc-ach-toast__title">Achievement Unlocked!</div>' +
+        '<div class="arc-ach-toast__title">' + t('arcAchUnlocked', 'Achievement Unlocked!') + '</div>' +
         '<div class="arc-ach-toast__name">' + ach.name + '</div>' +
-        '<div class="arc-ach-toast__reward">+' + ach.reward + ' coins</div>' +
+        '<div class="arc-ach-toast__reward">+' + ach.reward + ' ' + t('arcCoins', 'coins') + '</div>' +
       '</div>';
     document.body.appendChild(toast);
     requestAnimationFrame(function () { toast.classList.add('arc-ach-toast--show'); });
@@ -516,27 +536,27 @@
     var html =
       '<div class="arc-scorecard__card">' +
         '<h2 class="arc-scorecard__title">' + game.name + '</h2>' +
-        (isNewBest ? '<div class="arc-scorecard__newbest">New Best!</div>' : '') +
+        (isNewBest ? '<div class="arc-scorecard__newbest">' + t('arcNewBest', 'New Best!') + '</div>' : '') +
         '<div class="arc-scorecard__scores">' +
           '<div class="arc-scorecard__score">' +
-            '<div class="arc-scorecard__score-label">Score</div>' +
+            '<div class="arc-scorecard__score-label">' + t('score', 'Score') + '</div>' +
             '<div class="arc-scorecard__score-value">' + score + '</div>' +
           '</div>' +
           '<div class="arc-scorecard__score">' +
-            '<div class="arc-scorecard__score-label">Best</div>' +
+            '<div class="arc-scorecard__score-label">' + t('best', 'Best') + '</div>' +
             '<div class="arc-scorecard__score-value">' + Math.max(score, best || 0) + '</div>' +
           '</div>' +
         '</div>' +
         '<div class="arc-scorecard__coins">' +
-          '<div class="arc-scorecard__coins-row"><span>Completion</span><span>+' + coinsBase + '</span></div>' +
-          (coinsNewBest ? '<div class="arc-scorecard__coins-row arc-scorecard__coins-row--bonus"><span>New Best!</span><span>+' + coinsNewBest + '</span></div>' : '') +
-          (thresholdBonus ? '<div class="arc-scorecard__coins-row arc-scorecard__coins-row--bonus"><span>Score Bonus</span><span>+' + thresholdBonus + '</span></div>' : '') +
-          '<div class="arc-scorecard__coins-total"><span>Total</span><span>+' + (coinsBase + coinsNewBest + thresholdBonus) + ' coins</span></div>' +
+          '<div class="arc-scorecard__coins-row"><span>' + t('arcCompletion', 'Completion') + '</span><span>+' + coinsBase + '</span></div>' +
+          (coinsNewBest ? '<div class="arc-scorecard__coins-row arc-scorecard__coins-row--bonus"><span>' + t('arcNewBest', 'New Best!') + '</span><span>+' + coinsNewBest + '</span></div>' : '') +
+          (thresholdBonus ? '<div class="arc-scorecard__coins-row arc-scorecard__coins-row--bonus"><span>' + t('arcScoreBonus', 'Score Bonus') + '</span><span>+' + thresholdBonus + '</span></div>' : '') +
+          '<div class="arc-scorecard__coins-total"><span>' + t('arcTotal', 'Total') + '</span><span>+' + (coinsBase + coinsNewBest + thresholdBonus) + ' ' + t('arcCoins', 'coins') + '</span></div>' +
         '</div>' +
         '<div class="arc-scorecard__actions">' +
-          '<button class="arc-scorecard__btn arc-scorecard__btn--share" title="Copy challenge">Share</button>' +
-          '<button class="arc-scorecard__btn arc-scorecard__btn--again">Play Again</button>' +
-          '<a href="/" class="arc-scorecard__btn arc-scorecard__btn--home">Home</a>' +
+          '<button class="arc-scorecard__btn arc-scorecard__btn--share" title="Copy challenge">' + t('arcShare', 'Share') + '</button>' +
+          '<button class="arc-scorecard__btn arc-scorecard__btn--again">' + t('arcPlayAgain', 'Play Again') + '</button>' +
+          '<a href="/" class="arc-scorecard__btn arc-scorecard__btn--home">' + t('arcHome', 'Home') + '</a>' +
         '</div>' +
       '</div>';
 

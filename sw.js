@@ -1,4 +1,4 @@
-const CACHE_NAME = 'slayplay-v6';
+const CACHE_NAME = 'slayplay-v7';
 
 const PRECACHE_URLS = [
   '/',
@@ -13,6 +13,7 @@ const PRECACHE_URLS = [
   '/achievements/',
   '/leaderboard-page/',
   '/icon.svg',
+  '/manifest.json',
   '/profile/',
   '/flappy-bird/',
   '/flappy-bird/script.js',
@@ -41,6 +42,7 @@ const PRECACHE_URLS = [
   '/gun-game/styles.css',
   '/unicorn-clicker/',
   '/unicorn-clicker/game.js',
+  '/unicorn-clicker/audio.js',
   '/unicorn-clicker/styles.css',
   '/astro-miner/',
   '/astro-miner/game.js',

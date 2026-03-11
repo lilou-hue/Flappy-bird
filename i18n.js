@@ -38,6 +38,17 @@ const I18N = (() => {
       // Shared
       backToGames: '\u2190 Back to Games',
 
+      // Arcade platform
+      arcAchUnlocked: 'Achievement Unlocked!',
+      arcCoins: 'coins',
+      arcNewBest: 'New Best!',
+      arcCompletion: 'Completion',
+      arcScoreBonus: 'Score Bonus',
+      arcTotal: 'Total',
+      arcShare: 'Share',
+      arcPlayAgain: 'Play Again',
+      arcHome: 'Home',
+
       // Flappy Bird
       fbTitle: 'Flappy Bird',
       fbInstructions: 'Press space or click/tap to flap. Avoid the pipes!',
@@ -956,6 +967,15 @@ const I18N = (() => {
       action: '액션',
 
       backToGames: '\u2190 게임 목록으로',
+      arcAchUnlocked: '업적 달성!',
+      arcCoins: '코인',
+      arcNewBest: '새 최고 기록!',
+      arcCompletion: '완료',
+      arcScoreBonus: '점수 보너스',
+      arcTotal: '합계',
+      arcShare: '공유',
+      arcPlayAgain: '다시 하기',
+      arcHome: '홈',
 
       fbTitle: '플래피 버드',
       fbInstructions: '스페이스바를 누르거나 클릭/탭하여 날개짓하세요. 파이프를 피하세요!',
@@ -1778,6 +1798,15 @@ const I18N = (() => {
       action: 'アクション',
 
       backToGames: '\u2190 ゲーム一覧へ',
+      arcAchUnlocked: '実績解除！',
+      arcCoins: 'コイン',
+      arcNewBest: '新記録！',
+      arcCompletion: 'クリア',
+      arcScoreBonus: 'スコアボーナス',
+      arcTotal: '合計',
+      arcShare: '共有',
+      arcPlayAgain: 'もう一度',
+      arcHome: 'ホーム',
 
       fbTitle: 'フラッピーバード',
       fbInstructions: 'スペースキーを押すかクリック/タップで羽ばたき。パイプを避けよう！',
@@ -2598,6 +2627,15 @@ const I18N = (() => {
       action: 'Aksiyon',
 
       backToGames: '\u2190 Oyunlara Dön',
+      arcAchUnlocked: 'Başarım Açıldı!',
+      arcCoins: 'jeton',
+      arcNewBest: 'Yeni Rekor!',
+      arcCompletion: 'Tamamlama',
+      arcScoreBonus: 'Skor Bonusu',
+      arcTotal: 'Toplam',
+      arcShare: 'Paylaş',
+      arcPlayAgain: 'Tekrar Oyna',
+      arcHome: 'Ana Sayfa',
 
       fbTitle: 'Flappy Bird',
       fbInstructions: 'Kanat çırpmak için boşluk tuşuna bas veya tıkla/dokun. Borulardan kaçın!',
@@ -3418,6 +3456,15 @@ const I18N = (() => {
       action: 'Action',
 
       backToGames: '\u2190 Retour aux jeux',
+      arcAchUnlocked: 'Succès débloqué !',
+      arcCoins: 'pièces',
+      arcNewBest: 'Nouveau record !',
+      arcCompletion: 'Complétion',
+      arcScoreBonus: 'Bonus de score',
+      arcTotal: 'Total',
+      arcShare: 'Partager',
+      arcPlayAgain: 'Rejouer',
+      arcHome: 'Accueil',
 
       fbTitle: 'Flappy Bird',
       fbInstructions: 'Appuie sur espace ou clique/tape pour voler. Évite les tuyaux !',
@@ -4238,6 +4285,15 @@ const I18N = (() => {
       action: 'Action',
 
       backToGames: '\u2190 Tillbaka till spel',
+      arcAchUnlocked: 'Prestation upplåst!',
+      arcCoins: 'mynt',
+      arcNewBest: 'Nytt rekord!',
+      arcCompletion: 'Avslutning',
+      arcScoreBonus: 'Poängbonus',
+      arcTotal: 'Totalt',
+      arcShare: 'Dela',
+      arcPlayAgain: 'Spela igen',
+      arcHome: 'Hem',
 
       fbTitle: 'Flappy Bird',
       fbInstructions: 'Tryck mellanslag eller klicka/tryck för att flaxa. Undvik rören!',
@@ -5058,6 +5114,15 @@ const I18N = (() => {
       action: '动作',
 
       backToGames: '\u2190 返回游戏',
+      arcAchUnlocked: '成就解锁！',
+      arcCoins: '金币',
+      arcNewBest: '新纪录！',
+      arcCompletion: '完成',
+      arcScoreBonus: '分数奖励',
+      arcTotal: '总计',
+      arcShare: '分享',
+      arcPlayAgain: '再玩一次',
+      arcHome: '首页',
 
       fbTitle: '像素鸟',
       fbInstructions: '按空格键或点击/触摸来飞翔。避开管道！',
