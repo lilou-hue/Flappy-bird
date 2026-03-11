@@ -39,7 +39,7 @@ function t(key, fb) {
 
 /* ── State ── */
 let currentCharIdx = 0;
-let currentCategory = 'hair';
+let currentCategory = 'top';
 let equipped = {};
 let challengeActive = false;
 let challengeTimer = 0;
@@ -47,7 +47,7 @@ let challengeInterval = null;
 let currentChallengeTheme = null;
 let colorCycleCount = {};
 
-const CATEGORIES = ['hair','top','bottom','dress','shoes','accessory','background'];
+const CATEGORIES = ['top','bottom','dress','shoes','accessory','background'];
 const SAVE_KEY = 'dressUpOutfits';
 const ACHIEVE_KEY = 'dressUpAchievements';
 const STATS_KEY = 'dressUpStats';
@@ -257,6 +257,109 @@ function _drawStitch(c, x1, y1, x2, y2, color) {
   c.globalAlpha = 0.35; c.setLineDash([1.5, 1.5]); c.lineCap = 'round';
   c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke();
   c.setLineDash([]); c.restore();
+}
+
+function _fabricFolds(c, x1, y1, x2, y2, count, color) {
+  c.save(); c.strokeStyle = _darken(color, 15); c.lineWidth = 0.35;
+  c.globalAlpha = 0.12; c.lineCap = 'round';
+  const dx = (x2 - x1) / (count + 1), dy = (y2 - y1) / (count + 1);
+  for (let i = 1; i <= count; i++) {
+    const fx = x1 + dx * i, fy = y1 + dy * i;
+    c.beginPath(); c.moveTo(fx - 3, fy);
+    c.quadraticCurveTo(fx, fy + 2, fx + 3, fy); c.stroke();
+  }
+  c.restore();
+}
+
+function _stitchLine(c, x1, y1, x2, y2, color) {
+  c.save(); c.strokeStyle = _darken(color, 18); c.lineWidth = 0.25;
+  c.globalAlpha = 0.3; c.setLineDash([1, 1.5]); c.lineCap = 'round';
+  c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke();
+  c.setLineDash([]); c.restore();
+}
+
+function _buttonRow(c, cx, startY, endY, count, color) {
+  const step = (endY - startY) / (count - 1 || 1);
+  for (let i = 0; i < count; i++) _drawButton(c, cx, startY + i * step, 0.9, color);
+}
+
+function _pocketDetail(c, x, y, w, h, color) {
+  c.save(); c.strokeStyle = _darken(color, 18); c.lineWidth = 0.4;
+  c.globalAlpha = 0.5; c.beginPath();
+  c.moveTo(x, y); c.lineTo(x, y + h); c.lineTo(x + w, y + h); c.lineTo(x + w, y);
+  c.stroke();
+  c.strokeStyle = _darken(color, 12); c.lineWidth = 0.3;
+  c.beginPath(); c.moveTo(x + 1, y + 1);
+  c.quadraticCurveTo(x + w / 2, y + 2, x + w - 1, y + 1); c.stroke();
+  c.restore();
+}
+
+function _collarDetail(c, cx, topY, width, color, type) {
+  c.save();
+  if (type === 'pointed') {
+    for (let s = -1; s <= 1; s += 2) {
+      c.fillStyle = _lighten(color, 12);
+      c.beginPath(); c.moveTo(cx + s * 1, topY + 1);
+      c.lineTo(cx + s * (width * 0.5), topY - 1);
+      c.lineTo(cx + s * (width * 0.45), topY + 7);
+      c.lineTo(cx + s * 2, topY + 5); c.closePath(); c.fill();
+    }
+  } else if (type === 'round') {
+    c.fillStyle = _lighten(color, 12);
+    c.beginPath(); c.arc(cx, topY + 2, width * 0.3, 0.2, Math.PI - 0.2); c.fill();
+  } else if (type === 'stand') {
+    c.fillStyle = _darken(color, 8);
+    c.beginPath(); c.moveTo(cx - width * 0.35, topY);
+    c.lineTo(cx - width * 0.38, topY - 5);
+    c.quadraticCurveTo(cx, topY - 7, cx + width * 0.38, topY - 5);
+    c.lineTo(cx + width * 0.35, topY); c.closePath(); c.fill();
+  }
+  c.restore();
+}
+
+function _beltLine(c, cx, y, width, color, buckle) {
+  c.save(); c.fillStyle = _darken(color, 25);
+  c.fillRect(cx - width, y, width * 2, 2.5);
+  if (buckle) {
+    c.strokeStyle = '#c0c0c0'; c.lineWidth = 0.6;
+    c.strokeRect(cx - 2, y - 0.5, 4, 3.5);
+    c.fillStyle = '#c0c0c0'; c.fillRect(cx + 0.5, y + 0.2, 1, 2);
+  }
+  c.restore();
+}
+
+function _fabricTexture(c, x, y, w, h, type, color) {
+  c.save(); c.globalAlpha = 0.1; c.lineCap = 'round';
+  if (type === 'knit') {
+    c.strokeStyle = _darken(color, 12); c.lineWidth = 0.25;
+    for (let ry = y; ry < y + h; ry += 3) {
+      c.beginPath(); c.moveTo(x, ry);
+      c.quadraticCurveTo(x + w * 0.5, ry + 1, x + w, ry); c.stroke();
+    }
+  } else if (type === 'denim') {
+    c.strokeStyle = _lighten(color, 15); c.lineWidth = 0.2;
+    for (let ry = y; ry < y + h; ry += 2) {
+      for (let rx = x; rx < x + w; rx += 2) {
+        c.beginPath(); c.moveTo(rx, ry); c.lineTo(rx + 1, ry + 1); c.stroke();
+      }
+    }
+  } else if (type === 'plaid') {
+    c.strokeStyle = 'rgba(255,255,255,0.5)'; c.lineWidth = 0.4;
+    for (let py = y; py < y + h; py += 5) {
+      c.beginPath(); c.moveTo(x, py); c.lineTo(x + w, py); c.stroke();
+    }
+    for (let px = x; px < x + w; px += 5) {
+      c.beginPath(); c.moveTo(px, y); c.lineTo(px, y + h); c.stroke();
+    }
+  } else if (type === 'lace') {
+    c.strokeStyle = 'rgba(255,255,255,0.5)'; c.lineWidth = 0.25;
+    for (let ly = y; ly < y + h; ly += 4) {
+      for (let lx = x; lx < x + w; lx += 4) {
+        c.beginPath(); c.arc(lx, ly, 1.2, 0, Math.PI * 2); c.stroke();
+      }
+    }
+  }
+  c.restore();
 }
 
 /* ── Draw fashion-slim character ── */
@@ -2850,6 +2953,8 @@ function drawTop(style, c, char, x, y, w, h, color) {
       c.bezierCurveTo(cx + bodyW * 0.7, waistY - 2,
                       cx + bodyW + 3, bodyTop + (waistY - bodyTop) * 0.5, cx + bodyW + 2, bodyTop + 4);
       c.closePath(); c.fill();
+      _garmentShade(c, cx, bodyTop, bodyW, bodyBot - bodyTop);
+      _garmentHighlight(c, cx, bodyTop, bodyW, bodyBot - bodyTop);
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath();
         c.ellipse(cx + s * (bodyW + 6), bodyTop + 10, 6, 5, s * 0.3, 0, Math.PI * 2);
@@ -2860,6 +2965,13 @@ function drawTop(style, c, char, x, y, w, h, color) {
       c.save(); c.globalAlpha = 0.1; c.fillStyle = _darken(color, 40);
       c.beginPath(); c.ellipse(cx, bodyTop + 8, bodyW * 0.6, 3, 0, 0, Math.PI * 2); c.fill();
       c.restore();
+      // Side seams
+      _stitchLine(c, cx - bodyW, bodyTop + 8, cx - bodyW * 0.6, bodyBot, color);
+      _stitchLine(c, cx + bodyW, bodyTop + 8, cx + bodyW * 0.6, bodyBot, color);
+      // Waist wrinkle
+      _fabricFolds(c, cx - bodyW * 0.5, bodyBot - 6, cx + bodyW * 0.5, bodyBot - 6, 2, color);
+      // Hem stitch
+      _stitchLine(c, cx - bodyW, bodyBot - 1, cx + bodyW, bodyBot - 1, color);
       break;
     }
     case 'hoodie': {
@@ -2883,6 +2995,18 @@ function drawTop(style, c, char, x, y, w, h, color) {
       c.beginPath(); c.arc(cx, bodyTop, 8, Math.PI, 0); c.fill();
       c.strokeStyle = _darken(color, 25); c.lineWidth = 0.6;
       c.beginPath(); c.arc(cx, bodyTop, 8, Math.PI, 0); c.stroke();
+      _garmentShade(c, cx, bodyTop, bodyW, bodyBot - bodyTop);
+      _garmentHighlight(c, cx, bodyTop, bodyW, bodyBot - bodyTop);
+      // Drawstrings
+      c.save(); c.strokeStyle = _darken(color, 20); c.lineWidth = 0.5; c.globalAlpha = 0.5;
+      c.beginPath(); c.moveTo(cx - 2, bodyTop + 2); c.quadraticCurveTo(cx - 3, bodyTop + 10, cx - 2, bodyTop + 14); c.stroke();
+      c.beginPath(); c.moveTo(cx + 2, bodyTop + 2); c.quadraticCurveTo(cx + 3, bodyTop + 10, cx + 2, bodyTop + 14); c.stroke();
+      c.restore();
+      // Kangaroo pocket
+      _pocketDetail(c, cx - 5, bodyBot - 14, 10, 7, color);
+      // Ribbed cuffs at hem
+      _stitchLine(c, cx - bodyW - 1, bodyBot, cx + bodyW + 1, bodyBot, color);
+      _stitchLine(c, cx - bodyW - 1, bodyBot - 2, cx + bodyW + 1, bodyBot - 2, color);
       c.strokeStyle = _darken(color, 15); c.lineWidth = 0.4;
       c.beginPath(); c.ellipse(cx, bodyBot - 10, 6, 3, 0, 0, Math.PI * 2); c.stroke();
       break;
@@ -2900,12 +3024,15 @@ function drawTop(style, c, char, x, y, w, h, color) {
       c.bezierCurveTo(cx + bodyW * 0.65, waistY,
                       cx + bodyW, bodyTop + (waistY - bodyTop) * 0.5, cx + bodyW - 1, bodyTop + 4);
       c.closePath(); c.fill();
+      _garmentShade(c, cx, bodyTop, bodyW, bodyBot - bodyTop);
+      _garmentHighlight(c, cx, bodyTop, bodyW, bodyBot - bodyTop);
       c.strokeStyle = _darken(color, 20); c.lineWidth = 0.5;
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath();
         c.arc(cx + s * 2, bodyTop + 1, 3, 0.2 * s + Math.PI * 0.5, 0.2 * s + Math.PI * 1.5);
         c.stroke();
       }
+      _stitchLine(c, cx - bodyW + 1, bodyBot - 1, cx + bodyW - 1, bodyBot - 1, color);
       break;
     }
     case 'dress_shirt': {
@@ -2921,22 +3048,25 @@ function drawTop(style, c, char, x, y, w, h, color) {
       c.bezierCurveTo(cx + bodyW * 0.7, waistY - 2,
                       cx + bodyW + 3, bodyTop + (waistY - bodyTop) * 0.5, cx + bodyW + 2, bodyTop + 3);
       c.closePath(); c.fill();
+      _garmentShade(c, cx, bodyTop, bodyW, bodyBot - bodyTop);
+      _garmentHighlight(c, cx, bodyTop, bodyW, bodyBot - bodyTop);
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath();
         c.ellipse(cx + s * (bodyW + 7), bodyTop + 12, 7, 5, s * 0.2, 0, Math.PI * 2);
         c.fill();
       }
-      c.fillStyle = '#fff';
+      // Pointed collar
+      _collarDetail(c, cx, bodyTop, bodyW, color, 'pointed');
+      // Button row
+      _buttonRow(c, cx, bodyTop + 12, bodyBot - 4, 5, color);
+      // Placket line
+      _stitchLine(c, cx - 2, bodyTop + 8, cx - 2, bodyBot - 2, color);
+      _stitchLine(c, cx + 2, bodyTop + 8, cx + 2, bodyBot - 2, color);
+      // Breast pocket
+      _pocketDetail(c, cx - bodyW * 0.55, bodyTop + 12, 5, 4, color);
+      // Cuff detail
       for (let s = -1; s <= 1; s += 2) {
-        c.beginPath();
-        c.moveTo(cx + s * 1, bodyTop + 2);
-        c.quadraticCurveTo(cx + s * 6, bodyTop + 3, cx + s * 5, bodyTop + 10);
-        c.quadraticCurveTo(cx + s * 3, bodyTop + 8, cx + s * 1, bodyTop + 6);
-        c.closePath(); c.fill();
-      }
-      c.fillStyle = _darken(color, 30);
-      for (let i = 0; i < 4; i++) {
-        c.beginPath(); c.arc(cx, bodyTop + 12 + i * ((bodyBot - bodyTop - 12) / 4), 0.8, 0, Math.PI * 2); c.fill();
+        _stitchLine(c, cx + s * (bodyW + 3), bodyTop + 15, cx + s * (bodyW + 9), bodyTop + 15, color);
       }
       break;
     }
@@ -2948,8 +3078,11 @@ function drawTop(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx, cropBot + 4, cx + bodyW - 2, cropBot + 2);
       c.quadraticCurveTo(cx + bodyW + 2, (bodyTop + cropBot) / 2, cx + bodyW, bodyTop + 4);
       c.closePath(); c.fill();
+      _garmentShade(c, cx, bodyTop, bodyW, cropBot - bodyTop);
+      _garmentHighlight(c, cx, bodyTop, bodyW, cropBot - bodyTop);
       c.strokeStyle = _darken(color, 20); c.lineWidth = 0.5;
       c.beginPath(); c.arc(cx, bodyTop + 2, 4, 0.4, Math.PI - 0.4); c.stroke();
+      _stitchLine(c, cx - bodyW + 2, cropBot + 1, cx + bodyW - 2, cropBot + 1, color);
       break;
     }
     case 'jacket': {
@@ -2965,15 +3098,33 @@ function drawTop(style, c, char, x, y, w, h, color) {
       c.bezierCurveTo(cx + bodyW * 0.8, waistY,
                       cx + bodyW + 5, bodyTop + (waistY - bodyTop) * 0.5, cx + bodyW + 4, bodyTop + 2);
       c.closePath(); c.fill();
+      _garmentShade(c, cx, bodyTop, bodyW, bodyBot - bodyTop);
+      _garmentHighlight(c, cx, bodyTop, bodyW, bodyBot - bodyTop);
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath();
         c.ellipse(cx + s * (bodyW + 8), bodyTop + 12, 8, 6, s * 0.25, 0, Math.PI * 2);
         c.fill();
       }
-      c.strokeStyle = _darken(color, 20); c.lineWidth = 0.6;
+      // Zipper line
+      c.strokeStyle = '#c0c0c0'; c.lineWidth = 0.5;
       c.beginPath(); c.moveTo(cx, bodyTop + 4);
       c.quadraticCurveTo(cx + 0.5, midY, cx, bodyBot);
       c.stroke();
+      // Zipper teeth
+      c.save(); c.strokeStyle = '#c0c0c0'; c.lineWidth = 0.25; c.globalAlpha = 0.4;
+      for (let zy = bodyTop + 6; zy < bodyBot - 2; zy += 2) {
+        c.beginPath(); c.moveTo(cx - 1, zy); c.lineTo(cx + 1, zy); c.stroke();
+      }
+      c.restore();
+      // Collar
+      _collarDetail(c, cx, bodyTop, bodyW, color, 'stand');
+      // Pocket flaps
+      for (let s = -1; s <= 1; s += 2) {
+        _pocketDetail(c, cx + s * bodyW * 0.3 - 3, bodyBot - 14, 6, 5, color);
+      }
+      // Shoulder seams
+      _stitchLine(c, cx - bodyW, bodyTop + 4, cx - bodyW - 6, bodyTop + 10, color);
+      _stitchLine(c, cx + bodyW, bodyTop + 4, cx + bodyW + 6, bodyTop + 10, color);
       c.save(); c.globalAlpha = 0.08; c.fillStyle = _darken(color, 40);
       c.beginPath(); c.ellipse(cx, bodyTop + 8, bodyW * 0.5, 4, 0, 0, Math.PI * 2); c.fill();
       c.restore();
@@ -2986,6 +3137,7 @@ function drawTop(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx, bodyBot + 3, cx + bodyW + 2, bodyBot);
       c.quadraticCurveTo(cx + bodyW + 4, midY, cx + bodyW + 2, bodyTop + 3);
       c.closePath(); c.fill();
+      _garmentHighlight(c, cx, bodyTop, bodyW, bodyBot - bodyTop);
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath();
         c.ellipse(cx + s * (bodyW + 4), bodyTop + 6, 7, 5, s * 0.3, 0, Math.PI * 2);
@@ -2993,11 +3145,27 @@ function drawTop(style, c, char, x, y, w, h, color) {
         c.strokeStyle = _darken(color, 25); c.lineWidth = 0.6;
         c.beginPath(); c.ellipse(cx + s * (bodyW + 4), bodyTop + 6, 7, 5, s * 0.3, 0, Math.PI * 2); c.stroke();
       }
+      // Plate segments
       c.strokeStyle = _darken(color, 25); c.lineWidth = 0.8;
-      c.beginPath();
-      c.moveTo(cx - bodyW, waistY);
-      c.quadraticCurveTo(cx, waistY + 2, cx + bodyW, waistY);
-      c.stroke();
+      c.beginPath(); c.moveTo(cx - bodyW, waistY);
+      c.quadraticCurveTo(cx, waistY + 2, cx + bodyW, waistY); c.stroke();
+      c.strokeStyle = _darken(color, 20); c.lineWidth = 0.5;
+      c.beginPath(); c.moveTo(cx - bodyW + 1, bodyTop + 12);
+      c.quadraticCurveTo(cx, bodyTop + 14, cx + bodyW - 1, bodyTop + 12); c.stroke();
+      // Center chest plate line
+      c.beginPath(); c.moveTo(cx, bodyTop + 5); c.lineTo(cx, waistY - 2); c.stroke();
+      // Rivets
+      c.save(); c.fillStyle = _darken(color, 35);
+      const rivetPos = [[cx - bodyW + 2, bodyTop + 6], [cx + bodyW - 2, bodyTop + 6],
+                        [cx - bodyW + 2, waistY + 2], [cx + bodyW - 2, waistY + 2],
+                        [cx - bodyW + 2, bodyBot - 4], [cx + bodyW - 2, bodyBot - 4]];
+      rivetPos.forEach(([rx, ry]) => { c.beginPath(); c.arc(rx, ry, 0.8, 0, Math.PI * 2); c.fill(); });
+      c.restore();
+      // Edge highlight
+      c.save(); c.strokeStyle = _lighten(color, 25); c.lineWidth = 0.4; c.globalAlpha = 0.2;
+      c.beginPath(); c.moveTo(cx - bodyW - 1, bodyTop + 5);
+      c.quadraticCurveTo(cx - bodyW - 3, midY, cx - bodyW - 1, bodyBot - 2); c.stroke();
+      c.restore();
       break;
     }
     case 'wizard_robe': {
@@ -3008,15 +3176,33 @@ function drawTop(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx, robeBot + 4, cx + bodyW + 6, robeBot);
       c.quadraticCurveTo(cx + bodyW + 12, (bodyTop + robeBot) / 2, cx + bodyW + 4, bodyTop + 2);
       c.closePath(); c.fill();
+      _garmentShade(c, cx, bodyTop, bodyW + 4, robeBot - bodyTop);
+      _garmentHighlight(c, cx, bodyTop, bodyW + 4, robeBot - bodyTop);
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath();
         c.ellipse(cx + s * (bodyW + 10), bodyTop + 14, 9, 6, s * 0.3, 0, Math.PI * 2);
         c.fill();
       }
-      c.fillStyle = 'rgba(255,215,0,0.35)';
-      c.font = '5px sans-serif';
+      // Stars and embroidery
+      c.fillStyle = 'rgba(255,215,0,0.35)'; c.font = '5px sans-serif';
       c.fillText('\u2605', cx - 4, bodyBot - 6);
       c.fillText('\u2605', cx + 3, midY + 2);
+      c.fillText('\u2605', cx - 6, midY + 12);
+      // Trim along hem
+      c.save(); c.strokeStyle = 'rgba(255,215,0,0.25)'; c.lineWidth = 1;
+      c.beginPath(); c.moveTo(cx - bodyW - 4, robeBot - 2);
+      c.quadraticCurveTo(cx, robeBot + 2, cx + bodyW + 4, robeBot - 2); c.stroke();
+      c.restore();
+      // Hood drape fold lines
+      c.save(); c.strokeStyle = _darken(color, 15); c.lineWidth = 0.3; c.globalAlpha = 0.15;
+      c.beginPath(); c.moveTo(cx - 3, bodyTop + 1);
+      c.quadraticCurveTo(cx - 4, bodyTop + 8, cx - 2, bodyTop + 14); c.stroke();
+      c.beginPath(); c.moveTo(cx + 3, bodyTop + 1);
+      c.quadraticCurveTo(cx + 4, bodyTop + 8, cx + 2, bodyTop + 14); c.stroke();
+      c.restore();
+      // Robe drape folds
+      _fabricFolds(c, cx - bodyW * 0.3, waistY, cx - bodyW * 0.3, robeBot - 4, 3, color);
+      _fabricFolds(c, cx + bodyW * 0.3, waistY, cx + bodyW * 0.3, robeBot - 4, 3, color);
       break;
     }
     case 'kimono': {
@@ -3027,6 +3213,16 @@ function drawTop(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx, kimBot + 3, cx + bodyW + 3, kimBot);
       c.quadraticCurveTo(cx + bodyW + 10, (bodyTop + kimBot) / 2, cx + bodyW + 5, bodyTop + 2);
       c.closePath(); c.fill();
+      _garmentShade(c, cx, bodyTop, bodyW + 5, kimBot - bodyTop);
+      _garmentHighlight(c, cx, bodyTop, bodyW + 5, kimBot - bodyTop);
+      // Pattern details - subtle waves
+      c.save(); c.strokeStyle = _lighten(color, 15); c.lineWidth = 0.3; c.globalAlpha = 0.12;
+      for (let py = bodyTop + 8; py < kimBot - 6; py += 8) {
+        c.beginPath(); c.moveTo(cx - bodyW - 2, py);
+        c.quadraticCurveTo(cx, py + 3, cx + bodyW + 2, py); c.stroke();
+      }
+      c.restore();
+      // Obi with bow detail
       c.fillStyle = _darken(color, 30);
       const obiY = waistY - 2;
       c.beginPath();
@@ -3036,6 +3232,17 @@ function drawTop(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx, obiY + 9, cx - bodyW - 2, obiY + 6);
       c.quadraticCurveTo(cx - bodyW - 3, obiY + 6, cx - bodyW - 3, obiY);
       c.closePath(); c.fill();
+      // Obi bow at back
+      c.save(); c.fillStyle = _darken(color, 25); c.globalAlpha = 0.6;
+      c.beginPath(); c.ellipse(cx, obiY + 3, 4, 2.5, 0, 0, Math.PI * 2); c.fill();
+      c.restore();
+      // V-neckline crossover
+      c.save(); c.strokeStyle = _darken(color, 20); c.lineWidth = 0.5; c.globalAlpha = 0.4;
+      c.beginPath(); c.moveTo(cx - 4, bodyTop + 3);
+      c.lineTo(cx + 2, obiY - 1); c.stroke();
+      c.beginPath(); c.moveTo(cx + 4, bodyTop + 3);
+      c.lineTo(cx - 2, obiY - 1); c.stroke();
+      c.restore();
       break;
     }
     case 'vest': {
@@ -3051,11 +3258,23 @@ function drawTop(style, c, char, x, y, w, h, color) {
       c.bezierCurveTo(cx + bodyW * 0.7, waistY,
                       cx + bodyW, bodyTop + (waistY - bodyTop) * 0.5, cx + bodyW - 1, bodyTop + 4);
       c.closePath(); c.fill();
+      _garmentShade(c, cx, bodyTop, bodyW, bodyBot - bodyTop);
+      _garmentHighlight(c, cx, bodyTop, bodyW, bodyBot - bodyTop);
+      // Front opening
       c.strokeStyle = _darken(color, 18); c.lineWidth = 0.4;
-      c.beginPath();
-      c.moveTo(cx, bodyTop + 5);
-      c.quadraticCurveTo(cx + 0.3, midY, cx, bodyBot - 3);
-      c.stroke();
+      c.beginPath(); c.moveTo(cx, bodyTop + 5);
+      c.quadraticCurveTo(cx + 0.3, midY, cx, bodyBot - 3); c.stroke();
+      // Lapel detail
+      for (let s = -1; s <= 1; s += 2) {
+        c.save(); c.fillStyle = _darken(color, 10); c.globalAlpha = 0.3;
+        c.beginPath(); c.moveTo(cx + s * 1, bodyTop + 5);
+        c.lineTo(cx + s * 5, bodyTop + 6); c.lineTo(cx + s * 4, bodyTop + 12);
+        c.lineTo(cx + s * 1, bodyTop + 9); c.closePath(); c.fill(); c.restore();
+      }
+      // Breast pocket
+      _pocketDetail(c, cx - bodyW * 0.45, bodyTop + 12, 4, 3.5, color);
+      // Button
+      _drawButton(c, cx, midY, 1, color);
       break;
     }
     case 'sweater': {
@@ -3079,15 +3298,18 @@ function drawTop(style, c, char, x, y, w, h, color) {
       c.fillStyle = _darken(color, 12);
       c.beginPath(); c.ellipse(cx, bodyTop + 1, 5, 2.5, 0, 0, Math.PI * 2); c.fill();
       c.fillStyle = tG;
-      c.strokeStyle = _darken(color, 10); c.lineWidth = 0.3;
-      const lineSpacing = (bodyBot - bodyTop - 6) / 6;
-      for (let i = 0; i < 6; i++) {
-        const ly = bodyTop + 6 + i * lineSpacing;
-        c.beginPath();
-        c.moveTo(cx - bodyW + 2, ly);
-        c.quadraticCurveTo(cx, ly + 1, cx + bodyW - 2, ly);
-        c.stroke();
+      _garmentShade(c, cx, bodyTop, bodyW, bodyBot - bodyTop);
+      _garmentHighlight(c, cx, bodyTop, bodyW, bodyBot - bodyTop);
+      // Knit texture
+      _fabricTexture(c, cx - bodyW + 2, bodyTop + 4, bodyW * 2 - 4, bodyBot - bodyTop - 6, 'knit', color);
+      // Ribbed edges at cuffs and hem
+      c.save(); c.strokeStyle = _darken(color, 15); c.lineWidth = 0.3; c.globalAlpha = 0.2;
+      for (let i = 0; i < 3; i++) {
+        const hy = bodyBot - 1 - i * 1.5;
+        c.beginPath(); c.moveTo(cx - bodyW + 1, hy);
+        c.quadraticCurveTo(cx, hy + 0.5, cx + bodyW - 1, hy); c.stroke();
       }
+      c.restore();
       break;
     }
     case 'corset': {
@@ -3103,6 +3325,8 @@ function drawTop(style, c, char, x, y, w, h, color) {
       c.bezierCurveTo(cx + bodyW * 0.6, waistY,
                       cx + bodyW, bodyTop + (waistY - bodyTop) * 0.5, cx + bodyW - 1, bodyTop + 6);
       c.closePath(); c.fill();
+      _garmentShade(c, cx, bodyTop, bodyW, bodyBot - bodyTop);
+      _garmentHighlight(c, cx, bodyTop, bodyW, bodyBot - bodyTop);
       c.strokeStyle = 'rgba(255,255,255,0.2)'; c.lineWidth = 0.4;
       const laceSpacing = (bodyBot - bodyTop - 12) / 5;
       for (let i = 0; i < 5; i++) {
@@ -3172,10 +3396,18 @@ function drawTop(style, c, char, x, y, w, h, color) {
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath(); c.ellipse(cx + s * (bodyW + 8), bodyTop + 12, 8, 6, s * 0.25, 0, Math.PI * 2); c.fill();
       }
+      _garmentShade(c, cx, bodyTop, bodyW, bodyBot - bodyTop);
       _garmentHighlight(c, cx, bodyTop, bodyW, bodyBot - bodyTop);
-      // Zipper
+      // Diagonal zipper with teeth
       c.strokeStyle = '#c0c0c0'; c.lineWidth = 0.6;
       c.beginPath(); c.moveTo(cx + 2, bodyTop + 5); c.lineTo(cx - 3, bodyBot - 2); c.stroke();
+      c.save(); c.strokeStyle = '#c0c0c0'; c.lineWidth = 0.2; c.globalAlpha = 0.35;
+      for (let zi = 0; zi < 8; zi++) {
+        const zt = zi / 8;
+        const zx = cx + 2 - 5 * zt, zy = bodyTop + 5 + (bodyBot - bodyTop - 7) * zt;
+        c.beginPath(); c.moveTo(zx - 1, zy); c.lineTo(zx + 1, zy); c.stroke();
+      }
+      c.restore();
       // Collar
       for (let s = -1; s <= 1; s += 2) {
         c.fillStyle = _darken(color, 8);
@@ -3187,6 +3419,13 @@ function drawTop(style, c, char, x, y, w, h, color) {
         c.closePath(); c.fill();
       }
       c.fillStyle = tG;
+      // Pocket flaps
+      for (let s = -1; s <= 1; s += 2) {
+        _pocketDetail(c, cx + s * bodyW * 0.25 - 3, bodyBot - 12, 6, 4, color);
+      }
+      // Shoulder seams
+      _stitchLine(c, cx - bodyW, bodyTop + 4, cx - bodyW - 6, bodyTop + 10, color);
+      _stitchLine(c, cx + bodyW, bodyTop + 4, cx + bodyW + 6, bodyTop + 10, color);
       break;
     }
     case 'graphic_tee': {
@@ -3198,17 +3437,29 @@ function drawTop(style, c, char, x, y, w, h, color) {
       c.bezierCurveTo(cx + bodyW + 2, midY + (bodyBot - midY) * 0.5, cx + bodyW * 0.7, waistY + 2, cx + bodyW * 0.6, waistY);
       c.bezierCurveTo(cx + bodyW * 0.7, waistY - 2, cx + bodyW + 3, midY, cx + bodyW + 2, bodyTop + 4);
       c.closePath(); c.fill();
+      _garmentShade(c, cx, bodyTop, bodyW, bodyBot - bodyTop);
+      _garmentHighlight(c, cx, bodyTop, bodyW, bodyBot - bodyTop);
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath(); c.ellipse(cx + s * (bodyW + 6), bodyTop + 10, 6, 5, s * 0.3, 0, Math.PI * 2); c.fill();
       }
       c.strokeStyle = _darken(color, 20); c.lineWidth = 0.6;
       c.beginPath(); c.arc(cx, bodyTop + 2, 4, 0.3, Math.PI - 0.3); c.stroke();
-      // Graphic print
-      c.save(); c.globalAlpha = 0.12; c.fillStyle = '#fff';
+      // Enhanced graphic print - geometric design
+      c.save(); c.globalAlpha = 0.15; c.fillStyle = '#fff';
       c.beginPath();
       c.moveTo(cx - 5, bodyTop + 14); c.lineTo(cx, bodyTop + 10); c.lineTo(cx + 5, bodyTop + 14);
       c.lineTo(cx + 3, bodyBot - 10); c.lineTo(cx - 3, bodyBot - 10);
-      c.closePath(); c.fill(); c.restore();
+      c.closePath(); c.fill();
+      // Inner triangle
+      c.globalAlpha = 0.1;
+      c.beginPath();
+      c.moveTo(cx - 3, bodyTop + 16); c.lineTo(cx, bodyTop + 13); c.lineTo(cx + 3, bodyTop + 16);
+      c.closePath(); c.fill();
+      c.restore();
+      // Side seams and hem stitch
+      _stitchLine(c, cx - bodyW, bodyTop + 8, cx - bodyW * 0.6, bodyBot, color);
+      _stitchLine(c, cx + bodyW, bodyTop + 8, cx + bodyW * 0.6, bodyBot, color);
+      _stitchLine(c, cx - bodyW, bodyBot - 1, cx + bodyW, bodyBot - 1, color);
       break;
     }
     case 'off_shoulder': {
@@ -3250,8 +3501,14 @@ function drawTop(style, c, char, x, y, w, h, color) {
       c.lineTo(cx + 5, bodyTop);
       c.closePath(); c.fill();
       c.fillStyle = tG;
+      _garmentShade(c, cx, bodyTop, bodyW, bodyBot - bodyTop);
+      _garmentHighlight(c, cx, bodyTop, bodyW, bodyBot - bodyTop);
+      // Knit texture
+      _fabricTexture(c, cx - bodyW + 2, bodyTop + 2, bodyW * 2 - 4, bodyBot - bodyTop - 4, 'knit', color);
       _drawFold(c, cx, bodyTop + (bodyBot - bodyTop) * 0.3, bodyW * 0.6, color);
       _drawFold(c, cx, bodyTop + (bodyBot - bodyTop) * 0.6, bodyW * 0.5, color);
+      // Ribbed hem and cuffs
+      _stitchLine(c, cx - bodyW, bodyBot, cx + bodyW, bodyBot, color);
       break;
     }
     case 'puffer_vest': {
@@ -3462,6 +3719,8 @@ function drawTop(style, c, char, x, y, w, h, color) {
       c.bezierCurveTo(cx + bodyW + 2, midY + (bodyBot - midY) * 0.5, cx + bodyW * 0.7, waistY, cx + bodyW * 0.6, waistY);
       c.bezierCurveTo(cx + bodyW * 0.7, waistY, cx + bodyW + 3, midY, cx + bodyW + 2, bodyTop + 3);
       c.closePath(); c.fill();
+      _garmentShade(c, cx, bodyTop, bodyW, bodyBot - bodyTop);
+      _garmentHighlight(c, cx, bodyTop, bodyW, bodyBot - bodyTop);
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath(); c.ellipse(cx + s * (bodyW + 6), bodyTop + 12, 6.5, 5, s * 0.15, 0, Math.PI * 2); c.fill();
       }
@@ -3544,15 +3803,27 @@ function drawTop(style, c, char, x, y, w, h, color) {
       c.bezierCurveTo(cx + bodyW + 3, midY + (bodyBot - midY) * 0.5, cx + bodyW * 0.7, waistY, cx + bodyW * 0.6, waistY);
       c.bezierCurveTo(cx + bodyW * 0.7, waistY, cx + bodyW + 4, midY, cx + bodyW + 3, bodyTop + 2);
       c.closePath(); c.fill();
+      _garmentShade(c, cx, bodyTop, bodyW, bodyBot - bodyTop);
+      _garmentHighlight(c, cx, bodyTop, bodyW, bodyBot - bodyTop);
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath(); c.ellipse(cx + s * (bodyW + 7), bodyTop + 12, 7, 5.5, s * 0.2, 0, Math.PI * 2); c.fill();
       }
-      // Epaulettes
+      // Epaulettes with fringe detail
       c.fillStyle = _darken(color, 20);
       for (let s = -1; s <= 1; s += 2) {
         c.fillRect(cx + s * bodyW - 2, bodyTop + 3, 5, 2.5);
+        c.save(); c.strokeStyle = '#f4d03f'; c.lineWidth = 0.3; c.globalAlpha = 0.4;
+        for (let fi = 0; fi < 3; fi++) {
+          c.beginPath(); c.moveTo(cx + s * bodyW - 1 + fi * 1.5, bodyTop + 5.5);
+          c.lineTo(cx + s * bodyW - 1 + fi * 1.5, bodyTop + 7); c.stroke();
+        }
+        c.restore();
       }
       c.fillStyle = tG;
+      // Chest pockets
+      for (let s = -1; s <= 1; s += 2) {
+        _pocketDetail(c, cx + s * bodyW * 0.35 - 3, bodyTop + 12, 6, 5, color);
+      }
       // Double button rows
       for (let b = bodyTop + 8; b < bodyBot - 3; b += 6) {
         _drawButton(c, cx - 3, b, 0.6, '#f4d03f');
@@ -3614,6 +3885,8 @@ function drawTop(style, c, char, x, y, w, h, color) {
       c.bezierCurveTo(cx + bodyW + 2, midY + (bodyBot - midY) * 0.5, cx + bodyW * 0.7, waistY, cx + bodyW * 0.6, waistY);
       c.bezierCurveTo(cx + bodyW * 0.7, waistY, cx + bodyW + 3, midY, cx + bodyW + 2, bodyTop + 3);
       c.closePath(); c.fill();
+      _garmentShade(c, cx, bodyTop, bodyW, bodyBot - bodyTop);
+      _garmentHighlight(c, cx, bodyTop, bodyW, bodyBot - bodyTop);
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath(); c.ellipse(cx + s * (bodyW + 6), bodyTop + 12, 7, 5.5, s * 0.2, 0, Math.PI * 2); c.fill();
       }
@@ -3622,9 +3895,21 @@ function drawTop(style, c, char, x, y, w, h, color) {
       c.fillRect(cx - bodyW - 2, bodyBot - 3, bodyW * 2 + 4, 3);
       c.fillRect(cx - 5, bodyTop + 1, 10, 3);
       c.fillStyle = tG;
-      // Center zipper
+      // Center zipper with teeth
       c.strokeStyle = '#c0c0c0'; c.lineWidth = 0.5;
       c.beginPath(); c.moveTo(cx, bodyTop + 4); c.lineTo(cx, bodyBot - 3); c.stroke();
+      c.save(); c.strokeStyle = '#c0c0c0'; c.lineWidth = 0.2; c.globalAlpha = 0.3;
+      for (let zy = bodyTop + 6; zy < bodyBot - 4; zy += 2) {
+        c.beginPath(); c.moveTo(cx - 1, zy); c.lineTo(cx + 1, zy); c.stroke();
+      }
+      c.restore();
+      // Pocket flaps
+      for (let s = -1; s <= 1; s += 2) {
+        _pocketDetail(c, cx + s * bodyW * 0.35 - 3, waistY + 2, 6, 4, color);
+      }
+      // Shoulder seams
+      _stitchLine(c, cx - bodyW, bodyTop + 5, cx - bodyW - 5, bodyTop + 10, color);
+      _stitchLine(c, cx + bodyW, bodyTop + 5, cx + bodyW + 5, bodyTop + 10, color);
       break;
     }
     case 'poncho': {
@@ -3773,8 +4058,28 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       c.lineTo(cx + 8, legBot);
       c.quadraticCurveTo(cx + bodyW + 2, midLeg, cx + bodyW + 1, bodyBot - 2);
       c.closePath(); c.fill();
+      _garmentShade(c, cx, bodyBot, bodyW, legBot - bodyBot);
+      // Denim texture
+      _fabricTexture(c, cx - bodyW, bodyBot, bodyW * 2, legBot - bodyBot, 'denim', color);
+      // Center seam
       c.strokeStyle = _darken(color, 15); c.lineWidth = 0.4;
       c.beginPath(); c.moveTo(cx, bodyBot); c.lineTo(cx, bodyBot + 4); c.stroke();
+      // Stitch lines along legs
+      _stitchLine(c, cx - 5, bodyBot + 6, cx - 5, legBot - 1, color);
+      _stitchLine(c, cx + 5, bodyBot + 6, cx + 5, legBot - 1, color);
+      // Belt loops
+      c.save(); c.strokeStyle = _darken(color, 20); c.lineWidth = 0.4; c.globalAlpha = 0.4;
+      for (let bl = -2; bl <= 2; bl++) {
+        if (bl === 0) continue;
+        const bx = cx + bl * bodyW * 0.35;
+        c.beginPath(); c.moveTo(bx, bodyBot - 3); c.lineTo(bx, bodyBot); c.stroke();
+      }
+      c.restore();
+      // Rivets at pockets
+      c.save(); c.fillStyle = '#c0a050'; c.globalAlpha = 0.5;
+      c.beginPath(); c.arc(cx - bodyW + 3, bodyBot + 2, 0.5, 0, Math.PI * 2); c.fill();
+      c.beginPath(); c.arc(cx + bodyW - 3, bodyBot + 2, 0.5, 0, Math.PI * 2); c.fill();
+      c.restore();
       break;
     }
     case 'skirt': {
@@ -3785,6 +4090,18 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx, skirtBot + 3, cx + bodyW - 2, skirtBot);
       c.quadraticCurveTo(cx + bodyW + 8, (bodyBot + skirtBot) / 2, cx + bodyW + 1, bodyBot - 2);
       c.closePath(); c.fill();
+      _garmentShade(c, cx, bodyBot, bodyW, skirtBot - bodyBot);
+      // Deeper fold lines with shadow
+      c.save(); c.strokeStyle = _darken(color, 20); c.lineWidth = 0.4; c.globalAlpha = 0.25;
+      for (let i = -2; i <= 2; i++) {
+        c.beginPath();
+        c.moveTo(cx + i * 3.5, bodyBot);
+        c.quadraticCurveTo(cx + i * 4, (bodyBot + skirtBot) / 2, cx + i * 3.8, skirtBot - 2);
+        c.stroke();
+      }
+      c.restore();
+      // Hem stitch
+      _stitchLine(c, cx - bodyW + 2, skirtBot - 1, cx + bodyW - 2, skirtBot - 1, color);
       break;
     }
     case 'shorts': {
@@ -3801,6 +4118,13 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx + bodyW / 2, shortBot + 2, cx + bodyW, shortBot);
       c.quadraticCurveTo(cx + bodyW + 2, bodyBot + 4, cx + bodyW + 1, bodyBot - 2);
       c.closePath(); c.fill();
+      _garmentShade(c, cx, bodyBot, bodyW, shortBot - bodyBot);
+      // Center seam
+      c.strokeStyle = _darken(color, 15); c.lineWidth = 0.4;
+      c.beginPath(); c.moveTo(cx, bodyBot); c.lineTo(cx, bodyBot + 3); c.stroke();
+      // Hem cuffs
+      _stitchLine(c, cx - bodyW, shortBot - 1, cx - 2, shortBot - 1, color);
+      _stitchLine(c, cx + 2, shortBot - 1, cx + bodyW, shortBot - 1, color);
       break;
     }
     case 'leggings': {
@@ -3816,6 +4140,12 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       c.lineTo(cx + 7, legBot + 1);
       c.quadraticCurveTo(cx + bodyW + 1, midLeg, cx + bodyW, bodyBot - 2);
       c.closePath(); c.fill();
+      // Shine highlight
+      _garmentHighlight(c, cx - 4, bodyBot + 4, 2, midLeg - bodyBot - 6);
+      _garmentHighlight(c, cx + 4, bodyBot + 4, 2, midLeg - bodyBot - 6);
+      // Side seam
+      _stitchLine(c, cx - bodyW, bodyBot, cx - 7, legBot, color);
+      _stitchLine(c, cx + bodyW, bodyBot, cx + 7, legBot, color);
       break;
     }
     case 'cargo_pants': {
@@ -3831,9 +4161,21 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       c.lineTo(cx + 9, legBot);
       c.quadraticCurveTo(cx + bodyW + 3, midLeg, cx + bodyW + 2, bodyBot - 2);
       c.closePath(); c.fill();
+      _garmentShade(c, cx, bodyBot, bodyW, legBot - bodyBot);
+      // Cargo pocket flaps with buttons
+      for (let s = -1; s <= 1; s += 2) {
+        _pocketDetail(c, cx + s * 5 - 3, kneeY - 12, 5, 4, color);
+        _drawButton(c, cx + s * 5 - 0.5, kneeY - 11, 0.5, _darken(color, 25));
+      }
+      // Knee seams
       c.strokeStyle = _darken(color, 18); c.lineWidth = 0.4;
-      c.beginPath(); c.ellipse(cx - 6, kneeY - 10, 4, 3, 0, 0, Math.PI * 2); c.stroke();
-      c.beginPath(); c.ellipse(cx + 6, kneeY - 10, 4, 3, 0, 0, Math.PI * 2); c.stroke();
+      c.beginPath(); c.moveTo(cx - 8, kneeY); c.quadraticCurveTo(cx - 5, kneeY + 1, cx - 2, kneeY); c.stroke();
+      c.beginPath(); c.moveTo(cx + 2, kneeY); c.quadraticCurveTo(cx + 5, kneeY + 1, cx + 8, kneeY); c.stroke();
+      // Side seams
+      _stitchLine(c, cx - bodyW - 1, bodyBot, cx - 8, legBot, color);
+      _stitchLine(c, cx + bodyW + 1, bodyBot, cx + 8, legBot, color);
+      // Belt loops
+      _beltLine(c, cx, bodyBot - 2, bodyW, color, true);
       break;
     }
     case 'flowing_skirt': {
@@ -3844,13 +4186,22 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx, flowBot + 3, cx + bodyW - 4, flowBot);
       c.quadraticCurveTo(cx + bodyW + 14, (bodyBot + flowBot) / 2, cx + bodyW + 1, bodyBot - 2);
       c.closePath(); c.fill();
-      c.strokeStyle = _darken(color, 12); c.lineWidth = 0.3;
+      _garmentShade(c, cx, bodyBot, bodyW, flowBot - bodyBot);
+      // Deeper fold lines with shadow
+      c.save(); c.strokeStyle = _darken(color, 18); c.lineWidth = 0.4; c.globalAlpha = 0.3;
       for (let i = -2; i <= 2; i++) {
         c.beginPath();
         c.moveTo(cx + i * 4, bodyBot);
         c.quadraticCurveTo(cx + i * 5 + 1, (bodyBot + flowBot) / 2, cx + i * 4.5, flowBot - 3);
         c.stroke();
       }
+      c.restore();
+      // Hem detail
+      c.save(); c.strokeStyle = _darken(color, 15); c.lineWidth = 0.3; c.globalAlpha = 0.2;
+      for (let hx = cx - bodyW + 4; hx < cx + bodyW - 2; hx += 3) {
+        c.beginPath(); c.arc(hx, flowBot - 1, 1.5, Math.PI, 0); c.stroke();
+      }
+      c.restore();
       break;
     }
     case 'armor_greaves': {
@@ -3866,9 +4217,24 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       c.lineTo(cx + 9, legBot + 1);
       c.quadraticCurveTo(cx + bodyW + 3, midLeg, cx + bodyW + 2, bodyBot - 2);
       c.closePath(); c.fill();
+      _garmentHighlight(c, cx - 4, bodyBot + 4, 2, midLeg - bodyBot - 6);
+      _garmentHighlight(c, cx + 4, bodyBot + 4, 2, midLeg - bodyBot - 6);
+      // Plate segments
       c.strokeStyle = _darken(color, 22); c.lineWidth = 0.6;
       c.beginPath(); c.moveTo(cx - 8, kneeY); c.quadraticCurveTo(cx - 5, kneeY + 1, cx - 2, kneeY); c.stroke();
       c.beginPath(); c.moveTo(cx + 2, kneeY); c.quadraticCurveTo(cx + 5, kneeY + 1, cx + 8, kneeY); c.stroke();
+      // Knee caps
+      c.save(); c.fillStyle = _lighten(color, 15); c.globalAlpha = 0.3;
+      c.beginPath(); c.ellipse(cx - 5, kneeY - 3, 3, 4, 0, 0, Math.PI * 2); c.fill();
+      c.beginPath(); c.ellipse(cx + 5, kneeY - 3, 3, 4, 0, 0, Math.PI * 2); c.fill();
+      c.restore();
+      // Rivets
+      c.save(); c.fillStyle = _darken(color, 30); c.globalAlpha = 0.5;
+      for (let s = -1; s <= 1; s += 2) {
+        c.beginPath(); c.arc(cx + s * 7, kneeY - 1, 0.6, 0, Math.PI * 2); c.fill();
+        c.beginPath(); c.arc(cx + s * 7, kneeY + 3, 0.6, 0, Math.PI * 2); c.fill();
+      }
+      c.restore();
       break;
     }
     case 'sweatpants': {
@@ -3884,9 +4250,23 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       c.lineTo(cx + 8, legBot);
       c.quadraticCurveTo(cx + bodyW + 2, midLeg, cx + bodyW, bodyBot - 2);
       c.closePath(); c.fill();
+      _garmentShade(c, cx, bodyBot, bodyW, legBot - bodyBot);
+      // Elastic cuffs
       c.strokeStyle = _darken(color, 18); c.lineWidth = 0.4;
       c.beginPath(); c.ellipse(cx - 5, legBot - 1, 4, 1.5, 0, 0, Math.PI * 2); c.stroke();
       c.beginPath(); c.ellipse(cx + 5, legBot - 1, 4, 1.5, 0, 0, Math.PI * 2); c.stroke();
+      // Drawstring
+      c.save(); c.strokeStyle = _darken(color, 22); c.lineWidth = 0.4; c.globalAlpha = 0.5;
+      c.beginPath(); c.moveTo(cx - 2, bodyBot - 1);
+      c.quadraticCurveTo(cx - 3, bodyBot + 3, cx - 2, bodyBot + 6); c.stroke();
+      c.beginPath(); c.moveTo(cx + 2, bodyBot - 1);
+      c.quadraticCurveTo(cx + 3, bodyBot + 3, cx + 2, bodyBot + 6); c.stroke();
+      c.restore();
+      // Side stripe
+      c.save(); c.strokeStyle = 'rgba(255,255,255,0.15)'; c.lineWidth = 0.8;
+      c.beginPath(); c.moveTo(cx - bodyW, bodyBot); c.lineTo(cx - 7, legBot - 1); c.stroke();
+      c.beginPath(); c.moveTo(cx + bodyW, bodyBot); c.lineTo(cx + 7, legBot - 1); c.stroke();
+      c.restore();
       break;
     }
     case 'pleated_skirt': {
@@ -3897,13 +4277,22 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx, pleatBot + 3, cx + bodyW + 3, pleatBot);
       c.quadraticCurveTo(cx + bodyW + 4, (bodyBot + pleatBot) / 2, cx + bodyW + 1, bodyBot - 2);
       c.closePath(); c.fill();
-      c.strokeStyle = _darken(color, 15); c.lineWidth = 0.3;
+      _garmentShade(c, cx, bodyBot, bodyW, pleatBot - bodyBot);
+      // Deeper pleat lines with shadow
+      c.save(); c.strokeStyle = _darken(color, 22); c.lineWidth = 0.4; c.globalAlpha = 0.3;
       for (let i = -3; i <= 3; i++) {
         c.beginPath();
         c.moveTo(cx + i * 3.5, bodyBot);
         c.quadraticCurveTo(cx + i * 3.7, (bodyBot + pleatBot) / 2, cx + i * 3.8, pleatBot - 2);
         c.stroke();
       }
+      c.restore();
+      // Waistband
+      c.fillStyle = _darken(color, 18);
+      c.fillRect(cx - bodyW - 1, bodyBot - 4, bodyW * 2 + 2, 3);
+      c.fillStyle = botGrad;
+      // Hem stitch
+      _stitchLine(c, cx - bodyW - 3, pleatBot - 1, cx + bodyW + 3, pleatBot - 1, color);
       break;
     }
     case 'bell_bottoms': {
@@ -3921,10 +4310,16 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx + 10, legBot, cx + 6, kneeY + 10);
       c.quadraticCurveTo(cx + bodyW + 1, kneeY, cx + bodyW, bodyBot - 2);
       c.closePath(); c.fill();
+      _garmentShade(c, cx, bodyBot, bodyW, legBot - bodyBot);
+      // Side seams
+      _stitchLine(c, cx - bodyW, bodyBot, cx - 14, legBot + 1, color);
+      _stitchLine(c, cx + bodyW, bodyBot, cx + 14, legBot + 1, color);
+      // Center seam
+      c.strokeStyle = _darken(color, 15); c.lineWidth = 0.4;
+      c.beginPath(); c.moveTo(cx, bodyBot); c.lineTo(cx, bodyBot + 4); c.stroke();
       break;
     }
     case 'ripped_jeans': {
-      // Same shape as jeans but with rip details
       c.beginPath();
       c.moveTo(cx - bodyW - 1, bodyBot - 2);
       c.quadraticCurveTo(cx - bodyW - 2, midLeg, cx - 8, legBot);
@@ -3935,15 +4330,32 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx + 1, bodyBot + 6, cx + 2, legBot);
       c.lineTo(cx + 8, legBot); c.quadraticCurveTo(cx + bodyW + 2, midLeg, cx + bodyW + 1, bodyBot - 2);
       c.closePath(); c.fill();
-      // Rips
+      _garmentShade(c, cx, bodyBot, bodyW, legBot - bodyBot);
+      _fabricTexture(c, cx - bodyW, bodyBot, bodyW * 2, legBot - bodyBot, 'denim', color);
+      // Center seam
       c.strokeStyle = _darken(color, 15); c.lineWidth = 0.4;
       c.beginPath(); c.moveTo(cx, bodyBot); c.lineTo(cx, bodyBot + 4); c.stroke();
+      // Stitch lines
+      _stitchLine(c, cx - 5, bodyBot + 6, cx - 5, legBot - 1, color);
+      _stitchLine(c, cx + 5, bodyBot + 6, cx + 5, legBot - 1, color);
+      // Rips with skin showing through
       c.fillStyle = 'rgba(255,220,185,0.35)';
       c.fillRect(cx - 7, kneeY - 4, 4, 6);
       c.fillRect(cx + 4, kneeY + 2, 3, 5);
-      c.strokeStyle = _darken(color, 20); c.lineWidth = 0.3;
-      for (let r = 0; r < 3; r++) { c.beginPath(); c.moveTo(cx - 7, kneeY - 4 + r * 2); c.lineTo(cx - 3, kneeY - 4 + r * 2); c.stroke(); }
-      for (let r = 0; r < 3; r++) { c.beginPath(); c.moveTo(cx + 4, kneeY + 2 + r * 2); c.lineTo(cx + 7, kneeY + 2 + r * 2); c.stroke(); }
+      // Frayed threads on rips
+      c.strokeStyle = _lighten(color, 15); c.lineWidth = 0.3;
+      for (let r = 0; r < 4; r++) { c.beginPath(); c.moveTo(cx - 7, kneeY - 4 + r * 1.5); c.lineTo(cx - 3, kneeY - 4 + r * 1.5); c.stroke(); }
+      for (let r = 0; r < 4; r++) { c.beginPath(); c.moveTo(cx + 4, kneeY + 2 + r * 1.5); c.lineTo(cx + 7, kneeY + 2 + r * 1.5); c.stroke(); }
+      // Rip edge darkening
+      c.save(); c.strokeStyle = _darken(color, 20); c.lineWidth = 0.4; c.globalAlpha = 0.4;
+      c.strokeRect(cx - 7, kneeY - 4, 4, 6);
+      c.strokeRect(cx + 4, kneeY + 2, 3, 5);
+      c.restore();
+      // Rivets
+      c.save(); c.fillStyle = '#c0a050'; c.globalAlpha = 0.5;
+      c.beginPath(); c.arc(cx - bodyW + 3, bodyBot + 2, 0.5, 0, Math.PI * 2); c.fill();
+      c.beginPath(); c.arc(cx + bodyW - 3, bodyBot + 2, 0.5, 0, Math.PI * 2); c.fill();
+      c.restore();
       break;
     }
     case 'high_waist_shorts': {
@@ -3968,6 +4380,10 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       c.strokeStyle = _darken(color, 18); c.lineWidth = 0.5;
       c.beginPath(); c.moveTo(cx - bodyW, hwBot - 1); c.lineTo(cx - 2, hwBot - 1); c.stroke();
       c.beginPath(); c.moveTo(cx + 2, hwBot - 1); c.lineTo(cx + bodyW, hwBot - 1); c.stroke();
+      _garmentShade(c, cx, bodyBot, bodyW, hwBot - bodyBot);
+      // Center seam
+      c.strokeStyle = _darken(color, 15); c.lineWidth = 0.4;
+      c.beginPath(); c.moveTo(cx, bodyBot); c.lineTo(cx, bodyBot + 3); c.stroke();
       break;
     }
     case 'wide_leg': {
@@ -3983,10 +4399,14 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       c.lineTo(cx + 12, legBot);
       c.quadraticCurveTo(cx + bodyW + 4, midLeg, cx + bodyW + 2, bodyBot - 2);
       c.closePath(); c.fill();
+      _garmentShade(c, cx, bodyBot, bodyW, legBot - bodyBot);
       // Crease lines
       c.strokeStyle = _darken(color, 12); c.lineWidth = 0.3;
       c.beginPath(); c.moveTo(cx - 6, bodyBot + 4); c.lineTo(cx - 7, legBot - 2); c.stroke();
       c.beginPath(); c.moveTo(cx + 6, bodyBot + 4); c.lineTo(cx + 7, legBot - 2); c.stroke();
+      // Side seams
+      _stitchLine(c, cx - bodyW - 2, bodyBot, cx - 12, legBot, color);
+      _stitchLine(c, cx + bodyW + 2, bodyBot, cx + 12, legBot, color);
       break;
     }
     case 'mini_skirt': {
@@ -3997,9 +4417,14 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx, miniBot + 2, cx + bodyW - 1, miniBot);
       c.quadraticCurveTo(cx + bodyW + 5, (bodyBot + miniBot) / 2, cx + bodyW + 1, bodyBot - 2);
       c.closePath(); c.fill();
+      _garmentShade(c, cx, bodyBot, bodyW, miniBot - bodyBot);
       // Hem line
       c.strokeStyle = _darken(color, 15); c.lineWidth = 0.5;
       c.beginPath(); c.moveTo(cx - bodyW + 1, miniBot); c.quadraticCurveTo(cx, miniBot + 2, cx + bodyW - 1, miniBot); c.stroke();
+      // Subtle fold
+      c.save(); c.strokeStyle = _darken(color, 18); c.lineWidth = 0.3; c.globalAlpha = 0.2;
+      c.beginPath(); c.moveTo(cx, bodyBot); c.quadraticCurveTo(cx + 1, (bodyBot + miniBot) / 2, cx, miniBot - 2); c.stroke();
+      c.restore();
       break;
     }
     case 'joggers': {
@@ -4025,6 +4450,14 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       c.strokeStyle = 'rgba(255,255,255,0.2)'; c.lineWidth = 0.6;
       c.beginPath(); c.moveTo(cx - bodyW, bodyBot); c.lineTo(cx - 8, legBot - 3); c.stroke();
       c.beginPath(); c.moveTo(cx + bodyW, bodyBot); c.lineTo(cx + 8, legBot - 3); c.stroke();
+      _garmentShade(c, cx, bodyBot, bodyW, legBot - bodyBot);
+      // Drawstring
+      c.save(); c.strokeStyle = _darken(color, 22); c.lineWidth = 0.4; c.globalAlpha = 0.5;
+      c.beginPath(); c.moveTo(cx - 2, bodyBot - 1);
+      c.quadraticCurveTo(cx - 3, bodyBot + 3, cx - 2, bodyBot + 6); c.stroke();
+      c.beginPath(); c.moveTo(cx + 2, bodyBot - 1);
+      c.quadraticCurveTo(cx + 3, bodyBot + 3, cx + 2, bodyBot + 6); c.stroke();
+      c.restore();
       break;
     }
     case 'pencil_skirt': {
@@ -4035,9 +4468,17 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx, penBot + 2, cx + bodyW - 2, penBot);
       c.quadraticCurveTo(cx + bodyW + 2, (bodyBot + penBot) / 2, cx + bodyW + 1, bodyBot - 2);
       c.closePath(); c.fill();
+      _garmentShade(c, cx, bodyBot, bodyW, penBot - bodyBot);
       // Back slit
       c.strokeStyle = _darken(color, 20); c.lineWidth = 0.4;
       c.beginPath(); c.moveTo(cx, penBot); c.lineTo(cx, penBot - 6); c.stroke();
+      // Side seam detail
+      _stitchLine(c, cx - bodyW + 2, bodyBot, cx - bodyW + 2, penBot - 1, color);
+      _stitchLine(c, cx + bodyW - 2, bodyBot, cx + bodyW - 2, penBot - 1, color);
+      // Waistband
+      c.fillStyle = _darken(color, 15);
+      c.fillRect(cx - bodyW - 1, bodyBot - 4, bodyW * 2 + 2, 3);
+      c.fillStyle = botGrad;
       break;
     }
     case 'culottes': {
@@ -4055,8 +4496,12 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx + bodyW + 6, (bodyBot + culBot) / 2, cx + bodyW + 1, bodyBot - 2);
       c.closePath(); c.fill();
       // Fold lines
+      _garmentShade(c, cx, bodyBot, bodyW, culBot - bodyBot);
       _drawFold(c, cx - 5, (bodyBot + culBot) / 2, 4, _darken(color, 12));
       _drawFold(c, cx + 5, (bodyBot + culBot) / 2, 4, _darken(color, 12));
+      // Hem stitch
+      _stitchLine(c, cx - bodyW - 2, culBot - 1, cx - 2, culBot - 1, color);
+      _stitchLine(c, cx + 2, culBot - 1, cx + bodyW + 2, culBot - 1, color);
       break;
     }
     case 'leather_pants': {
@@ -4072,11 +4517,15 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       c.lineTo(cx + 7, legBot);
       c.quadraticCurveTo(cx + bodyW + 1, midLeg, cx + bodyW, bodyBot - 2);
       c.closePath(); c.fill();
+      _garmentShade(c, cx, bodyBot, bodyW, legBot - bodyBot);
       // Shine highlight
       _garmentHighlight(c, cx - 4, bodyBot + 6, 2, midLeg - bodyBot - 10);
       _garmentHighlight(c, cx + 4, bodyBot + 6, 2, midLeg - bodyBot - 10);
       // Seam
       _drawSeam(c, cx, bodyBot, cx, bodyBot + 4, _darken(color, 15));
+      // Side seam stitching
+      _stitchLine(c, cx - bodyW, bodyBot, cx - 7, legBot, color);
+      _stitchLine(c, cx + bodyW, bodyBot, cx + 7, legBot, color);
       break;
     }
     case 'overalls': {
@@ -4102,6 +4551,15 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       // Pocket
       c.strokeStyle = _darken(color, 15); c.lineWidth = 0.4;
       c.strokeRect(cx - 3, bodyBot - 14, 6, 5);
+      _garmentShade(c, cx, bodyBot, bodyW, legBot - bodyBot);
+      // Stitch lines on legs
+      _stitchLine(c, cx - 5, bodyBot + 6, cx - 5, legBot - 1, color);
+      _stitchLine(c, cx + 5, bodyBot + 6, cx + 5, legBot - 1, color);
+      // Strap buttons
+      c.save(); c.fillStyle = _darken(color, 25); c.globalAlpha = 0.6;
+      c.beginPath(); c.arc(cx - 3, bodyTop, 1, 0, Math.PI * 2); c.fill();
+      c.beginPath(); c.arc(cx + 3, bodyTop, 1, 0, Math.PI * 2); c.fill();
+      c.restore();
       break;
     }
     case 'wrap_skirt': {
@@ -4112,9 +4570,16 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx, wrapBot + 3, cx + bodyW - 2, wrapBot);
       c.quadraticCurveTo(cx + bodyW + 8, (bodyBot + wrapBot) / 2, cx + bodyW + 1, bodyBot - 2);
       c.closePath(); c.fill();
+      _garmentShade(c, cx, bodyBot, bodyW, wrapBot - bodyBot);
       // Wrap overlap line
       c.strokeStyle = _darken(color, 18); c.lineWidth = 0.5;
       c.beginPath(); c.moveTo(cx + 2, bodyBot); c.quadraticCurveTo(cx - 3, (bodyBot + wrapBot) / 2, cx + 1, wrapBot - 2); c.stroke();
+      // Fold detail at overlap
+      c.save(); c.strokeStyle = _darken(color, 15); c.lineWidth = 0.3; c.globalAlpha = 0.25;
+      c.beginPath(); c.moveTo(cx - 3, bodyBot + 4); c.quadraticCurveTo(cx - 5, (bodyBot + wrapBot) / 2, cx - 2, wrapBot - 3); c.stroke();
+      c.restore();
+      // Hem stitch
+      _stitchLine(c, cx - bodyW + 2, wrapBot - 1, cx + bodyW - 2, wrapBot - 1, color);
       break;
     }
     case 'palazzo': {
@@ -4130,11 +4595,16 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       c.lineTo(cx + 14, legBot);
       c.quadraticCurveTo(cx + bodyW + 6, midLeg, cx + bodyW + 2, bodyBot - 2);
       c.closePath(); c.fill();
+      _garmentShade(c, cx, bodyBot, bodyW, legBot - bodyBot);
       // Soft fold lines
-      c.strokeStyle = _darken(color, 10); c.lineWidth = 0.25;
+      c.save(); c.strokeStyle = _darken(color, 14); c.lineWidth = 0.3; c.globalAlpha = 0.25;
       for (let f = -2; f <= 2; f++) {
         c.beginPath(); c.moveTo(cx + f * 3, bodyBot + 4); c.quadraticCurveTo(cx + f * 3.5, midLeg, cx + f * 4, legBot - 3); c.stroke();
       }
+      c.restore();
+      // Center seam
+      c.strokeStyle = _darken(color, 15); c.lineWidth = 0.4;
+      c.beginPath(); c.moveTo(cx, bodyBot); c.lineTo(cx, bodyBot + 4); c.stroke();
       break;
     }
     case 'bike_shorts': {
@@ -4151,6 +4621,13 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx + bodyW / 2, bsBot + 1, cx + bodyW - 1, bsBot);
       c.quadraticCurveTo(cx + bodyW + 1, bodyBot + 4, cx + bodyW, bodyBot - 2);
       c.closePath(); c.fill();
+      _garmentShade(c, cx, bodyBot, bodyW, bsBot - bodyBot);
+      // Side seams
+      _stitchLine(c, cx - bodyW, bodyBot, cx - bodyW + 1, bsBot - 1, color);
+      _stitchLine(c, cx + bodyW, bodyBot, cx + bodyW - 1, bsBot - 1, color);
+      // Highlight
+      _garmentHighlight(c, cx - 3, bodyBot + 2, 2, bsBot - bodyBot - 4);
+      _garmentHighlight(c, cx + 3, bodyBot + 2, 2, bsBot - bodyBot - 4);
       break;
     }
     case 'tutu': {
@@ -4170,6 +4647,14 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       // Waistband
       c.fillStyle = _darken(color, 20);
       c.fillRect(cx - bodyW, bodyBot - 4, bodyW * 2, 3);
+      // Sparkle dots on tulle
+      c.save(); c.fillStyle = '#fff'; c.globalAlpha = 0.15;
+      for (let i = 0; i < 8; i++) {
+        const sx = cx + (Math.sin(i * 2.3) * bodyW * 0.8);
+        const sy = bodyBot + 2 + (i * (tutuBot - bodyBot - 4) / 8);
+        c.beginPath(); c.arc(sx, sy, 0.4, 0, Math.PI * 2); c.fill();
+      }
+      c.restore();
       break;
     }
     case 'harem_pants': {
@@ -4186,10 +4671,14 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx + 4, legBot, cx + 6, legBot - 2);
       c.quadraticCurveTo(cx + bodyW + 4, haremDrop, cx + bodyW, bodyBot - 2);
       c.closePath(); c.fill();
+      _garmentShade(c, cx, bodyBot, bodyW, legBot - bodyBot);
       // Ankle cuffs
       c.fillStyle = _darken(color, 15);
       c.fillRect(cx - 7, legBot - 4, 5, 3);
       c.fillRect(cx + 2, legBot - 4, 5, 3);
+      // Fabric folds on droopy fabric
+      _fabricFolds(c, cx - 4, bodyBot + 6, cx - 4, legBot - 6, 3, color);
+      _fabricFolds(c, cx + 4, bodyBot + 6, cx + 4, legBot - 6, 3, color);
       break;
     }
     case 'paperbag': {
@@ -4217,6 +4706,12 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx + 1, bodyBot + 4, cx + 2, legBot);
       c.lineTo(cx + 7, legBot); c.quadraticCurveTo(cx + bodyW + 2, midLeg, cx + bodyW + 1, bodyBot - 3);
       c.closePath(); c.fill();
+      _garmentShade(c, cx, bodyBot, bodyW, legBot - bodyBot);
+      // Belt/tie
+      _beltLine(c, cx, bodyBot - 4, bodyW, color, false);
+      // Center seam
+      c.strokeStyle = _darken(color, 15); c.lineWidth = 0.4;
+      c.beginPath(); c.moveTo(cx, bodyBot); c.lineTo(cx, bodyBot + 3); c.stroke();
       break;
     }
     case 'flared_skirt': {
@@ -4227,6 +4722,18 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx, flBot + 4, cx + bodyW - 4, flBot);
       c.quadraticCurveTo(cx + bodyW + 12, (bodyBot + flBot) / 2, cx + bodyW + 1, bodyBot - 2);
       c.closePath(); c.fill();
+      _garmentShade(c, cx, bodyBot, bodyW, flBot - bodyBot);
+      // Fold lines with shadow
+      c.save(); c.strokeStyle = _darken(color, 18); c.lineWidth = 0.35; c.globalAlpha = 0.25;
+      for (let i = -2; i <= 2; i++) {
+        c.beginPath();
+        c.moveTo(cx + i * 3.5, bodyBot);
+        c.quadraticCurveTo(cx + i * 4.5, (bodyBot + flBot) / 2, cx + i * 4, flBot - 2);
+        c.stroke();
+      }
+      c.restore();
+      // Hem stitch
+      _stitchLine(c, cx - bodyW + 4, flBot - 1, cx + bodyW - 4, flBot - 1, color);
       break;
     }
     case 'track_pants': {
@@ -4244,6 +4751,14 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       c.strokeStyle = 'rgba(255,255,255,0.3)'; c.lineWidth = 1;
       c.beginPath(); c.moveTo(cx - bodyW - 1, bodyBot); c.lineTo(cx - 8, legBot); c.stroke();
       c.beginPath(); c.moveTo(cx + bodyW + 1, bodyBot); c.lineTo(cx + 8, legBot); c.stroke();
+      _garmentShade(c, cx, bodyBot, bodyW, legBot - bodyBot);
+      // Center seam
+      c.strokeStyle = _darken(color, 15); c.lineWidth = 0.4;
+      c.beginPath(); c.moveTo(cx, bodyBot); c.lineTo(cx, bodyBot + 4); c.stroke();
+      // Elastic cuffs
+      c.strokeStyle = _darken(color, 18); c.lineWidth = 0.4;
+      c.beginPath(); c.ellipse(cx - 5, legBot - 1, 4, 1.5, 0, 0, Math.PI * 2); c.stroke();
+      c.beginPath(); c.ellipse(cx + 5, legBot - 1, 4, 1.5, 0, 0, Math.PI * 2); c.stroke();
       break;
     }
     case 'layered_skirt': {
@@ -4259,6 +4774,16 @@ function drawBottom(style, c, char, x, y, w, h, color) {
         c.quadraticCurveTo(cx + bodyW + spread, (lTop + lBot) / 2, cx + bodyW + layer * 2, lTop);
         c.closePath(); c.fill();
       }
+      // Layer edge highlights
+      c.save(); c.strokeStyle = _lighten(color, 15); c.lineWidth = 0.3; c.globalAlpha = 0.2;
+      for (let layer = 0; layer < 3; layer++) {
+        const lBot = bodyBot - 2 + (layer + 1) * ((lsBot - bodyBot + 2) / 3);
+        c.beginPath();
+        c.moveTo(cx - bodyW - layer * 2 + 2, lBot);
+        c.quadraticCurveTo(cx, lBot + 2, cx + bodyW + layer * 2 - 2, lBot);
+        c.stroke();
+      }
+      c.restore();
       break;
     }
     case 'cargo_shorts': {
@@ -4279,6 +4804,13 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       c.strokeStyle = _darken(color, 18); c.lineWidth = 0.4;
       c.strokeRect(cx - bodyW + 1, bodyBot + 2, 4, 4);
       c.strokeRect(cx + bodyW - 5, bodyBot + 2, 4, 4);
+      _garmentShade(c, cx, bodyBot, bodyW, csBot - bodyBot);
+      // Pocket flap buttons
+      _drawButton(c, cx - bodyW + 3, bodyBot + 3, 0.4, _darken(color, 25));
+      _drawButton(c, cx + bodyW - 3, bodyBot + 3, 0.4, _darken(color, 25));
+      // Center seam
+      c.strokeStyle = _darken(color, 15); c.lineWidth = 0.4;
+      c.beginPath(); c.moveTo(cx, bodyBot); c.lineTo(cx, bodyBot + 3); c.stroke();
       break;
     }
     case 'maxi_skirt': {
@@ -4289,11 +4821,19 @@ function drawBottom(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx, mxBot + 3, cx + bodyW - 4, mxBot);
       c.quadraticCurveTo(cx + bodyW + 14, (bodyBot + mxBot) / 2, cx + bodyW + 1, bodyBot - 2);
       c.closePath(); c.fill();
-      // Fold lines
-      c.strokeStyle = _darken(color, 10); c.lineWidth = 0.25;
+      _garmentShade(c, cx, bodyBot, bodyW, mxBot - bodyBot);
+      // Fold lines with shadow
+      c.save(); c.strokeStyle = _darken(color, 15); c.lineWidth = 0.3; c.globalAlpha = 0.25;
       for (let f = -2; f <= 2; f++) {
         c.beginPath(); c.moveTo(cx + f * 4, bodyBot); c.quadraticCurveTo(cx + f * 5, (bodyBot + mxBot) / 2, cx + f * 4.5, mxBot - 3); c.stroke();
       }
+      c.restore();
+      // Hem detail scallops
+      c.save(); c.strokeStyle = _darken(color, 12); c.lineWidth = 0.3; c.globalAlpha = 0.2;
+      for (let hx = cx - bodyW + 4; hx < cx + bodyW - 2; hx += 3) {
+        c.beginPath(); c.arc(hx, mxBot - 1, 1.5, Math.PI, 0); c.stroke();
+      }
+      c.restore();
       break;
     }
   }
@@ -4370,11 +4910,27 @@ function drawDress(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx, kneeY + 3, cx + bodyW - 3, kneeY);
       c.quadraticCurveTo(cx + bodyW + 10, (bodyBot + kneeY) / 2, cx + bodyW + 1, bodyBot - 2);
       c.closePath(); c.fill();
+      _garmentShade(c, cx, bodyTop, bodyW, kneeY - bodyTop);
+      _garmentHighlight(c, cx, bodyTop, bodyW, kneeY - bodyTop);
       // Straps
       c.strokeStyle = _darken(color, 20); c.lineWidth = 0.8;
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath(); c.moveTo(cx + s * 3, bodyTop + 4); c.lineTo(cx + s * 4, bodyTop - 3); c.stroke();
       }
+      // Dot/flower pattern on skirt
+      c.save(); c.fillStyle = 'rgba(255,255,255,0.12)';
+      for (let py = bodyBot + 4; py < kneeY - 2; py += 5) {
+        for (let px = cx - bodyW + 3; px < cx + bodyW - 2; px += 6) {
+          c.beginPath(); c.arc(px + (py % 10 === 0 ? 3 : 0), py, 1, 0, Math.PI * 2); c.fill();
+        }
+      }
+      c.restore();
+      // Ruffle hem
+      c.save(); c.strokeStyle = _darken(color, 15); c.lineWidth = 0.3; c.globalAlpha = 0.3;
+      for (let hx = cx - bodyW + 3; hx < cx + bodyW - 2; hx += 3) {
+        c.beginPath(); c.arc(hx, kneeY - 1, 1.5, Math.PI, 0); c.stroke();
+      }
+      c.restore();
       break;
     }
     case 'ball_gown': {
@@ -4401,9 +4957,29 @@ function drawDress(style, c, char, x, y, w, h, color) {
       // Neckline
       c.strokeStyle = _darken(color, 22); c.lineWidth = 0.6;
       c.beginPath(); c.arc(cx, bodyTop + 3, 5, 0.3, Math.PI - 0.3); c.stroke();
+      _garmentShade(c, cx, bodyTop, bodyW, footY - bodyTop);
       // Waist sash
       c.fillStyle = _darken(color, 30);
       c.fillRect(cx - bodyW - 1, bodyBot - 4, bodyW * 2 + 2, 3);
+      // Waist bow
+      c.save(); c.fillStyle = _darken(color, 25);
+      c.beginPath(); c.ellipse(cx - 4, bodyBot - 2, 3, 2, -0.3, 0, Math.PI * 2); c.fill();
+      c.beginPath(); c.ellipse(cx + 4, bodyBot - 2, 3, 2, 0.3, 0, Math.PI * 2); c.fill();
+      c.beginPath(); c.arc(cx, bodyBot - 2, 1.5, 0, Math.PI * 2); c.fill();
+      c.restore();
+      // Bodice boning lines
+      c.save(); c.strokeStyle = _darken(color, 12); c.lineWidth = 0.25; c.globalAlpha = 0.2;
+      for (let s = -1; s <= 1; s += 2) {
+        c.beginPath(); c.moveTo(cx + s * bodyW * 0.4, bodyTop + 6); c.lineTo(cx + s * bodyW * 0.4, bodyBot - 5); c.stroke();
+      }
+      c.restore();
+      // Tulle layer hints on skirt
+      c.save(); c.strokeStyle = _lighten(color, 12); c.lineWidth = 0.3; c.globalAlpha = 0.15;
+      for (let f = -3; f <= 3; f++) {
+        c.beginPath(); c.moveTo(cx + f * 5, bodyBot + 2); c.quadraticCurveTo(cx + f * 7, (bodyBot + footY) / 2, cx + f * 6, footY - 2); c.stroke();
+      }
+      c.restore();
+      c.fillStyle = dG;
       break;
     }
     case 'cocktail_dress': {
@@ -4427,9 +5003,19 @@ function drawDress(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx, kneeY + 3, cx + bodyW - 1, kneeY);
       c.quadraticCurveTo(cx + bodyW + 3, (bodyBot + kneeY) / 2, cx + bodyW, bodyBot - 2);
       c.closePath(); c.fill();
+      _garmentShade(c, cx, bodyTop, bodyW, kneeY - bodyTop);
+      _garmentHighlight(c, cx, bodyTop, bodyW, kneeY - bodyTop);
       // Single strap
       c.strokeStyle = _darken(color, 20); c.lineWidth = 0.8;
       c.beginPath(); c.moveTo(cx - 2, bodyTop + 5); c.lineTo(cx - 4, bodyTop - 2); c.stroke();
+      // Fabric sheen
+      c.save(); c.fillStyle = 'rgba(255,255,255,0.06)';
+      c.beginPath();
+      c.moveTo(cx - 2, bodyTop + 8);
+      c.quadraticCurveTo(cx + 1, waistY, cx - 1, kneeY - 3);
+      c.quadraticCurveTo(cx + 3, waistY, cx + 1, bodyTop + 8);
+      c.closePath(); c.fill();
+      c.restore();
       break;
     }
     case 'kimono_dress': {
@@ -4456,6 +5042,25 @@ function drawDress(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx, obiY + 10, cx - bodyW - 3, obiY + 7);
       c.quadraticCurveTo(cx - bodyW - 4, obiY + 7, cx - bodyW - 4, obiY);
       c.closePath(); c.fill();
+      _garmentShade(c, cx, bodyTop, bodyW, kimBot - bodyTop);
+      // Cherry blossom pattern
+      c.save(); c.fillStyle = 'rgba(255,200,220,0.2)';
+      for (let i = 0; i < 6; i++) {
+        const bx = cx + Math.sin(i * 1.8) * bodyW * 0.6;
+        const by = bodyBot + 5 + i * ((kimBot - bodyBot - 10) / 6);
+        for (let p = 0; p < 5; p++) {
+          const a = p * Math.PI * 2 / 5;
+          c.beginPath(); c.ellipse(bx + Math.cos(a) * 2, by + Math.sin(a) * 2, 1.2, 0.7, a, 0, Math.PI * 2); c.fill();
+        }
+      }
+      c.restore();
+      // Obi bow detail on back
+      c.save(); c.fillStyle = _darken(color, 25);
+      c.beginPath(); c.ellipse(cx, obiY + 9, 3, 2, 0, 0, Math.PI * 2); c.fill();
+      c.restore();
+      // V-neckline crossover
+      c.strokeStyle = _darken(color, 20); c.lineWidth = 0.5;
+      c.beginPath(); c.moveTo(cx - 4, bodyTop + 3); c.lineTo(cx, bodyTop + 10); c.lineTo(cx + 4, bodyTop + 3); c.stroke();
       break;
     }
     case 'fairy_dress': {
@@ -4485,14 +5090,24 @@ function drawDress(style, c, char, x, y, w, h, color) {
         c.closePath(); c.fill();
       }
       c.restore();
-      // Sparkles
+      _garmentShade(c, cx, bodyTop, bodyW, footY - bodyTop);
+      // More sparkles
       c.fillStyle = 'rgba(255,255,255,0.3)';
       const now = Date.now() / 800;
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 8; i++) {
         const sx = cx + Math.sin(now + i * 1.5) * (bodyW + 4);
         const sy = bodyBot + 5 + Math.cos(now + i * 2.1) * (footY - bodyBot - 10) * 0.5;
-        c.beginPath(); c.arc(sx, sy, 1, 0, Math.PI * 2); c.fill();
+        c.beginPath(); c.arc(sx, sy, 0.8 + (i % 3) * 0.3, 0, Math.PI * 2); c.fill();
       }
+      // Petal scalloping on each layer edge
+      c.save(); c.strokeStyle = _lighten(color, 20); c.lineWidth = 0.3; c.globalAlpha = 0.25;
+      for (let layer = 0; layer < 3; layer++) {
+        const layerBot = bodyBot + (footY - bodyBot) * (0.5 + layer * 0.2);
+        for (let hx = cx - bodyW + 2; hx < cx + bodyW - 2; hx += 4) {
+          c.beginPath(); c.arc(hx + 2, layerBot - 1, 2, Math.PI, 0); c.stroke();
+        }
+      }
+      c.restore();
       break;
     }
     case 'wrap_dress': {
@@ -4516,6 +5131,8 @@ function drawDress(style, c, char, x, y, w, h, color) {
       c.beginPath(); c.moveTo(cx - 3, bodyTop + 4); c.lineTo(cx, bodyTop + 10); c.lineTo(cx + 3, bodyTop + 4); c.stroke();
       // Wrap line
       c.beginPath(); c.moveTo(cx, bodyTop + 10); c.quadraticCurveTo(cx - 4, waistY, cx + 2, wdBot - 4); c.stroke();
+      _garmentShade(c, cx, bodyTop, bodyW, wdBot - bodyTop);
+      _garmentHighlight(c, cx, bodyTop, bodyW, wdBot - bodyTop);
       break;
     }
     case 'maxi_dress': {
@@ -4538,11 +5155,13 @@ function drawDress(style, c, char, x, y, w, h, color) {
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath(); c.moveTo(cx + s * 3, bodyTop + 4); c.lineTo(cx + s * 4, bodyTop - 3); c.stroke();
       }
-      // Fold lines
-      c.strokeStyle = _darken(color, 10); c.lineWidth = 0.25;
+      _garmentShade(c, cx, bodyTop, bodyW, footY - bodyTop);
+      // Fold lines with shadow
+      c.save(); c.strokeStyle = _darken(color, 14); c.lineWidth = 0.3; c.globalAlpha = 0.25;
       for (let f = -2; f <= 2; f++) {
         c.beginPath(); c.moveTo(cx + f * 4, waistY + 3); c.quadraticCurveTo(cx + f * 5, (waistY + footY) / 2, cx + f * 4.5, footY - 4); c.stroke();
       }
+      c.restore();
       break;
     }
     case 'shirt_dress': {
@@ -4564,6 +5183,11 @@ function drawDress(style, c, char, x, y, w, h, color) {
       for (let b = bodyTop + 10; b < sdBot - 5; b += 8) { _drawButton(c, cx, b, 0.8, _darken(color, 15)); }
       // Belt
       c.fillStyle = _darken(color, 25); c.fillRect(cx - bodyW, waistY - 1, bodyW * 2, 2.5);
+      _garmentShade(c, cx, bodyTop, bodyW, sdBot - bodyTop);
+      // Placket stitch lines
+      _stitchLine(c, cx - 1, bodyTop + 10, cx - 1, sdBot - 5, color);
+      _stitchLine(c, cx + 1, bodyTop + 10, cx + 1, sdBot - 5, color);
+      c.fillStyle = dG;
       break;
     }
     case 'bodycon': {
@@ -4579,8 +5203,12 @@ function drawDress(style, c, char, x, y, w, h, color) {
       c.bezierCurveTo(cx + bodyW, bodyBot, cx + bodyW * 0.6, waistY, cx + bodyW * 0.5, waistY);
       c.bezierCurveTo(cx + bodyW * 0.6, waistY, cx + bodyW, waistY * 0.5 + bodyTop * 0.5, cx + bodyW - 1, bodyTop + 5);
       c.closePath(); c.fill();
+      _garmentShade(c, cx, bodyTop, bodyW, bcBot - bodyTop);
       // Shine
       _garmentHighlight(c, cx - 2, bodyTop + 8, 3, bodyBot - bodyTop - 12);
+      // Side seams
+      _stitchLine(c, cx - bodyW + 1, bodyTop + 8, cx - bodyW + 3, bcBot - 2, color);
+      _stitchLine(c, cx + bodyW - 1, bodyTop + 8, cx + bodyW - 3, bcBot - 2, color);
       break;
     }
     case 'pinafore': {
@@ -4601,6 +5229,12 @@ function drawDress(style, c, char, x, y, w, h, color) {
       // Front pocket
       c.strokeStyle = _darken(color, 15); c.lineWidth = 0.4;
       c.strokeRect(cx - 4, waistY + 2, 8, 6);
+      _garmentShade(c, cx, bodyTop, bodyW, pfBot - bodyTop);
+      // Strap buttons
+      c.save(); c.fillStyle = _darken(color, 25); c.globalAlpha = 0.6;
+      c.beginPath(); c.arc(cx - 3, bodyTop, 1, 0, Math.PI * 2); c.fill();
+      c.beginPath(); c.arc(cx + 3, bodyTop, 1, 0, Math.PI * 2); c.fill();
+      c.restore();
       break;
     }
     case 'slip_dress': {
@@ -4643,6 +5277,8 @@ function drawDress(style, c, char, x, y, w, h, color) {
       c.closePath(); c.fill();
       // Waistline seam
       _drawSeam(c, cx - bodyW, waistY, cx + bodyW, waistY, _darken(color, 15));
+      _garmentShade(c, cx, bodyTop, bodyW, kneeY - bodyTop);
+      _garmentHighlight(c, cx, bodyTop, bodyW, kneeY - bodyTop);
       break;
     }
     case 'mermaid_gown': {
@@ -4663,6 +5299,16 @@ function drawDress(style, c, char, x, y, w, h, color) {
       // Neckline
       c.strokeStyle = _darken(color, 22); c.lineWidth = 0.6;
       c.beginPath(); c.arc(cx, bodyTop + 4, 5, 0.3, Math.PI - 0.3); c.stroke();
+      _garmentShade(c, cx, bodyTop, bodyW, footY - bodyTop);
+      _garmentHighlight(c, cx, bodyTop, bodyW, kneeY - bodyTop);
+      // Fabric sheen on fitted section
+      c.save(); c.fillStyle = 'rgba(255,255,255,0.05)';
+      c.beginPath();
+      c.moveTo(cx - 1, bodyTop + 8);
+      c.quadraticCurveTo(cx + 2, waistY, cx, kneeY - 3);
+      c.quadraticCurveTo(cx + 4, waistY, cx + 2, bodyTop + 8);
+      c.closePath(); c.fill();
+      c.restore();
       break;
     }
     case 'babydoll': {
@@ -4690,6 +5336,13 @@ function drawDress(style, c, char, x, y, w, h, color) {
       c.strokeStyle = _darken(color, 20); c.lineWidth = 0.7;
       c.beginPath(); c.moveTo(cx - 3, bodyTop + 4); c.lineTo(cx - 4, bodyTop - 3); c.stroke();
       c.beginPath(); c.moveTo(cx + 3, bodyTop + 4); c.lineTo(cx + 4, bodyTop - 3); c.stroke();
+      _garmentShade(c, cx, bodyTop, bodyW, bbBot - bodyTop);
+      // Fold lines in floaty skirt
+      c.save(); c.strokeStyle = _darken(color, 12); c.lineWidth = 0.25; c.globalAlpha = 0.2;
+      for (let f = -2; f <= 2; f++) {
+        c.beginPath(); c.moveTo(cx + f * 3.5, bbTop + 2); c.quadraticCurveTo(cx + f * 4.5, (bbTop + bbBot) / 2, cx + f * 4, bbBot - 2); c.stroke();
+      }
+      c.restore();
       break;
     }
     case 'warrior_tunic': {
@@ -4705,6 +5358,17 @@ function drawDress(style, c, char, x, y, w, h, color) {
       c.fillRect(cx - bodyW - 1, waistY - 1, bodyW * 2 + 2, 3);
       // Belt buckle
       c.strokeStyle = '#f4d03f'; c.lineWidth = 0.8; c.strokeRect(cx - 2, waistY - 1.5, 4, 4);
+      _garmentShade(c, cx, bodyTop, bodyW, wtBot - bodyTop);
+      // Leather texture
+      _fabricTexture(c, cx - bodyW, bodyTop, bodyW * 2, wtBot - bodyTop, 'denim', color);
+      // Belt pouches
+      for (let s = -1; s <= 1; s += 2) {
+        c.save(); c.fillStyle = _darken(color, 20);
+        c.fillRect(cx + s * bodyW * 0.5 - 2, waistY + 2, 4, 5);
+        c.strokeStyle = _darken(color, 30); c.lineWidth = 0.3;
+        c.strokeRect(cx + s * bodyW * 0.5 - 2, waistY + 2, 4, 5);
+        c.restore();
+      }
       // Hem detail - jagged
       c.strokeStyle = _darken(color, 18); c.lineWidth = 0.4;
       for (let hx = cx - bodyW; hx < cx + bodyW; hx += 5) {
@@ -4737,6 +5401,15 @@ function drawDress(style, c, char, x, y, w, h, color) {
       c.strokeStyle = _darken(color, 25); c.lineWidth = 0.5;
       c.beginPath(); c.arc(cx + 2, bodyTop + 6, 2, 0, Math.PI * 2); c.stroke();
       c.beginPath(); c.arc(cx + 2, bodyTop + 12, 2, 0, Math.PI * 2); c.stroke();
+      _garmentShade(c, cx, bodyTop, bodyW, qBot - bodyTop);
+      _garmentHighlight(c, cx, bodyTop, bodyW, qBot - bodyTop);
+      // Embroidery detail
+      c.save(); c.strokeStyle = _lighten(color, 25); c.lineWidth = 0.3; c.globalAlpha = 0.2;
+      for (let ey = bodyBot + 3; ey < qBot - 4; ey += 6) {
+        c.beginPath(); c.moveTo(cx - 3, ey); c.quadraticCurveTo(cx, ey - 2, cx + 3, ey); c.stroke();
+      }
+      c.restore();
+      c.fillStyle = dG;
       break;
     }
     case 'tiered_dress': {
@@ -4763,6 +5436,16 @@ function drawDress(style, c, char, x, y, w, h, color) {
       c.strokeStyle = _darken(color, 20); c.lineWidth = 0.7;
       c.beginPath(); c.moveTo(cx - 3, bodyTop + 4); c.lineTo(cx - 4, bodyTop - 3); c.stroke();
       c.beginPath(); c.moveTo(cx + 3, bodyTop + 4); c.lineTo(cx + 4, bodyTop - 3); c.stroke();
+      _garmentShade(c, cx, bodyTop, bodyW, kneeY - bodyTop);
+      // Tier edge stitches
+      c.save(); c.strokeStyle = _darken(color, 15); c.lineWidth = 0.3; c.globalAlpha = 0.2;
+      for (let t = 0; t < tiers; t++) {
+        const tBotE = bodyBot + (t + 1) * ((kneeY + 5 - bodyBot) / tiers);
+        for (let hx = cx - bodyW - t * 2 + 2; hx < cx + bodyW + t * 2 - 2; hx += 3) {
+          c.beginPath(); c.arc(hx, tBotE - 1, 1.5, Math.PI, 0); c.stroke();
+        }
+      }
+      c.restore();
       break;
     }
     case 'off_shoulder_dress': {
@@ -4782,6 +5465,14 @@ function drawDress(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx, osdBot + 3, cx + bodyW - 4, osdBot);
       c.quadraticCurveTo(cx + bodyW + 14, (waistY + osdBot) / 2, cx + bodyW + 1, waistY);
       c.closePath(); c.fill();
+      _garmentShade(c, cx, bodyTop, bodyW, osdBot - bodyTop);
+      _garmentHighlight(c, cx, bodyTop, bodyW, osdBot - bodyTop);
+      // Fold lines
+      c.save(); c.strokeStyle = _darken(color, 12); c.lineWidth = 0.25; c.globalAlpha = 0.2;
+      for (let f = -2; f <= 2; f++) {
+        c.beginPath(); c.moveTo(cx + f * 4, waistY + 3); c.quadraticCurveTo(cx + f * 5, (waistY + osdBot) / 2, cx + f * 4.5, osdBot - 4); c.stroke();
+      }
+      c.restore();
       break;
     }
     case 'witchy_gown': {
@@ -4848,6 +5539,15 @@ function drawDress(style, c, char, x, y, w, h, color) {
       for (let ry = bodyTop + 6; ry < swBot; ry += 3) {
         c.beginPath(); c.moveTo(cx - bodyW, ry); c.lineTo(cx + bodyW, ry); c.stroke();
       }
+      _garmentShade(c, cx, bodyTop, bodyW, swBot - bodyTop);
+      // Knit texture
+      _fabricTexture(c, cx - bodyW, bodyTop, bodyW * 2, swBot - bodyTop, 'knit', color);
+      // Ribbed hem
+      c.save(); c.strokeStyle = _darken(color, 12); c.lineWidth = 0.3;
+      for (let hx = cx - bodyW; hx < cx + bodyW; hx += 2) {
+        c.beginPath(); c.moveTo(hx, swBot - 3); c.lineTo(hx, swBot); c.stroke();
+      }
+      c.restore();
       break;
     }
     case 'skater_dress': {
@@ -4871,6 +5571,13 @@ function drawDress(style, c, char, x, y, w, h, color) {
       c.strokeStyle = _darken(color, 20); c.lineWidth = 0.8;
       c.beginPath(); c.moveTo(cx - 3, bodyTop + 4); c.lineTo(cx - 4, bodyTop - 3); c.stroke();
       c.beginPath(); c.moveTo(cx + 3, bodyTop + 4); c.lineTo(cx + 4, bodyTop - 3); c.stroke();
+      _garmentShade(c, cx, bodyTop, bodyW, skBot - bodyTop);
+      // Fold lines in circle skirt
+      c.save(); c.strokeStyle = _darken(color, 15); c.lineWidth = 0.3; c.globalAlpha = 0.2;
+      for (let f = -2; f <= 2; f++) {
+        c.beginPath(); c.moveTo(cx + f * 3.5, bodyBot); c.quadraticCurveTo(cx + f * 4.5, (bodyBot + skBot) / 2, cx + f * 4, skBot - 2); c.stroke();
+      }
+      c.restore();
       break;
     }
     case 'prom_dress': {
@@ -4898,6 +5605,19 @@ function drawDress(style, c, char, x, y, w, h, color) {
         const sy = waistY + 10 + Math.cos(i * 1.8) * (footY - waistY - 15) * 0.5;
         c.beginPath(); c.arc(sx, sy, 0.8, 0, Math.PI * 2); c.fill();
       }
+      _garmentShade(c, cx, bodyTop, bodyW, footY - bodyTop);
+      // Bodice boning hints
+      c.save(); c.strokeStyle = _darken(color, 10); c.lineWidth = 0.25; c.globalAlpha = 0.15;
+      for (let s = -1; s <= 1; s += 2) {
+        c.beginPath(); c.moveTo(cx + s * bodyW * 0.4, bodyTop + 8); c.lineTo(cx + s * bodyW * 0.4, waistY - 2); c.stroke();
+      }
+      c.restore();
+      // Tulle fold lines on skirt
+      c.save(); c.strokeStyle = _lighten(color, 10); c.lineWidth = 0.3; c.globalAlpha = 0.12;
+      for (let f = -3; f <= 3; f++) {
+        c.beginPath(); c.moveTo(cx + f * 5, waistY + 3); c.quadraticCurveTo(cx + f * 7, (waistY + footY) / 2, cx + f * 6, footY - 3); c.stroke();
+      }
+      c.restore();
       break;
     }
     case 'cheongsam': {
@@ -4923,6 +5643,23 @@ function drawDress(style, c, char, x, y, w, h, color) {
       c.strokeStyle = _darken(color, 20); c.lineWidth = 0.4;
       c.beginPath(); c.moveTo(cx - bodyW + 2, csBot); c.lineTo(cx - bodyW + 1, csBot - 10); c.stroke();
       c.beginPath(); c.moveTo(cx + bodyW - 2, csBot); c.lineTo(cx + bodyW - 1, csBot - 10); c.stroke();
+      _garmentShade(c, cx, bodyTop, bodyW, csBot - bodyTop);
+      _garmentHighlight(c, cx, bodyTop, bodyW, csBot - bodyTop);
+      // Frog button closures
+      c.save(); c.strokeStyle = _darken(color, 25); c.lineWidth = 0.5;
+      for (let fb = 0; fb < 3; fb++) {
+        const fby = bodyTop + 6 + fb * 6;
+        c.beginPath(); c.arc(cx + 2, fby, 2, 0, Math.PI * 2); c.stroke();
+        c.beginPath(); c.moveTo(cx + 4, fby); c.lineTo(cx + 7, fby); c.stroke();
+      }
+      c.restore();
+      // Embroidery
+      c.save(); c.strokeStyle = _lighten(color, 25); c.lineWidth = 0.3; c.globalAlpha = 0.2;
+      for (let ey = bodyBot + 3; ey < csBot - 4; ey += 6) {
+        c.beginPath(); c.moveTo(cx - 3, ey); c.quadraticCurveTo(cx, ey - 2, cx + 3, ey); c.stroke();
+      }
+      c.restore();
+      c.fillStyle = dG;
       break;
     }
     case 'toga': {
@@ -4941,6 +5678,7 @@ function drawDress(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx - 3, waistY, cx + 5, bodyBot + 5); c.stroke();
       c.beginPath(); c.moveTo(cx + bodyW - 2, bodyTop + 8);
       c.quadraticCurveTo(cx + 2, waistY + 5, cx + bodyW - 4, footY - 5); c.stroke();
+      _garmentShade(c, cx, bodyTop, bodyW, footY - bodyTop);
       break;
     }
     case 'dungaree_dress': {
@@ -4963,6 +5701,7 @@ function drawDress(style, c, char, x, y, w, h, color) {
       // Pocket
       c.strokeStyle = _darken(color, 15); c.lineWidth = 0.4;
       c.strokeRect(cx - 4, waistY + 2, 8, 6);
+      _garmentShade(c, cx, bodyTop, bodyW, ddBot - bodyTop);
       break;
     }
     case 'empire_dress': {
@@ -4983,6 +5722,14 @@ function drawDress(style, c, char, x, y, w, h, color) {
       c.closePath(); c.fill();
       // Empire seam
       c.fillStyle = _darken(color, 22); c.fillRect(cx - bodyW - 1, ewTop - 1, bodyW * 2 + 2, 2.5);
+      _garmentShade(c, cx, bodyTop, bodyW, footY - bodyTop);
+      // Fold lines
+      c.save(); c.strokeStyle = _darken(color, 12); c.lineWidth = 0.25; c.globalAlpha = 0.2;
+      for (let f = -2; f <= 2; f++) {
+        c.beginPath(); c.moveTo(cx + f * 4, ewTop + 3); c.quadraticCurveTo(cx + f * 5, (ewTop + footY) / 2, cx + f * 4.5, footY - 4); c.stroke();
+      }
+      c.restore();
+      c.fillStyle = dG;
       break;
     }
     case 'shirt_mini': {
@@ -5002,6 +5749,7 @@ function drawDress(style, c, char, x, y, w, h, color) {
       c.fillStyle = dG;
       // Buttons
       for (let b = bodyTop + 8; b < smBot - 4; b += 6) { _drawButton(c, cx, b, 0.7, _darken(color, 15)); }
+      _garmentShade(c, cx, bodyTop, bodyW, smBot - bodyTop);
       break;
     }
     case 'halter_dress': {
@@ -5024,6 +5772,14 @@ function drawDress(style, c, char, x, y, w, h, color) {
       c.strokeStyle = _darken(color, 20); c.lineWidth = 1;
       c.beginPath(); c.moveTo(cx - bodyW + 2, bodyTop + 6); c.lineTo(cx, bodyTop - 4); c.stroke();
       c.beginPath(); c.moveTo(cx + bodyW - 2, bodyTop + 6); c.lineTo(cx, bodyTop - 4); c.stroke();
+      _garmentShade(c, cx, bodyTop, bodyW, hdBot - bodyTop);
+      _garmentHighlight(c, cx, bodyTop, bodyW, hdBot - bodyTop);
+      // Fold lines
+      c.save(); c.strokeStyle = _darken(color, 12); c.lineWidth = 0.25; c.globalAlpha = 0.2;
+      for (let f = -2; f <= 2; f++) {
+        c.beginPath(); c.moveTo(cx + f * 4, waistY + 3); c.quadraticCurveTo(cx + f * 5, (waistY + hdBot) / 2, cx + f * 4.5, hdBot - 4); c.stroke();
+      }
+      c.restore();
       break;
     }
   }
@@ -5078,8 +5834,22 @@ function drawShoes(style, c, char, x, y, w, h, color) {
         const fx = cx + s * 5;
         c.fillStyle = sG;
         c.beginPath(); c.ellipse(fx, footY, 7, 3.5, 0, 0, Math.PI * 2); c.fill();
+        // Sole detail
         c.fillStyle = 'rgba(0,0,0,0.06)';
         c.beginPath(); c.ellipse(fx, footY + 1.5, 7, 1.8, 0, 0, Math.PI); c.fill();
+        // Sole edge highlight
+        c.save(); c.strokeStyle = 'rgba(255,255,255,0.2)'; c.lineWidth = 0.4;
+        c.beginPath(); c.ellipse(fx, footY + 1, 6.5, 1.5, 0, Math.PI, 0); c.stroke();
+        c.restore();
+        // Toe cap
+        c.save(); c.strokeStyle = _darken(color, 12); c.lineWidth = 0.3;
+        c.beginPath(); c.arc(fx + s * 3, footY - 0.5, 3, Math.PI * 0.3, Math.PI * 0.7); c.stroke();
+        c.restore();
+        // Lace lines
+        c.save(); c.strokeStyle = '#fff'; c.lineWidth = 0.3; c.globalAlpha = 0.4;
+        c.beginPath(); c.moveTo(fx - 1, footY - 2); c.lineTo(fx + 1, footY - 1); c.stroke();
+        c.beginPath(); c.moveTo(fx - 1, footY - 1); c.lineTo(fx + 1, footY); c.stroke();
+        c.restore();
       }
       break;
     case 'boots':
@@ -5088,8 +5858,19 @@ function drawShoes(style, c, char, x, y, w, h, color) {
         c.fillStyle = sG;
         c.beginPath(); c.ellipse(fx, footY - 4, 6, 8, 0, 0, Math.PI * 2); c.fill();
         c.beginPath(); c.ellipse(fx, footY + 3, 6, 3, 0, 0, Math.PI * 2); c.fill();
+        // Shaft stitching
         c.strokeStyle = _darken(color, 18); c.lineWidth = 0.4;
         c.beginPath(); c.moveTo(fx - 5, footY - 5); c.quadraticCurveTo(fx, footY - 4, fx + 5, footY - 5); c.stroke();
+        // Buckle/strap
+        c.save(); c.strokeStyle = _darken(color, 25); c.lineWidth = 0.5;
+        c.beginPath(); c.moveTo(fx - 5, footY - 8); c.lineTo(fx + 5, footY - 8); c.stroke();
+        c.strokeStyle = '#c0a050'; c.lineWidth = 0.4;
+        c.strokeRect(fx - 1.5, footY - 9, 3, 2);
+        c.restore();
+        // Sole edge
+        c.save(); c.strokeStyle = 'rgba(255,255,255,0.15)'; c.lineWidth = 0.3;
+        c.beginPath(); c.ellipse(fx, footY + 2.5, 5.5, 1.2, 0, Math.PI, 0); c.stroke();
+        c.restore();
       }
       break;
     case 'heels':
@@ -5097,7 +5878,16 @@ function drawShoes(style, c, char, x, y, w, h, color) {
         const fx = cx + s * 5;
         c.fillStyle = sG;
         c.beginPath(); c.ellipse(fx + s * 1.5, footY, 6, 3, 0, 0, Math.PI * 2); c.fill();
+        // Heel shape
         c.beginPath(); c.ellipse(fx - s * 2.5, footY + 3, 1.5, 3, 0, 0, Math.PI * 2); c.fill();
+        // Strap
+        c.save(); c.strokeStyle = _darken(color, 15); c.lineWidth = 0.5;
+        c.beginPath(); c.moveTo(fx - 2, footY - 2); c.quadraticCurveTo(fx, footY - 4, fx + 2, footY - 2); c.stroke();
+        c.restore();
+        // Sole edge highlight
+        c.save(); c.strokeStyle = 'rgba(255,255,255,0.15)'; c.lineWidth = 0.3;
+        c.beginPath(); c.ellipse(fx + s * 1.5, footY + 1, 5.5, 1.2, 0, Math.PI, 0); c.stroke();
+        c.restore();
       }
       break;
     case 'sandals':
@@ -5474,6 +6264,11 @@ function drawAccessory(style, c, char, x, y, w, h, color) {
       c.beginPath(); c.moveTo(cx - sp + headR * 0.22, eyeY2); c.lineTo(cx + sp - headR * 0.22, eyeY2); c.stroke();
       c.beginPath(); c.moveTo(cx - sp - headR * 0.22, eyeY2); c.lineTo(cx - headR - 1, eyeY2 - 1); c.stroke();
       c.beginPath(); c.moveTo(cx + sp + headR * 0.22, eyeY2); c.lineTo(cx + headR + 1, eyeY2 - 1); c.stroke();
+      // Lens reflection
+      c.save(); c.fillStyle = 'rgba(255,255,255,0.15)';
+      c.beginPath(); c.ellipse(cx - sp - headR * 0.08, eyeY2 - headR * 0.06, headR * 0.06, headR * 0.1, -0.3, 0, Math.PI * 2); c.fill();
+      c.beginPath(); c.ellipse(cx + sp - headR * 0.08, eyeY2 - headR * 0.06, headR * 0.06, headR * 0.1, -0.3, 0, Math.PI * 2); c.fill();
+      c.restore();
       break;
     case 'crown':
       c.beginPath();
@@ -5485,7 +6280,24 @@ function drawAccessory(style, c, char, x, y, w, h, color) {
       c.lineTo(cx + headR * 0.55, headY - headR * 1.1);
       c.lineTo(cx + headR * 0.55, headY - headR * 0.7);
       c.closePath(); c.fill();
+      // Metallic gradient overlay
+      c.save(); c.fillStyle = 'rgba(255,255,255,0.15)';
+      c.beginPath();
+      c.moveTo(cx - headR * 0.5, headY - headR * 0.72);
+      c.lineTo(cx - headR * 0.45, headY - headR * 0.9);
+      c.lineTo(cx + headR * 0.45, headY - headR * 0.9);
+      c.lineTo(cx + headR * 0.5, headY - headR * 0.72);
+      c.closePath(); c.fill();
+      c.restore();
+      // Central jewel
       c.fillStyle = '#e74c3c'; c.beginPath(); c.arc(cx, headY - headR * 1.05, 1.2, 0, Math.PI*2); c.fill();
+      // Side jewel dots
+      c.fillStyle = '#3498db'; c.beginPath(); c.arc(cx - headR * 0.28, headY - headR * 0.85, 0.8, 0, Math.PI*2); c.fill();
+      c.fillStyle = '#2ecc71'; c.beginPath(); c.arc(cx + headR * 0.28, headY - headR * 0.85, 0.8, 0, Math.PI*2); c.fill();
+      // Crown edge highlight
+      c.save(); c.strokeStyle = 'rgba(255,255,255,0.2)'; c.lineWidth = 0.3;
+      c.beginPath(); c.moveTo(cx - headR * 0.55, headY - headR * 0.7); c.lineTo(cx + headR * 0.55, headY - headR * 0.7); c.stroke();
+      c.restore();
       break;
     case 'necklace':
       c.strokeStyle = color; c.lineWidth = 1;
@@ -5505,6 +6317,19 @@ function drawAccessory(style, c, char, x, y, w, h, color) {
       c.lineTo(cx + headR * 0.5, bodyTop + 18);
       c.quadraticCurveTo(cx + headR * 0.65, bodyTop + 10, cx + headR * 0.45, headY + headR + 2);
       c.fill();
+      // Fringe at scarf end
+      c.save(); c.strokeStyle = _darken(color, 10); c.lineWidth = 0.3; c.globalAlpha = 0.4;
+      for (let fi = 0; fi < 4; fi++) {
+        c.beginPath();
+        c.moveTo(cx + headR * 0.5 + fi * 1.5, bodyTop + 18);
+        c.lineTo(cx + headR * 0.5 + fi * 1.5, bodyTop + 21);
+        c.stroke();
+      }
+      c.restore();
+      // Pattern stripes
+      c.save(); c.strokeStyle = 'rgba(255,255,255,0.12)'; c.lineWidth = 0.4;
+      c.beginPath(); c.moveTo(cx - headR * 0.6, headY + headR + 1); c.quadraticCurveTo(cx, headY + headR + 4, cx + headR * 0.6, headY + headR + 1); c.stroke();
+      c.restore();
       break;
     case 'extra_wings':
       c.globalAlpha = 0.45;
@@ -5515,6 +6340,15 @@ function drawAccessory(style, c, char, x, y, w, h, color) {
         c.beginPath(); c.moveTo(cx + s * bodyW, bodyTop + 12);
         c.quadraticCurveTo(cx + s * (bodyW + 26), bodyTop + 32, cx + s * (bodyW + 6), bodyTop + 40);
         c.closePath(); c.fill();
+        // Feather detail lines
+        c.save(); c.strokeStyle = _darken(color, 15); c.lineWidth = 0.3; c.globalAlpha = 0.3;
+        for (let fi = 0; fi < 4; fi++) {
+          const fy = bodyTop + 8 + fi * 6;
+          c.beginPath(); c.moveTo(cx + s * bodyW, fy);
+          c.quadraticCurveTo(cx + s * (bodyW + 16 - fi * 2), fy + 3, cx + s * (bodyW + 8), fy + 8);
+          c.stroke();
+        }
+        c.restore();
       }
       c.globalAlpha = 1;
       break;
@@ -5526,6 +6360,15 @@ function drawAccessory(style, c, char, x, y, w, h, color) {
       c.lineTo(cx + bodyW + 6, y + h * 0.82);
       c.quadraticCurveTo(cx + bodyW + 12, bodyBot, cx + bodyW - 2, bodyTop + 1);
       c.closePath(); c.fill();
+      // Fold lines
+      c.save(); c.strokeStyle = _darken(color, 15); c.lineWidth = 0.3; c.globalAlpha = 0.2;
+      for (let f = -2; f <= 2; f++) {
+        c.beginPath();
+        c.moveTo(cx + f * 4, bodyTop + 4);
+        c.quadraticCurveTo(cx + f * 5, bodyBot, cx + f * 4.5, y + h * 0.8);
+        c.stroke();
+      }
+      c.restore();
       c.globalAlpha = 1;
       c.fillStyle = '#f4d03f'; c.beginPath(); c.arc(cx, bodyTop + 2, 2, 0, Math.PI*2); c.fill();
       break;
