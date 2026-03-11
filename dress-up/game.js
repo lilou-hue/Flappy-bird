@@ -1597,27 +1597,42 @@ const HAIR_COLORS = [
 /* ── Anime hair helpers ── */
 function _animeHairShine(c, cx, headY, headR) {
   c.save();
-  c.globalAlpha = 0.22;
+  // Primary shine band
+  c.globalAlpha = 0.25;
   c.fillStyle = '#fff';
   c.beginPath();
-  c.ellipse(cx - headR * 0.12, headY - headR * 0.5, headR * 0.45, headR * 0.12, -0.25, 0, Math.PI * 2);
+  c.ellipse(cx - headR * 0.12, headY - headR * 0.52, headR * 0.48, headR * 0.1, -0.25, 0, Math.PI * 2);
   c.fill();
-  c.globalAlpha = 0.12;
+  // Secondary shine
+  c.globalAlpha = 0.14;
   c.beginPath();
-  c.ellipse(cx + headR * 0.25, headY - headR * 0.35, headR * 0.2, headR * 0.06, 0.3, 0, Math.PI * 2);
+  c.ellipse(cx + headR * 0.25, headY - headR * 0.38, headR * 0.22, headR * 0.06, 0.3, 0, Math.PI * 2);
   c.fill();
+  // Fine rim highlight along top
+  c.globalAlpha = 0.1;
+  c.strokeStyle = '#fff'; c.lineWidth = 0.6;
+  c.beginPath();
+  c.arc(cx, headY, headR * 1.04, Math.PI + 0.5, -0.5);
+  c.stroke();
   c.restore();
 }
 
 function _animeHairShadow(c, cx, headY, headR, color) {
   c.save();
-  c.globalAlpha = 0.1;
+  // Under-hair shadow at forehead
+  c.globalAlpha = 0.12;
   c.fillStyle = _darken(color, 40);
   c.beginPath();
   c.arc(cx + headR * 0.08, headY - headR * 0.05, headR * 0.95, -0.4, Math.PI * 0.5);
   c.quadraticCurveTo(cx + headR * 0.3, headY + headR * 0.1, cx - headR * 0.3, headY - headR * 0.2);
-  c.closePath();
-  c.fill();
+  c.closePath(); c.fill();
+  // Temple shadows
+  c.globalAlpha = 0.06;
+  for (let s = -1; s <= 1; s += 2) {
+    c.beginPath();
+    c.ellipse(cx + s * headR * 0.75, headY + headR * 0.1, headR * 0.18, headR * 0.4, s * 0.2, 0, Math.PI * 2);
+    c.fill();
+  }
   c.restore();
 }
 
@@ -1626,180 +1641,411 @@ function _hairOutline(c, color) {
   c.globalAlpha = 0.18; c.stroke(); c.restore();
 }
 
+// Strand detail lines for depth — call after main hair fill
+function _hairStrands(c, cx, headY, R, color, strands) {
+  c.save(); c.lineCap = 'round';
+  for (const s of strands) {
+    c.strokeStyle = s.light ? _lighten(color, s.light) : _darken(color, s.dark || 12);
+    c.lineWidth = s.w || 0.5;
+    c.globalAlpha = s.a || 0.15;
+    c.beginPath();
+    c.moveTo(cx + s.x1 * R, headY + s.y1 * R);
+    if (s.cx2 !== undefined) {
+      c.bezierCurveTo(cx + s.cx1 * R, headY + s.cy1 * R, cx + s.cx2 * R, headY + s.cy2 * R, cx + s.x2 * R, headY + s.y2 * R);
+    } else if (s.cx1 !== undefined) {
+      c.quadraticCurveTo(cx + s.cx1 * R, headY + s.cy1 * R, cx + s.x2 * R, headY + s.y2 * R);
+    } else {
+      c.lineTo(cx + s.x2 * R, headY + s.y2 * R);
+    }
+    c.stroke();
+  }
+  c.restore();
+}
+
+// Inner highlight glow for premium hair feel
+function _hairInnerGlow(c, cx, headY, R, color) {
+  c.save();
+  const g = c.createRadialGradient(cx - R * 0.1, headY - R * 0.5, R * 0.1, cx, headY - R * 0.2, R * 0.8);
+  g.addColorStop(0, `rgba(255,255,255,0.12)`);
+  g.addColorStop(1, `rgba(255,255,255,0)`);
+  c.fillStyle = g;
+  c.beginPath(); c.arc(cx, headY - R * 0.2, R * 0.8, 0, Math.PI * 2); c.fill();
+  c.restore();
+}
+
 function hairDraw(style, c, char, x, y, w, h, color) {
-  const { cx, headR, headY, bodyTop, bodyBot } = M(x, y, w, h);
+  const { cx, headR, headY, bodyTop, bodyBot, neckTop, waistY } = M(x, y, w, h);
   const R = headR;
+  const dk = _darken(color, 18);
+  const dk2 = _darken(color, 30);
+  const lt = _lighten(color, 20);
+  const lt2 = _lighten(color, 35);
+
+  // Rich multi-stop gradient
   const hairGrad = c.createLinearGradient(cx, headY - R * 1.4, cx, headY + R * 0.8);
-  hairGrad.addColorStop(0, _lighten(color, 35));
-  hairGrad.addColorStop(0.35, color);
-  hairGrad.addColorStop(1, _darken(color, 25));
+  hairGrad.addColorStop(0, lt2);
+  hairGrad.addColorStop(0.2, lt);
+  hairGrad.addColorStop(0.45, color);
+  hairGrad.addColorStop(0.75, dk);
+  hairGrad.addColorStop(1, dk2);
   c.fillStyle = hairGrad;
+
+  // Side gradient for depth on left/right panels
+  const sideGradL = c.createLinearGradient(cx - R * 1.2, headY, cx - R * 0.3, headY);
+  sideGradL.addColorStop(0, dk); sideGradL.addColorStop(0.5, color); sideGradL.addColorStop(1, lt);
+  const sideGradR = c.createLinearGradient(cx + R * 0.3, headY, cx + R * 1.2, headY);
+  sideGradR.addColorStop(0, lt); sideGradR.addColorStop(0.5, color); sideGradR.addColorStop(1, dk);
 
   switch(style) {
     case 'ponytail': {
+      // Hair cap
       c.beginPath(); c.arc(cx, headY, R * 1.08, Math.PI, 0); c.fill();
-      for (let i = -1; i <= 1; i++) {
-        const bx = cx + i * R * 0.28;
+      // Soft bangs with individual strand separations
+      for (let i = -2; i <= 2; i++) {
+        const bx = cx + i * R * 0.22;
+        c.fillStyle = i <= 0 ? hairGrad : dk;
         c.beginPath();
-        c.moveTo(bx - R * 0.2, headY - R * 0.7);
-        c.quadraticCurveTo(bx - R * 0.05, headY - R * 0.3, bx, headY + R * 0.05);
-        c.quadraticCurveTo(bx + R * 0.05, headY - R * 0.3, bx + R * 0.2, headY - R * 0.7);
+        c.moveTo(bx - R * 0.14, headY - R * 0.75);
+        c.quadraticCurveTo(bx - R * 0.08, headY - R * 0.3, bx, headY + R * 0.05);
+        c.quadraticCurveTo(bx + R * 0.08, headY - R * 0.3, bx + R * 0.14, headY - R * 0.75);
         c.fill();
       }
+      c.fillStyle = hairGrad;
+      // Flowing ponytail with volume
       c.beginPath();
-      c.moveTo(cx + R * 0.2, headY - R * 0.6);
-      c.bezierCurveTo(cx + R * 1.6, headY - R * 0.3, cx + R * 1.2, headY + R * 1.5, cx + R * 0.6, headY + R * 2.4);
-      c.quadraticCurveTo(cx + R * 0.3, headY + R * 2.6, cx + R * 0.2, headY + R * 2.2);
-      c.bezierCurveTo(cx + R * 0.5, headY + R * 1.3, cx + R * 1.0, headY, cx + R * 0.2, headY - R * 0.6);
+      c.moveTo(cx + R * 0.15, headY - R * 0.55);
+      c.bezierCurveTo(cx + R * 1.5, headY - R * 0.4, cx + R * 1.3, headY + R * 1.2, cx + R * 0.8, headY + R * 2.2);
+      c.quadraticCurveTo(cx + R * 0.6, headY + R * 2.5, cx + R * 0.45, headY + R * 2.4);
+      c.bezierCurveTo(cx + R * 0.55, headY + R * 1.5, cx + R * 0.9, headY + R * 0.2, cx + R * 0.15, headY - R * 0.55);
       c.fill();
-      c.fillStyle = '#e84393';
-      c.beginPath(); c.ellipse(cx + R * 0.45, headY - R * 0.25, 2.5, 2, 0.3, 0, Math.PI*2); c.fill();
+      // Inner ponytail highlight
+      c.save(); c.globalAlpha = 0.12; c.fillStyle = lt2;
+      c.beginPath();
+      c.moveTo(cx + R * 0.3, headY - R * 0.3);
+      c.bezierCurveTo(cx + R * 1.1, headY - R * 0.1, cx + R * 0.9, headY + R * 0.8, cx + R * 0.6, headY + R * 1.6);
+      c.quadraticCurveTo(cx + R * 0.5, headY + R * 1.0, cx + R * 0.3, headY - R * 0.3);
+      c.fill(); c.restore();
+      // Strand lines through ponytail
+      _hairStrands(c, cx, headY, R, color, [
+        { x1: 0.4, y1: -0.2, cx1: 1.0, cy1: 0.3, x2: 0.7, y2: 1.8, dark: 15, a: 0.12, w: 0.5 },
+        { x1: 0.3, y1: -0.3, cx1: 0.9, cy1: 0.5, x2: 0.55, y2: 2.0, light: 15, a: 0.1, w: 0.4 },
+        { x1: 0.5, y1: -0.1, cx1: 1.1, cy1: 0.6, x2: 0.65, y2: 1.5, dark: 20, a: 0.08, w: 0.3 },
+      ]);
+      // Elastic/scrunchie
+      c.save(); c.fillStyle = '#e84393';
+      c.beginPath(); c.ellipse(cx + R * 0.35, headY - R * 0.3, 3.5, 2.5, 0.3, 0, Math.PI * 2); c.fill();
+      c.fillStyle = _lighten('#e84393', 20); c.globalAlpha = 0.4;
+      c.beginPath(); c.ellipse(cx + R * 0.33, headY - R * 0.33, 1.5, 1.0, 0.3, 0, Math.PI * 2); c.fill();
+      c.restore();
       c.fillStyle = hairGrad;
       break;
     }
     case 'bob': {
+      // Hair cap
       c.beginPath(); c.arc(cx, headY, R * 1.08, Math.PI + 0.2, -0.2); c.fill();
+      // Left side panel with depth gradient
+      c.fillStyle = sideGradL;
       c.beginPath();
       c.moveTo(cx - R * 1.06, headY - R * 0.15);
-      c.bezierCurveTo(cx - R * 1.2, headY + R * 0.3, cx - R * 1.15, headY + R * 0.6, cx - R * 0.75, headY + R * 0.75);
-      c.quadraticCurveTo(cx - R * 0.5, headY + R * 0.7, cx - R * 0.55, headY + R * 0.2);
+      c.bezierCurveTo(cx - R * 1.22, headY + R * 0.25, cx - R * 1.18, headY + R * 0.55, cx - R * 0.8, headY + R * 0.72);
+      c.quadraticCurveTo(cx - R * 0.6, headY + R * 0.78, cx - R * 0.5, headY + R * 0.65);
+      c.quadraticCurveTo(cx - R * 0.55, headY + R * 0.3, cx - R * 0.6, headY + R * 0.1);
       c.fill();
+      // Right side panel
+      c.fillStyle = sideGradR;
       c.beginPath();
       c.moveTo(cx + R * 1.06, headY - R * 0.15);
-      c.bezierCurveTo(cx + R * 1.2, headY + R * 0.3, cx + R * 1.15, headY + R * 0.6, cx + R * 0.75, headY + R * 0.75);
-      c.quadraticCurveTo(cx + R * 0.5, headY + R * 0.7, cx + R * 0.55, headY + R * 0.2);
+      c.bezierCurveTo(cx + R * 1.22, headY + R * 0.25, cx + R * 1.18, headY + R * 0.55, cx + R * 0.8, headY + R * 0.72);
+      c.quadraticCurveTo(cx + R * 0.6, headY + R * 0.78, cx + R * 0.5, headY + R * 0.65);
+      c.quadraticCurveTo(cx + R * 0.55, headY + R * 0.3, cx + R * 0.6, headY + R * 0.1);
       c.fill();
+      c.fillStyle = hairGrad;
+      // Soft bangs
       c.beginPath();
-      c.moveTo(cx - R * 0.4, headY - R * 0.8);
-      c.quadraticCurveTo(cx, headY - R * 0.1, cx + R * 0.4, headY - R * 0.8);
+      c.moveTo(cx - R * 0.5, headY - R * 0.82);
+      c.quadraticCurveTo(cx - R * 0.2, headY - R * 0.15, cx, headY - R * 0.2);
+      c.quadraticCurveTo(cx + R * 0.2, headY - R * 0.15, cx + R * 0.5, headY - R * 0.82);
       c.fill();
+      // Strand detail
+      _hairStrands(c, cx, headY, R, color, [
+        { x1: -0.7, y1: -0.1, cx1: -0.8, cy1: 0.3, x2: -0.65, y2: 0.6, dark: 12, a: 0.12 },
+        { x1: -0.85, y1: 0.0, cx1: -0.9, cy1: 0.35, x2: -0.72, y2: 0.55, light: 15, a: 0.1 },
+        { x1: 0.7, y1: -0.1, cx1: 0.8, cy1: 0.3, x2: 0.65, y2: 0.6, dark: 12, a: 0.12 },
+        { x1: 0.85, y1: 0.0, cx1: 0.9, cy1: 0.35, x2: 0.72, y2: 0.55, light: 15, a: 0.1 },
+      ]);
+      // Inward curl tips
+      c.save(); c.strokeStyle = dk; c.lineWidth = 0.6; c.globalAlpha = 0.15; c.lineCap = 'round';
+      for (let s = -1; s <= 1; s += 2) {
+        c.beginPath();
+        c.moveTo(cx + s * R * 0.6, headY + R * 0.6);
+        c.quadraticCurveTo(cx + s * R * 0.45, headY + R * 0.72, cx + s * R * 0.5, headY + R * 0.68);
+        c.stroke();
+      }
+      c.restore();
       break;
     }
     case 'spiky': {
+      // Base cap
       c.beginPath(); c.arc(cx, headY, R * 1.05, Math.PI, 0); c.fill();
+      // Multi-layered spikes with gradient tips
       const spikes = [
-        { x: -0.5, angle: -2.4, len: 1.5 }, { x: -0.25, angle: -1.8, len: 1.7 },
-        { x: 0, angle: -1.57, len: 1.8 }, { x: 0.25, angle: -1.3, len: 1.7 },
-        { x: 0.5, angle: -0.7, len: 1.5 }, { x: -0.7, angle: -2.7, len: 1.2 },
-        { x: 0.7, angle: -0.4, len: 1.2 },
+        { x: -0.6, a: -2.5, len: 1.3 }, { x: -0.4, a: -2.2, len: 1.6 },
+        { x: -0.15, a: -1.85, len: 1.8 }, { x: 0.05, a: -1.57, len: 1.9 },
+        { x: 0.25, a: -1.3, len: 1.75 }, { x: 0.45, a: -0.95, len: 1.55 },
+        { x: 0.65, a: -0.55, len: 1.25 }, { x: -0.75, a: -2.7, len: 1.0 },
       ];
-      for (const sp of spikes) {
-        const baseX = cx + sp.x * R;
-        const baseY = headY - R * 0.5;
-        const tipX = baseX + Math.cos(sp.angle) * R * sp.len;
-        const tipY = baseY + Math.sin(sp.angle) * R * sp.len;
-        c.beginPath();
-        c.moveTo(baseX - 2, baseY);
-        c.quadraticCurveTo((baseX + tipX) / 2 - 1, (baseY + tipY) / 2, tipX, tipY);
-        c.quadraticCurveTo((baseX + tipX) / 2 + 1, (baseY + tipY) / 2, baseX + 2, baseY);
-        c.fill();
+      for (let layer = 0; layer < 2; layer++) {
+        for (const sp of spikes) {
+          const baseX = cx + sp.x * R + layer * 1;
+          const baseY = headY - R * 0.5;
+          const l = sp.len * (layer === 0 ? 0.85 : 1.0);
+          const tipX = baseX + Math.cos(sp.a) * R * l;
+          const tipY = baseY + Math.sin(sp.a) * R * l;
+          c.fillStyle = layer === 0 ? dk : hairGrad;
+          c.beginPath();
+          c.moveTo(baseX - 3, baseY);
+          c.quadraticCurveTo((baseX + tipX) / 2 - 1.5, (baseY + tipY) / 2, tipX, tipY);
+          c.quadraticCurveTo((baseX + tipX) / 2 + 1.5, (baseY + tipY) / 2, baseX + 3, baseY);
+          c.fill();
+        }
       }
+      // Highlight streaks on tips
+      c.save(); c.strokeStyle = lt2; c.lineWidth = 0.5; c.globalAlpha = 0.18; c.lineCap = 'round';
+      for (const sp of spikes.slice(1, 5)) {
+        const baseX = cx + sp.x * R;
+        const baseY2 = headY - R * 0.5;
+        const tipX = baseX + Math.cos(sp.a) * R * sp.len;
+        const tipY = baseY2 + Math.sin(sp.a) * R * sp.len;
+        c.beginPath();
+        c.moveTo((baseX + tipX) / 2, (baseY2 + tipY) / 2);
+        c.lineTo(tipX, tipY);
+        c.stroke();
+      }
+      c.restore();
+      c.fillStyle = hairGrad;
       break;
     }
     case 'long_flowing': {
+      // Hair cap
       c.beginPath(); c.arc(cx, headY, R * 1.1, Math.PI + 0.15, -0.15); c.fill();
+      // Flowing side panels with layered depth
       for (let s = -1; s <= 1; s += 2) {
+        // Back layer (darker, wider)
+        c.fillStyle = dk;
+        c.beginPath();
+        c.moveTo(cx + s * R * 1.1, headY - R * 0.15);
+        c.bezierCurveTo(cx + s * R * 1.35, headY + R * 0.8, cx + s * R * 1.15, headY + R * 1.9, cx + s * R * 0.75, headY + R * 2.9);
+        c.quadraticCurveTo(cx + s * R * 0.55, headY + R * 3.0, cx + s * R * 0.45, headY + R * 2.7);
+        c.bezierCurveTo(cx + s * R * 0.65, headY + R * 1.7, cx + s * R * 0.9, headY + R * 0.6, cx + s * R * 0.85, headY + R * 0.05);
+        c.fill();
+        // Front layer (main color)
+        c.fillStyle = s === -1 ? sideGradL : sideGradR;
         c.beginPath();
         c.moveTo(cx + s * R * 1.08, headY - R * 0.2);
-        c.bezierCurveTo(cx + s * R * 1.3, headY + R * 0.8, cx + s * R * 1.1, headY + R * 1.8, cx + s * R * 0.7, headY + R * 2.8);
-        c.quadraticCurveTo(cx + s * R * 0.5, headY + R * 2.9, cx + s * R * 0.4, headY + R * 2.6);
-        c.bezierCurveTo(cx + s * R * 0.6, headY + R * 1.6, cx + s * R * 0.85, headY + R * 0.6, cx + s * R * 0.8, headY + R * 0.1);
+        c.bezierCurveTo(cx + s * R * 1.28, headY + R * 0.7, cx + s * R * 1.08, headY + R * 1.7, cx + s * R * 0.68, headY + R * 2.7);
+        c.quadraticCurveTo(cx + s * R * 0.5, headY + R * 2.8, cx + s * R * 0.42, headY + R * 2.5);
+        c.bezierCurveTo(cx + s * R * 0.58, headY + R * 1.5, cx + s * R * 0.82, headY + R * 0.5, cx + s * R * 0.78, headY + R * 0.05);
         c.fill();
       }
+      c.fillStyle = hairGrad;
+      // Bangs with strand separation
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath();
-        c.moveTo(cx, headY - R * 0.85);
-        c.quadraticCurveTo(cx + s * R * 0.15, headY - R * 0.2, cx + s * R * 0.35, headY + R * 0.05);
-        c.quadraticCurveTo(cx + s * R * 0.25, headY - R * 0.3, cx + s * R * 0.5, headY - R * 0.85);
+        c.moveTo(cx + s * R * 0.05, headY - R * 0.88);
+        c.quadraticCurveTo(cx + s * R * 0.15, headY - R * 0.25, cx + s * R * 0.38, headY + R * 0.02);
+        c.quadraticCurveTo(cx + s * R * 0.28, headY - R * 0.3, cx + s * R * 0.52, headY - R * 0.88);
         c.fill();
       }
+      // Flowing strand lines
+      _hairStrands(c, cx, headY, R, color, [
+        { x1: -0.9, y1: 0.0, cx1: -1.0, cy1: 0.8, cx2: -0.85, cy2: 1.6, x2: -0.6, y2: 2.4, light: 18, a: 0.1, w: 0.5 },
+        { x1: -0.8, y1: -0.1, cx1: -0.95, cy1: 1.0, cx2: -0.75, cy2: 1.8, x2: -0.5, y2: 2.5, dark: 15, a: 0.08 },
+        { x1: 0.9, y1: 0.0, cx1: 1.0, cy1: 0.8, cx2: 0.85, cy2: 1.6, x2: 0.6, y2: 2.4, light: 18, a: 0.1, w: 0.5 },
+        { x1: 0.8, y1: -0.1, cx1: 0.95, cy1: 1.0, cx2: 0.75, cy2: 1.8, x2: 0.5, y2: 2.5, dark: 15, a: 0.08 },
+      ]);
       break;
     }
     case 'braids': {
       c.beginPath(); c.arc(cx, headY, R * 1.08, Math.PI + 0.15, -0.15); c.fill();
       for (let s = -1; s <= 1; s += 2) {
         const bx = cx + s * R * 0.7;
-        const startY = headY + R * 0.2;
-        for (let j = 0; j < 6; j++) {
-          const by = startY + j * R * 0.35;
-          const taper = 1 - j * 0.08;
-          const xOff = s * 1.5 * ((j % 2) * 2 - 1);
-          c.beginPath();
-          c.ellipse(bx + xOff, by, 3 * taper, 4.5 * taper, s * 0.2, 0, Math.PI*2);
-          c.fill();
+        const startY = headY + R * 0.15;
+        // Braid outer shadow
+        c.save(); c.fillStyle = dk2; c.globalAlpha = 0.12;
+        for (let j = 0; j < 7; j++) {
+          const by = startY + j * R * 0.33;
+          const taper = 1 - j * 0.07;
+          c.beginPath(); c.ellipse(bx + 1, by + 1, 4 * taper, 5.5 * taper, s * 0.2, 0, Math.PI * 2); c.fill();
         }
-        c.fillStyle = '#e84393';
-        const endY = startY + 6 * R * 0.35;
+        c.restore();
+        // Braid segments — alternating left/right weave
+        for (let j = 0; j < 7; j++) {
+          const by = startY + j * R * 0.33;
+          const taper = 1 - j * 0.07;
+          const xOff = s * 1.8 * ((j % 2) * 2 - 1);
+          c.fillStyle = j % 2 === 0 ? hairGrad : dk;
+          c.beginPath();
+          c.ellipse(bx + xOff, by, 3.5 * taper, 5 * taper, s * 0.2, 0, Math.PI * 2);
+          c.fill();
+          // Highlight on each segment
+          c.save(); c.fillStyle = lt; c.globalAlpha = 0.1;
+          c.beginPath(); c.ellipse(bx + xOff - 0.5, by - 1, 1.5 * taper, 2 * taper, s * 0.2, 0, Math.PI * 2); c.fill();
+          c.restore();
+        }
+        // Ribbon bow at end
+        const endY = startY + 7 * R * 0.33;
+        c.save(); c.fillStyle = '#e84393';
         c.beginPath();
-        c.moveTo(bx, endY - 1);
-        c.lineTo(bx - 2.5, endY + 3);
-        c.lineTo(bx, endY + 2);
-        c.lineTo(bx + 2.5, endY + 3);
-        c.closePath(); c.fill();
-        c.fillStyle = hairGrad;
+        c.moveTo(bx, endY - 2);
+        c.quadraticCurveTo(bx - 4, endY, bx - 3, endY + 4);
+        c.quadraticCurveTo(bx, endY + 2, bx + 3, endY + 4);
+        c.quadraticCurveTo(bx + 4, endY, bx, endY - 2);
+        c.fill();
+        c.fillStyle = _lighten('#e84393', 25); c.globalAlpha = 0.35;
+        c.beginPath(); c.arc(bx - 1.5, endY + 0.5, 1.2, 0, Math.PI * 2); c.fill();
+        c.restore();
       }
+      c.fillStyle = hairGrad;
+      // Bangs
       c.beginPath();
-      c.moveTo(cx - R * 0.3, headY - R * 0.8);
-      c.quadraticCurveTo(cx, headY - R * 0.05, cx + R * 0.3, headY - R * 0.8);
+      c.moveTo(cx - R * 0.35, headY - R * 0.82);
+      c.quadraticCurveTo(cx - R * 0.1, headY - R * 0.1, cx, headY - R * 0.15);
+      c.quadraticCurveTo(cx + R * 0.1, headY - R * 0.1, cx + R * 0.35, headY - R * 0.82);
       c.fill();
       break;
     }
     case 'mohawk': {
+      // Shaved sides
       c.beginPath(); c.arc(cx, headY, R * 1.02, Math.PI + 0.7, -0.7); c.fill();
+      // Buzz texture on sides
+      c.save(); c.fillStyle = dk2; c.globalAlpha = 0.08;
+      for (let i = 0; i < 20; i++) {
+        const a = Math.PI + 0.7 + (i / 19) * (Math.PI - 1.4);
+        const sr = R * 0.92;
+        c.beginPath(); c.arc(cx + Math.cos(a) * sr, headY + Math.sin(a) * sr * 0.6 - R * 0.1, 0.6, 0, Math.PI * 2); c.fill();
+      }
+      c.restore();
+      // Ridge spikes — two layers for depth
       const ridgeSpikes = [
-        { x: -0.2, h: 1.5 }, { x: -0.08, h: 1.8 }, { x: 0.05, h: 1.9 },
-        { x: 0.18, h: 1.7 }, { x: 0.3, h: 1.3 },
+        { x: -0.22, h: 1.5 }, { x: -0.1, h: 1.8 }, { x: 0.02, h: 1.95 },
+        { x: 0.14, h: 1.85 }, { x: 0.26, h: 1.6 }, { x: 0.38, h: 1.2 },
       ];
+      // Shadow layer
+      c.save(); c.fillStyle = dk2; c.globalAlpha = 0.15;
+      for (const sp of ridgeSpikes) {
+        const bx = cx + sp.x * R + 1;
+        c.beginPath();
+        c.moveTo(bx - 3, headY - R * 0.55);
+        c.quadraticCurveTo(bx, headY - R * sp.h + 3, bx + 0.5, headY - R * sp.h + 1);
+        c.quadraticCurveTo(bx + 1, headY - R * sp.h + 3, bx + 3, headY - R * 0.55);
+        c.fill();
+      }
+      c.restore();
+      // Main spikes
+      c.fillStyle = hairGrad;
       for (const sp of ridgeSpikes) {
         const bx = cx + sp.x * R;
         c.beginPath();
-        c.moveTo(bx - 2, headY - R * 0.6);
+        c.moveTo(bx - 2.5, headY - R * 0.6);
         c.quadraticCurveTo(bx - 0.5, headY - R * sp.h + 2, bx, headY - R * sp.h);
-        c.quadraticCurveTo(bx + 0.5, headY - R * sp.h + 2, bx + 2, headY - R * 0.6);
+        c.quadraticCurveTo(bx + 0.5, headY - R * sp.h + 2, bx + 2.5, headY - R * 0.6);
         c.fill();
       }
+      // Highlight streaks on spike tips
+      c.save(); c.strokeStyle = lt2; c.lineWidth = 0.5; c.globalAlpha = 0.2; c.lineCap = 'round';
+      for (const sp of ridgeSpikes.slice(1, 4)) {
+        const bx = cx + sp.x * R;
+        c.beginPath();
+        c.moveTo(bx, headY - R * sp.h);
+        c.lineTo(bx, headY - R * (sp.h - 0.35));
+        c.stroke();
+      }
+      c.restore();
       break;
     }
     case 'curly': {
+      // Two-layer curls for depth
       const curls = [
-        { a: Math.PI, r: 1.15, s: 0.32 }, { a: Math.PI * 0.8, r: 1.18, s: 0.30 },
-        { a: Math.PI * 0.6, r: 1.2, s: 0.32 }, { a: Math.PI * 0.4, r: 1.18, s: 0.30 },
-        { a: Math.PI * 0.2, r: 1.15, s: 0.32 }, { a: 0, r: 1.15, s: 0.30 },
-        { a: Math.PI * 0.9, r: 1.1, s: 0.28, dy: 0.5 },
-        { a: Math.PI * 0.1, r: 1.1, s: 0.28, dy: 0.5 },
-        { a: Math.PI * 0.92, r: 1.0, s: 0.25, dy: 0.9 },
-        { a: Math.PI * 0.08, r: 1.0, s: 0.25, dy: 0.9 },
+        { a: Math.PI, r: 1.18, s: 0.34 }, { a: Math.PI * 0.8, r: 1.2, s: 0.32 },
+        { a: Math.PI * 0.6, r: 1.22, s: 0.34 }, { a: Math.PI * 0.4, r: 1.2, s: 0.32 },
+        { a: Math.PI * 0.2, r: 1.18, s: 0.34 }, { a: 0, r: 1.18, s: 0.32 },
+        { a: Math.PI * 0.9, r: 1.12, s: 0.3, dy: 0.5 },
+        { a: Math.PI * 0.1, r: 1.12, s: 0.3, dy: 0.5 },
+        { a: Math.PI * 0.95, r: 1.02, s: 0.27, dy: 0.9 },
+        { a: Math.PI * 0.05, r: 1.02, s: 0.27, dy: 0.9 },
+        { a: Math.PI * 0.85, r: 1.0, s: 0.24, dy: 1.2 },
+        { a: Math.PI * 0.15, r: 1.0, s: 0.24, dy: 1.2 },
       ];
+      // Shadow layer
+      c.save(); c.fillStyle = dk2; c.globalAlpha = 0.1;
       for (const curl of curls) {
         const dy = curl.dy || 0;
         const rx = cx + Math.cos(curl.a) * R * curl.r;
         const ry = headY + Math.sin(curl.a) * R * 0.55 - R * 0.15 + dy * R;
-        c.beginPath(); c.arc(rx, ry, R * curl.s, 0, Math.PI*2); c.fill();
+        c.beginPath(); c.arc(rx + 1, ry + 1, R * curl.s + 1, 0, Math.PI * 2); c.fill();
+      }
+      c.restore();
+      // Main curls
+      for (const curl of curls) {
+        const dy = curl.dy || 0;
+        const rx = cx + Math.cos(curl.a) * R * curl.r;
+        const ry = headY + Math.sin(curl.a) * R * 0.55 - R * 0.15 + dy * R;
+        c.fillStyle = hairGrad;
+        c.beginPath(); c.arc(rx, ry, R * curl.s, 0, Math.PI * 2); c.fill();
+        // Inner curl highlight
+        c.save(); c.fillStyle = lt; c.globalAlpha = 0.12;
+        c.beginPath(); c.arc(rx - R * 0.05, ry - R * 0.06, R * curl.s * 0.45, 0, Math.PI * 2); c.fill();
+        c.restore();
+        // Spiral line inside curl
+        c.save(); c.strokeStyle = dk; c.lineWidth = 0.3; c.globalAlpha = 0.1;
+        c.beginPath(); c.arc(rx, ry, R * curl.s * 0.6, 0.5, Math.PI * 1.5); c.stroke();
+        c.restore();
       }
       break;
     }
     case 'bun': {
       c.beginPath(); c.arc(cx, headY, R * 1.06, Math.PI + 0.25, -0.25); c.fill();
-      c.beginPath(); c.arc(cx, headY - R * 1.05, R * 0.42, 0, Math.PI*2); c.fill();
-      c.save();
-      c.globalAlpha = 0.15;
-      c.fillStyle = _darken(color, 35);
-      c.beginPath(); c.arc(cx + 1, headY - R * 1.0, R * 0.22, 0, Math.PI*2); c.fill();
-      c.restore();
+      // Bun with multi-layer depth
+      const bunY = headY - R * 1.05;
+      // Shadow
+      c.save(); c.fillStyle = dk2; c.globalAlpha = 0.12;
+      c.beginPath(); c.arc(cx + 1.5, bunY + 2, R * 0.44, 0, Math.PI * 2); c.fill(); c.restore();
+      // Main bun
       c.fillStyle = hairGrad;
-      c.strokeStyle = '#f4d03f'; c.lineWidth = 1; c.lineCap = 'round';
+      c.beginPath(); c.arc(cx, bunY, R * 0.44, 0, Math.PI * 2); c.fill();
+      // Wrapped strand texture on bun
+      c.save(); c.strokeStyle = dk; c.lineWidth = 0.5; c.globalAlpha = 0.12;
+      for (let i = 0; i < 4; i++) {
+        const a = i * Math.PI * 0.5 + 0.3;
+        c.beginPath();
+        c.arc(cx, bunY, R * (0.25 + i * 0.05), a, a + Math.PI * 0.8);
+        c.stroke();
+      }
+      c.restore();
+      // Bun highlight
+      c.save(); c.fillStyle = lt2; c.globalAlpha = 0.15;
+      c.beginPath(); c.ellipse(cx - R * 0.08, bunY - R * 0.12, R * 0.18, R * 0.12, -0.3, 0, Math.PI * 2); c.fill();
+      c.restore();
+      // Chopstick / hair pin
+      c.save();
+      c.strokeStyle = '#f4d03f'; c.lineWidth = 1.2; c.lineCap = 'round';
       c.beginPath();
-      c.moveTo(cx - R * 0.45, headY - R * 1.2);
-      c.lineTo(cx + R * 0.45, headY - R * 0.9);
+      c.moveTo(cx - R * 0.45, bunY - R * 0.2);
+      c.lineTo(cx + R * 0.45, bunY + R * 0.1);
       c.stroke();
+      // Pin end ornament
       c.fillStyle = '#e74c3c';
-      c.beginPath(); c.arc(cx - R * 0.45, headY - R * 1.2, 1.5, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.arc(cx - R * 0.45, bunY - R * 0.2, 2, 0, Math.PI * 2); c.fill();
+      c.fillStyle = _lighten('#e74c3c', 30); c.globalAlpha = 0.4;
+      c.beginPath(); c.arc(cx - R * 0.46, bunY - R * 0.22, 0.8, 0, Math.PI * 2); c.fill();
+      c.restore();
+      // Side wisps
       c.fillStyle = hairGrad;
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath();
         c.moveTo(cx + s * R * 0.85, headY - R * 0.1);
-        c.quadraticCurveTo(cx + s * R * 0.95, headY + R * 0.25, cx + s * R * 0.7, headY + R * 0.45);
-        c.quadraticCurveTo(cx + s * R * 0.6, headY + R * 0.3, cx + s * R * 0.7, headY - R * 0.05);
+        c.quadraticCurveTo(cx + s * R * 0.95, headY + R * 0.25, cx + s * R * 0.72, headY + R * 0.48);
+        c.quadraticCurveTo(cx + s * R * 0.6, headY + R * 0.32, cx + s * R * 0.68, headY - R * 0.05);
         c.fill();
       }
       break;
@@ -1807,26 +2053,63 @@ function hairDraw(style, c, char, x, y, w, h, color) {
     case 'long_waves': {
       c.beginPath(); c.arc(cx, headY, R * 1.1, Math.PI + 0.12, -0.12); c.fill();
       for (let s = -1; s <= 1; s += 2) {
+        // Back wave layer (darker)
+        c.fillStyle = dk;
+        c.beginPath();
+        c.moveTo(cx + s * R * 1.1, headY - R * 0.1);
+        c.bezierCurveTo(cx + s * R * 1.3, headY + R * 0.55, cx + s * R * 1.0, headY + R * 1.25, cx + s * R * 1.2, headY + R * 1.85);
+        c.bezierCurveTo(cx + s * R * 0.9, headY + R * 2.35, cx + s * R * 1.1, headY + R * 2.85, cx + s * R * 0.75, headY + R * 3.1);
+        c.quadraticCurveTo(cx + s * R * 0.45, headY + R * 3.15, cx + s * R * 0.4, headY + R * 2.9);
+        c.bezierCurveTo(cx + s * R * 0.6, headY + R * 2.25, cx + s * R * 0.75, headY + R * 1.55, cx + s * R * 0.85, headY + R * 0.15);
+        c.fill();
+        // Front wave layer
+        c.fillStyle = s === -1 ? sideGradL : sideGradR;
         c.beginPath();
         c.moveTo(cx + s * R * 1.08, headY - R * 0.15);
         c.bezierCurveTo(cx + s * R * 1.25, headY + R * 0.5, cx + s * R * 0.95, headY + R * 1.2, cx + s * R * 1.15, headY + R * 1.8);
         c.bezierCurveTo(cx + s * R * 0.85, headY + R * 2.3, cx + s * R * 1.05, headY + R * 2.8, cx + s * R * 0.7, headY + R * 3.0);
-        c.quadraticCurveTo(cx + s * R * 0.4, headY + R * 3.1, cx + s * R * 0.35, headY + R * 2.8);
+        c.quadraticCurveTo(cx + s * R * 0.42, headY + R * 3.08, cx + s * R * 0.38, headY + R * 2.8);
         c.bezierCurveTo(cx + s * R * 0.55, headY + R * 2.2, cx + s * R * 0.7, headY + R * 1.5, cx + s * R * 0.8, headY + R * 0.1);
         c.fill();
       }
+      c.fillStyle = hairGrad;
       c.beginPath(); c.moveTo(cx - R * 0.3, headY - R * 0.85);
       c.quadraticCurveTo(cx, headY - R * 0.15, cx + R * 0.3, headY - R * 0.85); c.fill();
+      // Wave highlight lines
+      _hairStrands(c, cx, headY, R, color, [
+        { x1: -0.95, y1: 0.2, cx1: -0.8, cy1: 0.8, cx2: -1.0, cy2: 1.5, x2: -0.8, y2: 2.0, light: 22, a: 0.1, w: 0.5 },
+        { x1: 0.95, y1: 0.2, cx1: 0.8, cy1: 0.8, cx2: 1.0, cy2: 1.5, x2: 0.8, y2: 2.0, light: 22, a: 0.1, w: 0.5 },
+        { x1: -1.05, y1: 0.5, cx1: -0.85, cy1: 1.1, cx2: -1.05, cy2: 1.8, x2: -0.7, y2: 2.5, dark: 18, a: 0.08 },
+        { x1: 1.05, y1: 0.5, cx1: 0.85, cy1: 1.1, cx2: 1.05, cy2: 1.8, x2: 0.7, y2: 2.5, dark: 18, a: 0.08 },
+      ]);
       break;
     }
     case 'messy_bun': {
       c.beginPath(); c.arc(cx, headY, R * 1.06, Math.PI + 0.3, -0.3); c.fill();
-      // Messy bun on top
-      const bunY = headY - R * 1.1;
-      c.beginPath(); c.arc(cx + 1, bunY, R * 0.48, 0, Math.PI * 2); c.fill();
-      c.beginPath(); c.arc(cx - 3, bunY + 2, R * 0.3, 0, Math.PI * 2); c.fill();
-      c.beginPath(); c.arc(cx + 4, bunY - 1, R * 0.25, 0, Math.PI * 2); c.fill();
-      // Loose strands
+      const mbY = headY - R * 1.1;
+      // Shadow beneath bun
+      c.save(); c.fillStyle = dk2; c.globalAlpha = 0.1;
+      c.beginPath(); c.arc(cx + 2, mbY + 3, R * 0.5, 0, Math.PI * 2); c.fill(); c.restore();
+      // Messy bun — overlapping lumps
+      c.fillStyle = hairGrad;
+      c.beginPath(); c.arc(cx + 1, mbY, R * 0.48, 0, Math.PI * 2); c.fill();
+      c.fillStyle = dk;
+      c.beginPath(); c.arc(cx - 3, mbY + 2, R * 0.32, 0, Math.PI * 2); c.fill();
+      c.fillStyle = color;
+      c.beginPath(); c.arc(cx + 4, mbY - 1, R * 0.28, 0, Math.PI * 2); c.fill();
+      // Highlight on top lump
+      c.save(); c.fillStyle = lt2; c.globalAlpha = 0.15;
+      c.beginPath(); c.ellipse(cx, mbY - R * 0.12, R * 0.15, R * 0.1, -0.3, 0, Math.PI * 2); c.fill();
+      c.restore();
+      // Escaped strands (wispy)
+      c.save(); c.strokeStyle = color; c.lineWidth = 0.6; c.globalAlpha = 0.25; c.lineCap = 'round';
+      c.beginPath(); c.moveTo(cx - R * 0.3, mbY + R * 0.3);
+      c.quadraticCurveTo(cx - R * 0.5, mbY + R * 0.8, cx - R * 0.35, mbY + R * 1.0); c.stroke();
+      c.beginPath(); c.moveTo(cx + R * 0.35, mbY + R * 0.25);
+      c.quadraticCurveTo(cx + R * 0.55, mbY + R * 0.7, cx + R * 0.4, mbY + R * 0.95); c.stroke();
+      c.restore();
+      // Side wisps
+      c.fillStyle = hairGrad;
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath();
         c.moveTo(cx + s * R * 0.8, headY - R * 0.15);
@@ -1840,118 +2123,220 @@ function hairDraw(style, c, char, x, y, w, h, color) {
       c.beginPath(); c.arc(cx, headY, R * 1.06, Math.PI + 0.2, -0.2); c.fill();
       for (let s = -1; s <= 1; s += 2) {
         const bunX = cx + s * R * 0.7;
-        const bunY2 = headY - R * 0.85;
-        c.beginPath(); c.arc(bunX, bunY2, R * 0.38, 0, Math.PI * 2); c.fill();
-        c.save(); c.globalAlpha = 0.15; c.fillStyle = _darken(color, 30);
-        c.beginPath(); c.arc(bunX + 1, bunY2 + 1, R * 0.2, 0, Math.PI * 2); c.fill();
-        c.restore(); c.fillStyle = hairGrad;
+        const bunY2 = headY - R * 0.88;
+        // Bun shadow
+        c.save(); c.fillStyle = dk2; c.globalAlpha = 0.1;
+        c.beginPath(); c.arc(bunX + 1.5, bunY2 + 2, R * 0.4, 0, Math.PI * 2); c.fill(); c.restore();
+        // Main bun
+        c.fillStyle = hairGrad;
+        c.beginPath(); c.arc(bunX, bunY2, R * 0.4, 0, Math.PI * 2); c.fill();
+        // Wrap texture
+        c.save(); c.strokeStyle = dk; c.lineWidth = 0.4; c.globalAlpha = 0.1;
+        for (let i = 0; i < 3; i++) {
+          c.beginPath(); c.arc(bunX, bunY2, R * (0.2 + i * 0.06), 0.5 + i * 0.4, 0.5 + i * 0.4 + Math.PI); c.stroke();
+        }
+        c.restore();
+        // Highlight
+        c.save(); c.fillStyle = lt2; c.globalAlpha = 0.15;
+        c.beginPath(); c.ellipse(bunX - R * 0.06, bunY2 - R * 0.1, R * 0.12, R * 0.08, -0.3, 0, Math.PI * 2); c.fill();
+        c.restore();
       }
-      c.beginPath(); c.moveTo(cx - R * 0.35, headY - R * 0.82);
-      c.quadraticCurveTo(cx, headY - R * 0.15, cx + R * 0.35, headY - R * 0.82); c.fill();
+      c.fillStyle = hairGrad;
+      // Center part bangs
+      c.beginPath(); c.moveTo(cx - R * 0.38, headY - R * 0.84);
+      c.quadraticCurveTo(cx - R * 0.15, headY - R * 0.15, cx, headY - R * 0.18);
+      c.quadraticCurveTo(cx + R * 0.15, headY - R * 0.15, cx + R * 0.38, headY - R * 0.84);
+      c.fill();
       break;
     }
     case 'pixie': {
       c.beginPath(); c.arc(cx, headY, R * 1.04, Math.PI + 0.5, -0.3); c.fill();
+      // Dramatic side-swept piece
+      c.fillStyle = hairGrad;
       c.beginPath();
-      c.moveTo(cx + R * 0.2, headY - R * 0.9);
-      c.bezierCurveTo(cx + R * 0.8, headY - R * 1.0, cx + R * 1.0, headY - R * 0.4, cx + R * 0.75, headY + R * 0.15);
-      c.quadraticCurveTo(cx + R * 0.6, headY + R * 0.1, cx + R * 0.55, headY - R * 0.1);
+      c.moveTo(cx + R * 0.2, headY - R * 0.92);
+      c.bezierCurveTo(cx + R * 0.85, headY - R * 1.0, cx + R * 1.05, headY - R * 0.35, cx + R * 0.78, headY + R * 0.18);
+      c.quadraticCurveTo(cx + R * 0.62, headY + R * 0.12, cx + R * 0.55, headY - R * 0.08);
       c.fill();
+      // Left tuck
+      c.fillStyle = dk;
       c.beginPath();
-      c.moveTo(cx - R * 0.6, headY - R * 0.6);
-      c.quadraticCurveTo(cx - R * 0.85, headY + R * 0.1, cx - R * 0.6, headY + R * 0.25);
-      c.quadraticCurveTo(cx - R * 0.5, headY + R * 0.15, cx - R * 0.5, headY - R * 0.2);
+      c.moveTo(cx - R * 0.6, headY - R * 0.55);
+      c.quadraticCurveTo(cx - R * 0.88, headY + R * 0.08, cx - R * 0.62, headY + R * 0.28);
+      c.quadraticCurveTo(cx - R * 0.52, headY + R * 0.18, cx - R * 0.52, headY - R * 0.18);
       c.fill();
+      // Strand detail on swept piece
+      _hairStrands(c, cx, headY, R, color, [
+        { x1: 0.35, y1: -0.85, cx1: 0.7, cy1: -0.6, x2: 0.65, y2: 0.0, light: 20, a: 0.12, w: 0.5 },
+        { x1: 0.45, y1: -0.8, cx1: 0.8, cy1: -0.5, x2: 0.7, y2: -0.05, dark: 15, a: 0.1 },
+      ]);
       break;
     }
     case 'side_braid': {
       c.beginPath(); c.arc(cx, headY, R * 1.08, Math.PI + 0.15, -0.15); c.fill();
-      const bx = cx + R * 0.85;
-      const startY2 = headY + R * 0.1;
-      for (let j = 0; j < 8; j++) {
-        const by = startY2 + j * R * 0.32;
-        const taper = 1 - j * 0.06;
-        const xOff = 1.5 * ((j % 2) * 2 - 1);
-        c.beginPath();
-        c.ellipse(bx + xOff, by, 3.5 * taper, 5 * taper, 0.2, 0, Math.PI * 2);
-        c.fill();
+      const sbx = cx + R * 0.85;
+      const sbStartY = headY + R * 0.05;
+      // Braid shadow
+      c.save(); c.fillStyle = dk2; c.globalAlpha = 0.1;
+      for (let j = 0; j < 9; j++) {
+        const by = sbStartY + j * R * 0.3;
+        const taper = 1 - j * 0.05;
+        c.beginPath(); c.ellipse(sbx + 1.5, by + 1, 4.5 * taper, 5.5 * taper, 0.2, 0, Math.PI * 2); c.fill();
       }
-      const endY2 = startY2 + 8 * R * 0.32;
-      c.fillStyle = '#e84393';
-      c.beginPath(); c.arc(bx, endY2, 2, 0, Math.PI * 2); c.fill();
+      c.restore();
+      // Braid segments
+      for (let j = 0; j < 9; j++) {
+        const by = sbStartY + j * R * 0.3;
+        const taper = 1 - j * 0.05;
+        const xOff = 2.0 * ((j % 2) * 2 - 1);
+        c.fillStyle = j % 2 === 0 ? hairGrad : dk;
+        c.beginPath(); c.ellipse(sbx + xOff, by, 4 * taper, 5.5 * taper, 0.2, 0, Math.PI * 2); c.fill();
+        c.save(); c.fillStyle = lt; c.globalAlpha = 0.08;
+        c.beginPath(); c.ellipse(sbx + xOff - 0.5, by - 1, 1.5 * taper, 2 * taper, 0.2, 0, Math.PI * 2); c.fill();
+        c.restore();
+      }
+      // End ribbon
+      const sbEndY = sbStartY + 9 * R * 0.3;
+      c.save(); c.fillStyle = '#e84393';
+      c.beginPath(); c.arc(sbx, sbEndY, 2.5, 0, Math.PI * 2); c.fill();
+      c.fillStyle = _lighten('#e84393', 25); c.globalAlpha = 0.3;
+      c.beginPath(); c.arc(sbx - 0.5, sbEndY - 0.5, 1, 0, Math.PI * 2); c.fill();
+      c.restore();
       c.fillStyle = hairGrad;
-      c.beginPath(); c.moveTo(cx - R * 0.3, headY - R * 0.82);
-      c.quadraticCurveTo(cx + R * 0.2, headY - R * 0.1, cx + R * 0.6, headY - R * 0.3); c.fill();
+      // Swept bangs
+      c.beginPath();
+      c.moveTo(cx - R * 0.35, headY - R * 0.84);
+      c.quadraticCurveTo(cx + R * 0.1, headY - R * 0.15, cx + R * 0.55, headY - R * 0.35);
+      c.quadraticCurveTo(cx + R * 0.3, headY - R * 0.5, cx - R * 0.1, headY - R * 0.78);
+      c.fill();
       break;
     }
     case 'layered_bob': {
       c.beginPath(); c.arc(cx, headY, R * 1.08, Math.PI + 0.15, -0.15); c.fill();
       for (let s = -1; s <= 1; s += 2) {
-        // Layer 1 (longer)
+        // Layer 1 back (darker, longer)
+        c.fillStyle = dk;
         c.beginPath();
-        c.moveTo(cx + s * R * 1.06, headY - R * 0.1);
-        c.bezierCurveTo(cx + s * R * 1.2, headY + R * 0.25, cx + s * R * 1.15, headY + R * 0.55, cx + s * R * 0.85, headY + R * 0.7);
-        c.quadraticCurveTo(cx + s * R * 0.6, headY + R * 0.65, cx + s * R * 0.6, headY + R * 0.2);
+        c.moveTo(cx + s * R * 1.08, headY - R * 0.08);
+        c.bezierCurveTo(cx + s * R * 1.22, headY + R * 0.28, cx + s * R * 1.18, headY + R * 0.58, cx + s * R * 0.88, headY + R * 0.75);
+        c.quadraticCurveTo(cx + s * R * 0.62, headY + R * 0.7, cx + s * R * 0.62, headY + R * 0.25);
         c.fill();
-        // Layer 2 (shorter)
+        // Layer 2 front (main color, shorter)
+        c.fillStyle = s === -1 ? sideGradL : sideGradR;
         c.beginPath();
-        c.moveTo(cx + s * R * 0.95, headY - R * 0.2);
-        c.bezierCurveTo(cx + s * R * 1.05, headY + R * 0.1, cx + s * R * 1.0, headY + R * 0.35, cx + s * R * 0.7, headY + R * 0.45);
-        c.quadraticCurveTo(cx + s * R * 0.55, headY + R * 0.4, cx + s * R * 0.55, headY + R * 0.05);
+        c.moveTo(cx + s * R * 0.98, headY - R * 0.18);
+        c.bezierCurveTo(cx + s * R * 1.08, headY + R * 0.12, cx + s * R * 1.02, headY + R * 0.38, cx + s * R * 0.72, headY + R * 0.5);
+        c.quadraticCurveTo(cx + s * R * 0.56, headY + R * 0.45, cx + s * R * 0.58, headY + R * 0.08);
         c.fill();
       }
-      c.beginPath(); c.moveTo(cx - R * 0.35, headY - R * 0.8);
-      c.quadraticCurveTo(cx, headY - R * 0.1, cx + R * 0.35, headY - R * 0.8); c.fill();
+      c.fillStyle = hairGrad;
+      c.beginPath(); c.moveTo(cx - R * 0.38, headY - R * 0.82);
+      c.quadraticCurveTo(cx, headY - R * 0.12, cx + R * 0.38, headY - R * 0.82); c.fill();
+      // Layer-tip strand lines
+      _hairStrands(c, cx, headY, R, color, [
+        { x1: -0.75, y1: 0.4, cx1: -0.7, cy1: 0.55, x2: -0.6, y2: 0.65, light: 15, a: 0.12 },
+        { x1: 0.75, y1: 0.4, cx1: 0.7, cy1: 0.55, x2: 0.6, y2: 0.65, light: 15, a: 0.12 },
+      ]);
       break;
     }
     case 'sleek_ponytail': {
       c.beginPath(); c.arc(cx, headY, R * 1.05, Math.PI + 0.1, -0.1); c.fill();
-      // Smooth pulled-back look
+      // Smooth pulled-back surface
       c.beginPath();
-      c.moveTo(cx - R * 0.4, headY - R * 0.9);
-      c.quadraticCurveTo(cx, headY - R * 0.4, cx + R * 0.4, headY - R * 0.9);
+      c.moveTo(cx - R * 0.42, headY - R * 0.92);
+      c.quadraticCurveTo(cx, headY - R * 0.42, cx + R * 0.42, headY - R * 0.92);
       c.fill();
-      // High ponytail
+      // Sleek ponytail body (two layers)
+      c.fillStyle = dk;
+      c.beginPath();
+      c.moveTo(cx + R * 0.02, headY - R * 0.82);
+      c.bezierCurveTo(cx + R * 0.85, headY - R * 0.92, cx + R * 1.55, headY - R * 0.15, cx + R * 0.95, headY + R * 1.55);
+      c.bezierCurveTo(cx + R * 0.75, headY + R * 2.25, cx + R * 0.45, headY + R * 2.55, cx + R * 0.35, headY + R * 2.35);
+      c.bezierCurveTo(cx + R * 0.55, headY + R * 1.85, cx + R * 0.65, headY + R * 0.85, cx + R * 0.22, headY - R * 0.48);
+      c.fill();
+      c.fillStyle = hairGrad;
       c.beginPath();
       c.moveTo(cx, headY - R * 0.85);
       c.bezierCurveTo(cx + R * 0.8, headY - R * 0.9, cx + R * 1.5, headY - R * 0.2, cx + R * 0.9, headY + R * 1.5);
       c.bezierCurveTo(cx + R * 0.7, headY + R * 2.2, cx + R * 0.4, headY + R * 2.5, cx + R * 0.3, headY + R * 2.3);
       c.bezierCurveTo(cx + R * 0.5, headY + R * 1.8, cx + R * 0.6, headY + R * 0.8, cx + R * 0.2, headY - R * 0.5);
       c.fill();
+      // Strand lines along ponytail
+      _hairStrands(c, cx, headY, R, color, [
+        { x1: 0.35, y1: -0.6, cx1: 0.9, cy1: 0.2, cx2: 0.7, cy2: 1.2, x2: 0.5, y2: 2.0, light: 18, a: 0.1, w: 0.5 },
+        { x1: 0.25, y1: -0.7, cx1: 0.7, cy1: 0.0, cx2: 0.6, cy2: 1.0, x2: 0.4, y2: 1.8, dark: 15, a: 0.08 },
+      ]);
       // Hair tie
-      c.fillStyle = '#e84393';
-      c.beginPath(); c.ellipse(cx + R * 0.15, headY - R * 0.75, 3, 2.5, 0.5, 0, Math.PI * 2); c.fill();
+      c.save(); c.fillStyle = '#e84393';
+      c.beginPath(); c.ellipse(cx + R * 0.15, headY - R * 0.76, 3.5, 2.5, 0.5, 0, Math.PI * 2); c.fill();
+      c.fillStyle = _lighten('#e84393', 20); c.globalAlpha = 0.35;
+      c.beginPath(); c.ellipse(cx + R * 0.13, headY - R * 0.78, 1.5, 1, 0.5, 0, Math.PI * 2); c.fill();
+      c.restore();
       c.fillStyle = hairGrad;
       break;
     }
     case 'curly_afro': {
       const afroR = R * 1.5;
-      for (let i = 0; i < 20; i++) {
-        const a = (i / 20) * Math.PI * 2;
-        const cr = afroR * (0.85 + Math.sin(i * 3.7) * 0.15);
-        const ccx = cx + Math.cos(a) * afroR * 0.6;
-        const ccy = headY - R * 0.2 + Math.sin(a) * afroR * 0.55;
-        c.beginPath(); c.arc(ccx, ccy, R * 0.42, 0, Math.PI * 2); c.fill();
+      // Shadow layer
+      c.save(); c.fillStyle = dk2; c.globalAlpha = 0.08;
+      c.beginPath(); c.arc(cx + 2, headY - R * 0.15, afroR * 0.72, 0, Math.PI * 2); c.fill();
+      c.restore();
+      // Outer curl ring
+      for (let i = 0; i < 22; i++) {
+        const a = (i / 22) * Math.PI * 2;
+        const ccx2 = cx + Math.cos(a) * afroR * 0.62;
+        const ccy = headY - R * 0.2 + Math.sin(a) * afroR * 0.56;
+        c.fillStyle = i % 3 === 0 ? dk : hairGrad;
+        c.beginPath(); c.arc(ccx2, ccy, R * 0.4, 0, Math.PI * 2); c.fill();
+        // Curl highlight
+        c.save(); c.fillStyle = lt; c.globalAlpha = 0.1;
+        c.beginPath(); c.arc(ccx2 - R * 0.06, ccy - R * 0.08, R * 0.15, 0, Math.PI * 2); c.fill();
+        c.restore();
       }
-      c.beginPath(); c.arc(cx, headY - R * 0.2, afroR * 0.7, 0, Math.PI * 2); c.fill();
+      // Inner fill
+      c.fillStyle = hairGrad;
+      c.beginPath(); c.arc(cx, headY - R * 0.2, afroR * 0.68, 0, Math.PI * 2); c.fill();
+      // Pick highlight
+      c.save(); c.fillStyle = lt2; c.globalAlpha = 0.1;
+      c.beginPath(); c.ellipse(cx - R * 0.3, headY - R * 0.6, R * 0.35, R * 0.15, -0.3, 0, Math.PI * 2); c.fill();
+      c.restore();
       break;
     }
     case 'twin_tails': {
       c.beginPath(); c.arc(cx, headY, R * 1.06, Math.PI + 0.2, -0.2); c.fill();
       for (let s = -1; s <= 1; s += 2) {
         const tx = cx + s * R * 0.65;
-        // Hair tie
-        c.fillStyle = '#e84393';
-        c.beginPath(); c.ellipse(tx, headY - R * 0.3, 3, 2.5, 0, 0, Math.PI * 2); c.fill();
+        // Tail shadow
+        c.save(); c.fillStyle = dk2; c.globalAlpha = 0.08;
+        c.beginPath();
+        c.moveTo(tx + 1.5, headY - R * 0.25);
+        c.bezierCurveTo(tx + s * R * 0.52, headY + R * 0.35, tx + s * R * 0.32, headY + R * 1.25, tx + s * R * 0.52, headY + R * 2.25);
+        c.lineTo(tx + s * R * 0.18, headY + R * 2.15);
+        c.bezierCurveTo(tx + s * R * 0.18, headY + R * 1.05, tx + s * R * 0.32, headY + R * 0.25, tx + 1.5, headY - R * 0.25);
+        c.fill(); c.restore();
+        // Flowing tail (two-tone)
+        c.fillStyle = dk;
+        c.beginPath();
+        c.moveTo(tx, headY - R * 0.28);
+        c.bezierCurveTo(tx + s * R * 0.52, headY + R * 0.32, tx + s * R * 0.32, headY + R * 1.22, tx + s * R * 0.52, headY + R * 2.22);
+        c.quadraticCurveTo(tx + s * R * 0.32, headY + R * 2.42, tx + s * R * 0.17, headY + R * 2.12);
+        c.bezierCurveTo(tx + s * R * 0.17, headY + R * 1.02, tx + s * R * 0.32, headY + R * 0.22, tx, headY - R * 0.28);
+        c.fill();
         c.fillStyle = hairGrad;
-        // Flowing tail
         c.beginPath();
         c.moveTo(tx, headY - R * 0.3);
         c.bezierCurveTo(tx + s * R * 0.5, headY + R * 0.3, tx + s * R * 0.3, headY + R * 1.2, tx + s * R * 0.5, headY + R * 2.2);
         c.quadraticCurveTo(tx + s * R * 0.3, headY + R * 2.4, tx + s * R * 0.15, headY + R * 2.1);
         c.bezierCurveTo(tx + s * R * 0.15, headY + R * 1.0, tx + s * R * 0.3, headY + R * 0.2, tx, headY - R * 0.3);
         c.fill();
+        // Hair tie
+        c.save(); c.fillStyle = '#e84393';
+        c.beginPath(); c.ellipse(tx, headY - R * 0.3, 3.5, 2.5, 0, 0, Math.PI * 2); c.fill();
+        c.fillStyle = _lighten('#e84393', 20); c.globalAlpha = 0.35;
+        c.beginPath(); c.ellipse(tx - 0.5, headY - R * 0.32, 1.5, 1.0, 0, 0, Math.PI * 2); c.fill();
+        c.restore();
       }
+      c.fillStyle = hairGrad;
       c.beginPath(); c.moveTo(cx - R * 0.3, headY - R * 0.82);
       c.quadraticCurveTo(cx, headY - R * 0.1, cx + R * 0.3, headY - R * 0.82); c.fill();
       break;
@@ -1959,28 +2344,53 @@ function hairDraw(style, c, char, x, y, w, h, color) {
     case 'short_wavy': {
       c.beginPath(); c.arc(cx, headY, R * 1.06, Math.PI + 0.25, -0.25); c.fill();
       for (let s = -1; s <= 1; s += 2) {
-        const waves = [0.0, 0.2, 0.4];
-        for (const wy of waves) {
+        const waves = [0.0, 0.18, 0.36];
+        for (let wi = 0; wi < waves.length; wi++) {
+          const wy = waves[wi];
+          c.fillStyle = wi === 1 ? dk : hairGrad;
           c.beginPath();
-          c.moveTo(cx + s * R * 0.9, headY - R * 0.2 + wy * R);
-          c.quadraticCurveTo(cx + s * R * 1.1, headY + R * (wy + 0.1), cx + s * R * 0.85, headY + R * (wy + 0.25));
-          c.quadraticCurveTo(cx + s * R * 0.7, headY + R * (wy + 0.15), cx + s * R * 0.75, headY - R * 0.1 + wy * R);
+          c.moveTo(cx + s * R * 0.92, headY - R * 0.18 + wy * R);
+          c.quadraticCurveTo(cx + s * R * 1.12, headY + R * (wy + 0.08), cx + s * R * 0.88, headY + R * (wy + 0.24));
+          c.quadraticCurveTo(cx + s * R * 0.72, headY + R * (wy + 0.14), cx + s * R * 0.76, headY - R * 0.08 + wy * R);
           c.fill();
         }
       }
+      c.fillStyle = hairGrad;
+      // Wavy strand highlights
+      _hairStrands(c, cx, headY, R, color, [
+        { x1: -0.85, y1: -0.1, cx1: -0.95, cy1: 0.1, x2: -0.82, y2: 0.3, light: 20, a: 0.12, w: 0.5 },
+        { x1: 0.85, y1: -0.1, cx1: 0.95, cy1: 0.1, x2: 0.82, y2: 0.3, light: 20, a: 0.12, w: 0.5 },
+      ]);
       break;
     }
     case 'hime_cut': {
       c.beginPath(); c.arc(cx, headY, R * 1.08, Math.PI + 0.1, -0.1); c.fill();
-      // Straight bangs
+      // Blunt straight bangs with strand separations
       c.beginPath();
-      c.moveTo(cx - R * 0.85, headY - R * 0.35);
-      c.lineTo(cx - R * 0.85, headY + R * 0.15);
-      c.quadraticCurveTo(cx, headY + R * 0.2, cx + R * 0.85, headY + R * 0.15);
-      c.lineTo(cx + R * 0.85, headY - R * 0.35);
+      c.moveTo(cx - R * 0.85, headY - R * 0.38);
+      c.lineTo(cx - R * 0.85, headY + R * 0.12);
+      c.quadraticCurveTo(cx, headY + R * 0.16, cx + R * 0.85, headY + R * 0.12);
+      c.lineTo(cx + R * 0.85, headY - R * 0.38);
       c.fill();
-      // Long side panels
+      // Bang strand lines
+      c.save(); c.strokeStyle = dk; c.lineWidth = 0.3; c.globalAlpha = 0.1;
+      for (let i = -3; i <= 3; i++) {
+        c.beginPath();
+        c.moveTo(cx + i * R * 0.2, headY - R * 0.35);
+        c.lineTo(cx + i * R * 0.2, headY + R * 0.1);
+        c.stroke();
+      }
+      c.restore();
+      // Long side panels (two-tone)
       for (let s = -1; s <= 1; s += 2) {
+        c.fillStyle = dk;
+        c.beginPath();
+        c.moveTo(cx + s * R * 1.08, headY - R * 0.08);
+        c.bezierCurveTo(cx + s * R * 1.18, headY + R * 1.0, cx + s * R * 1.12, headY + R * 2.0, cx + s * R * 0.78, headY + R * 2.85);
+        c.quadraticCurveTo(cx + s * R * 0.58, headY + R * 2.95, cx + s * R * 0.52, headY + R * 2.55);
+        c.bezierCurveTo(cx + s * R * 0.68, headY + R * 1.85, cx + s * R * 0.82, headY + R * 0.85, cx + s * R * 0.88, headY + R * 0.08);
+        c.fill();
+        c.fillStyle = s === -1 ? sideGradL : sideGradR;
         c.beginPath();
         c.moveTo(cx + s * R * 1.06, headY - R * 0.1);
         c.bezierCurveTo(cx + s * R * 1.15, headY + R * 1.0, cx + s * R * 1.1, headY + R * 2.0, cx + s * R * 0.75, headY + R * 2.8);
@@ -1988,150 +2398,310 @@ function hairDraw(style, c, char, x, y, w, h, color) {
         c.bezierCurveTo(cx + s * R * 0.65, headY + R * 1.8, cx + s * R * 0.8, headY + R * 0.8, cx + s * R * 0.85, headY + R * 0.05);
         c.fill();
       }
+      c.fillStyle = hairGrad;
+      // Strand detail on long panels
+      _hairStrands(c, cx, headY, R, color, [
+        { x1: -0.95, y1: 0.3, cx1: -0.9, cy1: 1.2, x2: -0.7, y2: 2.2, light: 18, a: 0.1, w: 0.5 },
+        { x1: 0.95, y1: 0.3, cx1: 0.9, cy1: 1.2, x2: 0.7, y2: 2.2, light: 18, a: 0.1, w: 0.5 },
+      ]);
       break;
     }
     case 'shag': {
       c.beginPath(); c.arc(cx, headY, R * 1.06, Math.PI + 0.3, -0.3); c.fill();
-      // Layered shaggy pieces
-      for (let i = 0; i < 12; i++) {
-        const a = Math.PI + 0.3 + (i / 11) * (Math.PI - 0.6);
-        const sx = cx + Math.cos(a) * R * 1.05;
-        const sy = headY + Math.sin(a) * R * 0.6;
-        const len = R * (0.4 + Math.sin(i * 2.3) * 0.15);
-        c.beginPath();
-        c.moveTo(sx, sy);
-        c.quadraticCurveTo(sx + Math.cos(a + 0.3) * len * 0.6, sy + len * 0.7, sx + Math.cos(a + 0.5) * 2, sy + len);
-        c.quadraticCurveTo(sx + Math.cos(a - 0.3) * len * 0.4, sy + len * 0.5, sx, sy);
-        c.fill();
+      // Layered shaggy pieces — two layers
+      for (let layer = 0; layer < 2; layer++) {
+        for (let i = 0; i < 14; i++) {
+          const a = Math.PI + 0.3 + (i / 13) * (Math.PI - 0.6);
+          const sx = cx + Math.cos(a) * R * (1.05 - layer * 0.05);
+          const sy = headY + Math.sin(a) * R * (0.6 - layer * 0.1);
+          const len = R * (0.35 + Math.sin(i * 2.3) * 0.15 + layer * 0.15);
+          c.fillStyle = layer === 0 ? dk : hairGrad;
+          c.beginPath();
+          c.moveTo(sx, sy);
+          c.quadraticCurveTo(sx + Math.cos(a + 0.3) * len * 0.6, sy + len * 0.7, sx + Math.cos(a + 0.5) * 2.5, sy + len);
+          c.quadraticCurveTo(sx + Math.cos(a - 0.3) * len * 0.4, sy + len * 0.5, sx, sy);
+          c.fill();
+        }
       }
+      // Tip highlights
+      c.save(); c.fillStyle = lt; c.globalAlpha = 0.08;
+      for (let i = 2; i < 12; i += 3) {
+        const a = Math.PI + 0.3 + (i / 13) * (Math.PI - 0.6);
+        const sx = cx + Math.cos(a) * R * 1.0;
+        const sy = headY + Math.sin(a) * R * 0.5;
+        const len = R * (0.45 + Math.sin(i * 2.3) * 0.15);
+        c.beginPath(); c.arc(sx + Math.cos(a + 0.5) * 2, sy + len, 1.5, 0, Math.PI * 2); c.fill();
+      }
+      c.restore();
+      c.fillStyle = hairGrad;
       break;
     }
     case 'french_twist': {
       c.beginPath(); c.arc(cx, headY, R * 1.04, Math.PI + 0.2, -0.2); c.fill();
-      // Twist at back
+      // Elegant twist at back with volume
+      c.fillStyle = dk;
+      c.beginPath();
+      c.moveTo(cx + R * 0.02, headY - R * 0.88);
+      c.quadraticCurveTo(cx + R * 0.35, headY - R * 0.58, cx + R * 0.2, headY - R * 0.18);
+      c.quadraticCurveTo(cx + R * 0.3, headY + R * 0.12, cx + R * 0.15, headY + R * 0.35);
+      c.quadraticCurveTo(cx - R * 0.12, headY + R * 0.12, cx - R * 0.07, headY - R * 0.48);
+      c.fill();
+      c.fillStyle = hairGrad;
       c.beginPath();
       c.moveTo(cx, headY - R * 0.9);
       c.quadraticCurveTo(cx + R * 0.3, headY - R * 0.6, cx + R * 0.15, headY - R * 0.2);
       c.quadraticCurveTo(cx + R * 0.25, headY + R * 0.1, cx + R * 0.1, headY + R * 0.3);
       c.quadraticCurveTo(cx - R * 0.1, headY + R * 0.1, cx - R * 0.05, headY - R * 0.5);
       c.fill();
+      // Twist spiral lines
+      c.save(); c.strokeStyle = dk; c.lineWidth = 0.4; c.globalAlpha = 0.12;
+      for (let i = 0; i < 3; i++) {
+        const ty = headY - R * 0.6 + i * R * 0.3;
+        c.beginPath();
+        c.moveTo(cx - R * 0.05, ty);
+        c.quadraticCurveTo(cx + R * 0.2, ty + R * 0.05, cx + R * 0.1, ty + R * 0.15);
+        c.stroke();
+      }
+      c.restore();
+      // Decorative pin
+      c.save(); c.fillStyle = '#c0c0c0';
+      c.beginPath(); c.arc(cx + R * 0.08, headY - R * 0.3, 1.5, 0, Math.PI * 2); c.fill();
+      c.fillStyle = '#fff'; c.globalAlpha = 0.4;
+      c.beginPath(); c.arc(cx + R * 0.06, headY - R * 0.32, 0.6, 0, Math.PI * 2); c.fill();
+      c.restore();
       break;
     }
     case 'low_bun': {
       c.beginPath(); c.arc(cx, headY, R * 1.05, Math.PI + 0.2, -0.2); c.fill();
+      // Low bun shadow
+      c.save(); c.fillStyle = dk2; c.globalAlpha = 0.1;
+      c.beginPath(); c.arc(cx + 1.5, headY + R * 0.65, R * 0.38, 0, Math.PI * 2); c.fill(); c.restore();
       // Low bun at nape
-      c.beginPath(); c.arc(cx, headY + R * 0.6, R * 0.35, 0, Math.PI * 2); c.fill();
-      // Side pieces
+      c.fillStyle = hairGrad;
+      c.beginPath(); c.arc(cx, headY + R * 0.6, R * 0.37, 0, Math.PI * 2); c.fill();
+      // Bun wrap texture
+      c.save(); c.strokeStyle = dk; c.lineWidth = 0.4; c.globalAlpha = 0.1;
+      c.beginPath(); c.arc(cx, headY + R * 0.6, R * 0.2, 0.3, Math.PI + 0.3); c.stroke();
+      c.beginPath(); c.arc(cx, headY + R * 0.6, R * 0.28, 0.8, Math.PI + 0.8); c.stroke();
+      c.restore();
+      // Bun highlight
+      c.save(); c.fillStyle = lt2; c.globalAlpha = 0.12;
+      c.beginPath(); c.ellipse(cx - R * 0.05, headY + R * 0.54, R * 0.12, R * 0.08, -0.3, 0, Math.PI * 2); c.fill();
+      c.restore();
+      // Side wisps
+      c.fillStyle = hairGrad;
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath();
         c.moveTo(cx + s * R * 0.9, headY - R * 0.15);
-        c.quadraticCurveTo(cx + s * R * 0.85, headY + R * 0.3, cx + s * R * 0.5, headY + R * 0.5);
-        c.quadraticCurveTo(cx + s * R * 0.6, headY + R * 0.15, cx + s * R * 0.75, headY - R * 0.1);
+        c.quadraticCurveTo(cx + s * R * 0.88, headY + R * 0.28, cx + s * R * 0.52, headY + R * 0.52);
+        c.quadraticCurveTo(cx + s * R * 0.62, headY + R * 0.18, cx + s * R * 0.76, headY - R * 0.08);
         c.fill();
       }
       break;
     }
     case 'bangs_straight': {
       c.beginPath(); c.arc(cx, headY, R * 1.06, Math.PI + 0.15, -0.15); c.fill();
-      // Shoulder-length
+      // Shoulder-length side panels (two-tone)
       for (let s = -1; s <= 1; s += 2) {
+        c.fillStyle = dk;
+        c.beginPath();
+        c.moveTo(cx + s * R * 1.06, headY - R * 0.08);
+        c.quadraticCurveTo(cx + s * R * 1.12, headY + R * 0.52, cx + s * R * 0.88, headY + R * 1.25);
+        c.quadraticCurveTo(cx + s * R * 0.58, headY + R * 1.15, cx + s * R * 0.68, headY + R * 0.25);
+        c.fill();
+        c.fillStyle = s === -1 ? sideGradL : sideGradR;
         c.beginPath();
         c.moveTo(cx + s * R * 1.04, headY - R * 0.1);
         c.quadraticCurveTo(cx + s * R * 1.1, headY + R * 0.5, cx + s * R * 0.85, headY + R * 1.2);
         c.quadraticCurveTo(cx + s * R * 0.55, headY + R * 1.1, cx + s * R * 0.65, headY + R * 0.2);
         c.fill();
       }
-      // Straight bangs across forehead
-      c.fillRect(cx - R * 0.8, headY - R * 0.95, R * 1.6, R * 0.35);
+      c.fillStyle = hairGrad;
+      // Straight bangs with strand gaps
+      c.beginPath();
+      c.moveTo(cx - R * 0.82, headY - R * 0.95);
+      c.lineTo(cx - R * 0.82, headY - R * 0.55);
+      c.quadraticCurveTo(cx, headY - R * 0.5, cx + R * 0.82, headY - R * 0.55);
+      c.lineTo(cx + R * 0.82, headY - R * 0.95);
+      c.fill();
+      // Strand separations
+      c.save(); c.strokeStyle = dk; c.lineWidth = 0.3; c.globalAlpha = 0.12;
+      for (let i = -3; i <= 3; i++) {
+        c.beginPath();
+        c.moveTo(cx + i * R * 0.2, headY - R * 0.92);
+        c.lineTo(cx + i * R * 0.2 + 0.3, headY - R * 0.55);
+        c.stroke();
+      }
+      c.restore();
       break;
     }
     case 'wolf_cut': {
       c.beginPath(); c.arc(cx, headY, R * 1.08, Math.PI + 0.15, -0.15); c.fill();
-      // Choppy layers — short on top, longer at bottom
-      for (let i = 0; i < 16; i++) {
-        const a = Math.PI + 0.15 + (i / 15) * (Math.PI - 0.3);
-        const sx = cx + Math.cos(a) * R * 1.06;
-        const sy = headY + Math.sin(a) * R * 0.5;
-        const len = R * (0.5 + (i > 4 && i < 12 ? 0.6 : 0.3) + Math.sin(i * 1.7) * 0.12);
-        c.beginPath();
-        c.moveTo(sx, sy);
-        c.quadraticCurveTo(sx + Math.cos(a) * len * 0.4, sy + len * 0.6, sx + Math.cos(a + 0.2) * 3, sy + len);
-        c.quadraticCurveTo(sx - Math.cos(a) * len * 0.2, sy + len * 0.4, sx, sy);
-        c.fill();
+      // Two-layer choppy pieces
+      for (let layer = 0; layer < 2; layer++) {
+        for (let i = 0; i < 18; i++) {
+          const a = Math.PI + 0.15 + (i / 17) * (Math.PI - 0.3);
+          const sx = cx + Math.cos(a) * R * (1.06 - layer * 0.04);
+          const sy = headY + Math.sin(a) * R * (0.5 - layer * 0.08);
+          const len = R * (0.45 + (i > 4 && i < 14 ? 0.55 : 0.25) + Math.sin(i * 1.7) * 0.12 + layer * 0.1);
+          c.fillStyle = layer === 0 ? dk : hairGrad;
+          c.beginPath();
+          c.moveTo(sx, sy);
+          c.quadraticCurveTo(sx + Math.cos(a) * len * 0.4, sy + len * 0.6, sx + Math.cos(a + 0.2) * 3.5, sy + len);
+          c.quadraticCurveTo(sx - Math.cos(a) * len * 0.2, sy + len * 0.4, sx, sy);
+          c.fill();
+        }
       }
+      // Wispy bangs
+      c.fillStyle = hairGrad;
+      c.save(); c.strokeStyle = lt; c.lineWidth = 0.4; c.globalAlpha = 0.1; c.lineCap = 'round';
+      for (let i = 0; i < 5; i++) {
+        const bx = cx + (i - 2) * R * 0.25;
+        c.beginPath();
+        c.moveTo(bx, headY - R * 0.9);
+        c.quadraticCurveTo(bx + 1, headY - R * 0.6, bx + 0.5, headY - R * 0.45);
+        c.stroke();
+      }
+      c.restore();
       break;
     }
     case 'curtain_bangs': {
       c.beginPath(); c.arc(cx, headY, R * 1.05, Math.PI + 0.15, -0.15); c.fill();
-      // Shoulder length
+      // Shoulder-length panels (two-tone)
       for (let s = -1; s <= 1; s += 2) {
+        c.fillStyle = dk;
+        c.beginPath();
+        c.moveTo(cx + s * R * 1.05, headY - R * 0.08);
+        c.quadraticCurveTo(cx + s * R * 1.1, headY + R * 0.62, cx + s * R * 0.82, headY + R * 1.45);
+        c.quadraticCurveTo(cx + s * R * 0.52, headY + R * 1.35, cx + s * R * 0.62, headY + R * 0.25);
+        c.fill();
+        c.fillStyle = s === -1 ? sideGradL : sideGradR;
         c.beginPath();
         c.moveTo(cx + s * R * 1.03, headY - R * 0.1);
         c.quadraticCurveTo(cx + s * R * 1.08, headY + R * 0.6, cx + s * R * 0.8, headY + R * 1.4);
         c.quadraticCurveTo(cx + s * R * 0.5, headY + R * 1.3, cx + s * R * 0.6, headY + R * 0.2);
         c.fill();
       }
-      // Curtain bangs parting in center
+      c.fillStyle = hairGrad;
+      // Curtain bangs with strand separation
       for (let s = -1; s <= 1; s += 2) {
         c.beginPath();
         c.moveTo(cx, headY - R * 0.95);
-        c.quadraticCurveTo(cx + s * R * 0.3, headY - R * 0.7, cx + s * R * 0.65, headY - R * 0.5);
-        c.quadraticCurveTo(cx + s * R * 0.5, headY - R * 0.65, cx, headY - R * 0.85);
+        c.quadraticCurveTo(cx + s * R * 0.3, headY - R * 0.68, cx + s * R * 0.68, headY - R * 0.48);
+        c.quadraticCurveTo(cx + s * R * 0.52, headY - R * 0.62, cx, headY - R * 0.85);
         c.fill();
+        // Inner wispy strand
+        c.save(); c.fillStyle = dk; c.globalAlpha = 0.15;
+        c.beginPath();
+        c.moveTo(cx + s * R * 0.05, headY - R * 0.9);
+        c.quadraticCurveTo(cx + s * R * 0.2, headY - R * 0.65, cx + s * R * 0.45, headY - R * 0.55);
+        c.quadraticCurveTo(cx + s * R * 0.3, headY - R * 0.7, cx + s * R * 0.05, headY - R * 0.85);
+        c.fill(); c.restore();
       }
       break;
     }
     case 'buzz_cut': {
       c.beginPath(); c.arc(cx, headY, R * 1.02, Math.PI + 0.3, -0.3); c.fill();
-      // Stipple texture for very short hair
-      c.fillStyle = _darken(color, 10);
-      for (let i = 0; i < 40; i++) {
-        const a = Math.PI + 0.3 + (i / 39) * (Math.PI - 0.6);
-        const r2 = R * (0.85 + Math.sin(i * 3.7) * 0.05);
-        c.beginPath(); c.arc(cx + Math.cos(a) * r2, headY + Math.sin(a) * r2 * 0.7 - R * 0.15, 0.6, 0, Math.PI * 2); c.fill();
+      // Gradient fade effect
+      c.save();
+      const buzzGrad = c.createRadialGradient(cx, headY - R * 0.3, R * 0.2, cx, headY - R * 0.1, R * 1.0);
+      buzzGrad.addColorStop(0, color);
+      buzzGrad.addColorStop(0.6, dk);
+      buzzGrad.addColorStop(1, dk2);
+      c.fillStyle = buzzGrad;
+      c.beginPath(); c.arc(cx, headY, R * 1.01, Math.PI + 0.35, -0.35); c.fill();
+      c.restore();
+      // Dense stipple texture
+      for (let layer = 0; layer < 2; layer++) {
+        c.fillStyle = layer === 0 ? dk2 : lt;
+        c.globalAlpha = layer === 0 ? 0.08 : 0.04;
+        for (let i = 0; i < 50; i++) {
+          const a = Math.PI + 0.3 + (i / 49) * (Math.PI - 0.6);
+          const r2 = R * (0.75 + Math.sin(i * 3.7 + layer * 1.5) * 0.15);
+          c.beginPath(); c.arc(cx + Math.cos(a) * r2, headY + Math.sin(a) * r2 * 0.65 - R * 0.15, 0.5 + layer * 0.2, 0, Math.PI * 2); c.fill();
+        }
       }
+      c.globalAlpha = 1;
       c.fillStyle = hairGrad;
       break;
     }
     case 'fishtail': {
       c.beginPath(); c.arc(cx, headY, R * 1.05, Math.PI + 0.2, -0.2); c.fill();
-      // Side fishtail braid
+      // Side fishtail braid — shadow
+      c.save(); c.fillStyle = dk2; c.globalAlpha = 0.08;
+      c.beginPath();
+      c.moveTo(cx + R * 0.72, headY + R * 0.12);
+      for (let seg = 0; seg < 9; seg++) {
+        const by = headY + R * 0.22 + seg * R * 0.33;
+        const bx2 = cx + R * 0.62 + Math.sin(seg * 0.8) * 3.5;
+        c.quadraticCurveTo(bx2 + 4, by, bx2 + 1, by + R * 0.15);
+      }
+      c.quadraticCurveTo(cx + R * 0.57, headY + R * 3.25, cx + R * 0.52, headY + R * 3.35);
+      c.quadraticCurveTo(cx + R * 0.42, headY + R * 3.15, cx + R * 0.47, headY + R * 0.35);
+      c.fill(); c.restore();
+      // Main fishtail
+      c.fillStyle = hairGrad;
       c.beginPath();
       c.moveTo(cx + R * 0.7, headY + R * 0.1);
-      for (let seg = 0; seg < 8; seg++) {
-        const by = headY + R * 0.2 + seg * R * 0.35;
-        const bx = cx + R * 0.6 + Math.sin(seg * 0.8) * 3;
-        c.quadraticCurveTo(bx + 3, by, bx, by + R * 0.15);
+      for (let seg = 0; seg < 9; seg++) {
+        const by = headY + R * 0.2 + seg * R * 0.33;
+        const bx2 = cx + R * 0.6 + Math.sin(seg * 0.8) * 3;
+        c.quadraticCurveTo(bx2 + 3, by, bx2, by + R * 0.15);
       }
       c.quadraticCurveTo(cx + R * 0.55, headY + R * 3.2, cx + R * 0.5, headY + R * 3.3);
       c.quadraticCurveTo(cx + R * 0.4, headY + R * 3.1, cx + R * 0.45, headY + R * 0.3);
       c.fill();
-      // Braid cross lines
-      c.strokeStyle = _darken(color, 15); c.lineWidth = 0.3;
-      for (let seg = 0; seg < 7; seg++) {
-        const by = headY + R * 0.4 + seg * R * 0.35;
-        c.beginPath(); c.moveTo(cx + R * 0.45, by); c.lineTo(cx + R * 0.65, by + R * 0.15); c.stroke();
+      // Cross-weave lines (alternating light/dark)
+      c.save(); c.lineWidth = 0.4; c.lineCap = 'round';
+      for (let seg = 0; seg < 8; seg++) {
+        const by = headY + R * 0.38 + seg * R * 0.33;
+        c.strokeStyle = seg % 2 === 0 ? dk : lt;
+        c.globalAlpha = 0.15;
+        c.beginPath(); c.moveTo(cx + R * 0.45, by); c.lineTo(cx + R * 0.67, by + R * 0.14); c.stroke();
       }
+      c.restore();
       break;
     }
     case 'crown_braid': {
       c.beginPath(); c.arc(cx, headY, R * 1.04, Math.PI + 0.2, -0.2); c.fill();
-      // Braid crown around head
+      // Braid crown — shadow
+      c.save(); c.strokeStyle = dk2; c.lineWidth = R * 0.24; c.globalAlpha = 0.1;
+      c.beginPath(); c.arc(cx + 1, headY - R * 0.08, R * 0.86, Math.PI + 0.5, -0.5); c.stroke();
+      c.restore();
+      // Braid crown
       c.strokeStyle = color; c.lineWidth = R * 0.2;
       c.beginPath(); c.arc(cx, headY - R * 0.1, R * 0.85, Math.PI + 0.5, -0.5); c.stroke();
+      // Highlight on crown
+      c.save(); c.strokeStyle = lt; c.lineWidth = R * 0.06; c.globalAlpha = 0.15;
+      c.beginPath(); c.arc(cx, headY - R * 0.1, R * 0.85, Math.PI + 0.8, -0.2); c.stroke();
+      c.restore();
       // Cross-hatch braid texture
-      c.strokeStyle = _darken(color, 12); c.lineWidth = 0.3;
-      for (let i = 0; i < 14; i++) {
-        const a = Math.PI + 0.5 + (i / 13) * (Math.PI - 1);
+      c.save(); c.lineCap = 'round';
+      for (let i = 0; i < 16; i++) {
+        const a = Math.PI + 0.5 + (i / 15) * (Math.PI - 1);
         const rx = cx + Math.cos(a) * R * 0.85;
         const ry = headY - R * 0.1 + Math.sin(a) * R * 0.85;
-        c.beginPath(); c.moveTo(rx, ry - 2); c.lineTo(rx + 2, ry + 2); c.stroke();
+        c.strokeStyle = i % 2 === 0 ? dk : lt;
+        c.lineWidth = 0.4;
+        c.globalAlpha = 0.15;
+        c.beginPath(); c.moveTo(rx, ry - 2.5); c.lineTo(rx + 2.5, ry + 2.5); c.stroke();
       }
+      c.restore();
       break;
     }
     case 'high_pony': {
       c.beginPath(); c.arc(cx, headY, R * 1.06, Math.PI + 0.2, -0.2); c.fill();
-      // High ponytail from top of head
+      // High ponytail — shadow
+      c.save(); c.fillStyle = dk2; c.globalAlpha = 0.1;
+      c.beginPath();
+      c.moveTo(cx - R * 0.18, headY - R * 0.92);
+      c.quadraticCurveTo(cx + R * 0.32, headY - R * 1.28, cx + R * 0.52, headY - R * 0.78);
+      c.bezierCurveTo(cx + R * 0.72, headY - R * 0.28, cx + R * 0.52, headY + R * 0.52, cx + R * 0.37, headY + R * 1.52);
+      c.quadraticCurveTo(cx + R * 0.22, headY + R * 1.42, cx + R * 0.27, headY + R * 0.32);
+      c.bezierCurveTo(cx + R * 0.37, headY - R * 0.18, cx + R * 0.32, headY - R * 0.68, cx + R * 0.22, headY - R * 0.83);
+      c.fill(); c.restore();
+      // Main ponytail
+      c.fillStyle = hairGrad;
       c.beginPath();
       c.moveTo(cx - R * 0.2, headY - R * 0.95);
       c.quadraticCurveTo(cx + R * 0.3, headY - R * 1.3, cx + R * 0.5, headY - R * 0.8);
@@ -2139,31 +2709,60 @@ function hairDraw(style, c, char, x, y, w, h, color) {
       c.quadraticCurveTo(cx + R * 0.2, headY + R * 1.4, cx + R * 0.25, headY + R * 0.3);
       c.bezierCurveTo(cx + R * 0.35, headY - R * 0.2, cx + R * 0.3, headY - R * 0.7, cx + R * 0.2, headY - R * 0.85);
       c.fill();
+      // Strand lines
+      _hairStrands(c, cx, headY, R, color, [
+        { x1: 0.25, y1: -0.8, cx1: 0.45, cy1: -0.2, cx2: 0.4, cy2: 0.5, x2: 0.3, y2: 1.2, light: 18, a: 0.1, w: 0.5 },
+        { x1: 0.15, y1: -0.85, cx1: 0.35, cy1: -0.1, cx2: 0.35, cy2: 0.6, x2: 0.28, y2: 1.0, dark: 15, a: 0.08 },
+      ]);
       // Hair tie
-      c.fillStyle = _darken(color, 25);
-      c.beginPath(); c.ellipse(cx + R * 0.15, headY - R * 0.95, R * 0.12, R * 0.08, 0.3, 0, Math.PI * 2); c.fill();
+      c.save(); c.fillStyle = dk2;
+      c.beginPath(); c.ellipse(cx + R * 0.15, headY - R * 0.95, R * 0.14, R * 0.09, 0.3, 0, Math.PI * 2); c.fill();
+      c.fillStyle = dk; c.globalAlpha = 0.5;
+      c.beginPath(); c.ellipse(cx + R * 0.13, headY - R * 0.97, R * 0.06, R * 0.04, 0.3, 0, Math.PI * 2); c.fill();
+      c.restore();
       c.fillStyle = hairGrad;
       break;
     }
     case 'locs': {
       c.beginPath(); c.arc(cx, headY, R * 1.06, Math.PI + 0.2, -0.2); c.fill();
-      // Individual locs hanging down
-      for (let i = 0; i < 14; i++) {
-        const a = Math.PI + 0.25 + (i / 13) * (Math.PI - 0.5);
+      // Individual locs — with shadow and texture
+      for (let i = 0; i < 16; i++) {
+        const a = Math.PI + 0.22 + (i / 15) * (Math.PI - 0.44);
         const sx = cx + Math.cos(a) * R * 1.04;
-        const sy = headY + Math.sin(a) * R * 0.5;
-        const len = R * (1.0 + Math.sin(i * 2.1) * 0.25);
+        const sy = headY + Math.sin(a) * R * 0.48;
+        const len = R * (0.95 + Math.sin(i * 2.1) * 0.25);
+        const sway = Math.sin(i * 1.3) * 2;
+        // Shadow
+        c.save(); c.fillStyle = dk2; c.globalAlpha = 0.06;
+        c.beginPath();
+        c.moveTo(sx - 1.3, sy + 1);
+        c.quadraticCurveTo(sx - 1.5 + sway, sy + len * 0.5 + 1, sx - 0.8 + sway, sy + len + 1);
+        c.lineTo(sx + 1.8 + sway, sy + len + 1);
+        c.quadraticCurveTo(sx + 2.5 + sway, sy + len * 0.5 + 1, sx + 2, sy + 1);
+        c.fill(); c.restore();
+        // Main loc
+        c.fillStyle = i % 3 === 0 ? dk : hairGrad;
         c.beginPath();
         c.moveTo(sx - 1.5, sy);
-        c.quadraticCurveTo(sx - 2 + Math.sin(i) * 2, sy + len * 0.5, sx - 1 + Math.cos(i) * 2, sy + len);
-        c.lineTo(sx + 1 + Math.cos(i) * 2, sy + len);
-        c.quadraticCurveTo(sx + 2 + Math.sin(i) * 2, sy + len * 0.5, sx + 1.5, sy);
+        c.quadraticCurveTo(sx - 2 + sway, sy + len * 0.5, sx - 1 + sway, sy + len);
+        c.lineTo(sx + 1 + sway, sy + len);
+        c.quadraticCurveTo(sx + 2 + sway, sy + len * 0.5, sx + 1.5, sy);
         c.fill();
+        // Texture bands
+        c.save(); c.strokeStyle = dk; c.lineWidth = 0.3; c.globalAlpha = 0.1;
+        for (let b = 0; b < 3; b++) {
+          const by = sy + len * (0.25 + b * 0.25);
+          const bsway = sway * (0.25 + b * 0.25);
+          c.beginPath(); c.moveTo(sx - 1.2 + bsway, by); c.lineTo(sx + 1.2 + bsway, by); c.stroke();
+        }
+        c.restore();
       }
+      c.fillStyle = hairGrad;
       break;
     }
   }
   _animeHairShadow(c, cx, headY, R, color);
+  _hairInnerGlow(c, cx, headY, R, color);
   _animeHairShine(c, cx, headY, R);
 }
 
