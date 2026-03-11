@@ -1523,83 +1523,121 @@ function drawHUD() {
 }
 
 /* ── Buy Phase Rendering ───────────────────────────────────────── */
-function drawBuyPhase() {
-  ctx.fillStyle = '#000000cc';
-  ctx.fillRect(0, 0, W, H);
-
+function drawBuyPanel(player, cursorIdx, ox, pw, label, accentColor, ctrlHint) {
+  // Header
   ctx.textAlign = 'center';
-  ctx.fillStyle = '#ff6b35';
-  ctx.font = 'bold 20px monospace';
-  ctx.fillText('BUY PHASE', W/2, 50);
+  ctx.fillStyle = accentColor;
+  ctx.font = 'bold 12px monospace';
+  ctx.fillText(label, ox + pw/2, 90);
 
   ctx.fillStyle = '#ffcc00';
-  ctx.font = '14px monospace';
-  ctx.fillText('Round ' + roundNum + ' \u2014 ' + Math.ceil(buyTimer) + 's', W/2, 75);
+  ctx.font = '11px monospace';
+  ctx.fillText('$' + (player ? player.credits : 0), ox + pw/2, 106);
 
-  ctx.fillStyle = '#88ccff';
-  ctx.font = '12px monospace';
-  ctx.fillText('Credits: $' + (p1 ? p1.credits : 0), W/2, 100);
-
-  if (p1) {
+  // Loadout
+  if (player) {
     ctx.fillStyle = '#667788';
-    ctx.font = '10px monospace';
-    var loadout = 'Loadout: ' + (p1.primary ? WEAPONS[p1.primary].name : 'None') + ' + Pistol + Knife';
-    ctx.fillText(loadout, W/2, 120);
-    if (p1.utility.length > 0) {
-      ctx.fillText('Utility: ' + p1.utility.map(function(u) { return UTILITY[u].name; }).join(', '), W/2, 135);
+    ctx.font = '9px monospace';
+    var primary = player.primary ? WEAPONS[player.primary].name : 'None';
+    ctx.fillText(primary + ' + Pistol', ox + pw/2, 120);
+    if (player.utility.length > 0) {
+      ctx.fillText(player.utility.map(function(u) { return UTILITY[u].name; }).join(', '), ox + pw/2, 132);
     }
   }
 
+  // Item list
   ctx.textAlign = 'left';
+  var itemH = numPlayers === 2 ? 40 : 48;
+  var startY = numPlayers === 2 ? 142 : 160;
+  var itemW = pw - 10;
+
   for (var i = 0; i < BUY_ITEMS.length; i++) {
     var itemId = BUY_ITEMS[i];
     var isWeapon = !!WEAPONS[itemId];
     var item = isWeapon ? WEAPONS[itemId] : UTILITY[itemId];
-    var iy = 160 + i * 48;
-    var selected = buyCursor.p1 === i;
+    var iy = startY + i * itemH;
+    var selected = cursorIdx === i;
 
+    // Background
     ctx.fillStyle = selected ? '#1a2538' : '#0d1320';
-    ctx.fillRect(30, iy, 300, 40);
+    ctx.fillRect(ox + 5, iy, itemW, itemH - 4);
     if (selected) {
-      ctx.strokeStyle = '#ff6b35';
+      ctx.strokeStyle = accentColor;
       ctx.lineWidth = 1;
-      ctx.strokeRect(30, iy, 300, 40);
+      ctx.strokeRect(ox + 5, iy, itemW, itemH - 4);
     }
 
-    var affordable = p1 && item.cost <= p1.credits;
-    var owned = isWeapon && p1 && p1.primary === itemId;
+    var affordable = player && item.cost <= player.credits;
+    var owned = isWeapon && player && player.primary === itemId;
 
+    // Name
     ctx.fillStyle = owned ? '#44cc44' : (affordable ? '#ddeeff' : '#445566');
-    ctx.font = 'bold 12px monospace';
-    ctx.fillText(item.name, 40, iy + 16);
+    ctx.font = 'bold ' + (numPlayers === 2 ? '10' : '12') + 'px monospace';
+    ctx.fillText(item.name, ox + 10, iy + (numPlayers === 2 ? 14 : 16));
 
+    // Cost + stats
     ctx.fillStyle = affordable ? '#ffcc00' : '#664400';
-    ctx.font = '10px monospace';
-    ctx.fillText('$' + item.cost, 40, iy + 32);
+    ctx.font = (numPlayers === 2 ? '8' : '10') + 'px monospace';
+    ctx.fillText('$' + item.cost, ox + 10, iy + (numPlayers === 2 ? 28 : 32));
 
-    if (isWeapon) {
-      ctx.fillStyle = '#667788';
-      ctx.fillText('DMG:' + item.dmg + ' RPM:' + item.rate, 120, iy + 32);
-    } else {
-      ctx.fillStyle = '#667788';
-      if (item.heal) ctx.fillText('Heals ' + item.heal + ' HP', 120, iy + 32);
-      else if (item.dmg) ctx.fillText('DMG:' + item.dmg + ' R:' + item.radius, 120, iy + 32);
-      else ctx.fillText('Blinds enemies', 120, iy + 32);
+    if (numPlayers === 1) {
+      if (isWeapon) {
+        ctx.fillStyle = '#667788';
+        ctx.fillText('DMG:' + item.dmg + ' RPM:' + item.rate, ox + 90, iy + 32);
+      } else {
+        ctx.fillStyle = '#667788';
+        if (item.heal) ctx.fillText('Heals ' + item.heal + ' HP', ox + 90, iy + 32);
+        else if (item.dmg) ctx.fillText('DMG:' + item.dmg + ' R:' + item.radius, ox + 90, iy + 32);
+        else ctx.fillText('Blinds enemies', ox + 90, iy + 32);
+      }
     }
 
     if (owned) {
       ctx.fillStyle = '#44cc44';
-      ctx.font = '10px monospace';
+      ctx.font = (numPlayers === 2 ? '8' : '10') + 'px monospace';
       ctx.textAlign = 'right';
-      ctx.fillText('OWNED', 320, iy + 20);
+      ctx.fillText('OWN', ox + 5 + itemW - 4, iy + (numPlayers === 2 ? 14 : 20));
       ctx.textAlign = 'left';
     }
   }
 
+  // Controls hint
   ctx.textAlign = 'center';
-  ctx.fillStyle = '#556677';
-  ctx.font = '10px monospace';
-  ctx.fillText('W/S to browse, F to buy', W/2, H - 20);
+  ctx.fillStyle = '#445566';
+  ctx.font = '8px monospace';
+  ctx.fillText(ctrlHint, ox + pw/2, H - 10);
+}
+
+function drawBuyPhase() {
+  ctx.fillStyle = '#000000cc';
+  ctx.fillRect(0, 0, W, H);
+
+  // Title
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#ff6b35';
+  ctx.font = 'bold 18px monospace';
+  ctx.fillText('BUY PHASE', W/2, 40);
+
+  ctx.fillStyle = '#ffcc00';
+  ctx.font = '12px monospace';
+  ctx.fillText('Round ' + roundNum + ' \u2014 ' + Math.ceil(buyTimer) + 's', W/2, 60);
+
+  if (numPlayers === 2) {
+    // Split screen: P1 left half, P2 right half
+    var halfW = W / 2;
+    // Divider line
+    ctx.strokeStyle = '#2a3040';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(halfW, 70);
+    ctx.lineTo(halfW, H - 20);
+    ctx.stroke();
+
+    drawBuyPanel(p1, buyCursor.p1, 0, halfW, 'P1', '#4488ff', 'W/S + F');
+    drawBuyPanel(p2, buyCursor.p2, halfW, halfW, 'P2', '#ff4444', 'Up/Down + Enter');
+  } else {
+    drawBuyPanel(p1, buyCursor.p1, 0, W, 'YOUR LOADOUT', '#88ccff', 'W/S to browse, F to buy');
+  }
 }
 
 /* ── Countdown Rendering ──────────────────────────────────────── */
