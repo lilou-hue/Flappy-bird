@@ -274,8 +274,8 @@ function drawCharacter(c, x, y, w, h, char) {
   const blushColor = char.blush || '#ff7090';
   const accentColor = char.accent || '#f0a0c0';
 
-  // ── Back hair (behind body) ──
-  if (!isWolf && !isCat) {
+  // ── Back hair (behind body) ── (hidden when a hair item is equipped)
+  if (!isWolf && !isCat && !equipped.hair) {
     c.save();
     const hc = char.hair;
     if (char.id === 'human_girl') {
@@ -1120,8 +1120,8 @@ function drawCharacter(c, x, y, w, h, char) {
     c.fill(); c.restore();
   }
 
-  // ── Front hair (over face) ──
-  if (!isWolf && !isCat) {
+  // ── Front hair (over face) ── (hidden when a hair item is equipped)
+  if (!isWolf && !isCat && !equipped.hair) {
     c.save();
     const hc = char.hair;
     if (char.id === 'human_girl') {
@@ -1230,36 +1230,6 @@ function drawCharacter(c, x, y, w, h, char) {
       c.quadraticCurveTo(cx + headR * 0.35, headY - headR * 0.7, cx + headR * 0.25, headY - headR * 0.5);
       c.stroke();
       c.restore();
-      // Brass goggles pushed up on forehead
-      c.save();
-      const gogY = headY - headR * 0.55;
-      // Strap
-      c.strokeStyle = '#8b6914'; c.lineWidth = 1.2; c.globalAlpha = 0.7;
-      c.beginPath();
-      c.moveTo(cx - headR * 0.55, gogY + 2);
-      c.quadraticCurveTo(cx, gogY - 1, cx + headR * 0.55, gogY + 2);
-      c.stroke();
-      // Lens frames
-      for (let s = -1; s <= 1; s += 2) {
-        const lx = cx + s * headR * 0.22;
-        // Brass rim
-        c.strokeStyle = '#b8860b'; c.lineWidth = 1.0; c.globalAlpha = 0.75;
-        c.beginPath(); c.arc(lx, gogY, headR * 0.15, 0, Math.PI * 2); c.stroke();
-        // Green-tinted lens
-        c.fillStyle = 'rgba(77,184,130,0.12)';
-        c.globalAlpha = 0.6;
-        c.beginPath(); c.arc(lx, gogY, headR * 0.13, 0, Math.PI * 2); c.fill();
-        // Lens glint
-        c.fillStyle = '#fff'; c.globalAlpha = 0.25;
-        c.beginPath(); c.arc(lx - headR * 0.04, gogY - headR * 0.04, headR * 0.04, 0, Math.PI * 2); c.fill();
-      }
-      // Bridge between lenses
-      c.strokeStyle = '#b8860b'; c.lineWidth = 0.8; c.globalAlpha = 0.7;
-      c.beginPath();
-      c.moveTo(cx - headR * 0.08, gogY);
-      c.quadraticCurveTo(cx, gogY - 1, cx + headR * 0.08, gogY);
-      c.stroke();
-      c.restore();
     } else if (isElf) {
       // Sylvie: wispy bangs, platinum-streaked, floating wisps
       c.fillStyle = hc;
@@ -1304,43 +1274,6 @@ function drawCharacter(c, x, y, w, h, char) {
         c.quadraticCurveTo(wx + Math.sin(now + i * 1.3) * 4, wy - 5, wx + Math.sin(now + i * 0.7) * 3, wy - 9);
         c.stroke();
       }
-      c.restore();
-      // Dewdrop pendant (at neck level)
-      c.save();
-      const pdX = cx, pdY = neckTop - 1;
-      // Thin chain
-      c.strokeStyle = '#c0c0c0'; c.lineWidth = 0.3; c.globalAlpha = 0.3;
-      c.beginPath(); c.moveTo(cx - headR * 0.2, headY + headR * 0.9);
-      c.quadraticCurveTo(cx, headY + headR * 1.05, cx + headR * 0.2, headY + headR * 0.9);
-      c.stroke();
-      // Crystal dewdrop
-      c.globalAlpha = 0.5;
-      const dewGrad = c.createRadialGradient(pdX - 0.5, pdY - 1, 0.3, pdX, pdY, 2);
-      dewGrad.addColorStop(0, 'rgba(255,255,255,0.8)');
-      dewGrad.addColorStop(0.5, 'rgba(200,230,255,0.4)');
-      dewGrad.addColorStop(1, 'rgba(180,210,240,0.2)');
-      c.fillStyle = dewGrad;
-      c.beginPath(); c.arc(pdX, pdY, 1.8, 0, Math.PI * 2); c.fill();
-      // Tiny rainbow refraction
-      c.globalAlpha = 0.15;
-      const rainbowColors = ['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#9b59b6'];
-      for (let i = 0; i < 5; i++) {
-        c.fillStyle = rainbowColors[i];
-        c.beginPath(); c.arc(pdX + Math.cos(now * 2 + i * 1.2) * 3, pdY + Math.sin(now * 2 + i * 1.2) * 3, 0.4, 0, Math.PI * 2);
-        c.fill();
-      }
-      c.restore();
-      // Gold ear wrap with leaf charm (left ear)
-      c.save();
-      const earWrapX = cx - headR * 0.88;
-      const earWrapY = headY - headR * 0.05;
-      c.strokeStyle = '#d4a030'; c.lineWidth = 0.8; c.globalAlpha = 0.6; c.lineCap = 'round';
-      c.beginPath(); c.arc(earWrapX, earWrapY, 2, -0.5, Math.PI * 0.8); c.stroke();
-      // Tiny hanging leaf
-      c.fillStyle = '#7ec88a'; c.globalAlpha = 0.5;
-      c.beginPath();
-      c.ellipse(earWrapX - 1, earWrapY + 3.5, 1.2, 2, -0.2, 0, Math.PI * 2);
-      c.fill();
       c.restore();
     } else if (isFairy) {
       // Petal: messy space buns + layered wavy bangs
@@ -1402,6 +1335,69 @@ function drawCharacter(c, x, y, w, h, char) {
       c.quadraticCurveTo(cx - headR * 0.35, headY - headR * 0.5, cx - headR * 0.4, headY + headR * 0.3);
       c.stroke(); c.restore();
     }
+    c.restore();
+  }
+
+  // ── Character accessories (always visible, even with equipped hair) ──
+  if (char.id === 'human_boy') {
+    // Fenn: Brass goggles pushed up on forehead
+    c.save();
+    const gogY = headY - headR * 0.55;
+    c.strokeStyle = '#8b6914'; c.lineWidth = 1.2; c.globalAlpha = 0.7;
+    c.beginPath();
+    c.moveTo(cx - headR * 0.55, gogY + 2);
+    c.quadraticCurveTo(cx, gogY - 1, cx + headR * 0.55, gogY + 2);
+    c.stroke();
+    for (let s = -1; s <= 1; s += 2) {
+      const lx = cx + s * headR * 0.22;
+      c.strokeStyle = '#b8860b'; c.lineWidth = 1.0; c.globalAlpha = 0.75;
+      c.beginPath(); c.arc(lx, gogY, headR * 0.15, 0, Math.PI * 2); c.stroke();
+      c.fillStyle = 'rgba(77,184,130,0.12)'; c.globalAlpha = 0.6;
+      c.beginPath(); c.arc(lx, gogY, headR * 0.13, 0, Math.PI * 2); c.fill();
+      c.fillStyle = '#fff'; c.globalAlpha = 0.25;
+      c.beginPath(); c.arc(lx - headR * 0.04, gogY - headR * 0.04, headR * 0.04, 0, Math.PI * 2); c.fill();
+    }
+    c.strokeStyle = '#b8860b'; c.lineWidth = 0.8; c.globalAlpha = 0.7;
+    c.beginPath();
+    c.moveTo(cx - headR * 0.08, gogY);
+    c.quadraticCurveTo(cx, gogY - 1, cx + headR * 0.08, gogY);
+    c.stroke();
+    c.restore();
+  }
+  if (isElf) {
+    // Sylvie: Dewdrop pendant
+    c.save();
+    const pdX2 = cx, pdY2 = neckTop - 1;
+    c.strokeStyle = '#c0c0c0'; c.lineWidth = 0.3; c.globalAlpha = 0.3;
+    c.beginPath(); c.moveTo(cx - headR * 0.2, headY + headR * 0.9);
+    c.quadraticCurveTo(cx, headY + headR * 1.05, cx + headR * 0.2, headY + headR * 0.9);
+    c.stroke();
+    c.globalAlpha = 0.5;
+    const dewGrad2 = c.createRadialGradient(pdX2 - 0.5, pdY2 - 1, 0.3, pdX2, pdY2, 2);
+    dewGrad2.addColorStop(0, 'rgba(255,255,255,0.8)');
+    dewGrad2.addColorStop(0.5, 'rgba(200,230,255,0.4)');
+    dewGrad2.addColorStop(1, 'rgba(180,210,240,0.2)');
+    c.fillStyle = dewGrad2;
+    c.beginPath(); c.arc(pdX2, pdY2, 1.8, 0, Math.PI * 2); c.fill();
+    const now2 = Date.now() / 2000;
+    c.globalAlpha = 0.15;
+    const rainbowColors2 = ['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#9b59b6'];
+    for (let i = 0; i < 5; i++) {
+      c.fillStyle = rainbowColors2[i];
+      c.beginPath(); c.arc(pdX2 + Math.cos(now2 * 2 + i * 1.2) * 3, pdY2 + Math.sin(now2 * 2 + i * 1.2) * 3, 0.4, 0, Math.PI * 2);
+      c.fill();
+    }
+    c.restore();
+    // Gold ear wrap with leaf charm
+    c.save();
+    const earWrapX2 = cx - headR * 0.88;
+    const earWrapY2 = headY - headR * 0.05;
+    c.strokeStyle = '#d4a030'; c.lineWidth = 0.8; c.globalAlpha = 0.6; c.lineCap = 'round';
+    c.beginPath(); c.arc(earWrapX2, earWrapY2, 2, -0.5, Math.PI * 0.8); c.stroke();
+    c.fillStyle = '#7ec88a'; c.globalAlpha = 0.5;
+    c.beginPath();
+    c.ellipse(earWrapX2 - 1, earWrapY2 + 3.5, 1.2, 2, -0.2, 0, Math.PI * 2);
+    c.fill();
     c.restore();
   }
 
