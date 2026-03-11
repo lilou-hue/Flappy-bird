@@ -37,7 +37,7 @@ var WEAPONS = {
   smg:       { cat: 'primary',   cost: 200, dmg: 12, rate: 5.5, ammo: 30,  speed: 7,  spread: 0.12, bloom: 0.04, color: '#44ddff', name: 'SMG', trailLen: 5, bulletDrop: 0.06 },
   shotgun:   { cat: 'primary',   cost: 300, dmg: 9,  rate: 0.9, ammo: 8,   speed: 6,  spread: 0.2,  bloom: 0,    color: '#ff8844', name: 'Shotgun', pellets: 6, trailLen: 3, bulletDrop: 0.12 },
   rifle:     { cat: 'primary',   cost: 400, dmg: 28, rate: 2.8, ammo: 25,  speed: 8,  spread: 0.04, bloom: 0.035,color: '#88ff44', name: 'Rifle', trailLen: 8, bulletDrop: 0.04 },
-  sniper:    { cat: 'primary',   cost: 500, dmg: 85, rate: 0.6, ammo: 5,   speed: 16, spread: 0.01, bloom: 0.08, color: '#ff44ff', name: 'Sniper', trailLen: 18, bulletDrop: 0.01 },
+  sniper:    { cat: 'primary',   cost: 500, dmg: 60, rate: 0.5, ammo: 4,   speed: 14, spread: 0.02, bloom: 0.12, color: '#ff44ff', name: 'Sniper', trailLen: 18, bulletDrop: 0.01 },
   knife:     { cat: 'melee',     cost: 0,   dmg: 55, rate: 2,   ammo: Infinity, range: 35, color: '#cccccc', name: 'Knife' }
 };
 var UTILITY = {
