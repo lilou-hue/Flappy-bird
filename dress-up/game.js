@@ -4156,7 +4156,7 @@ function drawDress(style, c, char, x, y, w, h, color) {
         const tTop = bodyBot + t * ((kneeY + 5 - bodyBot) / tiers);
         const tBot = bodyBot + (t + 1) * ((kneeY + 5 - bodyBot) / tiers);
         const spread = 4 + t * 4;
-        c.fillStyle = t % 2 === 0 ? botGrad : dG;
+        c.fillStyle = t % 2 === 0 ? dG : _lighten(color, 10);
         c.beginPath();
         c.moveTo(cx - bodyW - t * 2, tTop);
         c.quadraticCurveTo(cx - bodyW - spread, (tTop + tBot) / 2, cx - bodyW - t * 2 + 2, tBot);
@@ -5197,19 +5197,25 @@ function drawAccessory(style, c, char, x, y, w, h, color) {
     }
     case 'mask': {
       const mkY = headY - headR * 0.05;
+      // Mask shape — draw left and right halves around eye openings
+      for (let s = -1; s <= 1; s += 2) {
+        c.beginPath();
+        c.moveTo(cx, mkY - headR * 0.35);
+        c.quadraticCurveTo(cx + s * headR * 0.15, mkY - headR * 0.3, cx + s * headR * 0.15, mkY - headR * 0.17);
+        c.ellipse(cx + s * headR * 0.3, mkY - headR * 0.05, headR * 0.15, headR * 0.12, 0, s === -1 ? 0 : Math.PI, s === -1 ? Math.PI : 0);
+        c.quadraticCurveTo(cx + s * headR * 0.55, mkY + headR * 0.15, cx + s * headR * 0.7, mkY);
+        c.quadraticCurveTo(cx + s * headR * 0.8, mkY - headR * 0.3, cx + s * headR * 0.4, mkY - headR * 0.25);
+        c.quadraticCurveTo(cx + s * headR * 0.1, mkY - headR * 0.35, cx, mkY - headR * 0.35);
+        c.closePath(); c.fill();
+      }
+      // Decorative edge
+      c.strokeStyle = _darken(color, 20); c.lineWidth = 0.4;
       c.beginPath();
       c.moveTo(cx - headR * 0.7, mkY);
       c.quadraticCurveTo(cx - headR * 0.8, mkY - headR * 0.3, cx - headR * 0.4, mkY - headR * 0.25);
       c.quadraticCurveTo(cx, mkY - headR * 0.35, cx + headR * 0.4, mkY - headR * 0.25);
       c.quadraticCurveTo(cx + headR * 0.8, mkY - headR * 0.3, cx + headR * 0.7, mkY);
-      c.quadraticCurveTo(cx + headR * 0.5, mkY + headR * 0.15, cx, mkY + headR * 0.1);
-      c.quadraticCurveTo(cx - headR * 0.5, mkY + headR * 0.15, cx - headR * 0.7, mkY);
-      c.closePath(); c.fill();
-      // Eye holes
-      c.globalCompositeOperation = 'destination-out';
-      c.beginPath(); c.ellipse(cx - headR * 0.3, mkY - headR * 0.05, headR * 0.15, headR * 0.12, 0, 0, Math.PI * 2); c.fill();
-      c.beginPath(); c.ellipse(cx + headR * 0.3, mkY - headR * 0.05, headR * 0.15, headR * 0.12, 0, 0, Math.PI * 2); c.fill();
-      c.globalCompositeOperation = 'source-over';
+      c.stroke();
       break;
     }
   }
