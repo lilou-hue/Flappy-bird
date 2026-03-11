@@ -1085,11 +1085,12 @@ function drawCharacter(c, x, y, w, h, char) {
     c.globalAlpha = blushAlpha;
     for (let s = -1; s <= 1; s += 2) {
       const bx = cx + s * (eyeSp + eyeW * 0.1);
+      // Soft radial blush using hex color with alpha
+      const bRgb = _hexToRgb(blushColor);
       const blushGrad = c.createRadialGradient(bx, blushY, 0, bx, blushY, headR * 0.22);
-      blushGrad.addColorStop(0, blushColor);
-      blushGrad.addColorStop(1, blushColor.replace(')', ',0)').replace('rgb(', 'rgba(').replace('#', ''));
-      // Use solid color with alpha for hex colors
-      c.fillStyle = blushColor;
+      blushGrad.addColorStop(0, `rgba(${bRgb.r},${bRgb.g},${bRgb.b},1)`);
+      blushGrad.addColorStop(1, `rgba(${bRgb.r},${bRgb.g},${bRgb.b},0)`);
+      c.fillStyle = blushGrad;
       c.beginPath(); c.ellipse(bx, blushY, headR * 0.2, headR * 0.1, 0, 0, Math.PI * 2); c.fill();
     }
     c.restore();
