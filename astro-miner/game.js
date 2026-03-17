@@ -386,9 +386,7 @@ function resetGame() {
   crashTimer = 0;
   stats.asteroidsThisRun = 0;
   stats.lowGravLandsThisRun = 0;
-  stats.noJetpackScore = score;
   stats.usedJetpack = false;
-  stats.longestTime = 0;
   scoreNode.textContent = '0';
   crystalsNode.textContent = '0';
   gravityNode.textContent = t('amGravNormal', 'Normal');

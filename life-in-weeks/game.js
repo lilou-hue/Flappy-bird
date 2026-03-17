@@ -377,7 +377,7 @@
     }
 
     // Language change handler
-    document.addEventListener('langchange', function () {
+    window.addEventListener('langchange', function () {
         I18N.applyDOM();
         populateMonthOptions();
         updateAgeLabels();

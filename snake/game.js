@@ -419,10 +419,10 @@ const SKINS = {
       ctx.lineTo(cx + half - 2, cy - half);
       ctx.fill();
     },
-    drawBody(cx, cy, half, bodySize, cr, cg, cb, alpha) {
-      const r = Math.round(lerp(255, 180, alpha));
-      const g = Math.round(lerp(107, 40, alpha));
-      const b = Math.round(lerp(53, 20, alpha));
+    drawBody(cx, cy, half, bodySize, cr, cg, cb, alpha, t) {
+      const r = Math.round(lerp(255, 180, t));
+      const g = Math.round(lerp(107, 40, t));
+      const b = Math.round(lerp(53, 20, t));
       ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
       ctx.shadowBlur = 6;
       ctx.shadowColor = `rgba(255,${g},0,0.3)`;
@@ -1718,6 +1718,7 @@ function drawSnake(movePhase) {
       cy += dir.x * wave;
     }
 
+    let deathAlpha = 1;
     if (isDead && deathElapsed > 0 && state.deathPos) {
       const dx = cx - state.deathPos.x;
       const dy = cy - state.deathPos.y;
@@ -1725,11 +1726,10 @@ function drawSnake(movePhase) {
       const scatterForce = deathElapsed * 120 * (1 + i * 0.3);
       cx += (dx / dist) * scatterForce;
       cy += (dy / dist) * scatterForce;
-      const deathAlpha = Math.max(0, 1 - deathElapsed * 1.2);
-      ctx.globalAlpha = deathAlpha;
+      deathAlpha = Math.max(0, 1 - deathElapsed * 1.2);
     }
 
-    positions.push({ cx, cy });
+    positions.push({ cx, cy, deathAlpha });
   }
 
   // Ghost mode transparency
@@ -1757,7 +1757,9 @@ function drawSnake(movePhase) {
 
   // Segments
   for (let i = segs.length - 1; i >= 0; i--) {
-    const { cx, cy } = positions[i];
+    const { cx, cy, deathAlpha } = positions[i];
+    ctx.save();
+    ctx.globalAlpha = deathAlpha;
     const t = segs.length > 1 ? i / (segs.length - 1) : 0;
 
     if (isDead && (cx < -50 || cx > GAME_W + 50 || cy < -50 || cy > GAME_H + 50)) continue;
@@ -1838,6 +1840,7 @@ function drawSnake(movePhase) {
       currentSkin.drawBody(cx, cy, half, bodySize, cr, cg, cb, alpha, t, i);
       ctx.restore();
     }
+    ctx.restore(); // restore deathAlpha
   }
 
   if (isGhost) ctx.restore();

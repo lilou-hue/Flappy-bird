@@ -1163,7 +1163,7 @@ function spawnExplosion(x, y, color, count) {
       vx: Math.cos(angle) * speed,
       vy: Math.sin(angle) * speed,
       life: 0.3 + Math.random() * 0.5,
-      maxLife: 0.5,
+      maxLife: 0.8,
       size: 1.5 + Math.random() * 3,
       color: color,
     });

@@ -7348,6 +7348,12 @@ function endChallenge() {
   if (stats.challengesCompleted >= 10) checkAchievement('challenge_10');
   if (score >= 35) checkAchievement('high_scorer');
 
+  // Save best score
+  const prevBest = Number(localStorage.getItem('dressUpBest')) || 0;
+  if (score > prevBest) {
+    localStorage.setItem('dressUpBest', String(score));
+  }
+
   if (typeof Leaderboard !== 'undefined') {
     Leaderboard.submitScore('dress-up', score);
   }
@@ -7672,5 +7678,7 @@ window.addEventListener('langchange', () => {
   renderAchievements();
   if (typeof I18N !== 'undefined') I18N.applyDOM();
 });
+
+document.addEventListener('arcade-restart', function() { startChallenge(); });
 
 })();

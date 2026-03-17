@@ -758,7 +758,9 @@ function gameOver() {
     );
   }
 
+  state.wasNewBest = false;
   if (state.score > state.bestScore) {
+    state.wasNewBest = true;
     state.bestScore = state.score;
     localStorage.setItem("phantomRoadBest", state.bestScore);
     localStorage.setItem("prBestScore", state.bestScore);
@@ -2760,7 +2762,7 @@ function drawGameOverScreen() {
   ctx.fillText(`${state.score}m`, W / 2, H / 2 - 15);
 
   // Best indicator
-  if (state.score >= state.bestScore && state.score > 0) {
+  if (state.wasNewBest && state.score > 0) {
     ctx.font = "bold 16px 'Trebuchet MS', sans-serif";
     ctx.fillStyle = "#ffcc22";
     ctx.fillText(_t('prNewBest'), W / 2, H / 2 + 8);

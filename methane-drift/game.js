@@ -559,15 +559,15 @@ function loadBestScore() {
 }
 
 function saveBestScore() {
-  let isNew = false;
+  world.wasNewBest = false;
   if (world.score > world.best) {
+    world.wasNewBest = true;
     world.best = world.score;
-    isNew = true;
     try { localStorage.setItem('methaneDriftBest', String(world.best)); } catch (e) { /* */ }
     if (bestNode) bestNode.textContent = String(world.best);
     Audio.newHighScore();
   }
-  return isNew;
+  return world.wasNewBest;
 }
 
 /* --- Reset --- */
@@ -1665,27 +1665,27 @@ function update(dt, rawDt) {
 
   /* HUD */
   scoreNode.textContent = String(world.score);
-  densityNode.textContent = world.densityLabel;
+  densityNode.textContent = _t(DENSITY_I18N[world.densityLabel] || 'buoyant');
   symbiosisNode.textContent = glider.symbiosisTimer > 0
-    ? `Active ${glider.symbiosisTimer.toFixed(1)}s`
+    ? `${_t('mdShieldOn')} ${glider.symbiosisTimer.toFixed(1)}s`
     : glider.symbiosisCooldown > 0
-    ? `Recharging ${glider.symbiosisCooldown.toFixed(1)}s`
-    : glider.symbiosisCharge >= 1 ? 'Ready' : 'Recharging';
+    ? `${_t('mdRechargingLabel')} ${glider.symbiosisCooldown.toFixed(1)}s`
+    : glider.symbiosisCharge >= 1 ? _t('mdShieldReadyLabel') : _t('mdRechargingLabel');
 
   /* Update HTML symbiosis button label */
   const symBtn = document.getElementById('symbiosisBtn');
   if (symBtn) {
     if (glider.symbiosisTimer > 0) {
-      symBtn.textContent = `Shield Active ${glider.symbiosisTimer.toFixed(1)}s`;
+      symBtn.textContent = `${_t('mdShieldOn')} ${glider.symbiosisTimer.toFixed(1)}s`;
       symBtn.disabled = true;
     } else if (glider.symbiosisCooldown > 0) {
-      symBtn.textContent = `Recharging ${Math.ceil(glider.symbiosisCooldown)}s`;
+      symBtn.textContent = `${_t('mdRechargingLabel')} ${Math.ceil(glider.symbiosisCooldown)}s`;
       symBtn.disabled = true;
     } else if (glider.symbiosisCharge >= 1) {
-      symBtn.textContent = 'Shield';
+      symBtn.textContent = _t('mdShieldBtnLabel');
       symBtn.disabled = false;
     } else {
-      symBtn.textContent = 'Recharging...';
+      symBtn.textContent = `${_t('mdRechargingLabel')}...`;
       symBtn.disabled = true;
     }
   }
@@ -3488,7 +3488,7 @@ function drawText(dt) {
     ctx.fillText(`${_t('mdYourBest')}: ${world.best}`, cx, yPos);
     yPos += 22;
 
-    if (world.score === world.best && world.score > 0) {
+    if (world.wasNewBest && world.score > 0) {
       ctx.fillStyle = 'rgba(255, 220, 120, 0.9)';
       ctx.font = '700 15px Inter, sans-serif';
       ctx.fillText(_t('mdNewBestScore'), cx, yPos);

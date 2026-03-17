@@ -399,13 +399,16 @@
   function save() {
     state.lastSave = Date.now();
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch(e) {}
+    saveUCAch();
+  }
+  function saveAndReport() {
+    save();
     if (typeof Leaderboard !== 'undefined' && state.lifetimeSP > 0 && Leaderboard.getNickname()) {
       Leaderboard.submitScore('unicorn-clicker', Math.floor(state.lifetimeSP));
     }
     if (typeof Arcade !== 'undefined') {
       Arcade.onGameOver('unicorn-clicker', Math.floor(state.lifetimeSP));
     }
-    saveUCAch();
   }
 
   function load() {
@@ -3958,7 +3961,7 @@
     }
   });
 
-  window.addEventListener('beforeunload', save);
+  window.addEventListener('beforeunload', saveAndReport);
 
   // ── Ko-fi Shop ──
   if (typeof Shop !== 'undefined') {

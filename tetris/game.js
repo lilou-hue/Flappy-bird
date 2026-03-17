@@ -848,11 +848,13 @@
     garbageRow[gapCol] = null;
     state.board.shift();
     state.board.push(garbageRow);
-    // Check if top visible row (row 4) has any non-null cell after push
-    for (var c = 0; c < COLS; c++) {
-      if (state.board[4][c] !== null) {
-        triggerGameOver();
-        return;
+    // Check if any hidden row (0-3) has content after push — top-out
+    for (var r = 0; r < 4; r++) {
+      for (var c = 0; c < COLS; c++) {
+        if (state.board[r][c] !== null) {
+          triggerGameOver();
+          return;
+        }
       }
     }
     state.garbageInterval = Math.max(3, state.garbageInterval - 0.3);
@@ -2106,6 +2108,8 @@
   if (savedMute === "true") {
     state.muted = true;
     muteBtn.textContent = "\u{1F507}";
+    Audio.init();
+    Audio.toggle(); // sync audio engine to muted state
   }
   resetGame();
   requestAnimationFrame(loop);

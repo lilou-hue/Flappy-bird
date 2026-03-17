@@ -2878,7 +2878,7 @@
           streakData = JSON.parse(localStorage.getItem('arcade_playStreak') || '{}');
         } catch(e) { streakData = {}; }
 
-        const streak = streakData.streak || 1;
+        const streak = streakData.streak || 0;
 
         if (totalAch > 0 || combinedBest > 0 || maxPlayed > 0) {
           dashboard.classList.remove('hidden');

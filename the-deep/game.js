@@ -120,6 +120,7 @@
   var discoveryCounter = document.getElementById('discovery-counter');
   var discoveredCountEl = document.getElementById('discovered-count');
   var totalCountEl = document.getElementById('total-count');
+  var nextSignalEl = document.getElementById('next-signal');
   totalCountEl.textContent = TOTAL_CREATURES;
 
   function updateCounter() {
@@ -171,7 +172,6 @@
   minimapEl.appendChild(minimapThumb);
 
   // --- Next signal indicator ---
-  var nextSignalEl = document.getElementById('next-signal');
 
   function findNearestUndiscovered(currentDepth) {
     var nearest = null;

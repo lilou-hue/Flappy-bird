@@ -198,14 +198,14 @@ function setupTouchControls() {
   touchButtons = [];
   if (inputMode === 'keyboard') return;
   var btnH = 50, btnW = 55, margin = 6, bottomY = H - btnH - margin;
-  if (inputMode === 'touch' || inputMode === 'mixed_p1touch') {
+  if (inputMode === 'touch' || inputMode === 'mixed') {
     touchButtons.push({ id: 'p1', action: 'left',  x: margin, y: bottomY, w: btnW, h: btnH, label: '<' });
     touchButtons.push({ id: 'p1', action: 'right', x: margin + btnW + 4, y: bottomY, w: btnW, h: btnH, label: '>' });
     touchButtons.push({ id: 'p1', action: 'up',    x: margin + (btnW+4)/2, y: bottomY - btnH - 4, w: btnW, h: btnH, label: '^' });
     touchButtons.push({ id: 'p1', action: 'shoot', x: margin, y: bottomY - (btnH+4)*2, w: btnW*2+4, h: btnH, label: 'FIRE' });
     touchButtons.push({ id: 'p1', action: 'down',  x: margin + btnW*2 + 12, y: bottomY, w: btnW-10, h: btnH, label: 'v' });
   }
-  if (inputMode === 'touch' && numPlayers === 2) {
+  if ((inputMode === 'touch' || inputMode === 'mixed') && numPlayers === 2) {
     var rx = W/2 + margin;
     touchButtons.push({ id: 'p2', action: 'left',  x: rx, y: bottomY, w: btnW, h: btnH, label: '<' });
     touchButtons.push({ id: 'p2', action: 'right', x: rx + btnW + 4, y: bottomY, w: btnW, h: btnH, label: '>' });
@@ -306,7 +306,7 @@ function updateInputs() {
       p2.input.switchWeapon = keys['Backspace'];
       p2.input.useUtility = keys['/'];
       p2.input.dash = keys['Shift'];
-    } else if (inputMode === 'touch') {
+    } else if (inputMode === 'touch' || inputMode === 'mixed') {
       p2.input.left = touchState.p2.left;
       p2.input.right = touchState.p2.right;
       p2.input.up = touchState.p2.up;
