@@ -6,24 +6,21 @@
   var multiplier = 1;
 
   var items = [
-    { name: "Big Mac", emoji: "\uD83C\uDF54", price: 5, qty: 0 },
-    { name: "Movie Ticket", emoji: "\uD83C\uDFAC", price: 15, qty: 0 },
-    { name: "Book", emoji: "\uD83D\uDCDA", price: 12, qty: 0 },
-    { name: "Pair of Jeans", emoji: "\uD83D\uDC56", price: 40, qty: 0 },
-    { name: "Video Game", emoji: "\uD83C\uDFAE", price: 70, qty: 0 },
-    { name: "Nice Dinner", emoji: "\uD83C\uDF7D\uFE0F", price: 150, qty: 0 },
-    { name: "Smartphone", emoji: "\uD83D\uDCF1", price: 1000, qty: 0 },
-    { name: "Gaming PC", emoji: "\uD83D\uDDA5\uFE0F", price: 2500, qty: 0 },
-    { name: "Hot Tub", emoji: "\uD83D\uDEC1", price: 8000, qty: 0 },
-    { name: "Rolex Watch", emoji: "\u231A", price: 15000, qty: 0 },
-    { name: "Tesla Model 3", emoji: "\uD83D\uDE97", price: 40000, qty: 0 },
-    { name: "College Tuition (1 yr)", emoji: "\uD83C\uDF93", price: 50000, qty: 0 },
-    { name: "Lamborghini", emoji: "\uD83C\uDFCE\uFE0F", price: 300000, qty: 0 },
-    { name: "House", emoji: "\uD83C\uDFE0", price: 400000, qty: 0 },
-    { name: "Yacht", emoji: "\uD83D\uDEA2", price: 7500000, qty: 0 },
-    { name: "Private Jet", emoji: "\u2708\uFE0F", price: 70000000, qty: 0 },
-    { name: "Skyscraper", emoji: "\uD83C\uDFD9\uFE0F", price: 850000000, qty: 0 },
-    { name: "Sports Team", emoji: "\uD83C\uDFC6", price: 4000000000, qty: 0, alwaysUnaffordable: true }
+    { name: "Park Bench", emoji: "🪑", price: 500, qty: 0 },
+    { name: "Street Light", emoji: "🔦", price: 2000, qty: 0 },
+    { name: "Bus Stop", emoji: "🚏", price: 15000, qty: 0 },
+    { name: "Playground", emoji: "🛝", price: 50000, qty: 0 },
+    { name: "Public Library", emoji: "📚", price: 2000000, qty: 0 },
+    { name: "Fire Station", emoji: "🚒", price: 5000000, qty: 0 },
+    { name: "Community Pool", emoji: "🏊", price: 8000000, qty: 0 },
+    { name: "School", emoji: "🏫", price: 15000000, qty: 0 },
+    { name: "Hospital", emoji: "🏥", price: 50000000, qty: 0 },
+    { name: "Sports Stadium", emoji: "🏟️", price: 100000000, qty: 0 },
+    { name: "Metro Line", emoji: "🚇", price: 150000000, qty: 0 },
+    { name: "Concert Hall", emoji: "🎭", price: 200000000, qty: 0 },
+    { name: "University", emoji: "🎓", price: 300000000, qty: 0 },
+    { name: "Airport", emoji: "✈️", price: 500000000, qty: 0 },
+    { name: "Space Center", emoji: "🚀", price: 2000000000, qty: 0, alwaysUnaffordable: true }
   ];
 
   // DOM refs
@@ -84,7 +81,7 @@
       var noteDiv = document.createElement("div");
       noteDiv.className = "item-note";
       if (item.alwaysUnaffordable) {
-        noteDiv.textContent = "Can't afford this with just a billion...";
+        noteDiv.textContent = "Not even a billion covers this...";
       }
 
       var qtyDiv = document.createElement("div");
@@ -96,7 +93,7 @@
 
       var buyBtn = document.createElement("button");
       buyBtn.className = "btn-buy";
-      buyBtn.textContent = "Buy";
+      buyBtn.textContent = "Build";
       buyBtn.setAttribute("data-buy", i);
       buyBtn.addEventListener("click", function () {
         buyItem(i);
@@ -104,7 +101,7 @@
 
       var sellBtn = document.createElement("button");
       sellBtn.className = "btn-sell";
-      sellBtn.textContent = "Sell";
+      sellBtn.textContent = "Demolish";
       sellBtn.setAttribute("data-sell", i);
       sellBtn.addEventListener("click", function () {
         sellItem(i);
@@ -161,7 +158,7 @@
 
       // Quantity display
       if (item.qty > 0) {
-        qtyEl.textContent = "Owned: " + fmt(item.qty);
+        qtyEl.textContent = "Built: " + fmt(item.qty);
       } else {
         qtyEl.textContent = "";
       }
@@ -212,7 +209,7 @@
       }
     });
 
-    spentDisplayEl.textContent = "Spent: $" + fmt(spent) + "  |  Remaining: $" + fmt(remaining);
+    spentDisplayEl.textContent = "Allocated: $" + fmt(spent) + "  |  Remaining: $" + fmt(remaining);
 
     if (hasPurchases) {
       receiptEmptyEl.style.display = "none";
