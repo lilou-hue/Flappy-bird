@@ -7315,7 +7315,7 @@ function endChallenge() {
   Audio.challengeEnd();
 
   const score = calculateScore();
-  const stars = score > 25 ? 3 : score > 15 ? 2 : score > 5 ? 1 : 0;
+  const stars = score >= 30 ? 3 : score >= 18 ? 2 : score >= 8 ? 1 : 0;
 
   stats.challengesCompleted = (stats.challengesCompleted || 0) + 1;
   saveJSON(STATS_KEY, stats);
@@ -7340,14 +7340,13 @@ function endChallenge() {
   challengeOverlay.classList.add('visible');
   hudTimer.style.display = 'none';
 
-  let coinReward = 10;
-  if (stars >= 3) coinReward += 5;
+  let coinReward = 5 + stars * 5;
   addCoins(coinReward);
 
   checkAchievement('challenge_1');
   if (stars >= 3) checkAchievement('three_stars');
   if (stats.challengesCompleted >= 10) checkAchievement('challenge_10');
-  if (score >= 28) checkAchievement('high_scorer');
+  if (score >= 35) checkAchievement('high_scorer');
 
   if (typeof Leaderboard !== 'undefined') {
     Leaderboard.submitScore('dress-up', score);
@@ -7362,29 +7361,77 @@ function calculateScore() {
   const targetTags = currentChallengeTheme.tags;
   let score = 0;
 
+  // --- Related & distant tag maps ---
+  const related = {
+    casual: ['simple', 'sporty', 'beach'], elegant: ['formal', 'fancy', 'royal'],
+    cool: ['punk', 'retro', 'edgy', 'urban'], natural: ['cute', 'colorful'],
+    magic: ['fantasy', 'magical'], summer: ['casual', 'beach', 'colorful'],
+    warm: ['cozy', 'winter'], medieval: ['warrior', 'armor', 'fantasy'],
+    royal: ['elegant', 'fancy', 'formal'], fancy: ['elegant', 'royal'],
+    punk: ['cool', 'retro', 'edgy', 'urban'], hero: ['warrior', 'cool', 'armor'],
+    warrior: ['medieval', 'hero', 'armor'], fantasy: ['magic', 'magical', 'natural'],
+    scifi: ['space', 'cool', 'urban'], edgy: ['punk', 'cool', 'urban'],
+    urban: ['cool', 'casual', 'edgy'], colorful: ['cute', 'natural', 'summer'],
+    cute: ['natural', 'colorful'], formal: ['elegant', 'fancy', 'royal'],
+    sporty: ['casual', 'simple'], cozy: ['warm', 'winter', 'casual'],
+    beach: ['summer', 'casual', 'sandals'], space: ['scifi', 'cool'],
+    armor: ['warrior', 'medieval', 'hero'], smart: ['formal', 'elegant'],
+    magical: ['magic', 'fantasy'], simple: ['casual', 'sporty'],
+    winter: ['warm', 'cozy'], retro: ['punk', 'cool', 'colorful'],
+  };
+
+  // Collect all equipped items for cohesion scoring
+  const equippedItems = [];
+
+  // --- Per-item theme matching ---
   CATEGORIES.forEach(cat => {
     if (!equipped[cat]) return;
     const item = ITEMS.find(it => it.id === equipped[cat].itemId);
     if (!item) return;
+    equippedItems.push(item);
+
     item.tags.forEach(tag => {
-      if (targetTags.includes(tag)) score += 3;
-      else {
-        const related = {
-          casual: ['simple', 'sporty'], elegant: ['formal', 'fancy'], cool: ['punk', 'retro'],
-          natural: ['cute'], magic: ['fantasy', 'magical'], summer: ['casual', 'beach'],
-          warm: ['cozy', 'winter'], medieval: ['warrior'], royal: ['elegant', 'fancy'],
-          fancy: ['elegant'], punk: ['cool', 'retro'], hero: ['warrior', 'cool'],
-          warrior: ['medieval', 'hero'], fantasy: ['magic', 'magical'], scifi: ['space', 'cool'],
-        };
-        if (related[tag] && related[tag].some(r => targetTags.includes(r))) score += 1;
+      if (targetTags.includes(tag)) {
+        score += 3; // exact match
+      } else if (related[tag] && related[tag].some(r => targetTags.includes(r))) {
+        score += 1; // related match
       }
     });
+
+    // Premium item bonus: +1 per premium piece that has at least one theme match
+    if (item.premium && item.tags.some(tag => targetTags.includes(tag))) {
+      score += 1;
+    }
   });
 
+  // --- Outfit cohesion bonus ---
+  // Reward items that share tags with each other (not just the theme)
+  if (equippedItems.length >= 3) {
+    const tagCounts = {};
+    equippedItems.forEach(item => {
+      const seen = new Set();
+      item.tags.forEach(tag => {
+        if (!seen.has(tag)) { tagCounts[tag] = (tagCounts[tag] || 0) + 1; seen.add(tag); }
+      });
+    });
+    // Each tag shared by 3+ items adds a cohesion point (max 4)
+    let cohesion = 0;
+    for (const tag in tagCounts) {
+      if (tagCounts[tag] >= 3) cohesion++;
+    }
+    score += Math.min(cohesion, 4);
+  }
+
+  // --- Slot coverage bonus (progressive) ---
+  const filledSlots = CATEGORIES.filter(c => equipped[c]).length;
   const hasDress = !!equipped.dress;
   const hasTopBot = !!equipped.top && !!equipped.bottom;
-  const coreSlots = ['hair', 'shoes', 'accessory', 'background'].filter(c2 => equipped[c2]).length;
-  if (coreSlots >= 4 && (hasDress || hasTopBot)) score += 5;
+  const hasOutfit = hasDress || hasTopBot;
+
+  if (filledSlots >= 3) score += 1;
+  if (filledSlots >= 4) score += 1;
+  if (filledSlots >= 5 && hasOutfit) score += 2;
+  if (filledSlots >= 6 && hasOutfit) score += 3; // full outfit bonus
 
   scoreDisplay.textContent = score;
   return score;
