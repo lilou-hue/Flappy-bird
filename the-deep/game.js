@@ -43,6 +43,8 @@
     { depth: 10994, emoji: '⬛', name: 'The Bottom',            fact: 'You made it. The deepest point in the ocean. Pressure here is 1,086 bars — over 1,000 times surface pressure.', isBottom: true }
   ];
 
+  var TOTAL_CREATURES = CREATURES.length;
+
   // --- Zone labels ---
   var ZONES = [
     { depth: 10,   name: 'Sunlight Zone' },
@@ -51,6 +53,26 @@
     { depth: 4050, name: 'Abyssal Zone' },
     { depth: 6050, name: 'Hadal Zone' }
   ];
+
+  // --- Discovery state ---
+  var discoveredSet = {};
+  try {
+    var stored = localStorage.getItem('theDeepDiscovered');
+    if (stored) {
+      var arr = JSON.parse(stored);
+      arr.forEach(function (d) { discoveredSet[d] = true; });
+    }
+  } catch (e) {}
+
+  function saveDiscoveries() {
+    try {
+      localStorage.setItem('theDeepDiscovered', JSON.stringify(Object.keys(discoveredSet)));
+    } catch (e) {}
+  }
+
+  function getDiscoveredCount() {
+    return Object.keys(discoveredSet).length;
+  }
 
   // --- Utility ---
   function depthToPx(depth) {
@@ -91,14 +113,35 @@
   // Title card
   var titleCard = document.createElement('div');
   titleCard.className = 'title-card';
-  titleCard.innerHTML = '<h1>The Deep</h1><div class="subtitle">Scroll down</div>';
+  titleCard.innerHTML = '<h1>The Deep</h1><div class="expedition-subtitle">A sonar expedition</div><div class="subtitle">Scroll down</div>';
   ocean.appendChild(titleCard);
+
+  // Discovery counter
+  var discoveryCounter = document.getElementById('discovery-counter');
+  var discoveredCountEl = document.getElementById('discovered-count');
+  var totalCountEl = document.getElementById('total-count');
+  totalCountEl.textContent = TOTAL_CREATURES;
+
+  function updateCounter() {
+    var count = getDiscoveredCount();
+    discoveredCountEl.textContent = count;
+    if (count >= TOTAL_CREATURES) {
+      discoveryCounter.innerHTML = '🎉 All species discovered!';
+      discoveryCounter.classList.add('complete');
+    }
+  }
+  updateCounter();
 
   // Depth indicator
   var depthIndicator = document.createElement('div');
   depthIndicator.className = 'depth-indicator';
   depthIndicator.textContent = '0m';
   document.body.appendChild(depthIndicator);
+
+  // Sonar sweep background
+  var sonarSweep = document.createElement('div');
+  sonarSweep.className = 'sonar-sweep';
+  document.body.appendChild(sonarSweep);
 
   // Light rays container
   var lightRaysContainer = document.createElement('div');
@@ -146,22 +189,96 @@
 
   // Create creature elements
   var creatureElements = [];
-  CREATURES.forEach(function (c) {
+  CREATURES.forEach(function (c, index) {
+    var depthKey = String(c.depth);
+    var alreadyDiscovered = !!discoveredSet[depthKey];
+
     var div = document.createElement('div');
-    div.className = 'creature' + (c.isBottom ? ' bottom' : '');
+    var classes = 'creature';
+    if (c.isBottom) classes += ' bottom';
+    if (alreadyDiscovered) {
+      classes += ' discovered';
+    } else {
+      classes += ' undiscovered';
+    }
+    div.className = classes;
     var yPos = depthToPx(c.depth);
-    // Center creatures vertically in viewport at their depth
     div.style.top = (yPos + window.innerHeight * 0.4) + 'px';
 
-    div.innerHTML =
-      '<span class="emoji">' + c.emoji + '</span>' +
-      '<div class="name">' + c.name + '</div>' +
-      '<div class="depth-label">' + c.depth.toLocaleString() + ' m</div>' +
-      '<div class="fact">' + c.fact + '</div>';
+    // Build inner HTML — undiscovered shows sonar blip, discovered shows real info
+    div.innerHTML = buildCreatureHTML(c, alreadyDiscovered);
+
+    // Store data attributes for reveal
+    div.setAttribute('data-depth', depthKey);
+    div.setAttribute('data-emoji', c.emoji);
+    div.setAttribute('data-name', c.name);
+    div.setAttribute('data-fact', c.fact);
+    div.setAttribute('data-depth-label', c.depth.toLocaleString() + ' m');
+
+    // Click handler for discovery
+    div.addEventListener('click', function (e) {
+      if (!div.classList.contains('undiscovered') || !div.classList.contains('visible')) return;
+
+      // Start pinging
+      div.classList.remove('undiscovered');
+      div.classList.add('pinging');
+
+      // Create ping rings at click position relative to the creature
+      var rect = div.getBoundingClientRect();
+      var pingX = rect.left + rect.width / 2;
+      var pingY = rect.top + rect.height * 0.3;
+      createPingRings(pingX, pingY);
+
+      // After ping animation, reveal
+      setTimeout(function () {
+        div.classList.remove('pinging');
+        div.classList.add('discovered');
+        div.innerHTML = buildCreatureHTML(c, true);
+
+        // Save discovery
+        discoveredSet[depthKey] = true;
+        saveDiscoveries();
+        updateCounter();
+      }, 600);
+    });
 
     ocean.appendChild(div);
     creatureElements.push({ el: div, depth: c.depth, yPos: yPos + window.innerHeight * 0.4 });
   });
+
+  function buildCreatureHTML(creature, isDiscovered) {
+    if (isDiscovered) {
+      return '<span class="emoji">' + creature.emoji + '</span>' +
+        '<div class="name">' + creature.name + '</div>' +
+        '<div class="depth-label">' + creature.depth.toLocaleString() + ' m</div>' +
+        '<div class="fact">' + creature.fact + '</div>';
+    } else {
+      return '<span class="emoji sonar-blip">?</span>' +
+        '<div class="name">Unknown Signal</div>' +
+        '<div class="depth-label">' + creature.depth.toLocaleString() + ' m</div>' +
+        '<div class="fact">Tap to identify</div>';
+    }
+  }
+
+  function createPingRings(x, y) {
+    for (var i = 0; i < 3; i++) {
+      (function (delay) {
+        var ring = document.createElement('div');
+        ring.className = 'ping-ring';
+        ring.style.left = x + 'px';
+        ring.style.top = y + 'px';
+        document.body.appendChild(ring);
+
+        setTimeout(function () {
+          ring.classList.add('animate');
+        }, delay);
+
+        setTimeout(function () {
+          if (ring.parentNode) ring.parentNode.removeChild(ring);
+        }, delay + 800);
+      })(i * 150);
+    }
+  }
 
   // Create zone labels
   var zoneElements = [];
@@ -217,6 +334,10 @@
     // Light rays fade
     var rayOpacity = 1 - Math.min(1, currentDepth / 200);
     lightRaysContainer.style.opacity = rayOpacity;
+
+    // Sonar sweep visibility — more visible in deeper zones
+    var sweepOpacity = Math.min(0.06, currentDepth / 8000 * 0.06);
+    sonarSweep.style.opacity = sweepOpacity;
 
     // Update creature visibility
     var viewTop = scrollY - VIEWPORT_PADDING;

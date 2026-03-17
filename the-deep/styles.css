@@ -43,6 +43,38 @@ body {
   width: 100%;
 }
 
+/* Discovery counter */
+#discovery-counter {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: #fff;
+  opacity: 0.45;
+  z-index: 100;
+  letter-spacing: 1.5px;
+  user-select: none;
+  padding: 8px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+#discovery-counter:hover {
+  opacity: 0.7;
+}
+
+#discovery-counter.complete {
+  opacity: 0.7;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
 /* Depth indicator */
 .depth-indicator {
   position: fixed;
@@ -81,11 +113,20 @@ body {
   opacity: 0.9;
 }
 
+.title-card .expedition-subtitle {
+  font-size: clamp(14px, 3vw, 18px);
+  font-weight: 300;
+  opacity: 0.3;
+  margin-top: 8px;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+}
+
 .title-card .subtitle {
   font-size: 14px;
   font-weight: 300;
   opacity: 0.35;
-  margin-top: 16px;
+  margin-top: 24px;
   letter-spacing: 3px;
   animation: pulse 3s ease-in-out infinite;
 }
@@ -93,6 +134,34 @@ body {
 @keyframes pulse {
   0%, 100% { opacity: 0.2; }
   50% { opacity: 0.5; }
+}
+
+/* Sonar sweep background */
+.sonar-sweep {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 200vmax;
+  height: 200vmax;
+  margin-top: -100vmax;
+  margin-left: -100vmax;
+  pointer-events: none;
+  z-index: 3;
+  opacity: 0;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    transparent 340deg,
+    rgba(100, 200, 255, 0.15) 355deg,
+    transparent 360deg
+  );
+  animation: sonarRotate 6s linear infinite;
+  border-radius: 50%;
+}
+
+@keyframes sonarRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 /* Light rays */
@@ -150,6 +219,17 @@ body {
   opacity: 1;
 }
 
+/* Make undiscovered creatures clickable */
+.creature.visible.undiscovered {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+/* Discovered creatures are not clickable */
+.creature.discovered {
+  pointer-events: none;
+}
+
 .creature .emoji {
   font-size: 48px;
   margin-bottom: 12px;
@@ -179,6 +259,116 @@ body {
   opacity: 0.55;
   line-height: 1.6;
   letter-spacing: 0.5px;
+}
+
+/* --- Undiscovered state --- */
+.creature.undiscovered .emoji.sonar-blip {
+  font-size: 32px;
+  width: 64px;
+  height: 64px;
+  line-height: 64px;
+  margin: 0 auto 12px;
+  border-radius: 50%;
+  border: 1px solid rgba(100, 200, 255, 0.3);
+  animation: sonarPulse 2.5s ease-in-out infinite;
+  background: rgba(100, 200, 255, 0.05);
+  display: block;
+  color: rgba(100, 200, 255, 0.6);
+}
+
+.creature.undiscovered .name {
+  opacity: 0.4;
+  font-weight: 300;
+  font-size: clamp(16px, 3.5vw, 22px);
+  letter-spacing: 3px;
+  color: rgba(100, 200, 255, 0.7);
+}
+
+.creature.undiscovered .fact {
+  opacity: 0.2;
+  font-size: 13px;
+  letter-spacing: 1.5px;
+}
+
+@keyframes sonarPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(100, 200, 255, 0.15),
+                0 0 0 0 rgba(100, 200, 255, 0.08);
+    border-color: rgba(100, 200, 255, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 12px rgba(100, 200, 255, 0),
+                0 0 0 24px rgba(100, 200, 255, 0);
+    border-color: rgba(100, 200, 255, 0.5);
+  }
+}
+
+/* --- Pinging state --- */
+.creature.pinging .emoji.sonar-blip {
+  animation: none;
+  border-color: rgba(100, 200, 255, 0.6);
+  background: rgba(100, 200, 255, 0.12);
+}
+
+.creature.pinging .name {
+  opacity: 0.6;
+  color: rgba(100, 200, 255, 0.9);
+}
+
+/* --- Ping ring effect --- */
+.ping-ring {
+  position: fixed;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(100, 200, 255, 0.6);
+  pointer-events: none;
+  z-index: 50;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+}
+
+.ping-ring.animate {
+  animation: pingExpand 0.7s ease-out forwards;
+}
+
+@keyframes pingExpand {
+  0% {
+    width: 0;
+    height: 0;
+    opacity: 0.8;
+    border-width: 2px;
+  }
+  100% {
+    width: 120px;
+    height: 120px;
+    opacity: 0;
+    border-width: 1px;
+  }
+}
+
+/* --- Discovered state transition --- */
+.creature.discovered .emoji {
+  animation: revealFadeIn 0.5s ease-out;
+}
+
+.creature.discovered .name {
+  animation: revealFadeIn 0.5s ease-out 0.1s both;
+}
+
+.creature.discovered .fact {
+  animation: revealFadeIn 0.5s ease-out 0.2s both;
+}
+
+@keyframes revealFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Zone labels */
@@ -239,5 +429,18 @@ body {
 
   .creature .emoji {
     font-size: 36px;
+  }
+
+  .creature.undiscovered .emoji.sonar-blip {
+    width: 52px;
+    height: 52px;
+    line-height: 52px;
+    font-size: 26px;
+  }
+
+  #discovery-counter {
+    font-size: 12px;
+    bottom: 16px;
+    padding: 6px 16px;
   }
 }
