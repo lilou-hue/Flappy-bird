@@ -309,6 +309,17 @@ let gameTime = 0;
 let lastMilestone = 0;
 let sessionMaxAlive = 0;
 let sessionLongestLife = 0;
+let scoreMultiplier = 1.0;
+let multiplierTimer = 0;
+let lastCollisionTime = -999;
+let nearMissCombo = 0;
+let nearMissTimer = 0;
+
+// ── Drag-to-launch state ──
+let isDragging = false;
+let dragStart = { x: 0, y: 0 };
+let dragEnd = { x: 0, y: 0 };
+let predictedPath = [];
 
 document.getElementById('bestScore').textContent = bestScore;
 
@@ -323,6 +334,13 @@ function resetGame() {
   lastMilestone = 0;
   sessionMaxAlive = 0;
   sessionLongestLife = 0;
+  scoreMultiplier = 1.0;
+  multiplierTimer = 0;
+  lastCollisionTime = -999;
+  nearMissCombo = 0;
+  nearMissTimer = 0;
+  isDragging = false;
+  predictedPath = [];
   document.getElementById('score').textContent = '0';
 
   Audio.init();
@@ -338,7 +356,7 @@ function plantSun(x, y) {
   Audio.playPlant();
 }
 
-function plantPlanet(x, y) {
+function plantPlanet(x, y, vx, vy) {
   if (planets.length >= MAX_PLANETS) return;
 
   const sun = planets[0];
@@ -349,18 +367,6 @@ function plantPlanet(x, y) {
   const dist = Math.sqrt(dx * dx + dy * dy);
 
   if (dist < sun.radius + 10) return; // Too close to sun
-
-  // Orbital velocity: v = sqrt(G*M/r), perpendicular to sun
-  const orbitalSpeed = Math.sqrt(G * sun.mass / dist);
-  const jitter = 0.85 + Math.random() * 0.3; // ±15% jitter
-  const speed = orbitalSpeed * jitter;
-
-  // Perpendicular direction (clockwise or counter-clockwise randomly)
-  const nx = dx / dist;
-  const ny = dy / dist;
-  const dir = Math.random() < 0.5 ? 1 : -1;
-  const vx = -ny * speed * dir;
-  const vy = nx * speed * dir;
 
   const hue = PLANET_HUES[Math.floor(Math.random() * PLANET_HUES.length)];
   const mass = 3 + Math.random() * 5;
@@ -374,6 +380,72 @@ function plantPlanet(x, y) {
 
   achData.stats.totalPlanetsPlanted++;
   Audio.playPlant();
+}
+
+// ── Orbit prediction ──
+function predictOrbit(x, y, vx, vy, steps) {
+  const path = [];
+  const sun = planets[0];
+  if (!sun || !sun.alive) return path;
+  let px = x, py = y, pvx = vx, pvy = vy;
+  const dt = 0.016;
+  for (let i = 0; i < steps; i++) {
+    const dx = sun.x - px;
+    const dy = sun.y - py;
+    const distSq = dx * dx + dy * dy + SOFTENING;
+    const dist = Math.sqrt(distSq);
+    const force = G * sun.mass / distSq;
+    pvx += force * dx / dist * dt;
+    pvy += force * dy / dist * dt;
+    // Also account for other planets' gravity
+    for (let j = 1; j < planets.length; j++) {
+      if (!planets[j].alive) continue;
+      const dx2 = planets[j].x - px;
+      const dy2 = planets[j].y - py;
+      const dSq2 = dx2 * dx2 + dy2 * dy2 + SOFTENING;
+      const d2 = Math.sqrt(dSq2);
+      const f2 = G * planets[j].mass / dSq2;
+      pvx += f2 * dx2 / d2 * dt;
+      pvy += f2 * dy2 / d2 * dt;
+    }
+    px += pvx * dt;
+    py += pvy * dt;
+    // Check if it hits the sun
+    const sd = Math.sqrt((px - sun.x) ** 2 + (py - sun.y) ** 2);
+    if (sd < sun.radius + 5) break;
+    // Check if it escapes
+    if (px < -100 || px > CW + 100 || py < -100 || py > CH + 100) break;
+    if (i % 2 === 0) path.push({ x: px, y: py });
+  }
+  return path;
+}
+
+function getDragVelocity() {
+  const dx = dragStart.x - dragEnd.x;
+  const dy = dragStart.y - dragEnd.y;
+  const dragDist = Math.sqrt(dx * dx + dy * dy);
+
+  // Scale: drag distance maps to velocity. Max drag ~200px = max speed
+  const sun = planets[0];
+  if (!sun) return { vx: 0, vy: 0 };
+  const dsx = dragStart.x - sun.x;
+  const dsy = dragStart.y - sun.y;
+  const distToSun = Math.sqrt(dsx * dsx + dsy * dsy);
+  const orbitalSpeed = Math.sqrt(G * sun.mass / Math.max(distToSun, 30));
+
+  // Drag direction = launch direction, drag length scales speed (0.5x to 2x orbital)
+  const speedScale = Math.min(dragDist / 100, 2.0);
+  const speed = orbitalSpeed * Math.max(speedScale, 0.3);
+
+  if (dragDist < 3) {
+    // Tiny drag = auto-orbit (perpendicular to sun, like before)
+    const nx = dsx / Math.max(distToSun, 1);
+    const ny = dsy / Math.max(distToSun, 1);
+    const dir = Math.random() < 0.5 ? 1 : -1;
+    return { vx: -ny * orbitalSpeed * dir, vy: nx * orbitalSpeed * dir };
+  }
+
+  return { vx: dx / Math.max(dragDist, 1) * speed, vy: dy / Math.max(dragDist, 1) * speed };
 }
 
 function endGame() {
@@ -436,16 +508,31 @@ function updatePhysics(dt) {
       if (realDist < a.radius + b.radius) {
         spawnExplosion((a.x + b.x) / 2, (a.y + b.y) / 2, a.hue, b.hue);
         Audio.playCollision();
-        a.alive = false;
-        b.alive = false;
+        lastCollisionTime = gameTime;
 
-        // If sun destroyed, game over
+        // Sun collision = game over
         if (a.isStationary || b.isStationary) {
-          // Remove dead planets
+          a.alive = false;
+          b.alive = false;
           planets = planets.filter(p => p.alive);
           endGame();
           return;
         }
+
+        // Planet-planet collision = merge! Bigger absorbs smaller
+        const bigger = a.mass >= b.mass ? a : b;
+        const smaller = a.mass >= b.mass ? b : a;
+        // Conserve momentum
+        bigger.vx = (bigger.vx * bigger.mass + smaller.vx * smaller.mass) / (bigger.mass + smaller.mass);
+        bigger.vy = (bigger.vy * bigger.mass + smaller.vy * smaller.mass) / (bigger.mass + smaller.mass);
+        bigger.mass += smaller.mass * 0.7;
+        bigger.radius = Math.min(bigger.radius + smaller.radius * 0.4, 18);
+        // Blend hues
+        bigger.hue = (bigger.hue + smaller.hue) / 2;
+        smaller.alive = false;
+
+        // Score bonus for merge
+        score += 15 * scoreMultiplier;
       }
     }
   }
@@ -476,10 +563,59 @@ function updatePhysics(dt) {
     }
   }
 
-  // Score: alive non-sun planets * dt * 10
+  // ── Score multiplier: grows while no collisions, resets on sun hit ──
+  const timeSinceCollision = gameTime - lastCollisionTime;
+  if (timeSinceCollision > 5) {
+    multiplierTimer += dt;
+    if (multiplierTimer > 3) {
+      scoreMultiplier = Math.min(scoreMultiplier + dt * 0.15, 5.0);
+    }
+  } else {
+    multiplierTimer = 0;
+    scoreMultiplier = Math.max(1.0, scoreMultiplier - dt * 0.5);
+  }
+
+  // ── Near-miss detection: planets passing close earn bonus ──
+  nearMissTimer -= dt;
+  for (let i = 1; i < planets.length; i++) {
+    if (!planets[i].alive || planets[i].isStationary) continue;
+    for (let j = i + 1; j < planets.length; j++) {
+      if (!planets[j].alive || planets[j].isStationary) continue;
+      const nmDx = planets[i].x - planets[j].x;
+      const nmDy = planets[i].y - planets[j].y;
+      const nmDist = Math.sqrt(nmDx * nmDx + nmDy * nmDy);
+      const threshold = planets[i].radius + planets[j].radius + 25;
+      if (nmDist < threshold && nmDist > planets[i].radius + planets[j].radius) {
+        if (nearMissTimer <= 0) {
+          nearMissCombo++;
+          const bonus = 10 * nearMissCombo * scoreMultiplier;
+          score += bonus;
+          nearMissTimer = 1.5; // cooldown
+          // Visual feedback: spawn small sparkle particles
+          for (let k = 0; k < 8; k++) {
+            const angle = Math.random() * Math.PI * 2;
+            particles.push({
+              x: (planets[i].x + planets[j].x) / 2,
+              y: (planets[i].y + planets[j].y) / 2,
+              vx: Math.cos(angle) * 40,
+              vy: Math.sin(angle) * 40,
+              life: 0.5,
+              maxLife: 0.5,
+              size: 1 + Math.random() * 2,
+              hue: 50,
+            });
+          }
+          Audio.playMilestone();
+        }
+      }
+    }
+  }
+  if (nearMissTimer <= -3) nearMissCombo = 0; // reset combo after inactivity
+
+  // Score: alive non-sun planets * dt * 10 * multiplier
   const alivePlanets = planets.filter(p => p.alive && !p.isStationary).length;
   if (alivePlanets > 0) {
-    score += alivePlanets * dt * 10;
+    score += alivePlanets * dt * 10 * scoreMultiplier;
     document.getElementById('score').textContent = Math.floor(score);
 
     // Milestone sound every 50 pts
@@ -503,25 +639,63 @@ function updatePhysics(dt) {
   }
 }
 
-// ── Controls ──
-function handleInput(e) {
+// ── Controls (drag-to-launch) ──
+function getCanvasCoords(e) {
   const rect = canvas.getBoundingClientRect();
-  const scaleX = CW / rect.width;
-  const scaleY = CH / rect.height;
-  const cx = (e.clientX - rect.left) * scaleX;
-  const cy = (e.clientY - rect.top) * scaleY;
+  return {
+    x: (e.clientX - rect.left) * (CW / rect.width),
+    y: (e.clientY - rect.top) * (CH / rect.height),
+  };
+}
+
+canvas.addEventListener('pointerdown', e => {
+  e.preventDefault();
+  const pos = getCanvasCoords(e);
 
   if (gameOver) { resetGame(); return; }
   if (!gameStarted) { resetGame(); return; }
 
   if (!sunPlanted) {
-    plantSun(cx, cy);
-  } else {
-    plantPlanet(cx, cy);
+    plantSun(pos.x, pos.y);
+    return;
   }
-}
 
-canvas.addEventListener('pointerdown', e => { e.preventDefault(); handleInput(e); });
+  // Start drag for planet launch
+  if (planets.length < MAX_PLANETS && planets[0] && planets[0].alive) {
+    isDragging = true;
+    dragStart = { x: pos.x, y: pos.y };
+    dragEnd = { x: pos.x, y: pos.y };
+    predictedPath = [];
+  }
+});
+
+canvas.addEventListener('pointermove', e => {
+  if (!isDragging) return;
+  e.preventDefault();
+  dragEnd = getCanvasCoords(e);
+
+  // Update prediction
+  const vel = getDragVelocity();
+  predictedPath = predictOrbit(dragStart.x, dragStart.y, vel.vx, vel.vy, 300);
+});
+
+canvas.addEventListener('pointerup', e => {
+  if (!isDragging) return;
+  e.preventDefault();
+  isDragging = false;
+  dragEnd = getCanvasCoords(e);
+
+  const vel = getDragVelocity();
+  plantPlanet(dragStart.x, dragStart.y, vel.vx, vel.vy);
+  predictedPath = [];
+});
+
+canvas.addEventListener('pointerleave', () => {
+  if (isDragging) {
+    isDragging = false;
+    predictedPath = [];
+  }
+});
 
 document.getElementById('restartButton').addEventListener('click', resetGame);
 
@@ -648,7 +822,51 @@ function render() {
 
   drawParticles();
 
-  // Planet count display
+  // ── Drag-to-launch visuals ──
+  if (isDragging && sunPlanted && !gameOver) {
+    ctx.save();
+    // Draw predicted orbit path
+    if (predictedPath.length > 1) {
+      for (let i = 1; i < predictedPath.length; i++) {
+        const alpha = (1 - i / predictedPath.length) * 0.5;
+        ctx.strokeStyle = `rgba(255,255,255,${alpha})`;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(predictedPath[i - 1].x, predictedPath[i - 1].y);
+        ctx.lineTo(predictedPath[i].x, predictedPath[i].y);
+        ctx.stroke();
+        // Dots every 10 steps
+        if (i % 10 === 0) {
+          ctx.fillStyle = `rgba(255,255,255,${alpha * 1.5})`;
+          ctx.beginPath();
+          ctx.arc(predictedPath[i].x, predictedPath[i].y, 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+    // Draw launch arrow
+    const arrowDx = dragStart.x - dragEnd.x;
+    const arrowDy = dragStart.y - dragEnd.y;
+    const arrowLen = Math.sqrt(arrowDx * arrowDx + arrowDy * arrowDy);
+    if (arrowLen > 5) {
+      ctx.strokeStyle = 'rgba(255,215,0,0.6)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 4]);
+      ctx.beginPath();
+      ctx.moveTo(dragStart.x, dragStart.y);
+      ctx.lineTo(dragStart.x + arrowDx * 0.5, dragStart.y + arrowDy * 0.5);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    // Ghost planet at launch point
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.beginPath();
+    ctx.arc(dragStart.x, dragStart.y, 7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Planet count + multiplier display
   if (gameStarted && sunPlanted && !gameOver) {
     const alive = planets.filter(p => p.alive && !p.isStationary).length;
     ctx.save();
@@ -656,6 +874,22 @@ function render() {
     ctx.textAlign = 'right';
     ctx.fillStyle = 'rgba(200,210,255,0.35)';
     ctx.fillText(`${alive}/${MAX_PLANETS - 1} planets`, CW - 12, 22);
+
+    // Score multiplier
+    if (scoreMultiplier > 1.05) {
+      const mAlpha = Math.min((scoreMultiplier - 1) / 2, 1);
+      ctx.font = 'bold 14px "Segoe UI", system-ui, sans-serif';
+      ctx.fillStyle = `rgba(255,215,0,${0.4 + mAlpha * 0.5})`;
+      ctx.fillText(`x${scoreMultiplier.toFixed(1)}`, CW - 12, 40);
+    }
+
+    // Near-miss combo
+    if (nearMissCombo > 0 && nearMissTimer > -2) {
+      ctx.font = 'bold 13px "Segoe UI", system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = `rgba(255,230,100,${Math.max(0, 0.6 + nearMissTimer * 0.2)})`;
+      ctx.fillText(`Near miss x${nearMissCombo}!`, CW / 2, CH - 20);
+    }
     ctx.restore();
   }
 
@@ -682,6 +916,16 @@ function render() {
     ctx.restore();
   }
 
+  // Drag hint after sun is planted and no planets yet
+  if (gameStarted && sunPlanted && !gameOver && planets.filter(p => !p.isStationary).length === 0 && !isDragging) {
+    ctx.save();
+    ctx.font = '16px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = `rgba(200,210,255,${0.3 + Math.sin(time * 2) * 0.2})`;
+    ctx.fillText('Drag to launch planets into orbit', CW / 2, CH - 40);
+    ctx.restore();
+  }
+
   // Game over overlay
   if (gameOver) {
     ctx.fillStyle = 'rgba(4,6,14,0.75)';
@@ -689,13 +933,16 @@ function render() {
     ctx.font = 'bold 42px "Segoe UI", system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillStyle = '#ffd700';
-    ctx.fillText(I18N.t('gameOver') || 'Game Over', CW / 2, CH / 2 - 30);
+    ctx.fillText(I18N.t('gameOver') || 'Game Over', CW / 2, CH / 2 - 50);
     ctx.font = '24px "Segoe UI", system-ui, sans-serif';
     ctx.fillStyle = 'rgba(255,215,0,0.7)';
-    ctx.fillText(`${I18N.t('score') || 'Score'}: ${Math.floor(score)}`, CW / 2, CH / 2 + 15);
+    ctx.fillText(`${I18N.t('score') || 'Score'}: ${Math.floor(score)}`, CW / 2, CH / 2 - 5);
+    ctx.font = '14px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle = 'rgba(200,210,255,0.45)';
+    ctx.fillText(`Peak multiplier: x${scoreMultiplier.toFixed(1)}  |  Planets planted: ${achData.stats.totalPlanetsPlanted}`, CW / 2, CH / 2 + 25);
     ctx.font = '16px "Segoe UI", system-ui, sans-serif';
     ctx.fillStyle = 'rgba(255,255,255,0.5)';
-    ctx.fillText(I18N.t('tapToRestart') || 'Tap to restart', CW / 2, CH / 2 + 50);
+    ctx.fillText(I18N.t('tapToRestart') || 'Tap to restart', CW / 2, CH / 2 + 55);
   }
 }
 
