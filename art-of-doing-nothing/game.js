@@ -55,6 +55,131 @@
     5: 'Tomorrow Starts Today'
   };
 
+  /* ── Scene fade transition ── */
+  var fadeAlpha = 0;       // 0 = no fade, 1 = fully black
+  var fadeDirection = 0;   // 1 = fading out, -1 = fading in, 0 = idle
+  var fadeCallback = null;
+  var FADE_SPEED = 0.04;
+
+  function fadeOut(cb) {
+    fadeDirection = 1;
+    fadeCallback = cb;
+  }
+
+  function fadeIn() {
+    fadeDirection = -1;
+    fadeCallback = null;
+  }
+
+  function updateFade() {
+    if (fadeDirection === 0) return;
+    fadeAlpha += fadeDirection * FADE_SPEED;
+    if (fadeAlpha >= 1 && fadeDirection === 1) {
+      fadeAlpha = 1;
+      fadeDirection = 0;
+      if (fadeCallback) { fadeCallback(); fadeCallback = null; }
+    }
+    if (fadeAlpha <= 0 && fadeDirection === -1) {
+      fadeAlpha = 0;
+      fadeDirection = 0;
+    }
+  }
+
+  /* ── Chapter title card ── */
+  var titleCardAlpha = 0;
+  var titleCardTimer = 0;
+  var titleCardText = '';
+
+  function showTitleCard(text) {
+    titleCardText = text;
+    titleCardAlpha = 1;
+    titleCardTimer = 120; // ~2 seconds at 60fps
+  }
+
+  function updateTitleCard() {
+    if (titleCardTimer > 0) {
+      titleCardTimer--;
+      if (titleCardTimer < 30) {
+        titleCardAlpha = titleCardTimer / 30;
+      }
+    }
+  }
+
+  function drawTitleCard() {
+    if (titleCardAlpha <= 0) return;
+    ctx.globalAlpha = titleCardAlpha * 0.8;
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, canvasW, canvasH);
+    ctx.globalAlpha = titleCardAlpha;
+    ctx.font = 'bold 18px "Space Grotesk", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#C4A97D';
+    ctx.fillText(titleCardText, canvasW / 2, canvasH / 2 - 10);
+    ctx.font = '12px "Space Grotesk", sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.fillText('Chapter ' + currentChapter, canvasW / 2, canvasH / 2 + 15);
+    ctx.textAlign = 'left';
+    ctx.globalAlpha = 1;
+  }
+
+  /* ── Atmospheric particles (per chapter) ── */
+  var atmoParticles = [];
+
+  function spawnAtmoParticle() {
+    var p;
+    switch (currentChapter) {
+      case 1: // Floating dust motes in bedroom
+        p = { x: Math.random() * canvasW, y: Math.random() * canvasH * 0.7,
+              vx: (Math.random() - 0.5) * 0.15, vy: -0.1 - Math.random() * 0.1,
+              life: 1, size: 1 + Math.random() * 2, color: 'rgba(200,180,255,' };
+        break;
+      case 2: // Leaves drifting
+        p = { x: canvasW + 5, y: Math.random() * canvasH * 0.5,
+              vx: -0.5 - Math.random() * 0.5, vy: 0.3 + Math.random() * 0.2,
+              life: 1, size: 3 + Math.random() * 3, color: 'rgba(120,180,80,' };
+        break;
+      case 3: // Screen glow particles (cyan)
+        p = { x: canvasW * 0.68 + (Math.random() - 0.5) * 40, y: canvasH * 0.4 + Math.random() * 20,
+              vx: (Math.random() - 0.5) * 0.3, vy: -0.3 - Math.random() * 0.2,
+              life: 1, size: 1 + Math.random() * 2, color: 'rgba(100,220,255,' };
+        break;
+      case 4: // Red stress particles
+        p = { x: Math.random() * canvasW, y: canvasH + 5,
+              vx: (Math.random() - 0.5) * 0.4, vy: -0.4 - Math.random() * 0.3,
+              life: 1, size: 1.5 + Math.random() * 2, color: 'rgba(255,100,80,' };
+        break;
+      case 5: // Golden motes (dawn)
+        p = { x: Math.random() * canvasW, y: Math.random() * canvasH,
+              vx: (Math.random() - 0.5) * 0.1, vy: -0.15 - Math.random() * 0.1,
+              life: 1, size: 1.5 + Math.random() * 2.5, color: 'rgba(255,220,100,' };
+        break;
+      default: return;
+    }
+    atmoParticles.push(p);
+  }
+
+  function updateAndDrawAtmo() {
+    // Spawn
+    if (gameStarted && Math.random() < 0.06) spawnAtmoParticle();
+
+    for (var i = atmoParticles.length - 1; i >= 0; i--) {
+      var p = atmoParticles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.life -= 0.005;
+      if (p.life <= 0 || p.x < -10 || p.x > canvasW + 10 || p.y < -10 || p.y > canvasH + 10) {
+        atmoParticles.splice(i, 1);
+        continue;
+      }
+      ctx.globalAlpha = p.life * 0.4;
+      ctx.fillStyle = p.color + (p.life * 0.5) + ')';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
   /* ── Z particles ── */
   var particles = [];
 
@@ -131,6 +256,9 @@
     }
     ctx.globalAlpha = 1;
 
+    // Atmospheric particles
+    updateAndDrawAtmo();
+
     // Procrastination meter
     drawMeter();
 
@@ -139,6 +267,19 @@
     ctx.textAlign = 'left';
     ctx.fillStyle = 'rgba(255,255,255,0.3)';
     ctx.fillText('Ch.' + currentChapter, 8, 14);
+
+    // Title card overlay
+    updateTitleCard();
+    drawTitleCard();
+
+    // Scene fade overlay
+    updateFade();
+    if (fadeAlpha > 0) {
+      ctx.globalAlpha = fadeAlpha;
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, canvasW, canvasH);
+      ctx.globalAlpha = 1;
+    }
 
     requestAnimationFrame(render);
   }
@@ -268,14 +409,15 @@
   /* ── Click/tap to advance ── */
   function onAdvance(e) {
     if (e.target.closest('.choice-btn') || e.target.closest('.chapter-select-btn') ||
-        e.target.closest('.chapter-nav-btn')) return;
+        e.target.closest('.chapter-nav-btn') || e.target.closest('.ch-select-close')) return;
 
     window.GameAudio.init();
 
     if (showingChapterSelect) return;
+    if (fadeDirection !== 0) return;
 
     if (!gameStarted) {
-      startChapter(currentChapter);
+      startChapter(currentChapter, true);
       return;
     }
 
@@ -288,13 +430,28 @@
   }
 
   /* ── Chapter management ── */
-  function startChapter(ch) {
+  function startChapter(ch, skipFade) {
+    if (!skipFade && gameStarted) {
+      // Fade out, then load new chapter
+      dialogueBox.classList.remove('active');
+      choiceContainer.classList.remove('active');
+      fadeOut(function () { loadChapter(ch); });
+      return;
+    }
+    loadChapter(ch);
+  }
+
+  function loadChapter(ch) {
     currentChapter = ch;
     window._.CHAPTER = ch;
     gameStarted = true;
     showingChapterSelect = false;
     document.getElementById('startOverlay').style.display = 'none';
     hideChapterSelect();
+
+    // Clear old atmospheric particles
+    atmoParticles = [];
+    particles = [];
 
     // Set palette
     targetBgColor = chapterPalette[ch] || '#2D1B4E';
@@ -306,6 +463,12 @@
     // Update subtitle
     var subtitle = document.querySelector('.game__header p');
     if (subtitle) subtitle.textContent = 'Chapter ' + ch + ': ' + (CHAPTER_NAMES[ch] || '');
+
+    // Show title card
+    showTitleCard(CHAPTER_NAMES[ch] || '');
+
+    // Fade in
+    fadeIn();
 
     // Load chapter source
     var srcName = CHAPTER_SOURCES[ch];

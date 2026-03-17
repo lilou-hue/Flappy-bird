@@ -195,6 +195,7 @@ s: And the fact that you played this far means you're already braver than you th
 s: Now close this game and go do the thing you've been putting off.
 s: ...after one more minute. Five tops.
 n: The End.
+(#chapter_end)
 
 # chapter_end
 \`_.ch5_complete = true\`
