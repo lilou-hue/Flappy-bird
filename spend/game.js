@@ -6,39 +6,103 @@
   var multiplier = 1;
 
   var items = [
+    // --- Street-level ($500 – $15k) ---
     { name: "Park Bench", emoji: "🪑", price: 500, qty: 0, i18nKey: "bcParkBench" },
     { name: "Trash Can", emoji: "🗑️", price: 800, qty: 0, i18nKey: "bcTrashCan" },
+    { name: "Water Fountain", emoji: "⛲", price: 1000, qty: 0, i18nKey: "bcWaterFountain" },
     { name: "Bike Rack", emoji: "🚲", price: 1200, qty: 0, i18nKey: "bcBikeRack" },
+    { name: "Flower Bed", emoji: "🌷", price: 1500, qty: 0, i18nKey: "bcFlowerBed" },
     { name: "Street Light", emoji: "🔦", price: 2000, qty: 0, i18nKey: "bcStreetLight" },
+    { name: "EV Charger", emoji: "🔌", price: 2500, qty: 0, i18nKey: "bcEvCharger" },
     { name: "Crosswalk", emoji: "🚶", price: 3500, qty: 0, i18nKey: "bcCrosswalk" },
+    { name: "Traffic Light", emoji: "🚦", price: 5000, qty: 0, i18nKey: "bcTrafficLight" },
+    { name: "CCTV Camera", emoji: "📷", price: 6000, qty: 0, i18nKey: "bcCctv" },
     { name: "Public Toilet", emoji: "🚻", price: 8000, qty: 0, i18nKey: "bcPublicToilet" },
+    { name: "Public Wi-Fi Hub", emoji: "📶", price: 10000, qty: 0, i18nKey: "bcWifiHub" },
     { name: "Bus Stop", emoji: "🚏", price: 15000, qty: 0, i18nKey: "bcBusStop" },
+
+    // --- Parks & Recreation ($20k – $120k) ---
     { name: "Dog Park", emoji: "🐕", price: 25000, qty: 0, i18nKey: "bcDogPark" },
+    { name: "Tennis Court", emoji: "🎾", price: 35000, qty: 0, i18nKey: "bcTennisCourt" },
+    { name: "Basketball Court", emoji: "🏀", price: 45000, qty: 0, i18nKey: "bcBasketballCourt" },
     { name: "Playground", emoji: "🛝", price: 50000, qty: 0, i18nKey: "bcPlayground" },
+    { name: "Outdoor Gym", emoji: "💪", price: 65000, qty: 0, i18nKey: "bcOutdoorGym" },
     { name: "Skate Park", emoji: "🛹", price: 75000, qty: 0, i18nKey: "bcSkatePark" },
+    { name: "Soccer Field", emoji: "⚽", price: 90000, qty: 0, i18nKey: "bcSoccerField" },
+    { name: "Splash Pad", emoji: "💦", price: 110000, qty: 0, i18nKey: "bcSplashPad" },
     { name: "Community Garden", emoji: "🌻", price: 120000, qty: 0, i18nKey: "bcCommunityGarden" },
+
+    // --- Community & Commerce ($150k – $1.2M) ---
+    { name: "Food Market", emoji: "🍎", price: 180000, qty: 0, i18nKey: "bcFoodMarket" },
     { name: "Parking Garage", emoji: "🅿️", price: 250000, qty: 0, i18nKey: "bcParkingGarage" },
+    { name: "Child Care Center", emoji: "👶", price: 320000, qty: 0, i18nKey: "bcChildCare" },
+    { name: "Recycling Center", emoji: "♻️", price: 400000, qty: 0, i18nKey: "bcRecyclingCenter" },
     { name: "Police Station", emoji: "🚔", price: 500000, qty: 0, i18nKey: "bcPoliceStation" },
+    { name: "Coworking Space", emoji: "💻", price: 550000, qty: 0, i18nKey: "bcCoworking" },
+    { name: "Senior Center", emoji: "👴", price: 650000, qty: 0, i18nKey: "bcSeniorCenter" },
+    { name: "Animal Shelter", emoji: "🐾", price: 750000, qty: 0, i18nKey: "bcAnimalShelter" },
     { name: "Art Installation", emoji: "🎨", price: 800000, qty: 0, i18nKey: "bcArtInstallation" },
+    { name: "Mosque", emoji: "🕌", price: 900000, qty: 0, i18nKey: "bcMosque" },
+    { name: "Church", emoji: "⛪", price: 950000, qty: 0, i18nKey: "bcChurch" },
     { name: "Bike Lane (1 mi)", emoji: "🚴", price: 1200000, qty: 0, i18nKey: "bcBikeLane" },
+
+    // --- Civic & Culture ($1.5M – $8M) ---
+    { name: "Marina", emoji: "🚤", price: 1500000, qty: 0, i18nKey: "bcMarina" },
+    { name: "Skyscraper", emoji: "🏙️", price: 1800000, qty: 0, i18nKey: "bcSkyscraper" },
     { name: "Public Library", emoji: "📚", price: 2000000, qty: 0, i18nKey: "bcPublicLibrary" },
+    { name: "Movie Theater", emoji: "🎬", price: 2500000, qty: 0, i18nKey: "bcMovieTheater" },
+    { name: "Museum", emoji: "🏺", price: 2800000, qty: 0, i18nKey: "bcMuseum" },
+    { name: "Shopping Mall", emoji: "🛍️", price: 3200000, qty: 0, i18nKey: "bcShoppingMall" },
     { name: "Homeless Shelter", emoji: "🏠", price: 3500000, qty: 0, i18nKey: "bcHomelessShelter" },
+    { name: "Botanical Garden", emoji: "🌿", price: 4000000, qty: 0, i18nKey: "bcBotanicalGarden" },
+    { name: "Amphitheater", emoji: "🎪", price: 4500000, qty: 0, i18nKey: "bcAmphitheater" },
     { name: "Fire Station", emoji: "🚒", price: 5000000, qty: 0, i18nKey: "bcFireStation" },
+    { name: "Indoor Arena", emoji: "🏟️", price: 5500000, qty: 0, i18nKey: "bcIndoorArena" },
+    { name: "Ice Rink", emoji: "⛸️", price: 6500000, qty: 0, i18nKey: "bcIceRink" },
+    { name: "Golf Course", emoji: "⛳", price: 7500000, qty: 0, i18nKey: "bcGolfCourse" },
     { name: "Community Pool", emoji: "🏊", price: 8000000, qty: 0, i18nKey: "bcCommunityPool" },
+
+    // --- Major Infrastructure ($10M – $50M) ---
     { name: "Water Treatment", emoji: "💧", price: 10000000, qty: 0, i18nKey: "bcWaterTreatment" },
+    { name: "Zoo", emoji: "🦁", price: 12000000, qty: 0, i18nKey: "bcZoo" },
+    { name: "Ferry Terminal", emoji: "⛴️", price: 14000000, qty: 0, i18nKey: "bcFerryTerminal" },
     { name: "School", emoji: "🏫", price: 15000000, qty: 0, i18nKey: "bcSchool" },
+    { name: "Data Center", emoji: "🖥️", price: 18000000, qty: 0, i18nKey: "bcDataCenter" },
+    { name: "Desalination Plant", emoji: "🌊", price: 20000000, qty: 0, i18nKey: "bcDesalinationPlant" },
     { name: "Power Plant", emoji: "⚡", price: 25000000, qty: 0, i18nKey: "bcPowerPlant" },
+    { name: "Tunnel (1 mi)", emoji: "🕳️", price: 30000000, qty: 0, i18nKey: "bcTunnel" },
     { name: "Bridge", emoji: "🌉", price: 35000000, qty: 0, i18nKey: "bcBridge" },
+    { name: "Wind Farm", emoji: "🌬️", price: 40000000, qty: 0, i18nKey: "bcWindFarm" },
+    { name: "Research Lab", emoji: "🔬", price: 45000000, qty: 0, i18nKey: "bcResearchLab" },
     { name: "Hospital", emoji: "🏥", price: 50000000, qty: 0, i18nKey: "bcHospital" },
+
+    // --- Landmark ($55M – $100M) ---
+    { name: "Opera House", emoji: "🎼", price: 60000000, qty: 0, i18nKey: "bcOperaHouse" },
+    { name: "Amusement Park", emoji: "🎠", price: 65000000, qty: 0, i18nKey: "bcAmusementPark" },
     { name: "Convention Center", emoji: "🏛️", price: 75000000, qty: 0, i18nKey: "bcConventionCenter" },
+    { name: "Aquarium", emoji: "🐟", price: 85000000, qty: 0, i18nKey: "bcAquarium" },
+    { name: "National Park", emoji: "🏞️", price: 95000000, qty: 0, i18nKey: "bcNationalPark" },
     { name: "Sports Stadium", emoji: "🏟️", price: 100000000, qty: 0, i18nKey: "bcSportsStadium" },
+
+    // --- Mega ($125M – $500M) ---
+    { name: "Monorail", emoji: "🚝", price: 125000000, qty: 0, i18nKey: "bcMonorail" },
     { name: "Metro Line", emoji: "🚇", price: 150000000, qty: 0, i18nKey: "bcMetroLine" },
+    { name: "Solar Farm", emoji: "☀️", price: 175000000, qty: 0, i18nKey: "bcSolarFarm" },
     { name: "Concert Hall", emoji: "🎭", price: 200000000, qty: 0, i18nKey: "bcConcertHall" },
+    { name: "Harbor", emoji: "🚢", price: 225000000, qty: 0, i18nKey: "bcHarbor" },
     { name: "Bullet Train", emoji: "🚄", price: 250000000, qty: 0, i18nKey: "bcBulletTrain" },
+    { name: "Fusion Reactor", emoji: "⚛️", price: 275000000, qty: 0, i18nKey: "bcFusionReactor" },
     { name: "University", emoji: "🎓", price: 300000000, qty: 0, i18nKey: "bcUniversity" },
+    { name: "Hyperloop", emoji: "🔄", price: 350000000, qty: 0, i18nKey: "bcHyperloop" },
     { name: "Theme Park", emoji: "🎢", price: 400000000, qty: 0, i18nKey: "bcThemePark" },
+    { name: "Underwater Hotel", emoji: "🤿", price: 450000000, qty: 0, i18nKey: "bcUnderwaterHotel" },
     { name: "Airport", emoji: "✈️", price: 500000000, qty: 0, i18nKey: "bcAirport" },
+
+    // --- Giga ($600M+) ---
+    { name: "Space Elevator", emoji: "🛗", price: 600000000, qty: 0, i18nKey: "bcSpaceElevator" },
     { name: "Artificial Island", emoji: "🏝️", price: 700000000, qty: 0, i18nKey: "bcArtificialIsland" },
+    { name: "Floating City District", emoji: "🌐", price: 800000000, qty: 0, i18nKey: "bcFloatingCity" },
+    { name: "Mega Dam", emoji: "🏗️", price: 900000000, qty: 0, i18nKey: "bcMegaDam" },
     { name: "Space Center", emoji: "🚀", price: 2000000000, qty: 0, alwaysUnaffordable: true, i18nKey: "bcSpaceCenter" }
   ];
 
