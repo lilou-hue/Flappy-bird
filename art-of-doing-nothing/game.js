@@ -60,6 +60,7 @@
   var fadeDirection = 0;   // 1 = fading out, -1 = fading in, 0 = idle
   var fadeCallback = null;
   var FADE_SPEED = 0.04;
+  var slothClickCooldown = 0;
 
   function fadeOut(cb) {
     fadeDirection = 1;
@@ -209,6 +210,7 @@
   /* ── Canvas rendering ── */
   function render() {
     animTime += 0.016;
+    if (slothClickCooldown > 0) slothClickCooldown--;
 
     // Smooth palette transition
     bgColor = lerpColor(bgColor, targetBgColor, 0.03);
@@ -234,6 +236,9 @@
       ctx.fillRect(sx, sy, 1.5, 1.5);
     }
     ctx.globalAlpha = 1;
+
+    // Background scene props
+    drawSceneProps();
 
     // Sam (chapter-dependent)
     drawSamForChapter();
@@ -287,20 +292,183 @@
   function drawSamForChapter() {
     switch (currentChapter) {
       case 1:
-        Characters.drawSamBed(ctx, canvasW * 0.65, canvasH * 0.6);
+        Characters.drawSamBed(ctx, canvasW * 0.65, canvasH * 0.6, animTime);
         break;
       case 2:
-        Characters.drawSamStanding(ctx, canvasW * 0.7, canvasH * 0.35, 0.9);
+        Characters.drawSamStanding(ctx, canvasW * 0.7, canvasH * 0.35, 0.9, animTime);
         break;
       case 3:
       case 4:
-        Characters.drawSamDesk(ctx, canvasW * 0.68, canvasH * 0.55);
+        Characters.drawSamDesk(ctx, canvasW * 0.68, canvasH * 0.55, animTime);
         break;
       case 5:
-        // Ch5: just the sloth and Sam standing together, smaller
-        Characters.drawSamStanding(ctx, canvasW * 0.55, canvasH * 0.4, 0.7);
+        Characters.drawSamStanding(ctx, canvasW * 0.55, canvasH * 0.4, 0.7, animTime);
         break;
     }
+  }
+
+  /* ── Background scene props (chapter-specific environment) ── */
+  function drawSceneProps() {
+    switch (currentChapter) {
+      case 1: drawBedroomBg(); break;
+      case 2: drawCampusBg(); break;
+      case 3: drawNightDeskBg(); break;
+      case 4: drawPanicRoomBg(); break;
+      case 5: drawMindscapeBg(); break;
+    }
+  }
+
+  function drawBedroomBg() {
+    // Window with moonlight
+    ctx.fillStyle = 'rgba(100,120,180,0.08)';
+    ctx.fillRect(canvasW * 0.75, canvasH * 0.05, canvasW * 0.2, canvasH * 0.3);
+    // Window frame
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(canvasW * 0.75, canvasH * 0.05, canvasW * 0.2, canvasH * 0.3);
+    ctx.beginPath();
+    ctx.moveTo(canvasW * 0.85, canvasH * 0.05);
+    ctx.lineTo(canvasW * 0.85, canvasH * 0.35);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(canvasW * 0.75, canvasH * 0.2);
+    ctx.lineTo(canvasW * 0.95, canvasH * 0.2);
+    ctx.stroke();
+    // Moon
+    ctx.fillStyle = 'rgba(240,230,200,0.25)';
+    ctx.beginPath();
+    ctx.arc(canvasW * 0.88, canvasH * 0.12, 8, 0, Math.PI * 2);
+    ctx.fill();
+    // Curtain
+    ctx.fillStyle = 'rgba(80,50,100,0.15)';
+    ctx.fillRect(canvasW * 0.72, canvasH * 0.03, 6, canvasH * 0.34);
+    ctx.fillRect(canvasW * 0.95, canvasH * 0.03, 6, canvasH * 0.34);
+    // Floor
+    ctx.fillStyle = 'rgba(60,45,35,0.15)';
+    ctx.fillRect(0, canvasH * 0.78, canvasW, canvasH * 0.22);
+  }
+
+  function drawCampusBg() {
+    // Ground / grass
+    ctx.fillStyle = 'rgba(40,80,40,0.12)';
+    ctx.fillRect(0, canvasH * 0.7, canvasW, canvasH * 0.3);
+    // Path
+    ctx.fillStyle = 'rgba(180,170,150,0.08)';
+    ctx.beginPath();
+    ctx.moveTo(0, canvasH * 0.85);
+    ctx.quadraticCurveTo(canvasW * 0.5, canvasH * 0.75, canvasW, canvasH * 0.82);
+    ctx.lineTo(canvasW, canvasH);
+    ctx.lineTo(0, canvasH);
+    ctx.fill();
+    // Library building silhouette
+    ctx.fillStyle = 'rgba(30,40,60,0.15)';
+    ctx.fillRect(canvasW * 0.05, canvasH * 0.2, canvasW * 0.15, canvasH * 0.5);
+    // Windows (warm glow)
+    for (var wy = 0; wy < 3; wy++) {
+      for (var wx = 0; wx < 2; wx++) {
+        ctx.fillStyle = 'rgba(255,220,120,' + (0.1 + Math.sin(animTime + wy + wx) * 0.05) + ')';
+        ctx.fillRect(canvasW * 0.07 + wx * 18, canvasH * 0.25 + wy * 40, 10, 14);
+      }
+    }
+    // Tree
+    ctx.fillStyle = 'rgba(40,30,20,0.2)';
+    ctx.fillRect(canvasW * 0.88, canvasH * 0.35, 6, canvasH * 0.35);
+    ctx.fillStyle = 'rgba(50,90,40,0.15)';
+    ctx.beginPath();
+    ctx.arc(canvasW * 0.91, canvasH * 0.3, 25, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  function drawNightDeskBg() {
+    // Dark room, only screen light
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    ctx.fillRect(0, 0, canvasW, canvasH);
+    // Screen cone of light
+    ctx.save();
+    var glow = ctx.createRadialGradient(canvasW * 0.68, canvasH * 0.4, 10, canvasW * 0.68, canvasH * 0.4, 120);
+    glow.addColorStop(0, 'rgba(80,180,255,0.08)');
+    glow.addColorStop(1, 'rgba(80,180,255,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, canvasW, canvasH);
+    ctx.restore();
+    // Window (dark, nighttime)
+    ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(canvasW * 0.82, canvasH * 0.08, canvasW * 0.12, canvasH * 0.2);
+    // City lights through window
+    for (var ci = 0; ci < 5; ci++) {
+      ctx.fillStyle = 'rgba(255,200,100,' + (0.03 + Math.random() * 0.03) + ')';
+      ctx.fillRect(canvasW * 0.84 + ci * 6, canvasH * 0.18, 2, 3);
+    }
+    // Floor
+    ctx.fillStyle = 'rgba(40,35,45,0.1)';
+    ctx.fillRect(0, canvasH * 0.82, canvasW, canvasH * 0.18);
+  }
+
+  function drawPanicRoomBg() {
+    // Pulsing red vignette
+    var pulse = 0.03 + Math.sin(animTime * 2) * 0.02;
+    var vig = ctx.createRadialGradient(canvasW * 0.5, canvasH * 0.5, canvasH * 0.2, canvasW * 0.5, canvasH * 0.5, canvasH * 0.7);
+    vig.addColorStop(0, 'rgba(0,0,0,0)');
+    vig.addColorStop(1, 'rgba(120,20,20,' + pulse + ')');
+    ctx.fillStyle = vig;
+    ctx.fillRect(0, 0, canvasW, canvasH);
+    // Clock on wall
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(canvasW * 0.12, canvasH * 0.15, 15, 0, Math.PI * 2);
+    ctx.stroke();
+    // Clock hands
+    var clockAngle = animTime * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(canvasW * 0.12, canvasH * 0.15);
+    ctx.lineTo(canvasW * 0.12 + Math.cos(clockAngle) * 10, canvasH * 0.15 + Math.sin(clockAngle) * 10);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(canvasW * 0.12, canvasH * 0.15);
+    ctx.lineTo(canvasW * 0.12 + Math.cos(clockAngle * 12) * 7, canvasH * 0.15 + Math.sin(clockAngle * 12) * 7);
+    ctx.stroke();
+    // "2:00 AM" text
+    ctx.fillStyle = 'rgba(255,80,80,0.15)';
+    ctx.font = '9px "Space Grotesk", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('2:00 AM', canvasW * 0.12, canvasH * 0.15 + 25);
+    ctx.textAlign = 'left';
+  }
+
+  function drawMindscapeBg() {
+    // Abstract golden dawn landscape
+    // Horizon glow
+    var dawnGrad = ctx.createLinearGradient(0, canvasH * 0.3, 0, canvasH);
+    dawnGrad.addColorStop(0, 'rgba(255,180,60,0)');
+    dawnGrad.addColorStop(0.5, 'rgba(255,180,60,0.06)');
+    dawnGrad.addColorStop(1, 'rgba(255,150,40,0.1)');
+    ctx.fillStyle = dawnGrad;
+    ctx.fillRect(0, canvasH * 0.3, canvasW, canvasH * 0.7);
+    // Floating abstract shapes (memories)
+    ctx.globalAlpha = 0.04;
+    for (var mi = 0; mi < 6; mi++) {
+      var mx = (mi * 89 + animTime * 8) % (canvasW + 60) - 30;
+      var my = canvasH * 0.2 + Math.sin(animTime * 0.5 + mi * 1.5) * 30;
+      ctx.fillStyle = mi % 2 === 0 ? '#FFD700' : '#C4A97D';
+      ctx.beginPath();
+      ctx.arc(mx, my, 12 + mi * 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    // Light rays from top
+    ctx.save();
+    ctx.globalAlpha = 0.03;
+    for (var ri = 0; ri < 5; ri++) {
+      ctx.fillStyle = '#FFD700';
+      ctx.beginPath();
+      ctx.moveTo(canvasW * (0.3 + ri * 0.1), 0);
+      ctx.lineTo(canvasW * (0.25 + ri * 0.1), canvasH);
+      ctx.lineTo(canvasW * (0.35 + ri * 0.1), canvasH);
+      ctx.fill();
+    }
+    ctx.restore();
   }
 
   function drawMeter() {
@@ -363,8 +531,20 @@
     if (speaker === 's') {
       Characters.setExpression('sleepy', 'smile');
       Characters.setSpeaking(true);
+      Characters.tiltHead(0);
+      // React to text content
+      if (text.indexOf('!') !== -1) Characters.setExpression('wide', 'open');
+      if (text.indexOf('sorry') !== -1 || text.indexOf('Sorry') !== -1) Characters.setExpression('concerned', 'worried');
+      if (text.indexOf('impressed') !== -1 || text.indexOf('not bad') !== -1) Characters.setExpression('happy', 'smile');
     } else if (speaker === 'm') {
       Characters.setExpression('concerned', 'neutral');
+      Characters.tiltHead(-0.5); // tilt listening
+      if (text.indexOf('!') !== -1) Characters.setExpression('wide', 'worried');
+      if (text.indexOf('can\'t') !== -1 || text.indexOf('fail') !== -1) Characters.setExpression('concerned', 'worried');
+    } else {
+      // Narrator
+      Characters.tiltHead(0);
+      Characters.setExpression('sleepy', 'neutral');
     }
 
     var charDelay = 30;
@@ -734,6 +914,41 @@
 
     resize();
     window.addEventListener('resize', resize);
+
+    // Canvas mouse tracking (sloth eyes follow cursor)
+    canvas.addEventListener('mousemove', function (e) {
+      var rect = canvas.getBoundingClientRect();
+      var mx = (e.clientX - rect.left) / rect.width * canvasW;
+      var my = (e.clientY - rect.top) / rect.height * canvasH;
+      // Normalize to -1..1 relative to sloth position
+      var sx = (mx - canvasW * 0.3) / (canvasW * 0.4);
+      var sy = (my - canvasH * 0.45) / (canvasH * 0.4);
+      Characters.lookAt(sx, sy);
+      // Tilt head slightly toward mouse
+      Characters.tiltHead(sx * 0.5);
+    });
+
+    canvas.addEventListener('mouseleave', function () {
+      Characters.lookAt(0, 0);
+      Characters.tiltHead(0);
+    });
+
+    // Click on sloth for reactions
+    var slothClickEmotes = ['💤', '😴', '🦥', '☕', '💭', '😌', '🫠', '✨'];
+    var slothClickIndex = 0;
+    canvas.addEventListener('click', function (e) {
+      var rect = canvas.getBoundingClientRect();
+      var mx = (e.clientX - rect.left) / rect.width * canvasW;
+      var my = (e.clientY - rect.top) / rect.height * canvasH;
+      if (Characters.hitTest(mx, my) && slothClickCooldown <= 0) {
+        Characters.react();
+        Characters.wave();
+        Characters.emote(slothClickEmotes[slothClickIndex % slothClickEmotes.length]);
+        slothClickIndex++;
+        slothClickCooldown = 30;
+        window.GameAudio.clickSfx();
+      }
+    });
 
     // Click to advance
     document.addEventListener('click', onAdvance);
