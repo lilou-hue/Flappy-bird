@@ -24,6 +24,7 @@
     'beat-drop':      { name: 'Beat Drop',           bestKey: 'beatDropBest',     thresholds: [500, 2000, 5000] },
     'rivals':         { name: 'Rivals',              bestKey: 'rivalsBest',       thresholds: [5, 15, 30] },
     'gravity-garden': { name: 'Gravity Garden',      bestKey: 'gravityGardenBest',thresholds: [50, 200, 500] },
+    'last-seen-online': { name: 'Last Seen Online',  bestKey: 'lastSeenOnlineBest', thresholds: [30, 60, 90] },
   };
 
   const GAME_IDS = Object.keys(GAMES);
