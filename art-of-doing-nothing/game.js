@@ -775,6 +775,14 @@
         updateScoreDisplay();
       });
     }
+    document.addEventListener('arcade-restart', function() {
+      GameState.reset(); gameStarted = false; currentChapter = 1;
+      if (executor) executor.stop(); executor = null; currentReveal = null;
+      meterDisplay = 50; targetBgColor = chapterPalette[1];
+      dialogueBox.classList.remove('active'); choiceContainer.classList.remove('active');
+      document.getElementById('startOverlay').style.display = 'flex';
+      Characters.setExpression('sleepy', 'smile'); window.GameAudio.stopAmbient(); updateScoreDisplay();
+    });
 
     // Chapter select button
     var chSelectBtn = document.getElementById('chapterSelectBtn');

@@ -1299,6 +1299,7 @@
     Audio.resume();
     resetGame();
   });
+  document.addEventListener('arcade-restart', () => { Audio.init(); Audio.resume(); resetGame(); });
 
   /* Challenge Mode toggle */
   const challengeModeBtn = document.getElementById("challengeModeButton");

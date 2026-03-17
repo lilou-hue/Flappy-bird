@@ -558,6 +558,7 @@ canvas.addEventListener('pointerdown', e => {
 });
 
 document.getElementById('restartButton').addEventListener('click', resetGame);
+document.addEventListener('arcade-restart', resetGame);
 
 // ── Beat-driven audio ──
 const bassNotes = [65.41, 73.42, 82.41, 87.31]; // C2, D2, E2, F2

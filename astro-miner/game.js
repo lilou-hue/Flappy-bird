@@ -1704,6 +1704,7 @@ restartBtn.addEventListener('click', () => {
   Audio.resume();
   startGame();
 });
+document.addEventListener('arcade-restart', () => { Audio.resume(); startGame(); });
 
 muteBtn.addEventListener('click', () => {
   const muted = Audio.toggle();

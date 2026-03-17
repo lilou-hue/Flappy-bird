@@ -2388,6 +2388,7 @@ function endJoystick() {
 
 /* Buttons */
 restartButton.addEventListener("click", () => { resetGame(); });
+document.addEventListener('arcade-restart', () => { resetGame(); });
 muteButton.addEventListener("click", () => { toggleMute(); });
 if (shrinkModeButton) {
   shrinkModeButton.addEventListener("click", () => {

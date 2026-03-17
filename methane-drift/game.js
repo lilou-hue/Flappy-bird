@@ -3860,6 +3860,7 @@ canvas.addEventListener('pointerdown', (event) => {
 });
 
 restartBtn.addEventListener('click', resetGame);
+document.addEventListener('arcade-restart', resetGame);
 
 if (muteBtn) {
   muteBtn.addEventListener('click', () => {

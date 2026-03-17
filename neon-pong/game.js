@@ -530,6 +530,7 @@ canvas.addEventListener('pointermove', e => {
 });
 
 document.getElementById('restartButton').addEventListener('click', resetGame);
+document.addEventListener('arcade-restart', resetGame);
 
 // ── AI ──
 function updateAI(dt) {

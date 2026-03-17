@@ -2269,6 +2269,7 @@ canvas.addEventListener('click', (e) => {
 restartButton.addEventListener('click', () => {
   startGame();
 });
+document.addEventListener('arcade-restart', () => { startGame(); });
 
 /* ══════════════════════════════════════════════════════════════════
    CANVAS SIZING (DPI-aware)

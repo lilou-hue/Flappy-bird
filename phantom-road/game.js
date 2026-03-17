@@ -634,6 +634,7 @@ document.addEventListener("visibilitychange", () => {
 });
 
 restartBtn.addEventListener("click", restartGame);
+document.addEventListener('arcade-restart', restartGame);
 muteBtn.addEventListener("click", () => audio.toggleMute());
 audio.loadMute();
 

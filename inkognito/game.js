@@ -523,6 +523,7 @@
     if (state === STATES.DRAWING || state === STATES.COUNTDOWN) return;
     startGame();
   });
+  document.addEventListener('arcade-restart', () => { startGame(); });
 
   /* ── Leaderboard toggle ── */
   if (lbToggle && typeof Leaderboard !== 'undefined') {

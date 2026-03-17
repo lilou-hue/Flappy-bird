@@ -2547,6 +2547,7 @@ restartButton.addEventListener("click", () => {
   fullGunReset();
   resetGame();
 });
+document.addEventListener('arcade-restart', () => { fullGunReset(); resetGame(); });
 
 /* --- Mute toggle --- */
 const muteButton = document.getElementById("muteButton");

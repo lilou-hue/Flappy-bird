@@ -432,6 +432,7 @@ document.addEventListener('keydown', e => {
 canvas.addEventListener('pointerdown', e => { e.preventDefault(); handleInput(); });
 
 document.getElementById('restartButton').addEventListener('click', resetGame);
+document.addEventListener('arcade-restart', resetGame);
 
 // ── Render ──
 function drawStarfield(t) {

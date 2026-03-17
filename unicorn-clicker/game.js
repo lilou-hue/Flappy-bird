@@ -3995,5 +3995,7 @@
     });
   }
 
+  document.addEventListener('arcade-restart', function() { resetGame(); });
+
   requestAnimationFrame(loop);
 })();
