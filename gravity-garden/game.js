@@ -27,6 +27,24 @@ const PLANET_HUES = [30, 60, 120, 180, 210, 270, 300, 0];
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
+// roundRect polyfill for older browsers
+if (!ctx.roundRect) {
+  CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+    if (typeof r === 'number') r = [r, r, r, r];
+    const [tl, tr, br, bl] = r;
+    this.moveTo(x + tl, y);
+    this.lineTo(x + w - tr, y);
+    this.quadraticCurveTo(x + w, y, x + w, y + tr);
+    this.lineTo(x + w, y + h - br);
+    this.quadraticCurveTo(x + w, y + h, x + w - br, y + h);
+    this.lineTo(x + bl, y + h);
+    this.quadraticCurveTo(x, y + h, x, y + h - bl);
+    this.lineTo(x, y + tl);
+    this.quadraticCurveTo(x, y, x + tl, y);
+    this.closePath();
+  };
+}
+
 // ── Themes ──
 const THEMES = {
   classic: { name: () => I18N.t('ggThemeClassic') || 'Classic', bg: '#060818', bg2: '#040610', starColor: 'rgba(150,180,255,0.4)', accent: '#6090ff' },
@@ -289,6 +307,16 @@ function spawnExplosion(x, y, hue1, hue2) {
   }
 }
 
+// ── Object Types ──
+const OBJ_TYPES = [
+  { id: 'planet',   name: 'Planet',   icon: '\u{1F30D}', key: '1', desc: 'Standard orbit',       mass: [3, 5],  radius: [5, 6],  trailLen: TRAIL_LEN },
+  { id: 'asteroid', name: 'Asteroid', icon: '\u{1FA78}', key: '2', desc: 'Tiny & fast',           mass: [0.8, 1.2], radius: [2.5, 3], trailLen: 40 },
+  { id: 'giant',    name: 'Gas Giant',icon: '\u{1FA90}', key: '3', desc: 'Heavy, pulls others',   mass: [12, 18], radius: [10, 13], trailLen: 80 },
+  { id: 'comet',    name: 'Comet',    icon: '\u{2604}',  key: '4', desc: 'Fast, fades over time', mass: [1.5, 3], radius: [3, 5],  trailLen: 180 },
+  { id: 'shield',   name: 'Shield',   icon: '\u{1F6E1}', key: '5', desc: 'Blocks one sun hit',   mass: [2, 3],  radius: [4, 5],  trailLen: 60 },
+];
+let selectedType = 0; // index into OBJ_TYPES
+
 // ── Planet class ──
 class Planet {
   constructor(x, y, mass, radius, hue, isStationary) {
@@ -303,6 +331,10 @@ class Planet {
     this.alive = true;
     this.isStationary = isStationary || false;
     this.birthTime = 0;
+    this.type = 'planet'; // planet, asteroid, giant, comet, shield
+    this.maxTrailLen = TRAIL_LEN;
+    this.isShield = false;
+    this.cometLife = 0; // seconds remaining for comets
   }
 }
 
@@ -381,14 +413,26 @@ function plantPlanet(x, y, vx, vy) {
 
   if (dist < sun.radius + 10) return; // Too close to sun
 
-  const hue = PLANET_HUES[Math.floor(Math.random() * PLANET_HUES.length)];
-  const mass = 3 + Math.random() * 5;
-  const radius = 5 + Math.random() * 6;
+  const typeDef = OBJ_TYPES[selectedType];
+  const mass = typeDef.mass[0] + Math.random() * typeDef.mass[1];
+  const radius = typeDef.radius[0] + Math.random() * typeDef.radius[1];
+
+  // Type-specific hue
+  let hue;
+  if (typeDef.id === 'asteroid') hue = 30 + Math.random() * 20; // brown/orange
+  else if (typeDef.id === 'giant') hue = 210 + Math.random() * 60; // blue-purple
+  else if (typeDef.id === 'comet') hue = 170 + Math.random() * 30; // cyan
+  else if (typeDef.id === 'shield') hue = 50; // gold
+  else hue = PLANET_HUES[Math.floor(Math.random() * PLANET_HUES.length)];
 
   const planet = new Planet(x, y, mass, radius, hue, false);
   planet.vx = vx;
   planet.vy = vy;
   planet.birthTime = gameTime;
+  planet.type = typeDef.id;
+  planet.maxTrailLen = typeDef.trailLen;
+  planet.isShield = typeDef.id === 'shield';
+  if (typeDef.id === 'comet') planet.cometLife = 20 + Math.random() * 10; // 20-30s lifespan
   planets.push(planet);
 
   achData.stats.totalPlanetsPlanted++;
@@ -523,13 +567,47 @@ function updatePhysics(dt) {
         Audio.playCollision();
         lastCollisionTime = gameTime;
 
-        // Sun collision = game over
+        // Sun collision
         if (a.isStationary || b.isStationary) {
-          a.alive = false;
-          b.alive = false;
-          planets = planets.filter(p => p.alive);
-          endGame();
-          return;
+          const other = a.isStationary ? b : a;
+          // Shield satellites sacrifice themselves to save the sun
+          if (other.isShield) {
+            other.alive = false;
+            score += 25 * scoreMultiplier;
+            // Big sparkle effect for shield save
+            for (let k = 0; k < 20; k++) {
+              const angle = Math.random() * Math.PI * 2;
+              particles.push({
+                x: other.x, y: other.y,
+                vx: Math.cos(angle) * 80, vy: Math.sin(angle) * 80,
+                life: 0.8, maxLife: 0.8, size: 2 + Math.random() * 3, hue: 50,
+              });
+            }
+          } else {
+            // Check if any shield satellite is nearby to intercept
+            let shieldSaved = false;
+            for (const sp of planets) {
+              if (!sp.alive || !sp.isShield || sp === other) continue;
+              const sdx = sp.x - other.x;
+              const sdy = sp.y - other.y;
+              const sDist = Math.sqrt(sdx * sdx + sdy * sdy);
+              if (sDist < 80) {
+                sp.alive = false;
+                shieldSaved = true;
+                other.alive = false;
+                score += 25 * scoreMultiplier;
+                spawnExplosion(sp.x, sp.y, 50, other.hue);
+                break;
+              }
+            }
+            if (!shieldSaved) {
+              a.alive = false;
+              b.alive = false;
+              planets = planets.filter(p => p.alive);
+              endGame();
+              return;
+            }
+          }
         }
 
         // Planet-planet collision = merge! Bigger absorbs smaller
@@ -563,7 +641,43 @@ function updatePhysics(dt) {
     // Trail (skip for stationary objects like the sun)
     if (!p.isStationary) {
       p.trail.push({ x: p.x, y: p.y });
-      if (p.trail.length > TRAIL_LEN) p.trail.shift();
+      if (p.trail.length > p.maxTrailLen) p.trail.shift();
+    }
+
+    // Comet decay: loses mass and radius over time, dies when spent
+    if (p.type === 'comet' && !p.isStationary) {
+      p.cometLife -= dt;
+      if (p.cometLife <= 0) {
+        // Comet burns out — sparkle farewell
+        for (let k = 0; k < 15; k++) {
+          const angle = Math.random() * Math.PI * 2;
+          particles.push({
+            x: p.x, y: p.y,
+            vx: Math.cos(angle) * 50, vy: Math.sin(angle) * 50,
+            life: 0.6, maxLife: 0.6, size: 1.5 + Math.random() * 2, hue: 180,
+          });
+        }
+        score += 5 * scoreMultiplier;
+        p.alive = false;
+        planets.splice(i, 1);
+        continue;
+      }
+      // Slowly shrink
+      p.radius = Math.max(1.5, p.radius - dt * 0.08);
+      p.mass = Math.max(0.3, p.mass - dt * 0.05);
+      // Shed particles along trail
+      if (Math.random() < 0.3) {
+        particles.push({
+          x: p.x + (Math.random() - 0.5) * 6,
+          y: p.y + (Math.random() - 0.5) * 6,
+          vx: -p.vx * 0.1 + (Math.random() - 0.5) * 15,
+          vy: -p.vy * 0.1 + (Math.random() - 0.5) * 15,
+          life: 0.4 + Math.random() * 0.3,
+          maxLife: 0.7,
+          size: 1 + Math.random() * 1.5,
+          hue: 170 + Math.random() * 30,
+        });
+      }
     }
 
     // Escape check (non-sun only)
@@ -673,6 +787,20 @@ canvas.addEventListener('pointerdown', e => {
     return;
   }
 
+  // Check if clicking on toolbar
+  if (sunPlanted) {
+    const toolbarW = OBJ_TYPES.length * 50;
+    const toolbarX = (CW - toolbarW) / 2;
+    const toolbarY = CH - 52;
+    if (pos.y >= toolbarY - 4 && pos.y <= toolbarY + 44) {
+      const idx = Math.floor((pos.x - toolbarX) / 50);
+      if (idx >= 0 && idx < OBJ_TYPES.length) {
+        selectedType = idx;
+        return; // don't start dragging
+      }
+    }
+  }
+
   // Start drag for planet launch
   if (planets.length < MAX_PLANETS && planets[0] && planets[0].alive) {
     isDragging = true;
@@ -710,6 +838,14 @@ canvas.addEventListener('pointerleave', () => {
   }
 });
 
+// ── Type selection via keyboard ──
+document.addEventListener('keydown', e => {
+  const idx = parseInt(e.key) - 1;
+  if (idx >= 0 && idx < OBJ_TYPES.length) {
+    selectedType = idx;
+  }
+});
+
 document.getElementById('restartButton').addEventListener('click', resetGame);
 
 // Listen for arcade restart
@@ -729,10 +865,31 @@ function drawStarfield(t) {
 
 function drawTrail(planet) {
   if (planet.trail.length < 2) return;
+  const isComet = planet.type === 'comet';
+  const isShield = planet.isShield;
   for (let i = 1; i < planet.trail.length; i++) {
-    const alpha = (i / planet.trail.length) * 0.4;
-    ctx.strokeStyle = `hsla(${planet.hue}, 70%, 60%, ${alpha})`;
-    ctx.lineWidth = 1.5;
+    const t = i / planet.trail.length;
+    let alpha, lw, sat, light;
+    if (isComet) {
+      // Bright, wide, glowing comet tail
+      alpha = t * 0.6;
+      lw = 1 + t * 3;
+      sat = 50;
+      light = 75;
+    } else if (isShield) {
+      // Dashed golden trail
+      alpha = t * 0.3;
+      lw = 1;
+      sat = 80;
+      light = 65;
+    } else {
+      alpha = t * 0.4;
+      lw = planet.type === 'giant' ? 2 : 1.5;
+      sat = 70;
+      light = 60;
+    }
+    ctx.strokeStyle = `hsla(${planet.hue}, ${sat}%, ${light}%, ${alpha})`;
+    ctx.lineWidth = lw;
     ctx.beginPath();
     ctx.moveTo(planet.trail[i - 1].x, planet.trail[i - 1].y);
     ctx.lineTo(planet.trail[i].x, planet.trail[i].y);
@@ -773,26 +930,100 @@ function drawSun(sun, t) {
 
 function drawPlanet(planet) {
   ctx.save();
-  ctx.shadowBlur = 12;
-  ctx.shadowColor = `hsla(${planet.hue}, 70%, 50%, 0.5)`;
+
+  // Gas giant: draw gravity well ring
+  if (planet.type === 'giant') {
+    ctx.strokeStyle = `hsla(${planet.hue}, 50%, 60%, 0.12)`;
+    ctx.lineWidth = 1;
+    for (let r = planet.radius + 8; r < planet.radius + 35; r += 8) {
+      ctx.beginPath();
+      ctx.arc(planet.x, planet.y, r, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  }
+
+  // Shield: draw protective ring
+  if (planet.isShield) {
+    ctx.strokeStyle = `hsla(50, 90%, 70%, ${0.3 + Math.sin(time * 4) * 0.15})`;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.arc(planet.x, planet.y, planet.radius + 5, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  ctx.shadowBlur = planet.type === 'comet' ? 18 : 12;
+  ctx.shadowColor = `hsla(${planet.hue}, 70%, 50%, ${planet.type === 'comet' ? 0.8 : 0.5})`;
 
   const grad = ctx.createRadialGradient(
     planet.x - planet.radius * 0.3, planet.y - planet.radius * 0.3, planet.radius * 0.1,
     planet.x, planet.y, planet.radius
   );
-  grad.addColorStop(0, `hsl(${planet.hue}, 65%, 75%)`);
-  grad.addColorStop(0.6, `hsl(${planet.hue}, 60%, 55%)`);
-  grad.addColorStop(1, `hsl(${planet.hue}, 55%, 30%)`);
+
+  if (planet.type === 'asteroid') {
+    // Rocky, rough-looking
+    grad.addColorStop(0, `hsl(${planet.hue}, 30%, 65%)`);
+    grad.addColorStop(0.6, `hsl(${planet.hue}, 25%, 45%)`);
+    grad.addColorStop(1, `hsl(${planet.hue}, 20%, 25%)`);
+  } else if (planet.type === 'giant') {
+    // Banded gas giant
+    grad.addColorStop(0, `hsl(${planet.hue}, 55%, 80%)`);
+    grad.addColorStop(0.3, `hsl(${planet.hue + 15}, 50%, 65%)`);
+    grad.addColorStop(0.6, `hsl(${planet.hue - 10}, 55%, 50%)`);
+    grad.addColorStop(1, `hsl(${planet.hue}, 45%, 30%)`);
+  } else if (planet.type === 'comet') {
+    // Bright icy core
+    grad.addColorStop(0, `hsl(${planet.hue}, 40%, 95%)`);
+    grad.addColorStop(0.4, `hsl(${planet.hue}, 60%, 75%)`);
+    grad.addColorStop(1, `hsl(${planet.hue}, 70%, 45%)`);
+  } else if (planet.isShield) {
+    // Golden metallic
+    grad.addColorStop(0, '#fff8e0');
+    grad.addColorStop(0.5, '#ffd700');
+    grad.addColorStop(1, '#b8860b');
+  } else {
+    grad.addColorStop(0, `hsl(${planet.hue}, 65%, 75%)`);
+    grad.addColorStop(0.6, `hsl(${planet.hue}, 60%, 55%)`);
+    grad.addColorStop(1, `hsl(${planet.hue}, 55%, 30%)`);
+  }
+
   ctx.fillStyle = grad;
   ctx.beginPath();
   ctx.arc(planet.x, planet.y, planet.radius, 0, Math.PI * 2);
   ctx.fill();
 
-  // Highlight
-  ctx.fillStyle = 'rgba(255,255,255,0.25)';
-  ctx.beginPath();
-  ctx.arc(planet.x - planet.radius * 0.25, planet.y - planet.radius * 0.25, planet.radius * 0.35, 0, Math.PI * 2);
-  ctx.fill();
+  // Gas giant bands
+  if (planet.type === 'giant') {
+    ctx.globalAlpha = 0.15;
+    for (let b = -planet.radius * 0.6; b < planet.radius * 0.6; b += planet.radius * 0.3) {
+      ctx.fillStyle = b > 0 ? `hsl(${planet.hue + 20}, 40%, 80%)` : `hsl(${planet.hue - 10}, 40%, 40%)`;
+      ctx.beginPath();
+      const bandW = Math.sqrt(planet.radius * planet.radius - b * b);
+      ctx.ellipse(planet.x, planet.y + b, bandW, planet.radius * 0.08, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // Highlight (skip for asteroid — they're rougher)
+  if (planet.type !== 'asteroid') {
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.beginPath();
+    ctx.arc(planet.x - planet.radius * 0.25, planet.y - planet.radius * 0.25, planet.radius * 0.35, 0, Math.PI * 2);
+    ctx.fill();
+  } else {
+    // Asteroid: small random surface dots for texture
+    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+    const seed = Math.floor(planet.hue * 10);
+    for (let d = 0; d < 3; d++) {
+      const ax = planet.x + Math.cos(seed + d * 2.1) * planet.radius * 0.4;
+      const ay = planet.y + Math.sin(seed + d * 2.1) * planet.radius * 0.4;
+      ctx.beginPath();
+      ctx.arc(ax, ay, planet.radius * 0.15, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
 
   ctx.shadowBlur = 0;
   ctx.restore();
@@ -929,13 +1160,63 @@ function render() {
     ctx.restore();
   }
 
+  // ── Object type toolbar ──
+  if (gameStarted && sunPlanted && !gameOver) {
+    ctx.save();
+    const toolbarW = OBJ_TYPES.length * 50;
+    const toolbarX = (CW - toolbarW) / 2;
+    const toolbarY = CH - 52;
+
+    // Background bar
+    ctx.fillStyle = 'rgba(10,12,30,0.6)';
+    ctx.beginPath();
+    ctx.roundRect(toolbarX - 6, toolbarY - 4, toolbarW + 12, 44, 8);
+    ctx.fill();
+
+    for (let i = 0; i < OBJ_TYPES.length; i++) {
+      const tx = toolbarX + i * 50 + 25;
+      const ty = toolbarY + 18;
+      const isSelected = i === selectedType;
+
+      // Selection highlight
+      if (isSelected) {
+        ctx.fillStyle = 'rgba(255,215,0,0.15)';
+        ctx.beginPath();
+        ctx.roundRect(toolbarX + i * 50 + 2, toolbarY - 1, 46, 38, 6);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,215,0,0.5)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+
+      // Icon
+      ctx.font = '20px "Segoe UI Emoji", "Apple Color Emoji", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = isSelected ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.4)';
+      ctx.fillText(OBJ_TYPES[i].icon, tx, ty + 6);
+
+      // Key number
+      ctx.font = '9px "Segoe UI", system-ui, sans-serif';
+      ctx.fillStyle = isSelected ? 'rgba(255,215,0,0.8)' : 'rgba(200,210,255,0.3)';
+      ctx.fillText(OBJ_TYPES[i].key, tx, toolbarY + 38);
+    }
+
+    // Selected type name
+    ctx.font = '11px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(255,215,0,0.5)';
+    ctx.fillText(OBJ_TYPES[selectedType].name + ' — ' + OBJ_TYPES[selectedType].desc, CW / 2, toolbarY - 10);
+
+    ctx.restore();
+  }
+
   // Drag hint after sun is planted and no planets yet
   if (gameStarted && sunPlanted && !gameOver && planets.filter(p => !p.isStationary).length === 0 && !isDragging) {
     ctx.save();
     ctx.font = '16px "Segoe UI", system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillStyle = `rgba(200,210,255,${0.3 + Math.sin(time * 2) * 0.2})`;
-    ctx.fillText('Drag to launch planets into orbit', CW / 2, CH - 40);
+    ctx.fillText('Drag to launch — press 1-5 to switch type', CW / 2, CH - 70);
     ctx.restore();
   }
 
