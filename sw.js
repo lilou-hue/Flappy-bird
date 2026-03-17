@@ -1,4 +1,4 @@
-const CACHE_NAME = 'slayplay-v7';
+const CACHE_NAME = 'slayplay-v8';
 
 const PRECACHE_URLS = [
   '/',
@@ -73,6 +73,15 @@ const PRECACHE_URLS = [
   '/rivals/game.js',
   '/rivals/audio.js',
   '/rivals/styles.css',
+  '/the-deep/',
+  '/the-deep/game.js',
+  '/the-deep/styles.css',
+  '/spend/',
+  '/spend/game.js',
+  '/spend/styles.css',
+  '/life-in-weeks/',
+  '/life-in-weeks/game.js',
+  '/life-in-weeks/styles.css',
 ];
 
 const NETWORK_FIRST_HOSTS = [

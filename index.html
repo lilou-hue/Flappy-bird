@@ -259,6 +259,9 @@
       .game-card:nth-child(14) { animation-delay: 0.7s; }
       .game-card:nth-child(15) { animation-delay: 0.75s; }
       .game-card:nth-child(16) { animation-delay: 0.8s; }
+      .game-card:nth-child(17) { animation-delay: 0.85s; }
+      .game-card:nth-child(18) { animation-delay: 0.9s; }
+      .game-card:nth-child(19) { animation-delay: 0.95s; }
       @keyframes cardReveal {
         to { opacity: 1; transform: translateY(0); }
       }
@@ -300,6 +303,9 @@
       .game-card:nth-child(14)::after { box-shadow: inset 0 0 0 1px rgba(0,210,255,0.4), 0 0 30px rgba(0,210,255,0.08); }
       .game-card:nth-child(15)::after { box-shadow: inset 0 0 0 1px rgba(255,50,150,0.4), 0 0 30px rgba(255,50,150,0.08); }
       .game-card:nth-child(16)::after { box-shadow: inset 0 0 0 1px rgba(255,107,53,0.4), 0 0 30px rgba(255,107,53,0.08); }
+      .game-card:nth-child(17)::after { box-shadow: inset 0 0 0 1px rgba(0,119,190,0.4), 0 0 30px rgba(0,119,190,0.08); }
+      .game-card:nth-child(18)::after { box-shadow: inset 0 0 0 1px rgba(34,197,94,0.4), 0 0 30px rgba(34,197,94,0.08); }
+      .game-card:nth-child(19)::after { box-shadow: inset 0 0 0 1px rgba(251,191,36,0.4), 0 0 30px rgba(251,191,36,0.08); }
 
       .game-card:hover .card-preview canvas { filter: brightness(1.12) saturate(1.1); }
 
@@ -704,6 +710,39 @@
           <h2 data-i18n="rivalsTitle">Rivals</h2>
           <p data-i18n="rivalsDesc">Round-based tactical shooter. Buy weapons, outsmart opponents, first to 5 wins!</p>
           <span class="card-tag rivals-tag" data-i18n="shooter">Shooter</span>
+        </div>
+      </a>
+
+      <a href="/the-deep/" class="game-card">
+        <div class="card-preview the-deep-preview">
+          <canvas id="theDeepCanvas" width="360" height="200"></canvas>
+        </div>
+        <div class="card-body">
+          <h2>The Deep</h2>
+          <p>Scroll to the bottom of the ocean. Real creatures at real depths.</p>
+          <span class="card-tag" style="background:rgba(0,119,190,0.15);color:#0077be">Experience</span>
+        </div>
+      </a>
+
+      <a href="/spend/" class="game-card">
+        <div class="card-preview spend-preview">
+          <canvas id="spendCanvas" width="360" height="200"></canvas>
+        </div>
+        <div class="card-body">
+          <h2>Spend a Billion</h2>
+          <p>You have $1,000,000,000. Try to spend it all.</p>
+          <span class="card-tag" style="background:rgba(34,197,94,0.15);color:#22c55e">Experience</span>
+        </div>
+      </a>
+
+      <a href="/life-in-weeks/" class="game-card">
+        <div class="card-preview life-weeks-preview">
+          <canvas id="lifeWeeksCanvas" width="360" height="200"></canvas>
+        </div>
+        <div class="card-body">
+          <h2>Life in Weeks</h2>
+          <p>Your entire life as a grid of tiny boxes. How many are left?</p>
+          <span class="card-tag" style="background:rgba(251,191,36,0.15);color:#f59e0b">Experience</span>
         </div>
       </a>
     </div>
@@ -2361,6 +2400,152 @@
           x.fillStyle = '#ff4444';
           x.textAlign = 'right';
           x.fillText('P2: 1', 350, 35);
+          requestAnimationFrame(draw);
+        }
+        requestAnimationFrame(draw);
+      })();
+
+      /* ─ The Deep Preview ─ */
+      (function() {
+        var c = document.getElementById('theDeepCanvas');
+        if (!c) return;
+        var x = c.getContext('2d');
+        var t = 0;
+        function draw() {
+          t += 0.02;
+          // Ocean gradient
+          var g = x.createLinearGradient(0, 0, 0, H);
+          g.addColorStop(0, '#0077be');
+          g.addColorStop(0.5, '#003366');
+          g.addColorStop(1, '#000811');
+          x.fillStyle = g; x.fillRect(0, 0, W, H);
+          // Light rays from top
+          x.save(); x.globalAlpha = 0.06;
+          for (var i = 0; i < 5; i++) {
+            x.fillStyle = '#fff';
+            x.beginPath();
+            var rx = 60 + i * 70 + Math.sin(t + i) * 10;
+            x.moveTo(rx, 0); x.lineTo(rx + 20, 0); x.lineTo(rx + 40 + i * 5, H * 0.6); x.lineTo(rx - 10 + i * 5, H * 0.6);
+            x.closePath(); x.fill();
+          }
+          x.restore();
+          // Marine snow particles
+          x.fillStyle = 'rgba(255,255,255,0.15)';
+          for (var i = 0; i < 30; i++) {
+            var px = (Math.sin(i * 127.1 + t * 0.3) * 0.5 + 0.5) * W;
+            var py = ((i * 73.7 + t * 8) % (H + 10)) - 5;
+            x.beginPath(); x.arc(px, py, 0.8, 0, Math.PI * 2); x.fill();
+          }
+          // Creature silhouettes
+          x.fillStyle = 'rgba(255,255,255,0.08)';
+          // Jellyfish
+          var jy = 60 + Math.sin(t * 0.7) * 8;
+          x.beginPath(); x.arc(100, jy, 12, Math.PI, 0); x.fill();
+          for (var i = -2; i <= 2; i++) {
+            x.beginPath(); x.moveTo(100 + i * 4, jy); x.quadraticCurveTo(100 + i * 4 + 2, jy + 15, 100 + i * 4 - 1, jy + 25 + Math.sin(t + i) * 3); x.stroke();
+          }
+          // Whale silhouette
+          x.fillStyle = 'rgba(255,255,255,0.05)';
+          x.beginPath(); x.ellipse(260 + Math.sin(t * 0.3) * 15, 130, 40, 14, 0, 0, Math.PI * 2); x.fill();
+          // Anglerfish light
+          x.fillStyle = 'rgba(150,255,200,0.15)';
+          x.beginPath(); x.arc(180, 170 + Math.sin(t) * 3, 3 + Math.sin(t * 3) * 1, 0, Math.PI * 2); x.fill();
+          // Depth text
+          x.fillStyle = 'rgba(255,255,255,0.25)';
+          x.font = '11px "Space Grotesk", sans-serif';
+          x.fillText('10,994m', W - 60, H - 12);
+          requestAnimationFrame(draw);
+        }
+        requestAnimationFrame(draw);
+      })();
+
+      /* ─ Spend Preview ─ */
+      (function() {
+        var c = document.getElementById('spendCanvas');
+        if (!c) return;
+        var x = c.getContext('2d');
+        var t = 0;
+        var displayMoney = 1000000000;
+        function draw() {
+          t += 0.015;
+          x.fillStyle = '#fafafa'; x.fillRect(0, 0, W, H);
+          // Money amount
+          var show = Math.floor(displayMoney - Math.abs(Math.sin(t * 0.5)) * 347892156);
+          if (show < 0) show += 1000000000;
+          var formatted = '$' + show.toLocaleString('en-US');
+          x.fillStyle = '#111';
+          x.font = 'bold 32px "Space Grotesk", sans-serif';
+          x.textAlign = 'center';
+          x.fillText(formatted, W / 2, 55);
+          // Item cards
+          var items = [
+            ['🍔', '$5'], ['🎮', '$70'], ['📱', '$1K'],
+            ['🚗', '$40K'], ['🏠', '$400K'], ['✈️', '$70M']
+          ];
+          for (var i = 0; i < items.length; i++) {
+            var ix = 30 + (i % 3) * 115;
+            var iy = 80 + Math.floor(i / 3) * 55;
+            x.fillStyle = '#fff';
+            x.beginPath();
+            x.roundRect(ix, iy, 100, 45, 8); x.fill();
+            x.strokeStyle = '#e5e5e5'; x.lineWidth = 1; x.stroke();
+            x.fillStyle = '#111'; x.font = '16px sans-serif'; x.textAlign = 'left';
+            x.fillText(items[i][0], ix + 8, iy + 28);
+            x.fillStyle = '#666'; x.font = '12px "Space Grotesk", sans-serif';
+            x.fillText(items[i][1], ix + 32, iy + 28);
+            x.fillStyle = '#22c55e'; x.beginPath(); x.roundRect(ix + 72, iy + 12, 22, 22, 4); x.fill();
+            x.fillStyle = '#fff'; x.font = 'bold 14px sans-serif'; x.textAlign = 'center';
+            x.fillText('+', ix + 83, iy + 28);
+          }
+          x.textAlign = 'left';
+          requestAnimationFrame(draw);
+        }
+        requestAnimationFrame(draw);
+      })();
+
+      /* ─ Life in Weeks Preview ─ */
+      (function() {
+        var c = document.getElementById('lifeWeeksCanvas');
+        if (!c) return;
+        var x = c.getContext('2d');
+        var t = 0;
+        var colors = ['#f8b4b4','#93c5fd','#86efac','#fde047','#fdba74','#f97316','#c084fc','#9ca3af'];
+        function draw() {
+          t += 0.01;
+          x.fillStyle = '#fafafa'; x.fillRect(0, 0, W, H);
+          // Title
+          x.fillStyle = '#111'; x.font = '13px "Space Grotesk", sans-serif'; x.textAlign = 'center';
+          x.fillText('Life in Weeks', W / 2, 20);
+          // Grid of tiny boxes
+          var bx = 30, by = 32, bs = 4, gap = 1.2;
+          var cols = 52, rows = 30;
+          var filledWeeks = Math.floor(25 * 52 + Math.sin(t) * 0); // ~25 years
+          var week = 0;
+          for (var r = 0; r < rows; r++) {
+            for (var col = 0; col < cols; col++) {
+              var wx = bx + col * (bs + gap);
+              var wy = by + r * (bs + gap);
+              if (wx > W - 10 || wy > H - 10) continue;
+              if (week < filledWeeks) {
+                var ci = Math.floor(r / (rows / 8));
+                x.fillStyle = colors[Math.min(ci, colors.length - 1)];
+              } else {
+                x.fillStyle = '#e5e5e5';
+              }
+              x.fillRect(wx, wy, bs, bs);
+              week++;
+            }
+          }
+          // Current week pulse
+          var cw = filledWeeks;
+          var cr = Math.floor(cw / cols);
+          var cc = cw % cols;
+          var cwx = bx + cc * (bs + gap);
+          var cwy = by + cr * (bs + gap);
+          x.fillStyle = '#ef4444';
+          var pulse = 1 + Math.sin(t * 4) * 0.3;
+          x.fillRect(cwx - pulse, cwy - pulse, bs + pulse * 2, bs + pulse * 2);
+          x.textAlign = 'left';
           requestAnimationFrame(draw);
         }
         requestAnimationFrame(draw);
