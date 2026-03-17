@@ -307,6 +307,7 @@
       .game-card:nth-child(18)::after { box-shadow: inset 0 0 0 1px rgba(34,197,94,0.4), 0 0 30px rgba(34,197,94,0.08); }
       .game-card:nth-child(19)::after { box-shadow: inset 0 0 0 1px rgba(251,191,36,0.4), 0 0 30px rgba(251,191,36,0.08); }
       .game-card:nth-child(20)::after { box-shadow: inset 0 0 0 1px rgba(88,86,214,0.4), 0 0 30px rgba(88,86,214,0.08); }
+      .game-card:nth-child(21)::after { box-shadow: inset 0 0 0 1px rgba(255,107,181,0.4), 0 0 30px rgba(255,107,181,0.08); }
 
       .game-card:hover .card-preview canvas { filter: brightness(1.12) saturate(1.1); }
 
@@ -376,6 +377,7 @@
       .spend-preview { background: linear-gradient(180deg, #0a1a0a, #142814, #0a1a0a); }
       .life-weeks-preview { background: linear-gradient(180deg, #1a1a2e, #16213e, #0f3460); }
       .art-nothing-preview { background: linear-gradient(180deg, #1a1020, #241530, #1a1020); }
+      .heart-serve-preview { background: linear-gradient(180deg, #ffe0ec, #ffc8dd, #ffb3c6); }
 
       .flappy-tag    { background: rgba(123,228,149,0.12); color: #7be495; border: 1px solid rgba(123,228,149,0.2); }
       .methane-tag   { background: rgba(23,205,211,0.12); color: #17cdd3; border: 1px solid rgba(23,205,211,0.2); }
@@ -784,6 +786,17 @@
           <h2 data-i18n="artNothingTitle">The Art of Doing Nothing</h2>
           <p data-i18n="artNothingDesc">A narrative game about procrastination and the sloth inside your head.</p>
           <span class="card-tag" style="background:rgba(196,169,125,0.15);color:#C4A97D">Story</span>
+        </div>
+      </a>
+
+      <a href="/heart-serve/" class="game-card">
+        <div class="card-preview heart-serve-preview">
+          <canvas id="heartServeCanvas" width="360" height="200"></canvas>
+        </div>
+        <div class="card-body">
+          <h2>HeartServe</h2>
+          <p>A dating sim meets ping pong — build friendships through dialogue and matches!</p>
+          <span class="card-tag" style="background:rgba(255,107,181,0.15);color:#ff6bb5">Dating Sim</span>
         </div>
       </a>
     </div>
@@ -2776,6 +2789,73 @@
         draw();
       })();
 
+      /* ─ HeartServe Preview ─ */
+      (function() {
+        var c = document.getElementById('heartServeCanvas');
+        if (!c) return;
+        var x = c.getContext('2d');
+        var t = 0;
+        var hearts = [];
+        for (var i = 0; i < 8; i++) hearts.push({x: Math.random()*W, y: Math.random()*H, s: 6+Math.random()*10, speed: 0.3+Math.random()*0.5, phase: Math.random()*Math.PI*2});
+
+        function drawHeart(cx, cy, size) {
+          x.beginPath();
+          x.moveTo(cx, cy + size * 0.3);
+          x.bezierCurveTo(cx - size * 0.5, cy - size * 0.3, cx - size, cy + size * 0.1, cx, cy + size * 0.7);
+          x.bezierCurveTo(cx + size, cy + size * 0.1, cx + size * 0.5, cy - size * 0.3, cx, cy + size * 0.3);
+          x.fill();
+        }
+
+        function draw() {
+          t += 0.016;
+          var bg = x.createLinearGradient(0,0,0,H);
+          bg.addColorStop(0,'#ffe0ec'); bg.addColorStop(0.5,'#ffc8dd'); bg.addColorStop(1,'#ffb3c6');
+          x.fillStyle = bg; x.fillRect(0,0,W,H);
+
+          // Floating hearts
+          for (var i = 0; i < hearts.length; i++) {
+            var h = hearts[i];
+            h.y -= h.speed;
+            h.x += Math.sin(t * 2 + h.phase) * 0.3;
+            if (h.y < -20) { h.y = H + 10; h.x = Math.random() * W; }
+            x.globalAlpha = 0.2 + Math.sin(t + h.phase) * 0.1;
+            x.fillStyle = i % 2 === 0 ? '#ff6b9d' : '#c084fc';
+            drawHeart(h.x, h.y, h.s);
+          }
+          x.globalAlpha = 1;
+
+          // Ping pong table line
+          x.strokeStyle = 'rgba(255,255,255,0.4)';
+          x.lineWidth = 2;
+          x.setLineDash([4, 4]);
+          x.beginPath(); x.moveTo(W/2, H*0.35); x.lineTo(W/2, H*0.85); x.stroke();
+          x.setLineDash([]);
+
+          // Paddles
+          var py = H*0.6 + Math.sin(t*2)*15;
+          x.fillStyle = '#ff6bb5';
+          x.beginPath(); x.roundRect(30, py-18, 8, 36, 4); x.fill();
+          x.fillStyle = '#c084fc';
+          x.beginPath(); x.roundRect(W-38, H*0.6 + Math.sin(t*2.5+1)*15 - 18, 8, 36, 4); x.fill();
+
+          // Ball
+          var bx = W/2 + Math.sin(t*3)*120;
+          var by = H*0.6 + Math.cos(t*4)*20;
+          x.fillStyle = '#fff';
+          x.beginPath(); x.arc(bx, by, 5, 0, Math.PI*2); x.fill();
+          x.fillStyle = 'rgba(255,255,255,0.3)';
+          x.beginPath(); x.arc(bx-3, by, 4, 0, Math.PI*2); x.fill();
+
+          // Title
+          x.fillStyle = '#d6336c'; x.font = 'bold 14px "Space Grotesk",sans-serif'; x.textAlign = 'center';
+          x.fillText('HeartServe', W/2, H-14);
+          x.textAlign = 'left';
+
+          requestAnimationFrame(draw);
+        }
+        draw();
+      })();
+
     })();
     </script>
     <script src="i18n.js"></script>
@@ -2790,7 +2870,7 @@
           'flappyBest', 'methaneDriftBest', 'snakeBest', 'luminaBest',
           'phantomRoadBest', 'unicorn', 'tetrisBest', 'gunGameBest', 'astroMinerBest', 'starFuryBest', 'inkognitoBest', 'dressUpBest',
           'stackTowerBest', 'neonPongBest', 'beatDropBest', 'rivalsBest', 'gravityGardenBest',
-          null, null, null, 'lastSeenOnlineBest', 'artOfDoingNothingBest'
+          null, null, null, 'lastSeenOnlineBest', 'artOfDoingNothingBest', 'heartServeBest'
         ];
         const cards = document.querySelectorAll('.game-card');
         cards.forEach((card, i) => {
@@ -2863,7 +2943,7 @@
           } catch(e) {}
         }
 
-        const bestKeys = ['flappyBest', 'methaneDriftBest', 'snakeBest', 'luminaBest', 'phantomRoadBest', 'tetrisBest', 'gunGameBest', 'astroMinerBest', 'starFuryBest', 'inkognitoBest', 'stackTowerBest', 'neonPongBest', 'beatDropBest', 'gravityGardenBest', 'artOfDoingNothingBest'];
+        const bestKeys = ['flappyBest', 'methaneDriftBest', 'snakeBest', 'luminaBest', 'phantomRoadBest', 'tetrisBest', 'gunGameBest', 'astroMinerBest', 'starFuryBest', 'inkognitoBest', 'stackTowerBest', 'neonPongBest', 'beatDropBest', 'gravityGardenBest', 'artOfDoingNothingBest', 'heartServeBest'];
         let combinedBest = 0;
         for (const key of bestKeys) {
           combinedBest += Number(localStorage.getItem(key)) || 0;
