@@ -1,4 +1,4 @@
-const CACHE_NAME = 'slayplay-v10';
+const CACHE_NAME = 'slayplay-v11';
 
 const PRECACHE_URLS = [
   '/',
