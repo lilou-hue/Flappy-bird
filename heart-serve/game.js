@@ -299,16 +299,21 @@
   /* ════════════════════════════════════════════════════════════
      SCREEN MANAGEMENT
      ════════════════════════════════════════════════════════════ */
+  var screenTimer = null;
   function showScreen(name) {
+    if (screenTimer) { clearTimeout(screenTimer); screenTimer = null; }
     Object.keys(screens).forEach(function(k) {
       var s = screens[k];
-      s.classList.remove('active', 'fade-in');
-      if (k !== name) s.style.display = 'none';
+      s.classList.remove('active');
+      s.style.display = 'none';
+      s.style.opacity = '0';
     });
     var next = screens[name];
     next.style.display = 'flex';
-    next.classList.add('fade-in');
-    setTimeout(function() { next.classList.add('active'); next.classList.remove('fade-in'); }, 400);
+    // Force layout so the display change takes before opacity transition
+    void next.offsetHeight;
+    next.style.opacity = '1';
+    next.classList.add('active');
     state.screen = name;
     saveState();
   }
