@@ -33,40 +33,50 @@
 
   /* ── Site-wide achievements ── */
   const ACHIEVEMENTS = [
-    { id: 'first_steps',       name: 'First Steps',       desc: 'Play your first game',           icon: '👶', reward: 10 },
-    { id: 'getting_hooked',    name: 'Getting Hooked',     desc: 'Play 5 games',                   icon: '🎣', reward: 25 },
-    { id: 'arcade_rat',        name: 'Arcade Rat',         desc: 'Play 50 games',                  icon: '🐀', reward: 100 },
-    { id: 'explorer',          name: 'Explorer',           desc: 'Try all games',                  icon: '🧭', reward: 75 },
-    { id: 'coin_collector',    name: 'Coin Collector',     desc: 'Earn 500 total coins',           icon: '🪙', reward: 50 },
-    { id: 'big_spender',       name: 'Big Spender',        desc: 'Earn 2000 total coins',          icon: '💰', reward: 100 },
-    { id: 'hat_trick',         name: 'Hat Trick',          desc: '3-day play streak',              icon: '🎩', reward: 30 },
-    { id: 'weekly_warrior',    name: 'Weekly Warrior',     desc: '7-day play streak',              icon: '⚔️', reward: 75 },
-    { id: 'monthly_master',    name: 'Monthly Master',     desc: '30-day play streak',             icon: '👑', reward: 200 },
-    { id: 'high_roller',       name: 'High Roller',        desc: 'Spend 500 coins in the shop',    icon: '🎰', reward: 50 },
-    { id: 'challenge_accepted',name: 'Challenge Accepted', desc: 'Complete 1 daily challenge',     icon: '✅', reward: 15 },
-    { id: 'challenge_streak',  name: 'Challenge Streak',   desc: 'Complete 7 daily challenges',    icon: '🔥', reward: 100 },
+    { id: 'first_steps',       nameKey: 'arcAchFirstSteps',      descKey: 'arcAchFirstStepsDesc',      icon: '👶', reward: 10 },
+    { id: 'getting_hooked',    nameKey: 'arcAchGettingHooked',   descKey: 'arcAchGettingHookedDesc',   icon: '🎣', reward: 25 },
+    { id: 'arcade_rat',        nameKey: 'arcAchArcadeRat',       descKey: 'arcAchArcadeRatDesc',       icon: '🐀', reward: 100 },
+    { id: 'explorer',          nameKey: 'arcAchExplorer',        descKey: 'arcAchExplorerDesc',        icon: '🧭', reward: 75 },
+    { id: 'coin_collector',    nameKey: 'arcAchCoinCollector',   descKey: 'arcAchCoinCollectorDesc',   icon: '🪙', reward: 50 },
+    { id: 'big_spender',       nameKey: 'arcAchBigSpender',      descKey: 'arcAchBigSpenderDesc',      icon: '💰', reward: 100 },
+    { id: 'hat_trick',         nameKey: 'arcAchHatTrick',        descKey: 'arcAchHatTrickDesc',        icon: '🎩', reward: 30 },
+    { id: 'weekly_warrior',    nameKey: 'arcAchWeeklyWarrior',   descKey: 'arcAchWeeklyWarriorDesc',   icon: '⚔️', reward: 75 },
+    { id: 'monthly_master',    nameKey: 'arcAchMonthlyMaster',   descKey: 'arcAchMonthlyMasterDesc',   icon: '👑', reward: 200 },
+    { id: 'high_roller',       nameKey: 'arcAchHighRoller',      descKey: 'arcAchHighRollerDesc',      icon: '🎰', reward: 50 },
+    { id: 'challenge_accepted',nameKey: 'arcAchChallengeAccepted',descKey: 'arcAchChallengeAcceptedDesc',icon: '✅', reward: 15 },
+    { id: 'challenge_streak',  nameKey: 'arcAchChallengeStreak', descKey: 'arcAchChallengeStreakDesc', icon: '🔥', reward: 100 },
   ];
+  ACHIEVEMENTS.forEach(function(a) {
+    Object.defineProperty(a, 'name', { get: function() { return t(a.nameKey, a.nameKey); }, enumerable: true });
+    Object.defineProperty(a, 'desc', { get: function() { return t(a.descKey, a.descKey); }, enumerable: true });
+  });
 
   /* ── Shop items ── */
   const SHOP_ITEMS = [
-    { id: 'badge_fire',    cat: 'badge', name: 'Fire Badge',    icon: '🔥', cost: 100 },
-    { id: 'badge_star',    cat: 'badge', name: 'Star Badge',    icon: '⭐', cost: 200 },
-    { id: 'badge_skull',   cat: 'badge', name: 'Skull Badge',   icon: '💀', cost: 300 },
-    { id: 'badge_crown',   cat: 'badge', name: 'Crown Badge',   icon: '👑', cost: 500 },
-    { id: 'theme_ocean',   cat: 'theme', name: 'Ocean Theme',   icon: '🌊', cost: 300, vars: { '--accent': '#38bdf8', '--accent2': '#06b6d4', '--accent3': '#0ea5e9' } },
-    { id: 'theme_flame',   cat: 'theme', name: 'Flame Theme',   icon: '🔥', cost: 300, vars: { '--accent': '#f97316', '--accent2': '#ef4444', '--accent3': '#eab308' } },
-    { id: 'theme_forest',  cat: 'theme', name: 'Forest Theme',  icon: '🌲', cost: 300, vars: { '--accent': '#22c55e', '--accent2': '#10b981', '--accent3': '#84cc16' } },
-    { id: 'frame_gold',    cat: 'frame', name: 'Gold Frame',    icon: '🥇', cost: 250 },
-    { id: 'frame_rainbow', cat: 'frame', name: 'Rainbow Frame', icon: '🌈', cost: 350 },
-    { id: 'frame_neon',    cat: 'frame', name: 'Neon Frame',    icon: '💜', cost: 400 },
+    { id: 'badge_fire',    cat: 'badge', nameKey: 'arcShopFireBadge',    icon: '🔥', cost: 100 },
+    { id: 'badge_star',    cat: 'badge', nameKey: 'arcShopStarBadge',    icon: '⭐', cost: 200 },
+    { id: 'badge_skull',   cat: 'badge', nameKey: 'arcShopSkullBadge',   icon: '💀', cost: 300 },
+    { id: 'badge_crown',   cat: 'badge', nameKey: 'arcShopCrownBadge',   icon: '👑', cost: 500 },
+    { id: 'theme_ocean',   cat: 'theme', nameKey: 'arcShopOceanTheme',   icon: '🌊', cost: 300, vars: { '--accent': '#38bdf8', '--accent2': '#06b6d4', '--accent3': '#0ea5e9' } },
+    { id: 'theme_flame',   cat: 'theme', nameKey: 'arcShopFlameTheme',   icon: '🔥', cost: 300, vars: { '--accent': '#f97316', '--accent2': '#ef4444', '--accent3': '#eab308' } },
+    { id: 'theme_forest',  cat: 'theme', nameKey: 'arcShopForestTheme',  icon: '🌲', cost: 300, vars: { '--accent': '#22c55e', '--accent2': '#10b981', '--accent3': '#84cc16' } },
+    { id: 'frame_gold',    cat: 'frame', nameKey: 'arcShopGoldFrame',    icon: '🥇', cost: 250 },
+    { id: 'frame_rainbow', cat: 'frame', nameKey: 'arcShopRainbowFrame', icon: '🌈', cost: 350 },
+    { id: 'frame_neon',    cat: 'frame', nameKey: 'arcShopNeonFrame',    icon: '💜', cost: 400 },
   ];
+  SHOP_ITEMS.forEach(function(item) {
+    Object.defineProperty(item, 'name', { get: function() { return t(item.nameKey, item.nameKey); }, enumerable: true });
+  });
 
   /* ── Challenge templates ── */
   const CHALLENGE_TEMPLATES = [
-    { type: 'score',     tpl: 'Score {target}+ in {game}',      targets: [5, 10, 20, 30, 50] },
-    { type: 'play',      tpl: 'Play {target} different games',   targets: [2, 3, 5] },
-    { type: 'beat_best', tpl: 'Beat your best in {game}',        targets: [1] },
+    { type: 'score',     tplKey: 'arcChallScore',    targets: [5, 10, 20, 30, 50] },
+    { type: 'play',      tplKey: 'arcChallPlay',     targets: [2, 3, 5] },
+    { type: 'beat_best', tplKey: 'arcChallBeatBest', targets: [1] },
   ];
+  function getChallTpl(tplKey) {
+    return t(tplKey, tplKey);
+  }
 
   /* ── i18n helper ── */
   function t(key, fallback) {
@@ -216,7 +226,7 @@
     var target1 = tpl1.targets[Math.floor(rng() * tpl1.targets.length)];
     challenges.push({
       id: 'c1_' + d, type: 'score', gameId: g1, target: target1, reward: 20,
-      completed: false, desc: tpl1.tpl.replace('{target}', target1).replace('{game}', GAMES[g1].name),
+      completed: false, desc: getChallTpl(tpl1.tplKey).replace('{target}', target1).replace('{game}', GAMES[g1].name),
     });
 
     /* Challenge 2: Play N different games */
@@ -224,14 +234,14 @@
     var target2 = tpl2.targets[Math.floor(rng() * tpl2.targets.length)];
     challenges.push({
       id: 'c2_' + d, type: 'play', gameId: null, target: target2, reward: 15,
-      completed: false, desc: tpl2.tpl.replace('{target}', target2),
+      completed: false, desc: getChallTpl(tpl2.tplKey).replace('{target}', target2),
     });
 
     /* Challenge 3: Beat your best in a specific game */
     var g3 = scoreGames[Math.floor(rng() * scoreGames.length)];
     challenges.push({
       id: 'c3_' + d, type: 'beat_best', gameId: g3, target: 1, reward: 25,
-      completed: false, desc: CHALLENGE_TEMPLATES[2].tpl.replace('{game}', GAMES[g3].name),
+      completed: false, desc: getChallTpl(CHALLENGE_TEMPLATES[2].tplKey).replace('{game}', GAMES[g3].name),
     });
 
     setChallenges({ date: d, challenges: challenges });
@@ -415,10 +425,10 @@
 
   function purchaseItem(id) {
     var item = SHOP_ITEMS.find(function (i) { return i.id === id; });
-    if (!item) return { success: false, reason: 'Item not found' };
+    if (!item) return { success: false, reason: t('arcItemNotFound', 'Item not found') };
     var shop = getShop();
-    if (shop.purchased.indexOf(id) !== -1) return { success: false, reason: 'Already owned' };
-    if (!spendCoins(item.cost)) return { success: false, reason: 'Not enough coins' };
+    if (shop.purchased.indexOf(id) !== -1) return { success: false, reason: t('arcAlreadyOwned', 'Already owned') };
+    if (!spendCoins(item.cost)) return { success: false, reason: t('arcNotEnoughCoins', 'Not enough coins') };
     shop = getShop();
     shop.purchased.push(id);
     setShop(shop);
@@ -489,7 +499,7 @@
       totalCoinsSpent: s.totalCoinsSpent || 0,
       totalGamesPlayed: s.totalGamesPlayed,
       uniqueGamesPlayed: s.uniqueGamesPlayed.length,
-      favoriteGame: fav ? GAMES[fav].name : 'None yet',
+      favoriteGame: fav ? GAMES[fav].name : t('arcNoneYet', 'None yet'),
       streak: streak.streak,
       longestStreak: streak.longestStreak,
       achievementsUnlocked: ach.unlocked.length,
@@ -568,11 +578,11 @@
 
     /* Share button */
     overlay.querySelector('.arc-scorecard__btn--share').addEventListener('click', function () {
-      var text = 'I scored ' + score + ' on ' + game.name + ' at SlayPlay! Can you beat me?';
+      var text = t('arcShareText', 'I scored {score} on {game} at SlayPlay! Can you beat me?').replace('{score}', score).replace('{game}', game.name);
       if (navigator.clipboard) {
         navigator.clipboard.writeText(text).then(function () {
-          this.textContent = 'Copied!';
-          setTimeout(function () { this.textContent = 'Share'; }.bind(this), 2000);
+          this.textContent = t('arcCopied', 'Copied!');
+          setTimeout(function () { this.textContent = t('arcShare', 'Share'); }.bind(this), 2000);
         }.bind(this));
       }
     });
@@ -614,11 +624,11 @@
     } else {
       nav.innerHTML =
         '<div class="arc-nav__left">' +
-          '<a href="/" class="arc-nav__link' + (window.location.pathname === '/' ? ' arc-nav__link--active' : '') + '">Games</a>' +
-          '<a href="/achievements/" class="arc-nav__link' + (window.location.pathname.indexOf('/achievements') === 0 ? ' arc-nav__link--active' : '') + '">Achievements</a>' +
-          '<a href="/shop/" class="arc-nav__link' + (window.location.pathname.indexOf('/shop') === 0 ? ' arc-nav__link--active' : '') + '">Shop</a>' +
-          '<a href="/leaderboard-page/" class="arc-nav__link' + (window.location.pathname.indexOf('/leaderboard-page') === 0 ? ' arc-nav__link--active' : '') + '">Leaderboard</a>' +
-          '<a href="/profile/" class="arc-nav__link' + (window.location.pathname.indexOf('/profile') === 0 ? ' arc-nav__link--active' : '') + '">Profile</a>' +
+          '<a href="/" class="arc-nav__link' + (window.location.pathname === '/' ? ' arc-nav__link--active' : '') + '">' + t('arcNavGames', 'Games') + '</a>' +
+          '<a href="/achievements/" class="arc-nav__link' + (window.location.pathname.indexOf('/achievements') === 0 ? ' arc-nav__link--active' : '') + '">' + t('achievements', 'Achievements') + '</a>' +
+          '<a href="/shop/" class="arc-nav__link' + (window.location.pathname.indexOf('/shop') === 0 ? ' arc-nav__link--active' : '') + '">' + t('arcNavShop', 'Shop') + '</a>' +
+          '<a href="/leaderboard-page/" class="arc-nav__link' + (window.location.pathname.indexOf('/leaderboard-page') === 0 ? ' arc-nav__link--active' : '') + '">' + t('leaderboard', 'Leaderboard') + '</a>' +
+          '<a href="/profile/" class="arc-nav__link' + (window.location.pathname.indexOf('/profile') === 0 ? ' arc-nav__link--active' : '') + '">' + t('arcNavProfile', 'Profile') + '</a>' +
         '</div>' +
         '<div class="arc-nav__right">' +
           (streak.streak > 0 ? '<div class="arc-nav__streak" title="' + streak.streak + '-day streak">&#x1F525; ' + streak.streak + '</div>' : '') +

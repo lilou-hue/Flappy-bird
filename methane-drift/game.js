@@ -37,57 +37,57 @@ const CONFIG = {
     { at: 20, multiplier: 5.0, label: 'x5' },
   ],
   loreMessages: [
-    { score: 5, text: 'Signal detected: biological origin...' },
-    { score: 12, text: 'Atmospheric composition: 94% methane, trace organics' },
-    { score: 20, text: 'Warning: symbiont bond strengthening' },
-    { score: 35, text: 'Deep current detected — navigating pressure gradient' },
-    { score: 50, text: 'Core pressure readings: anomalous' },
-    { score: 65, text: 'Bioluminescent signatures intensifying' },
-    { score: 80, text: 'Warning: entity signatures detected ahead' },
-    { score: 100, text: 'You have reached the unstable core. There is no return.' },
+    { score: 5, get text() { return _t('mdLore1'); } },
+    { score: 12, get text() { return _t('mdLore2'); } },
+    { score: 20, get text() { return _t('mdLore3'); } },
+    { score: 35, get text() { return _t('mdLore4'); } },
+    { score: 50, get text() { return _t('mdLore5'); } },
+    { score: 65, get text() { return _t('mdLore6'); } },
+    { score: 80, get text() { return _t('mdLore7'); } },
+    { score: 100, get text() { return _t('mdLore8'); } },
   ],
   zoneColors: [
-    { bg1: '#1a2248', bg2: '#111540', bg3: '#0a0d2e', bg4: '#030410', hue: 220, name: 'Upper Atmosphere' },
-    { bg1: '#0a3038', bg2: '#0a2828', bg3: '#082020', bg4: '#031210', hue: 170, name: 'Mid Turbulence' },
-    { bg1: '#2a1040', bg2: '#201038', bg3: '#180828', bg4: '#0a0310', hue: 280, name: 'Pressure Layer' },
-    { bg1: '#3a1818', bg2: '#2a1010', bg3: '#200808', bg4: '#100404', hue: 15, name: 'Core Proximity' },
-    { bg1: '#1a2248', bg2: '#111540', bg3: '#0a0d2e', bg4: '#030410', hue: 220, name: 'Unstable Core' },
+    { bg1: '#1a2248', bg2: '#111540', bg3: '#0a0d2e', bg4: '#030410', hue: 220, get name() { return _t('mdZoneUpperAtmosphere'); } },
+    { bg1: '#0a3038', bg2: '#0a2828', bg3: '#082020', bg4: '#031210', hue: 170, get name() { return _t('mdZoneMidTurbulence'); } },
+    { bg1: '#2a1040', bg2: '#201038', bg3: '#180828', bg4: '#0a0310', hue: 280, get name() { return _t('mdZonePressureLayer'); } },
+    { bg1: '#3a1818', bg2: '#2a1010', bg3: '#200808', bg4: '#100404', hue: 15, get name() { return _t('mdZoneCoreProximity'); } },
+    { bg1: '#1a2248', bg2: '#111540', bg3: '#0a0d2e', bg4: '#030410', hue: 220, get name() { return _t('mdZoneUnstableCore'); } },
   ],
   skins: {
-    default:  { name: 'Drifter',       glowHue: 170, bodyHue: 160, trailHue: 170 },
-    ember:    { name: 'Ember',          glowHue: 15,  bodyHue: 10,  trailHue: 20  },
-    void:     { name: 'Void Walker',    glowHue: 270, bodyHue: 260, trailHue: 280 },
-    solar:    { name: 'Solar Wind',     glowHue: 45,  bodyHue: 40,  trailHue: 50  },
-    deep:     { name: 'Deep Current',   glowHue: 200, bodyHue: 210, trailHue: 195 },
-    spectral: { name: 'Spectral',       glowHue: 300, bodyHue: 310, trailHue: 290 },
+    default:  { get name() { return _t('mdSkinDrifter'); },       glowHue: 170, bodyHue: 160, trailHue: 170 },
+    ember:    { get name() { return _t('mdSkinEmber'); },          glowHue: 15,  bodyHue: 10,  trailHue: 20  },
+    void:     { get name() { return _t('mdSkinVoidWalker'); },    glowHue: 270, bodyHue: 260, trailHue: 280 },
+    solar:    { get name() { return _t('mdSkinSolarWind'); },     glowHue: 45,  bodyHue: 40,  trailHue: 50  },
+    deep:     { get name() { return _t('mdSkinDeepCurrent'); },   glowHue: 200, bodyHue: 210, trailHue: 195 },
+    spectral: { get name() { return _t('mdSkinSpectral'); },       glowHue: 300, bodyHue: 310, trailHue: 290 },
   },
   skinUnlocks: {
     default:  { type: 'default' },
-    ember:    { type: 'score', value: 50, desc: 'Score 50+' },
-    void:     { type: 'achievement', value: 'untouchable', desc: 'Untouchable achievement' },
-    solar:    { type: 'runs', value: 25, desc: 'Complete 25 runs' },
-    deep:     { type: 'score', value: 100, desc: 'Score 100+' },
-    spectral: { type: 'achievement', value: 'near_miss_expert', desc: 'Near-Miss Expert achievement' },
+    ember:    { type: 'score', value: 50, get desc() { return _t('mdUnlockScore50'); } },
+    void:     { type: 'achievement', value: 'untouchable', get desc() { return _t('mdUnlockUntouchable'); } },
+    solar:    { type: 'runs', value: 25, get desc() { return _t('mdUnlock25Runs'); } },
+    deep:     { type: 'score', value: 100, get desc() { return _t('mdUnlockScore100'); } },
+    spectral: { type: 'achievement', value: 'near_miss_expert', get desc() { return _t('mdUnlockNearMiss'); } },
   },
 };
 
 const STATE = { MENU: 'menu', PLAYING: 'playing', PAUSED: 'paused', CRASHING: 'crashing', GAMEOVER: 'gameover' };
 
 const ACHIEVEMENTS = [
-  { id: 'first_drift', name: 'First Drift', desc: 'Score 1 point', check: (s) => s.bestScore >= 1 },
-  { id: 'deep_diver', name: 'Deep Diver', desc: 'Score 25 points', check: (s) => s.bestScore >= 25 },
-  { id: 'pressure_veteran', name: 'Pressure Veteran', desc: 'Score 50 points', check: (s) => s.bestScore >= 50 },
-  { id: 'core_runner', name: 'Core Runner', desc: 'Score 100 points', check: (s) => s.bestScore >= 100 },
-  { id: 'symbiont', name: 'Shield Expert', desc: 'Use your shield 10 times total', check: (s) => s.totalSymbiosis >= 10 },
-  { id: 'untouchable', name: 'Untouchable', desc: 'Score 20 without using your shield', check: (s) => s.noSymbiosisRecord >= 20 },
-  { id: 'density_master', name: 'Density Master', desc: 'Survive 5 Heavy air phases in one run', check: (s) => s.crushingPhasesThisRun >= 5 },
-  { id: 'near_miss_expert', name: 'Close Call Expert', desc: '10 close calls in one run', check: (s) => s.nearMissesThisRun >= 10 },
-  { id: 'combo_adept', name: 'Combo Adept', desc: 'Reach a 5x combo', check: (s) => s.longestStreak >= 5 },
-  { id: 'combo_master', name: 'Combo Master', desc: 'Reach a 10x combo', check: (s) => s.longestStreak >= 10 },
-  { id: 'density_surfer', name: 'Wave Rider', desc: 'Ride the air change 5 times in one run', check: (s) => s.densitySurfsThisRun >= 5 },
-  { id: 'boss_slayer', name: 'Boss Slayer', desc: 'Defeat 3 bosses in one run', check: (s) => s.bossesDefeatedThisRun >= 3 },
-  { id: 'marathon', name: 'Marathon Runner', desc: 'Stay alive for 2 minutes in one run', check: (s) => s.longestTimeAlive >= 120 },
-  { id: 'nitro_collector', icon: '\uD83D\uDCA8', title: 'Nitro Collector', desc: 'Collect 10 nitro pickups total', check: (s) => s.totalNitro >= 10 },
+  { id: 'first_drift', get name() { return _t('achFirstDrift'); }, get desc() { return _t('achFirstDriftDesc'); }, check: (s) => s.bestScore >= 1 },
+  { id: 'deep_diver', get name() { return _t('achDeepDiver'); }, get desc() { return _t('achDeepDiverDesc'); }, check: (s) => s.bestScore >= 25 },
+  { id: 'pressure_veteran', get name() { return _t('achPressureVet'); }, get desc() { return _t('achPressureVetDesc'); }, check: (s) => s.bestScore >= 50 },
+  { id: 'core_runner', get name() { return _t('achCoreRunner'); }, get desc() { return _t('achCoreRunnerDesc'); }, check: (s) => s.bestScore >= 100 },
+  { id: 'symbiont', get name() { return _t('achSymbiont'); }, get desc() { return _t('achSymbiontDesc'); }, check: (s) => s.totalSymbiosis >= 10 },
+  { id: 'untouchable', get name() { return _t('achUntouchable'); }, get desc() { return _t('achUntouchableDesc'); }, check: (s) => s.noSymbiosisRecord >= 20 },
+  { id: 'density_master', get name() { return _t('achDensityMaster'); }, get desc() { return _t('achDensityMasterDesc'); }, check: (s) => s.crushingPhasesThisRun >= 5 },
+  { id: 'near_miss_expert', get name() { return _t('achNearMissExpert'); }, get desc() { return _t('achNearMissExpertDesc'); }, check: (s) => s.nearMissesThisRun >= 10 },
+  { id: 'combo_adept', get name() { return _t('achComboAdept'); }, get desc() { return _t('achComboAdeptDesc'); }, check: (s) => s.longestStreak >= 5 },
+  { id: 'combo_master', get name() { return _t('achComboMaster'); }, get desc() { return _t('achComboMasterDesc'); }, check: (s) => s.longestStreak >= 10 },
+  { id: 'density_surfer', get name() { return _t('achDensitySurfer'); }, get desc() { return _t('achDensitySurferDesc'); }, check: (s) => s.densitySurfsThisRun >= 5 },
+  { id: 'boss_slayer', get name() { return _t('achBossSlayer'); }, get desc() { return _t('achBossSlayerDesc'); }, check: (s) => s.bossesDefeatedThisRun >= 3 },
+  { id: 'marathon', get name() { return _t('achMarathon'); }, get desc() { return _t('achMarathonDesc'); }, check: (s) => s.longestTimeAlive >= 120 },
+  { id: 'nitro_collector', icon: '\uD83D\uDCA8', get name() { return _t('achNitroCollector'); }, get desc() { return _t('achNitroCollectorDesc'); }, check: (s) => s.totalNitro >= 10 },
 ];
 
 /* --- DOM --- */
@@ -348,13 +348,13 @@ let isFullscreen = false;
 
 /* --- First-encounter tips (shown once per session) --- */
 const firstEncounterTips = {
-  nearMiss: { shown: false, text: 'Nice! Fly close to obstacles for bonus points', timer: 0 },
-  combo: { shown: false, text: 'Keep flying close to build your combo!', timer: 0 },
-  densityShift: { shown: false, text: 'The air just changed \u2014 this affects your movement', timer: 0 },
-  shield: { shown: false, text: 'Shield ready! Press Shift to become invincible', timer: 0 },
-  boss: { shown: false, text: 'Boss ahead! Use your Shield to fly through and damage it', timer: 0 },
-  geyser: { shown: false, text: 'Geyser! Wait for it to stop erupting, then fly past', timer: 0 },
-  storm: { shown: false, text: 'Storm! It pulls you in \u2014 steer clear or use your Shield', timer: 0 },
+  nearMiss: { shown: false, get text() { return _t('mdTipNearMiss'); }, timer: 0 },
+  combo: { shown: false, get text() { return _t('mdTipCombo'); }, timer: 0 },
+  densityShift: { shown: false, get text() { return _t('mdTipDensityShift'); }, timer: 0 },
+  shield: { shown: false, get text() { return _t('mdTipShieldReady'); }, timer: 0 },
+  boss: { shown: false, get text() { return _t('mdTipBoss'); }, timer: 0 },
+  geyser: { shown: false, get text() { return _t('mdTipGeyser'); }, timer: 0 },
+  storm: { shown: false, get text() { return _t('mdTipStorm'); }, timer: 0 },
 };
 let activeTip = null;
 
@@ -465,7 +465,7 @@ function restoreCanvasSize() {
 
 function updateFullscreenUI() {
   const fsBtn = document.getElementById('fullscreenBtn');
-  if (fsBtn) fsBtn.textContent = isFullscreen ? 'Exit Fullscreen' : 'Fullscreen';
+  if (fsBtn) fsBtn.textContent = isFullscreen ? _t('mdExitFullscreen') : _t('mdFullscreen');
 }
 
 document.addEventListener('fullscreenchange', onFullscreenChange);
@@ -1013,10 +1013,10 @@ function nearMissDistance(obstacle) {
 /* --- Boss System --- */
 function spawnBoss(zone) {
   const bossTypes = {
-    2: { name: 'Storm Leviathan', radius: 140, health: 3, pattern: 'spiral', hue: 170 },
-    3: { name: 'Geyser Titan', radius: 120, health: 4, pattern: 'eruption', hue: 280 },
-    4: { name: 'Crystal Colossus', radius: 160, health: 5, pattern: 'maze', hue: 15 },
-    5: { name: 'Core Entity', radius: 180, health: 6, pattern: 'chaos', hue: 300 },
+    2: { get name() { return _t('mdBossStormLeviathan'); }, radius: 140, health: 3, pattern: 'spiral', hue: 170 },
+    3: { get name() { return _t('mdBossGeyserTitan'); }, radius: 120, health: 4, pattern: 'eruption', hue: 280 },
+    4: { get name() { return _t('mdBossCrystalColossus'); }, radius: 160, health: 5, pattern: 'maze', hue: 15 },
+    5: { get name() { return _t('mdBossCoreEntity'); }, radius: 180, health: 6, pattern: 'chaos', hue: 300 },
   };
   const def = bossTypes[zone] || bossTypes[2];
   world.boss = {
@@ -1030,7 +1030,7 @@ function spawnBoss(zone) {
     hitTimer: 0,
     enterTimer: 2.0,
   };
-  world.atmosphereAnnounce = { text: `BOSS: ${def.name}`, timer: 3.0 };
+  world.atmosphereAnnounce = { text: `${_t('mdBossLabel')}: ${def.name}`, timer: 3.0 };
   if (Audio.bossAppear) Audio.bossAppear();
   showTip('boss');
 }
@@ -1104,7 +1104,7 @@ function defeatBoss() {
   world.scorePopAmount = bonus;
   glider.symbiosisCharge = 1;
   glider.symbiosisCooldown = 0;
-  world.atmosphereAnnounce = { text: `BOSS DEFEATED! +${bonus}`, timer: 2.5 };
+  world.atmosphereAnnounce = { text: `${_t('mdBossDefeated')} +${bonus}`, timer: 2.5 };
   if (!reducedMotion) { world.shakeTimer = 0.4; world.shakeIntensity = 10; world.flashWhite = 0.5; }
   /* Victory particles */
   for (let i = 0; i < 60; i++) {
@@ -1245,7 +1245,7 @@ function updateAtmosphere(dt) {
         world.crushingWithoutSymbiosis++;
         if (world.crushingWithoutSymbiosis >= 3 && world.pressureAdaptation === 0) {
           world.pressureAdaptation = 1;
-          world.atmosphereAnnounce = { text: 'ADAPTED TO HEAVY AIR', timer: 2.0 };
+          world.atmosphereAnnounce = { text: _t('mdHeavyAirAdapted'), timer: 2.0 };
         }
       }
     }
@@ -1269,7 +1269,7 @@ function checkDensitySurf() {
     world.densitySurfBoost = CONFIG.densitySurfBoostDuration;
     world.densityShiftJustHappened = 0;
     world.runStats.densitySurfs++;
-    world.atmosphereAnnounce = { text: 'WAVE RIDE!', timer: 1.2 };
+    world.atmosphereAnnounce = { text: _t('mdWaveRide'), timer: 1.2 };
     if (!reducedMotion) {
       world.shakeTimer = 0.15;
       world.shakeIntensity = 4;
@@ -1629,7 +1629,7 @@ function update(dt, rawDt) {
         spawnParticle(np.x, np.y, Math.cos(angle) * 100, Math.sin(angle) * 100, 0.6, 40 + Math.random() * 30, 2.5);
       }
       if (!reducedMotion) { world.shakeTimer = 0.15; world.shakeIntensity = 4; }
-      world.atmosphereAnnounce = { text: 'NITRO BOOST!', timer: 1.5 };
+      world.atmosphereAnnounce = { text: _t('mdNitroBoost'), timer: 1.5 };
     }
   }
   world.nitroPickups = world.nitroPickups.filter(np => np.x > -60 && !np.collected);
@@ -2954,7 +2954,7 @@ function drawScorePop() {
     ctx.fillStyle = `rgba(255, 220, 100, ${alpha})`;
     ctx.font = 'bold 20px Inter, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(`COMBO ${getComboLabel()}!`, 0, 0);
+    ctx.fillText(`${_t('mdComboLabel')} ${getComboLabel()}!`, 0, 0);
     ctx.restore();
   }
 
@@ -3161,7 +3161,7 @@ function drawNitroPickups() {
     ctx.fillStyle = `rgba(255, 220, 80, ${alpha * 0.8})`;
     ctx.font = '700 14px Inter, sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText(`NITRO ${remaining.toFixed(1)}s`, 20, 110);
+    ctx.fillText(`${_t('mdNitroLabel')} ${remaining.toFixed(1)}s`, 20, 110);
     ctx.restore();
   }
 }
@@ -3175,7 +3175,7 @@ function drawDominantHazardsHUD() {
   ctx.fillStyle = 'rgba(200, 180, 140, 0.5)';
   const hazardIcons = { spire: '\u2666', school: '\uD83D\uDC1F', geyser: '\u2668', storm: '\u26C8' };
   const labels = world.dominantHazards.map(h => (hazardIcons[h] || '') + ' ' + h).join('  ');
-  ctx.fillText('Dominant: ' + labels, 20, world.height - 10);
+  ctx.fillText(_t('mdDominant') + ': ' + labels, 20, world.height - 10);
   ctx.restore();
 }
 
@@ -3308,13 +3308,13 @@ function drawText(dt) {
       /* Tutorial panels — plain language with visual cues */
       ctx.font = '600 28px Inter, sans-serif';
       const msgs = [
-        { title: 'Go Up', desc: 'Press SPACE or TAP the screen to fly upward', icon: '\u2191', hint: 'SPACE / TAP' },
-        { title: 'Dodge Obstacles', desc: 'Crystals, fish, geysers, and storms will block your path', icon: '\u26A0', hint: 'Steer around them' },
-        { title: 'Shield (Symbiosis)', desc: 'Press SHIFT to become invincible for a short time', icon: '\u25C9', hint: 'SHIFT / on-screen button' },
-        { title: 'Close Calls = Points', desc: 'Fly NEAR obstacles without touching them to build combos', icon: '\u2605', hint: 'The closer, the better!' },
-        { title: 'Ride the Wave', desc: 'Press SPACE right when the air changes for a speed boost', icon: '\u2248', hint: 'Watch for "SHIFT INCOMING"' },
-        { title: 'Beat the Bosses', desc: 'Use your shield to fly THROUGH bosses and hurt them', icon: '\u2694', hint: 'Shield + fly into boss' },
-        { title: 'You\'re Ready!', desc: 'The air changes between light, normal, and heavy — adapt!', icon: '\u2713', hint: 'Good luck out there' },
+        { get title() { return _t('mdTut1Title'); }, get desc() { return _t('mdTut1Desc'); }, icon: '\u2191', get hint() { return _t('mdTut1Hint'); } },
+        { get title() { return _t('mdTut2Title'); }, get desc() { return _t('mdTut2Desc'); }, icon: '\u26A0', get hint() { return _t('mdTut2Hint'); } },
+        { get title() { return _t('mdTut3Title'); }, get desc() { return _t('mdTut3Desc'); }, icon: '\u25C9', get hint() { return _t('mdTut3Hint'); } },
+        { get title() { return _t('mdTut4Title'); }, get desc() { return _t('mdTut4Desc'); }, icon: '\u2605', get hint() { return _t('mdTut4Hint'); } },
+        { get title() { return _t('mdTut5Title'); }, get desc() { return _t('mdTut5Desc'); }, icon: '\u2248', get hint() { return _t('mdTut5Hint'); } },
+        { get title() { return _t('mdTut6Title'); }, get desc() { return _t('mdTut6Desc'); }, icon: '\u2694', get hint() { return _t('mdTut6Hint'); } },
+        { get title() { return _t('mdTut7Title'); }, get desc() { return _t('mdTut7Desc'); }, icon: '\u2713', get hint() { return _t('mdTut7Hint'); } },
       ];
       const step = Math.min(tutorialStep, msgs.length - 1);
       const m = msgs[step];
@@ -3656,7 +3656,7 @@ function drawCanvasHUD() {
                        `rgba(180, 255, 230, ${comboAlpha})`;
     ctx.fillStyle = comboColor;
     ctx.font = '600 16px Inter, sans-serif';
-    ctx.fillText(`Combo x${world.combo}`, world.width - 20, 56);
+    ctx.fillText(`${_t('mdComboX')} x${world.combo}`, world.width - 20, 56);
 
     /* Combo countdown bar — shows how long before combo resets */
     const comboFrac = Math.max(0, world.comboTimer / 3.5);
@@ -3677,7 +3677,7 @@ function drawCanvasHUD() {
     if (world.comboMultiplier > 1) {
       ctx.font = '500 13px Inter, sans-serif';
       ctx.fillStyle = `rgba(255, 220, 140, ${comboAlpha * 0.7})`;
-      ctx.fillText(`Score ${getComboLabel()}`, world.width - 20, 78);
+      ctx.fillText(`${_t('mdScoreLabel')} ${getComboLabel()}`, world.width - 20, 78);
     }
   }
 
@@ -3875,7 +3875,7 @@ const ghostToggleBtn = document.getElementById('ghostToggleButton');
 if (ghostToggleBtn) {
   ghostToggleBtn.addEventListener('click', () => {
     world.showGhost = !world.showGhost;
-    ghostToggleBtn.textContent = world.showGhost ? 'Ghost: ON' : 'Ghost: OFF';
+    ghostToggleBtn.textContent = world.showGhost ? _t('mdGhostOn') : _t('mdGhostOff');
   });
 }
 

@@ -10,6 +10,14 @@ var overlayEl = null;
 var statusEl = null;
 var inputEl = null;
 
+function _t(key, fallback) {
+  if (typeof I18N !== 'undefined' && I18N.t) {
+    var v = I18N.t(key);
+    if (v && v !== key) return v;
+  }
+  return fallback || key;
+}
+
 /* ── localStorage helpers ── */
 function loadRedeemed(gameId) {
   try {
@@ -33,7 +41,7 @@ function buildModal(cfg) {
   // Title
   var title = document.createElement('div');
   title.className = 'sp-shop-title';
-  title.innerHTML = '&#x1F6CD; Shop &mdash; Premium Bundles';
+  title.innerHTML = '&#x1F6CD; ' + _t('shopTitle', 'Shop') + ' &mdash; ' + _t('shopPremiumBundles', 'Premium Bundles');
   modal.appendChild(title);
 
   // Bundles grid
@@ -64,7 +72,7 @@ function buildModal(cfg) {
     link.href = b.kofiUrl;
     link.target = '_blank';
     link.rel = 'noopener';
-    link.textContent = 'Buy on Ko-fi';
+    link.textContent = _t('shopBuyOnKofi', 'Buy on Ko-fi');
     card.appendChild(link);
 
     grid.appendChild(card);
@@ -79,13 +87,13 @@ function buildModal(cfg) {
   var input = document.createElement('input');
   input.type = 'text';
   input.className = 'sp-shop-redeem__input';
-  input.placeholder = 'Enter redeem code...';
+  input.placeholder = _t('shopEnterCode', 'Enter redeem code...');
   input.id = 'spShopCodeInput';
   redeemRow.appendChild(input);
 
   var redeemBtn = document.createElement('button');
   redeemBtn.className = 'sp-shop-redeem__btn';
-  redeemBtn.textContent = 'Redeem';
+  redeemBtn.textContent = _t('shopRedeem', 'Redeem');
   redeemBtn.type = 'button';
   redeemRow.appendChild(redeemBtn);
 
@@ -100,7 +108,7 @@ function buildModal(cfg) {
   // Close button
   var closeBtn = document.createElement('button');
   closeBtn.className = 'sp-shop-close';
-  closeBtn.textContent = 'Close';
+  closeBtn.textContent = _t('shopClose', 'Close');
   closeBtn.type = 'button';
   modal.appendChild(closeBtn);
 
@@ -128,7 +136,7 @@ function redeem(code) {
 
   var bundleId = config.codes[upper];
   if (!bundleId) {
-    statusEl.textContent = 'Invalid code. Please check and try again.';
+    statusEl.textContent = _t('shopInvalidCode', 'Invalid code. Please check and try again.');
     statusEl.className = 'sp-shop-status error';
     return;
   }
@@ -136,7 +144,7 @@ function redeem(code) {
   // Check already redeemed
   var redeemed = loadRedeemed(config.gameId);
   if (redeemed.indexOf(upper) !== -1) {
-    statusEl.textContent = 'Code already redeemed!';
+    statusEl.textContent = _t('shopAlreadyRedeemed', 'Code already redeemed!');
     statusEl.className = 'sp-shop-status success';
     return;
   }
@@ -162,7 +170,7 @@ function redeem(code) {
   }
 
   if (itemIds.length === 0) {
-    statusEl.textContent = 'No items found for this code.';
+    statusEl.textContent = _t('shopNoItems', 'No items found for this code.');
     statusEl.className = 'sp-shop-status error';
     return;
   }
@@ -177,14 +185,14 @@ function redeem(code) {
   // Find bundle name for display
   var bundleName = 'Bundle';
   if (bundleId === '__all__') {
-    bundleName = 'All Bundles';
+    bundleName = _t('shopAllBundles', 'All Bundles');
   } else {
     for (var j = 0; j < config.bundles.length; j++) {
       if (config.bundles[j].id === bundleId) { bundleName = config.bundles[j].name; break; }
     }
   }
 
-  statusEl.textContent = bundleName + ' redeemed! ' + itemIds.length + ' item(s) unlocked.';
+  statusEl.textContent = bundleName + ' ' + _t('shopRedeemed', 'redeemed!') + ' ' + itemIds.length + ' ' + _t('shopItemsUnlocked', 'item(s) unlocked.');
   statusEl.className = 'sp-shop-status success';
 }
 

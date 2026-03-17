@@ -6,19 +6,20 @@
   "use strict";
 
   /* ── i18n setup ── */
+  var _t = I18N.t;
   I18N.createSelector(document.querySelector('.game__header'));
   I18N.applyDOM();
   window.addEventListener('langchange', () => { I18N.applyDOM(); });
 
   /* ── Achievements ────────────────────────────────────────── */
   const TETRIS_ACHIEVEMENTS = [
-    { id: 'first_line',    icon: '\u2728', title: 'First Clear',      desc: 'Clear your first line',       check: s => s.totalLines >= 1 },
-    { id: 'lines_50',      icon: '\uD83D\uDD25', title: 'Line Master',      desc: 'Clear 50 lines total',        check: s => s.totalLines >= 50 },
-    { id: 'score_5k',      icon: '\uD83D\uDC8E', title: 'Score 5000',        desc: 'Score 5000 in one game',      check: s => s.bestScore >= 5000 },
-    { id: 'score_10k',     icon: '\uD83D\uDC51', title: 'Score 10000',       desc: 'Score 10000 in one game',     check: s => s.bestScore >= 10000 },
-    { id: 'level_10',      icon: '\uD83D\uDCC8', title: 'Level 10',          desc: 'Reach level 10',              check: s => s.bestLevel >= 10 },
-    { id: 'games_10',      icon: '\uD83C\uDFAE', title: 'Dedicated',         desc: 'Play 10 games',               check: s => s.gamesPlayed >= 10 },
-    { id: 'garbage_warrior', icon: '\uD83D\uDDD1\uFE0F', title: 'Garbage Warrior', desc: 'Clear 10 garbage rows in challenge mode', check: s => s.garbageRowsCleared >= 10 },
+    { id: 'first_line',    icon: '\u2728', get title() { return _t('tetAchFirstClear'); },      get desc() { return _t('tetAchFirstClearDesc'); },       check: s => s.totalLines >= 1 },
+    { id: 'lines_50',      icon: '\uD83D\uDD25', get title() { return _t('tetAchLineMaster'); },      get desc() { return _t('tetAchLineMasterDesc'); },        check: s => s.totalLines >= 50 },
+    { id: 'score_5k',      icon: '\uD83D\uDC8E', get title() { return _t('tetAchScore5k'); },        get desc() { return _t('tetAchScore5kDesc'); },      check: s => s.bestScore >= 5000 },
+    { id: 'score_10k',     icon: '\uD83D\uDC51', get title() { return _t('tetAchScore10k'); },       get desc() { return _t('tetAchScore10kDesc'); },     check: s => s.bestScore >= 10000 },
+    { id: 'level_10',      icon: '\uD83D\uDCC8', get title() { return _t('tetAchLevel10'); },          get desc() { return _t('tetAchLevel10Desc'); },              check: s => s.bestLevel >= 10 },
+    { id: 'games_10',      icon: '\uD83C\uDFAE', get title() { return _t('tetAchDedicated'); },         get desc() { return _t('tetAchDedicatedDesc'); },               check: s => s.gamesPlayed >= 10 },
+    { id: 'garbage_warrior', icon: '\uD83D\uDDD1\uFE0F', get title() { return _t('tetGarbageWarrior'); }, get desc() { return _t('tetGarbageWarriorDesc'); }, check: s => s.garbageRowsCleared >= 10 },
   ];
 
   let tetAchStats = { totalLines: 0, bestScore: 0, bestLevel: 0, gamesPlayed: 0, garbageRowsCleared: 0 };
@@ -75,7 +76,7 @@
   /* ── Themes ────────────────────────────────────────────────────────── */
   const TETRIS_THEMES = {
     classic: {
-      name: () => I18N.t('tetThemeClassic'),
+      name: () => _t('tetThemeClassic'),
       bg: '#08091a', field: '#060816',
       gridColor: 'rgba(0,210,255,0.06)', borderColor: 'rgba(0,210,255,0.35)',
       textColor: '#c0d8ff', accentColor: '#00d4ff',
@@ -83,7 +84,7 @@
       glows:  { I: 'rgba(0,212,255,0.5)', O: 'rgba(255,221,0,0.5)', T: 'rgba(180,77,255,0.5)', S: 'rgba(68,255,68,0.5)', Z: 'rgba(255,68,68,0.5)', J: 'rgba(68,136,255,0.5)', L: 'rgba(255,136,51,0.5)', G: 'rgba(102,102,102,0.3)' },
     },
     neon: {
-      name: () => I18N.t('tetThemeNeon'),
+      name: () => _t('tetThemeNeon'),
       bg: '#0a0014', field: '#08000f',
       gridColor: 'rgba(255,0,200,0.06)', borderColor: 'rgba(255,0,200,0.35)',
       textColor: '#ffc0e8', accentColor: '#ff00c8',
@@ -91,7 +92,7 @@
       glows:  { I: 'rgba(0,255,255,0.5)', O: 'rgba(255,255,0,0.5)', T: 'rgba(255,0,255,0.5)', S: 'rgba(0,255,102,0.5)', Z: 'rgba(255,0,102,0.5)', J: 'rgba(102,102,255,0.5)', L: 'rgba(255,136,0,0.5)', G: 'rgba(102,102,102,0.3)' },
     },
     retro: {
-      name: () => I18N.t('tetThemeRetro'),
+      name: () => _t('tetThemeRetro'),
       bg: '#1a1408', field: '#16120a',
       gridColor: 'rgba(200,160,80,0.06)', borderColor: 'rgba(200,160,80,0.3)',
       textColor: '#d4c8a0', accentColor: '#c8a050',
@@ -99,7 +100,7 @@
       glows:  { I: 'rgba(107,181,192,0.4)', O: 'rgba(212,168,64,0.4)', T: 'rgba(160,112,160,0.4)', S: 'rgba(106,170,96,0.4)', Z: 'rgba(192,96,80,0.4)', J: 'rgba(80,128,160,0.4)', L: 'rgba(192,128,64,0.4)', G: 'rgba(102,102,102,0.3)' },
     },
     pastel: {
-      name: () => I18N.t('tetThemePastel'),
+      name: () => _t('tetThemePastel'),
       bg: '#f0f0f8', field: '#e8e8f0',
       gridColor: 'rgba(100,100,140,0.08)', borderColor: 'rgba(100,100,140,0.2)',
       textColor: '#505070', accentColor: '#8080c0',
@@ -107,7 +108,7 @@
       glows:  { I: 'rgba(136,204,221,0.3)', O: 'rgba(238,221,136,0.3)', T: 'rgba(204,153,204,0.3)', S: 'rgba(136,204,136,0.3)', Z: 'rgba(221,136,136,0.3)', J: 'rgba(136,153,204,0.3)', L: 'rgba(221,170,119,0.3)', G: 'rgba(102,102,102,0.3)' },
     },
     midnight: {
-      name: () => I18N.t('tetThemeMidnight'),
+      name: () => _t('tetThemeMidnight'),
       bg: '#040408', field: '#030306',
       gridColor: 'rgba(60,60,100,0.08)', borderColor: 'rgba(60,60,100,0.25)',
       textColor: '#8080a0', accentColor: '#5050a0',
@@ -115,7 +116,7 @@
       glows:  { I: 'rgba(51,136,170,0.4)', O: 'rgba(170,136,51,0.4)', T: 'rgba(119,68,170,0.4)', S: 'rgba(51,136,68,0.4)', Z: 'rgba(170,51,68,0.4)', J: 'rgba(51,85,170,0.4)', L: 'rgba(170,102,51,0.4)', G: 'rgba(102,102,102,0.3)' },
     },
     frost: {
-      name: () => 'Frost',
+      name: () => _t('tetThemeFrost'),
       bg: '#0a1420', field: '#081018',
       gridColor: 'rgba(100,200,255,0.06)', borderColor: 'rgba(100,200,255,0.3)',
       textColor: '#b0d8ff', accentColor: '#60c0ff',
@@ -124,7 +125,7 @@
       premium: true,
     },
     candy: {
-      name: () => 'Candy',
+      name: () => _t('tetThemeCandy'),
       bg: '#1a0818', field: '#140610',
       gridColor: 'rgba(255,100,200,0.06)', borderColor: 'rgba(255,100,200,0.3)',
       textColor: '#ffc0e0', accentColor: '#ff69b4',
@@ -153,7 +154,7 @@
 
   const TETRIS_SKINS = {
     standard: {
-      name: () => I18N.t('tetSkinStandard'),
+      name: () => _t('tetSkinStandard'),
       drawBlock(x, y, color, glow, dimmed, ctx) {
         const margin = 1, bx = x+margin, by = y+margin, bs = CELL-margin*2, r = 3;
         ctx.save();
@@ -171,7 +172,7 @@
       }
     },
     glossy: {
-      name: () => I18N.t('tetSkinGlossy'),
+      name: () => _t('tetSkinGlossy'),
       drawBlock(x, y, color, glow, dimmed, ctx) {
         const margin = 1, bx = x+margin, by = y+margin, bs = CELL-margin*2, r = 4;
         ctx.save();
@@ -190,7 +191,7 @@
       }
     },
     pixel: {
-      name: () => I18N.t('tetSkinPixel'),
+      name: () => _t('tetSkinPixel'),
       drawBlock(x, y, color, glow, dimmed, ctx) {
         const margin = 1, bx = x+margin, by = y+margin, bs = CELL-margin*2;
         ctx.save();
@@ -208,7 +209,7 @@
       }
     },
     glow: {
-      name: () => I18N.t('tetSkinGlow'),
+      name: () => _t('tetSkinGlow'),
       drawBlock(x, y, color, glow, dimmed, ctx) {
         const margin = 1, bx = x+margin, by = y+margin, bs = CELL-margin*2, r = 3;
         ctx.save();
@@ -225,7 +226,7 @@
       }
     },
     candy: {
-      name: () => I18N.t('tetSkinCandy'),
+      name: () => _t('tetSkinCandy'),
       drawBlock(x, y, color, glow, dimmed, ctx) {
         const margin = 1, bx = x+margin, by = y+margin, bs = CELL-margin*2, r = 8;
         ctx.save();
@@ -242,7 +243,7 @@
       }
     },
     hologram: {
-      name: () => 'Hologram',
+      name: () => _t('tetSkinHologram'),
       premium: true,
       drawBlock(x, y, color, glow, dimmed, ctx) {
         const margin = 1, bx = x+margin, by = y+margin, bs = CELL-margin*2, r = 3;
@@ -760,7 +761,7 @@
 
       // Score pop
       state.scorePop = 1.0;
-      const labels = ["", "SINGLE", "DOUBLE", "TRIPLE", "TETRIS!"];
+      const labels = ["", _t('tetSingle'), _t('tetDouble'), _t('tetTriple'), _t('tetTetris')];
       state.scorePopValue = labels[fullRows.length] + " +" + base;
       state.scorePopX = FIELD_X + FIELD_W / 2;
       state.scorePopY = FIELD_Y + (fullRows[0] - 4) * CELL + CELL / 2;
@@ -1756,7 +1757,7 @@
     ctx2d.fillStyle = currentTheme.textColor;
     ctx2d.font = '700 10px "Trebuchet MS", system-ui, sans-serif';
     ctx2d.textAlign = "center";
-    ctx2d.fillText("HOLD", holdBoxX + holdBoxW / 2, holdBoxY + 14);
+    ctx2d.fillText(_t('tetHold'), holdBoxX + holdBoxW / 2, holdBoxY + 14);
 
     if (state.holdPiece) {
       drawPieceMini(
@@ -1774,21 +1775,21 @@
     ctx2d.textAlign = "left";
     ctx2d.fillStyle = dimText;
     ctx2d.font = '700 10px "Trebuchet MS", system-ui, sans-serif';
-    ctx2d.fillText("SCORE", holdBoxX + 4, infoY);
+    ctx2d.fillText(_t('tetScore'), holdBoxX + 4, infoY);
     ctx2d.fillStyle = currentTheme.textColor;
     ctx2d.font = '700 16px "Trebuchet MS", system-ui, sans-serif';
     ctx2d.fillText(Math.floor(state.displayScore).toLocaleString(), holdBoxX + 4, infoY + 18);
 
     ctx2d.fillStyle = dimText;
     ctx2d.font = '700 10px "Trebuchet MS", system-ui, sans-serif';
-    ctx2d.fillText("LEVEL", holdBoxX + 4, infoY + 44);
+    ctx2d.fillText(_t('tetLevel'), holdBoxX + 4, infoY + 44);
     ctx2d.fillStyle = currentTheme.textColor;
     ctx2d.font = '700 16px "Trebuchet MS", system-ui, sans-serif';
     ctx2d.fillText(String(state.level), holdBoxX + 4, infoY + 62);
 
     ctx2d.fillStyle = dimText;
     ctx2d.font = '700 10px "Trebuchet MS", system-ui, sans-serif';
-    ctx2d.fillText("LINES", holdBoxX + 4, infoY + 88);
+    ctx2d.fillText(_t('tetLines'), holdBoxX + 4, infoY + 88);
     ctx2d.fillStyle = currentTheme.textColor;
     ctx2d.font = '700 16px "Trebuchet MS", system-ui, sans-serif';
     ctx2d.fillText(String(state.lines), holdBoxX + 4, infoY + 106);
@@ -1814,7 +1815,7 @@
     ctx2d.fillStyle = currentTheme.textColor;
     ctx2d.font = '700 10px "Trebuchet MS", system-ui, sans-serif';
     ctx2d.textAlign = "center";
-    ctx2d.fillText("NEXT", nextBoxX + nextBoxW / 2, nextBoxY + 14);
+    ctx2d.fillText(_t('tetNext'), nextBoxX + nextBoxW / 2, nextBoxY + 14);
 
     for (let i = 0; i < Math.min(5, state.nextQueue.length); i++) {
       drawPieceMini(
@@ -1831,7 +1832,7 @@
     ctx2d.textAlign = "left";
     ctx2d.fillStyle = dimText;
     ctx2d.font = '700 10px "Trebuchet MS", system-ui, sans-serif';
-    ctx2d.fillText("BEST", nextBoxX + 4, bestY);
+    ctx2d.fillText(_t('tetBest'), nextBoxX + 4, bestY);
     ctx2d.fillStyle = currentTheme.textColor;
     ctx2d.font = '700 16px "Trebuchet MS", system-ui, sans-serif';
     ctx2d.fillText(state.best.toLocaleString(), nextBoxX + 4, bestY + 18);
@@ -1846,7 +1847,7 @@
       ctx2d.scale(comboScale, comboScale);
       ctx2d.fillStyle = dimText;
       ctx2d.font = '700 10px "Trebuchet MS", system-ui, sans-serif';
-      ctx2d.fillText("COMBO x" + state.combo, 0, 0);
+      ctx2d.fillText(_t('tetCombo') + " x" + state.combo, 0, 0);
       ctx2d.restore();
     }
 
@@ -1855,7 +1856,7 @@
       var garbageY = bestY + 60;
       ctx2d.fillStyle = dimText;
       ctx2d.font = '700 10px "Trebuchet MS", system-ui, sans-serif';
-      ctx2d.fillText("GARBAGE", nextBoxX + 4, garbageY);
+      ctx2d.fillText(_t('tetGarbageLabel'), nextBoxX + 4, garbageY);
       var barW = nextBoxW - 8;
       var barH = 6;
       var barX = nextBoxX + 4;
@@ -1919,12 +1920,12 @@
       ctx2d.shadowColor = currentTheme.accentColor;
       ctx2d.fillStyle = "#fff";
       ctx2d.font = '700 36px "Trebuchet MS", system-ui, sans-serif';
-      ctx2d.fillText("TETRIS", CW / 2, CH / 2 - 20);
+      ctx2d.fillText(_t('tetTitleOverlay'), CW / 2, CH / 2 - 20);
       ctx2d.restore();
 
       ctx2d.fillStyle = currentTheme.textColor + (Math.floor((0.5 + Math.sin(Date.now() / 500) * 0.3) * 255)).toString(16).padStart(2,'0');
       ctx2d.font = '400 14px "Trebuchet MS", system-ui, sans-serif';
-      ctx2d.fillText("Press any key to start", CW / 2, CH / 2 + 20);
+      ctx2d.fillText(_t('tetPressAnyKey'), CW / 2, CH / 2 + 20);
     }
 
     if (state.phase === "paused") {
@@ -1933,10 +1934,10 @@
       ctx2d.textAlign = "center";
       ctx2d.fillStyle = "#fff";
       ctx2d.font = '700 32px "Trebuchet MS", system-ui, sans-serif';
-      ctx2d.fillText("PAUSED", CW / 2, CH / 2);
+      ctx2d.fillText(_t('tetPaused'), CW / 2, CH / 2);
       ctx2d.fillStyle = currentTheme.textColor + '99';
       ctx2d.font = '400 14px "Trebuchet MS", system-ui, sans-serif';
-      ctx2d.fillText("Press Esc to resume", CW / 2, CH / 2 + 30);
+      ctx2d.fillText(_t('tetPressEscResume'), CW / 2, CH / 2 + 30);
     }
 
     if (state.phase === "gameover") {
@@ -1952,14 +1953,14 @@
       ctx2d.shadowColor = "rgba(255,68,68,0.5)";
       ctx2d.fillStyle = "#fff";
       ctx2d.font = '700 34px "Trebuchet MS", system-ui, sans-serif';
-      ctx2d.fillText("GAME OVER", CW / 2, CH / 2 - 40);
+      ctx2d.fillText(_t('tetGameOver'), CW / 2, CH / 2 - 40);
       ctx2d.restore();
 
       ctx2d.fillStyle = currentTheme.textColor + 'b3';
       ctx2d.font = '400 16px "Trebuchet MS", system-ui, sans-serif';
-      ctx2d.fillText("Score: " + state.score.toLocaleString(), CW / 2, CH / 2);
+      ctx2d.fillText(_t('tetScoreLabel') + " " + state.score.toLocaleString(), CW / 2, CH / 2);
       ctx2d.fillText(
-        "Level " + state.level + "  •  " + state.lines + " lines",
+        _t('tetLevelLabel') + " " + state.level + "  •  " + state.lines + " " + _t('tetLinesLabel'),
         CW / 2,
         CH / 2 + 24
       );
@@ -1967,12 +1968,12 @@
       if (state.wasNewBest && state.score > 0) {
         ctx2d.fillStyle = "#ffd700";
         ctx2d.font = '700 16px "Trebuchet MS", system-ui, sans-serif';
-        ctx2d.fillText("New Best!", CW / 2, CH / 2 + 52);
+        ctx2d.fillText(_t('tetNewBest'), CW / 2, CH / 2 + 52);
       }
 
       ctx2d.fillStyle = currentTheme.textColor + (Math.floor((0.4 + Math.sin(Date.now() / 500) * 0.3) * 255)).toString(16).padStart(2,'0');
       ctx2d.font = '400 13px "Trebuchet MS", system-ui, sans-serif';
-      ctx2d.fillText("Press Space to restart", CW / 2, CH / 2 + 80);
+      ctx2d.fillText(_t('tetPressSpaceRestart'), CW / 2, CH / 2 + 80);
     }
 
     ctx2d.restore();

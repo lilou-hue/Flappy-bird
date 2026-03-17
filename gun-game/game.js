@@ -25,7 +25,7 @@ const GG_ACHIEVEMENTS = [
   { id: 'demolition',      icon: '\uD83E\uDDE8', get title() { return I18N.t('ggAchDemolition'); },      get desc() { return I18N.t('ggAchDemolitionDesc'); },      check: s => s.totalDestroyed >= 50 },
   { id: 'sharpshooter',    icon: '\uD83C\uDFAF', get title() { return I18N.t('ggAchSharpShooter'); },    get desc() { return I18N.t('ggAchSharpShooterDesc'); },    check: s => s.bestScore >= 20 },
   { id: 'dedicated',       icon: '\uD83C\uDFAE', get title() { return I18N.t('ggAchDedicated'); },       get desc() { return I18N.t('ggAchDedicatedDesc'); },       check: s => s.gamesPlayed >= 10 },
-  { id: 'ricochet_kill',   icon: '\uD83C\uDFD3', title: 'Ricochet Kill', desc: 'Destroy a pipe with a bounced bullet', check: s => s.ricochetKills >= 1 },
+  { id: 'ricochet_kill',   icon: '\uD83C\uDFD3', get title() { return I18N.t('ggRicochetKill'); }, get desc() { return I18N.t('ggRicochetKillDesc'); }, check: s => s.ricochetKills >= 1 },
 ];
 
 let ggAchStats = { totalDestroyed: 0, highestTier: 1, wins: 0, bestScore: 0, gamesPlayed: 0, ricochetKills: 0 };
@@ -122,14 +122,14 @@ const gunState = {
 };
 
 const weaponDefs = [
-  { name: 'Seed Spit',      fireRate: 400,  speed: 350, damage: 1, radius: 3,  projectileCount: 1, spread: 0, piercing: false, explosive: false, explosionRadius: 0, arcGravity: 0, lifetime: 2 },
-  { name: 'Egg Toss',       fireRate: 500,  speed: 300, damage: 1, radius: 5,  projectileCount: 1, spread: 0, piercing: false, explosive: false, explosionRadius: 0, arcGravity: 200, lifetime: 2.5 },
-  { name: 'Feather Darts',  fireRate: 350,  speed: 400, damage: 1, radius: 3,  projectileCount: 3, spread: 0.25, piercing: false, explosive: false, explosionRadius: 0, arcGravity: 0, lifetime: 1.8 },
-  { name: 'Acorn Cannon',   fireRate: 600,  speed: 280, damage: 2, radius: 6,  projectileCount: 1, spread: 0, piercing: false, explosive: true, explosionRadius: 40, arcGravity: 150, lifetime: 3 },
-  { name: 'Wind Gust',      fireRate: 700,  speed: 500, damage: 1, radius: 12, projectileCount: 1, spread: 0, piercing: true, explosive: false, explosionRadius: 0, arcGravity: 0, lifetime: 1.2 },
-  { name: 'Sonic Screech',  fireRate: 800,  speed: 900, damage: 2, radius: 8,  projectileCount: 1, spread: 0, piercing: true, explosive: true, explosionRadius: 50, arcGravity: 0, lifetime: 0.8 },
-  { name: 'Lightning Bolt', fireRate: 500,  speed: 1200, damage: 3, radius: 4, projectileCount: 1, spread: 0, piercing: true, explosive: false, explosionRadius: 0, arcGravity: 0, lifetime: 0.5 },
-  { name: 'Phoenix Fire',   fireRate: 900,  speed: 250, damage: 3, radius: 14, projectileCount: 1, spread: 0, piercing: true, explosive: true, explosionRadius: 60, arcGravity: 0, lifetime: 3 },
+  { get name() { return I18N.t('ggWeaponSeedSpit'); },      fireRate: 400,  speed: 350, damage: 1, radius: 3,  projectileCount: 1, spread: 0, piercing: false, explosive: false, explosionRadius: 0, arcGravity: 0, lifetime: 2 },
+  { get name() { return I18N.t('ggWeaponEggToss'); },       fireRate: 500,  speed: 300, damage: 1, radius: 5,  projectileCount: 1, spread: 0, piercing: false, explosive: false, explosionRadius: 0, arcGravity: 200, lifetime: 2.5 },
+  { get name() { return I18N.t('ggWeaponFeatherDarts'); },  fireRate: 350,  speed: 400, damage: 1, radius: 3,  projectileCount: 3, spread: 0.25, piercing: false, explosive: false, explosionRadius: 0, arcGravity: 0, lifetime: 1.8 },
+  { get name() { return I18N.t('ggWeaponAcornCannon'); },   fireRate: 600,  speed: 280, damage: 2, radius: 6,  projectileCount: 1, spread: 0, piercing: false, explosive: true, explosionRadius: 40, arcGravity: 150, lifetime: 3 },
+  { get name() { return I18N.t('ggWeaponWindGust'); },      fireRate: 700,  speed: 500, damage: 1, radius: 12, projectileCount: 1, spread: 0, piercing: true, explosive: false, explosionRadius: 0, arcGravity: 0, lifetime: 1.2 },
+  { get name() { return I18N.t('ggWeaponSonicScreech'); },  fireRate: 800,  speed: 900, damage: 2, radius: 8,  projectileCount: 1, spread: 0, piercing: true, explosive: true, explosionRadius: 50, arcGravity: 0, lifetime: 0.8 },
+  { get name() { return I18N.t('ggWeaponLightningBolt'); }, fireRate: 500,  speed: 1200, damage: 3, radius: 4, projectileCount: 1, spread: 0, piercing: true, explosive: false, explosionRadius: 0, arcGravity: 0, lifetime: 0.5 },
+  { get name() { return I18N.t('ggWeaponPhoenixFire'); },   fireRate: 900,  speed: 250, damage: 3, radius: 14, projectileCount: 1, spread: 0, piercing: true, explosive: true, explosionRadius: 60, arcGravity: 0, lifetime: 3 },
 ];
 
 const bird = {
@@ -637,13 +637,13 @@ function advanceTier() {
   /* Weapon upgrade choice at tiers 4 and 7 */
   if (gunState.tier === 4) {
     gunState.upgradeChoice = {
-      left: { id: 'rapid_fire', name: 'Rapid Fire', desc: '2x Fire Rate' },
-      right: { id: 'heavy_shot', name: 'Heavy Shot', desc: '2x Damage' },
+      left: { id: 'rapid_fire', get name() { return I18N.t('ggRapidFire'); }, get desc() { return I18N.t('ggRapidFireDesc'); } },
+      right: { id: 'heavy_shot', get name() { return I18N.t('ggHeavyShot'); }, get desc() { return I18N.t('ggHeavyShotDesc'); } },
     };
   } else if (gunState.tier === 7) {
     gunState.upgradeChoice = {
-      left: { id: 'spread_shot', name: 'Spread Shot', desc: '3 Bullets Per Shot' },
-      right: { id: 'piercing', name: 'Piercing', desc: 'Bullets Go Through Pipes' },
+      left: { id: 'spread_shot', get name() { return I18N.t('ggSpreadShot'); }, get desc() { return I18N.t('ggSpreadShotDesc'); } },
+      right: { id: 'piercing', get name() { return I18N.t('ggPiercing'); }, get desc() { return I18N.t('ggPiercingDesc'); } },
     };
   }
 }
@@ -891,7 +891,7 @@ function drawBoss() {
   context.fillStyle = '#FFD700';
   context.font = "bold 10px 'Trebuchet MS'";
   context.textAlign = 'center';
-  context.fillText('BOSS', bx + bw / 2, barY - 4);
+  context.fillText(I18N.t('ggBoss'), bx + bw / 2, barY - 4);
 
   context.restore();
 }
@@ -931,7 +931,7 @@ function defeatBoss() {
 function demoteTier() {
   gunState.tier = Math.max(1, gunState.tier - 1);
   gunState.destroys = 0;
-  gunState.demotionMsg = `Demoted to Tier ${gunState.tier}`;
+  gunState.demotionMsg = I18N.t('ggDemotedTo') + ' ' + gunState.tier;
   gunState.demotionTimer = 2;
   Audio.gunTierDown();
 }
@@ -2217,7 +2217,7 @@ function drawUpgradeChoice() {
   context.fillStyle = '#FFD700';
   context.font = "bold 22px 'Trebuchet MS'";
   context.textAlign = 'center';
-  context.fillText('Choose Upgrade', GAME_W / 2, GAME_H * 0.25);
+  context.fillText(I18N.t('ggChooseUpgrade'), GAME_W / 2, GAME_H * 0.25);
 
   /* Left option */
   const boxW = GAME_W * 0.4;
@@ -2243,7 +2243,7 @@ function drawUpgradeChoice() {
   context.fillText(choice.left.desc, leftX + boxW / 2, boxY + 60);
   context.fillStyle = 'rgba(255,255,255,0.5)';
   context.font = "12px 'Trebuchet MS'";
-  context.fillText('Press 1 / Tap Left', leftX + boxW / 2, boxY + boxH - 15);
+  context.fillText(I18N.t('ggPress1TapLeft'), leftX + boxW / 2, boxY + boxH - 15);
 
   /* Right box */
   context.fillStyle = 'rgba(200, 80, 50, 0.6)';
@@ -2263,7 +2263,7 @@ function drawUpgradeChoice() {
   context.fillText(choice.right.desc, rightX + boxW / 2, boxY + 60);
   context.fillStyle = 'rgba(255,255,255,0.5)';
   context.font = "12px 'Trebuchet MS'";
-  context.fillText('Press 2 / Tap Right', rightX + boxW / 2, boxY + boxH - 15);
+  context.fillText(I18N.t('ggPress2TapRight'), rightX + boxW / 2, boxY + boxH - 15);
 }
 
 /* --- Weapon indicator on bird --- */

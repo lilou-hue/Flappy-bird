@@ -120,12 +120,13 @@
         return LIFE_STAGES[LIFE_STAGES.length - 1].color;
     }
 
+    var MONTH_ABBR_KEYS = [
+        'liwJanAbbr', 'liwFebAbbr', 'liwMarAbbr', 'liwAprAbbr', 'liwMayAbbr', 'liwJunAbbr',
+        'liwJulAbbr', 'liwAugAbbr', 'liwSepAbbr', 'liwOctAbbr', 'liwNovAbbr', 'liwDecAbbr'
+    ];
+
     function formatDate(date) {
-        var months = [
-            'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-            'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-        ];
-        return months[date.getMonth()] + ' ' + date.getDate() + ', ' + date.getFullYear();
+        return I18N.t(MONTH_ABBR_KEYS[date.getMonth()]) + ' ' + date.getDate() + ', ' + date.getFullYear();
     }
 
     function getWeekDateRange(birthdayDate, weekIndex) {
@@ -295,7 +296,7 @@
             var week = parseInt(target.getAttribute('data-week'), 10);
             var weekIndex = year * WEEKS_PER_YEAR + week;
 
-            var text = I18N.t('liwAge') + ' ' + year + ', Week ' + (week + 1);
+            var text = I18N.t('liwAge') + ' ' + year + ', ' + I18N.t('liwWeek') + ' ' + (week + 1);
 
             if (birthday) {
                 var range = getWeekDateRange(birthday, weekIndex);

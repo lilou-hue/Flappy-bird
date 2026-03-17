@@ -19,40 +19,49 @@
 
   // --- Creatures / landmarks ---
   var CREATURES = [
-    { depth: 0,     emoji: '🌊', name: 'Surface',              fact: 'Sunlight floods the first 200 meters' },
-    { depth: 20,    emoji: '🪸', name: 'Coral Reef',            fact: 'Home to 25% of all marine species' },
-    { depth: 40,    emoji: '🐢', name: 'Sea Turtle',            fact: 'Can hold their breath for 5 hours' },
-    { depth: 100,   emoji: '🤿', name: 'Scuba Limit',           fact: 'Maximum depth for recreational diving' },
-    { depth: 200,   emoji: '☀️', name: 'Sunlight Zone Ends',    fact: 'Below here, not enough light for photosynthesis' },
-    { depth: 332,   emoji: '🐧', name: 'Emperor Penguin',       fact: 'Deepest diving bird on Earth' },
-    { depth: 500,   emoji: '🦑', name: 'Giant Squid',           fact: 'Eyes the size of dinner plates' },
-    { depth: 830,   emoji: '🚁', name: 'Helicopter Crash Depth',fact: 'Deepest helicopter wreck recovery' },
-    { depth: 1000,  emoji: '🌑', name: 'Twilight Zone Ends',    fact: 'Total darkness from here on' },
-    { depth: 1280,  emoji: '🐟', name: 'Giant Oarfish',         fact: 'The longest bony fish, up to 11 meters' },
-    { depth: 2000,  emoji: '🐉', name: 'Black Dragonfish',      fact: 'Produces invisible infrared light to hunt' },
-    { depth: 2500,  emoji: '🐋', name: 'Sperm Whale Dive',      fact: 'Deepest diving mammal — hunts giant squid here' },
-    { depth: 3000,  emoji: '🔦', name: 'Anglerfish',            fact: 'Uses a bioluminescent lure in total darkness' },
-    { depth: 3800,  emoji: '🚢', name: 'RMS Titanic',           fact: 'Resting on the ocean floor since 1912' },
-    { depth: 4000,  emoji: '🧊', name: 'Abyssal Zone',          fact: 'Water temperature: 1–4°C everywhere' },
-    { depth: 4500,  emoji: '🐙', name: 'Dumbo Octopus',         fact: 'Named for ear-like fins, lives deeper than any octopus' },
-    { depth: 6000,  emoji: '💀', name: 'Hadal Zone Begins',     fact: 'Named after Hades, Greek god of the underworld' },
-    { depth: 7000,  emoji: '🐌', name: 'Snailfish',             fact: 'Deepest living fish ever recorded' },
-    { depth: 8848,  emoji: '🏔️', name: 'Mount Everest',         fact: "If placed here, its peak wouldn't reach the surface" },
-    { depth: 10000, emoji: '🐠', name: 'Mariana Snailfish',     fact: 'Thrives under 1,000 atmospheres of pressure' },
-    { depth: 10916, emoji: '🏴', name: 'Challenger Deep',       fact: 'The deepest known point on Earth. James Cameron visited in 2012.' },
-    { depth: 10994, emoji: '⬛', name: 'The Bottom',            fact: 'You made it. The deepest point in the ocean. Pressure here is 1,086 bars — over 1,000 times surface pressure.', isBottom: true }
+    { depth: 0,     emoji: '🌊', nameKey: 'tdSurface',           factKey: 'tdFactSurface' },
+    { depth: 20,    emoji: '🪸', nameKey: 'tdCoralReef',         factKey: 'tdFactCoralReef' },
+    { depth: 40,    emoji: '🐢', nameKey: 'tdSeaTurtle',         factKey: 'tdFactSeaTurtle' },
+    { depth: 100,   emoji: '🤿', nameKey: 'tdScubaLimit',        factKey: 'tdFactScubaLimit' },
+    { depth: 200,   emoji: '☀️', nameKey: 'tdSunlightZoneEnds',  factKey: 'tdFactSunlightZoneEnds' },
+    { depth: 332,   emoji: '🐧', nameKey: 'tdEmperorPenguin',    factKey: 'tdFactEmperorPenguin' },
+    { depth: 500,   emoji: '🦑', nameKey: 'tdGiantSquid',        factKey: 'tdFactGiantSquid' },
+    { depth: 830,   emoji: '🚁', nameKey: 'tdHelicopterCrash',   factKey: 'tdFactHelicopterCrash' },
+    { depth: 1000,  emoji: '🌑', nameKey: 'tdTwilightZoneEnds',  factKey: 'tdFactTwilightZoneEnds' },
+    { depth: 1280,  emoji: '🐟', nameKey: 'tdGiantOarfish',      factKey: 'tdFactGiantOarfish' },
+    { depth: 2000,  emoji: '🐉', nameKey: 'tdBlackDragonfish',   factKey: 'tdFactBlackDragonfish' },
+    { depth: 2500,  emoji: '🐋', nameKey: 'tdSpermWhaleDive',    factKey: 'tdFactSpermWhaleDive' },
+    { depth: 3000,  emoji: '🔦', nameKey: 'tdAnglerfish',        factKey: 'tdFactAnglerfish' },
+    { depth: 3800,  emoji: '🚢', nameKey: 'tdTitanic',           factKey: 'tdFactTitanic' },
+    { depth: 4000,  emoji: '🧊', nameKey: 'tdAbyssalZone',       factKey: 'tdFactAbyssalZone' },
+    { depth: 4500,  emoji: '🐙', nameKey: 'tdDumboOctopus',      factKey: 'tdFactDumboOctopus' },
+    { depth: 6000,  emoji: '💀', nameKey: 'tdHadalZone',         factKey: 'tdFactHadalZone' },
+    { depth: 7000,  emoji: '🐌', nameKey: 'tdSnailfish',         factKey: 'tdFactSnailfish' },
+    { depth: 8848,  emoji: '🏔️', nameKey: 'tdMountEverest',      factKey: 'tdFactMountEverest' },
+    { depth: 10000, emoji: '🐠', nameKey: 'tdMarianaSnailfish',  factKey: 'tdFactMarianaSnailfish' },
+    { depth: 10916, emoji: '🏴', nameKey: 'tdChallengerDeep',    factKey: 'tdFactChallengerDeep' },
+    { depth: 10994, emoji: '⬛', nameKey: 'tdTheBottom',         factKey: 'tdFactTheBottom', isBottom: true }
   ];
+
+  // Define dynamic name/fact getters using i18n keys
+  CREATURES.forEach(function (c) {
+    Object.defineProperty(c, 'name', { get: function () { return I18N.t(c.nameKey); }, enumerable: true });
+    Object.defineProperty(c, 'fact', { get: function () { return I18N.t(c.factKey); }, enumerable: true });
+  });
 
   var TOTAL_CREATURES = CREATURES.length;
 
   // --- Zone labels ---
   var ZONES = [
-    { depth: 10,   name: 'Sunlight Zone' },
-    { depth: 250,  name: 'Twilight Zone' },
-    { depth: 1050, name: 'Midnight Zone' },
-    { depth: 4050, name: 'Abyssal Zone' },
-    { depth: 6050, name: 'Hadal Zone' }
+    { depth: 10,   nameKey: 'tdZoneSunlight' },
+    { depth: 250,  nameKey: 'tdZoneTwilight' },
+    { depth: 1050, nameKey: 'tdZoneMidnight' },
+    { depth: 4050, nameKey: 'tdZoneAbyssal' },
+    { depth: 6050, nameKey: 'tdZoneHadal' }
   ];
+  ZONES.forEach(function (z) {
+    Object.defineProperty(z, 'name', { get: function () { return I18N.t(z.nameKey); }, enumerable: true });
+  });
 
   // --- Discovery state ---
   var discoveredSet = {};
@@ -203,7 +212,7 @@
     var dist = Math.abs(diff);
     var arrow = diff > 0 ? '▼' : '▲';
     var distText = dist < 10 ? '< 10m' : Math.round(dist).toLocaleString() + 'm';
-    nextSignalEl.innerHTML = '<span class="signal-arrow">' + arrow + '</span> Signal ' + distText + (diff > 0 ? ' below' : ' above');
+    nextSignalEl.innerHTML = '<span class="signal-arrow">' + arrow + '</span> ' + I18N.t('tdSignal') + ' ' + distText + (diff > 0 ? ' ' + I18N.t('tdBelow') : ' ' + I18N.t('tdAbove'));
 
     // Brighter when close
     var closeness = Math.max(0, 1 - dist / 1000);
@@ -510,11 +519,16 @@
     titleCard.innerHTML = '<h1>' + I18N.t('theDeepTitle') + '</h1><div class="expedition-subtitle">' + I18N.t('theDeepSubtitle') + '</div><div class="subtitle">' + I18N.t('theDeepScrollDown') + '</div>';
     updateCounter();
     creatureElements.forEach(function (c) {
-      if (c.el.classList.contains('undiscovered')) {
-        var creature = CREATURES.filter(function (cr) { return cr.depth === c.depth; })[0];
-        if (creature) {
-          c.el.innerHTML = buildCreatureHTML(creature, false);
-        }
+      var creature = CREATURES.filter(function (cr) { return cr.depth === c.depth; })[0];
+      if (creature) {
+        var isDiscovered = c.el.classList.contains('discovered');
+        c.el.innerHTML = buildCreatureHTML(creature, isDiscovered);
+      }
+    });
+    zoneElements.forEach(function (z) {
+      var zone = ZONES.filter(function (zn) { return z.el.getAttribute('data-zone-depth') === String(zn.depth) || Math.abs(z.yPos - (depthToPx(zn.depth) + window.innerHeight * 0.3)) < 1; })[0];
+      if (zone) {
+        z.el.innerHTML = '<div class="zone-name">' + zone.name + '</div><div class="zone-line"></div>';
       }
     });
     I18N.applyDOM();

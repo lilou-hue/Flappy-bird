@@ -309,11 +309,11 @@ function spawnExplosion(x, y, hue1, hue2) {
 
 // ── Object Types ──
 const OBJ_TYPES = [
-  { id: 'planet',   name: 'Planet',   icon: '\u{1F30D}', key: '1', desc: 'Standard orbit',       mass: [3, 5],  radius: [5, 6],  trailLen: TRAIL_LEN },
-  { id: 'asteroid', name: 'Asteroid', icon: '\u{1FA78}', key: '2', desc: 'Tiny & fast',           mass: [0.8, 1.2], radius: [2.5, 3], trailLen: 40 },
-  { id: 'giant',    name: 'Gas Giant',icon: '\u{1FA90}', key: '3', desc: 'Heavy, pulls others',   mass: [12, 18], radius: [10, 13], trailLen: 80 },
-  { id: 'comet',    name: 'Comet',    icon: '\u{2604}',  key: '4', desc: 'Fast, fades over time', mass: [1.5, 3], radius: [3, 5],  trailLen: 180 },
-  { id: 'shield',   name: 'Shield',   icon: '\u{1F6E1}', key: '5', desc: 'Blocks one sun hit',   mass: [2, 3],  radius: [4, 5],  trailLen: 60 },
+  { id: 'planet',   get name() { return I18N.t('gravTypePlanet'); },   icon: '\u{1F30D}', key: '1', get desc() { return I18N.t('gravTypePlanetDesc'); },       mass: [3, 5],  radius: [5, 6],  trailLen: TRAIL_LEN },
+  { id: 'asteroid', get name() { return I18N.t('gravTypeAsteroid'); }, icon: '\u{1FA78}', key: '2', get desc() { return I18N.t('gravTypeAsteroidDesc'); },           mass: [0.8, 1.2], radius: [2.5, 3], trailLen: 40 },
+  { id: 'giant',    get name() { return I18N.t('gravTypeGiant'); },icon: '\u{1FA90}', key: '3', get desc() { return I18N.t('gravTypeGiantDesc'); },   mass: [12, 18], radius: [10, 13], trailLen: 80 },
+  { id: 'comet',    get name() { return I18N.t('gravTypeComet'); },    icon: '\u{2604}',  key: '4', get desc() { return I18N.t('gravTypeCometDesc'); }, mass: [1.5, 3], radius: [3, 5],  trailLen: 180 },
+  { id: 'shield',   get name() { return I18N.t('gravTypeShield'); },   icon: '\u{1F6E1}', key: '5', get desc() { return I18N.t('gravTypeShieldDesc'); },   mass: [2, 3],  radius: [4, 5],  trailLen: 60 },
 ];
 let selectedType = 0; // index into OBJ_TYPES
 
@@ -1120,7 +1120,7 @@ function render() {
     ctx.font = '13px "Segoe UI", system-ui, sans-serif';
     ctx.textAlign = 'right';
     ctx.fillStyle = 'rgba(200,210,255,0.35)';
-    ctx.fillText(`${alive}/${MAX_PLANETS - 1} planets`, CW - 12, 22);
+    ctx.fillText(`${alive}/${MAX_PLANETS - 1} ${I18N.t('gravPlanets')}`, CW - 12, 22);
 
     // Score multiplier
     if (scoreMultiplier > 1.05) {
@@ -1135,7 +1135,7 @@ function render() {
       ctx.font = 'bold 13px "Segoe UI", system-ui, sans-serif';
       ctx.textAlign = 'center';
       ctx.fillStyle = `rgba(255,230,100,${Math.max(0, 0.6 + nearMissTimer * 0.2)})`;
-      ctx.fillText(`Near miss x${nearMissCombo}!`, CW / 2, CH - 20);
+      ctx.fillText(`${I18N.t('gravNearMiss')} x${nearMissCombo}!`, CW / 2, CH - 20);
     }
     ctx.restore();
   }
@@ -1219,7 +1219,7 @@ function render() {
     ctx.font = '16px "Segoe UI", system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillStyle = `rgba(200,210,255,${0.3 + Math.sin(time * 2) * 0.2})`;
-    ctx.fillText('Drag to launch — press 1-5 to switch type', CW / 2, CH - 70);
+    ctx.fillText(I18N.t('gravDragHint'), CW / 2, CH - 70);
     ctx.restore();
   }
 
@@ -1236,7 +1236,7 @@ function render() {
     ctx.fillText(`${I18N.t('score') || 'Score'}: ${Math.floor(score)}`, CW / 2, CH / 2 - 5);
     ctx.font = '14px "Segoe UI", system-ui, sans-serif';
     ctx.fillStyle = 'rgba(200,210,255,0.45)';
-    ctx.fillText(`Peak multiplier: x${scoreMultiplier.toFixed(1)}  |  Planets planted: ${achData.stats.totalPlanetsPlanted}`, CW / 2, CH / 2 + 25);
+    ctx.fillText(`${I18N.t('gravPeakMultiplier')}: x${scoreMultiplier.toFixed(1)}  |  ${I18N.t('gravPlanetsPlanted')}: ${achData.stats.totalPlanetsPlanted}`, CW / 2, CH / 2 + 25);
     ctx.font = '16px "Segoe UI", system-ui, sans-serif';
     ctx.fillStyle = 'rgba(255,255,255,0.5)';
     ctx.fillText(I18N.t('tapToRestart') || 'Tap to restart', CW / 2, CH / 2 + 55);

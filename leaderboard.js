@@ -71,7 +71,7 @@ const Leaderboard = (() => {
       const input = document.createElement('input');
       input.type = 'text';
       input.maxLength = 16;
-      input.placeholder = 'Player';
+      input.placeholder = t('lbPlayer', 'Player');
       input.autocomplete = 'off';
 
       const btn = document.createElement('button');
@@ -184,7 +184,7 @@ const Leaderboard = (() => {
       html += '</tbody></table>';
       container.innerHTML = html;
     }).catch(() => {
-      container.innerHTML = '<p class="lb-empty">Could not load leaderboard.</p>';
+      container.innerHTML = '<p class="lb-empty">' + t('lbError', 'Could not load leaderboard.') + '</p>';
     });
   }
 

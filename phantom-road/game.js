@@ -25,13 +25,13 @@ window.addEventListener('langchange', () => { I18N.applyDOM(); });
 
 /* ── Achievements ────────────────────────────────────────── */
 const PR_ACHIEVEMENTS = [
-  { id: 'first_drive',   icon: '🚗', title: 'First Drive',     desc: 'Score your first point',       check: s => s.bestScore >= 1 },
-  { id: 'score_50',      icon: '🏎️', title: 'Speed Racer',      desc: 'Score 50 in one game',         check: s => s.bestScore >= 50 },
-  { id: 'score_100',     icon: '🏆', title: 'Road Warrior',     desc: 'Score 100 in one game',        check: s => s.bestScore >= 100 },
-  { id: 'score_200',     icon: '👑', title: 'Phantom King',     desc: 'Score 200 in one game',        check: s => s.bestScore >= 200 },
-  { id: 'coins_100',     icon: '💰', title: 'Coin Collector',   desc: 'Collect 100 coins total',      check: s => s.totalCoins >= 100 },
-  { id: 'games_10',      icon: '🎮', title: 'Dedicated Driver', desc: 'Play 10 games',                check: s => s.gamesPlayed >= 10 },
-  { id: 'storm_chaser',  icon: '⛈️', title: 'Storm Chaser',     desc: 'Drive 500m in adverse weather', check: s => s.adverseWeatherDist >= 500 },
+  { id: 'first_drive',   icon: '🚗', get title() { return _t('prFirstDrive'); },     get desc() { return _t('prFirstDriveDesc'); },       check: s => s.bestScore >= 1 },
+  { id: 'score_50',      icon: '🏎️', get title() { return _t('prSpeedRacer'); },      get desc() { return _t('prSpeedRacerDesc'); },         check: s => s.bestScore >= 50 },
+  { id: 'score_100',     icon: '🏆', get title() { return _t('prRoadWarrior'); },     get desc() { return _t('prRoadWarriorDesc'); },        check: s => s.bestScore >= 100 },
+  { id: 'score_200',     icon: '👑', get title() { return _t('prPhantomKing'); },     get desc() { return _t('prPhantomKingDesc'); },        check: s => s.bestScore >= 200 },
+  { id: 'coins_100',     icon: '💰', get title() { return _t('prCoinCollector'); },   get desc() { return _t('prCoinCollectorDesc'); },      check: s => s.totalCoins >= 100 },
+  { id: 'games_10',      icon: '🎮', get title() { return _t('prDedicatedDriver'); }, get desc() { return _t('prDedicatedDriverDesc'); },                check: s => s.gamesPlayed >= 10 },
+  { id: 'storm_chaser',  icon: '⛈️', get title() { return _t('prStormChaser'); },     get desc() { return _t('prStormChaserDesc'); }, check: s => s.adverseWeatherDist >= 500 },
 ];
 
 let prAchStats = { bestScore: 0, totalCoins: 0, gamesPlayed: 0, adverseWeatherDist: 0 };
@@ -334,10 +334,10 @@ function _prShopUnlocked() {
 
 // ── Vehicle Skins ────────────────────────────────────────
 const VEHICLE_SKINS = [
-  { id: 'sedan', name: 'Sedan', color: '#3388ff', unlocked: () => true },
-  { id: 'sports', name: 'Sports', color: '#ff3344', unlocked: () => (localStorage.getItem('prBestScore') || 0) >= 100 || _prShopUnlocked().includes('sports') },
-  { id: 'truck', name: 'Truck', color: '#33cc55', unlocked: () => (localStorage.getItem('prTotalCoins') || 0) >= 200 || _prShopUnlocked().includes('truck') },
-  { id: 'neon', name: 'Neon', color: '#ff44ff', unlocked: () => (localStorage.getItem('prPoliceEvasions') || 0) >= 3 || _prShopUnlocked().includes('neon') },
+  { id: 'sedan', get name() { return _t('prSkinSedan'); }, color: '#3388ff', unlocked: () => true },
+  { id: 'sports', get name() { return _t('prSkinSports'); }, color: '#ff3344', unlocked: () => (localStorage.getItem('prBestScore') || 0) >= 100 || _prShopUnlocked().includes('sports') },
+  { id: 'truck', get name() { return _t('prSkinTruck'); }, color: '#33cc55', unlocked: () => (localStorage.getItem('prTotalCoins') || 0) >= 200 || _prShopUnlocked().includes('truck') },
+  { id: 'neon', get name() { return _t('prSkinNeon'); }, color: '#ff44ff', unlocked: () => (localStorage.getItem('prPoliceEvasions') || 0) >= 3 || _prShopUnlocked().includes('neon') },
 ];
 
 // ── Skin selector button ─────────────────────────────────
@@ -529,7 +529,7 @@ function initState() {
 
   // Update skin button label
   if (skinButton) {
-    skinButton.textContent = VEHICLE_SKINS[state.currentSkin] ? VEHICLE_SKINS[state.currentSkin].name : 'Sedan';
+    skinButton.textContent = VEHICLE_SKINS[state.currentSkin] ? VEHICLE_SKINS[state.currentSkin].name : _t('prSkinSedan');
   }
 
   bestEl.textContent = state.bestScore;
@@ -1301,7 +1301,7 @@ function update(dt) {
       state.nitro = 1;
       state.combo += 5;
       state.comboTimer = 4;
-      state.milestoneText = `EVADED! +${bonus}`;
+      state.milestoneText = `${_t('prEvaded')} +${bonus}`;
       state.milestoneTimer = 2;
       audio.policeEvaded();
       haptic([30, 20, 30, 20, 30]);
@@ -2088,7 +2088,7 @@ function draw() {
     ctx.font = "bold 14px 'Trebuchet MS', sans-serif";
     ctx.textAlign = "right";
     ctx.fillStyle = state.nitroActive ? "rgba(255,150,50,0.7)" : "rgba(255,255,255,0.35)";
-    ctx.fillText(`${Math.floor(state.scrollSpeed * 0.8)} km/h`, W - 16, H - 16);
+    ctx.fillText(`${Math.floor(state.scrollSpeed * 0.8)} ${_t('prKmh')}`, W - 16, H - 16);
     ctx.restore();
   }
 
@@ -2629,7 +2629,7 @@ function drawComboHUD() {
     if (state.combo > 0) {
       ctx.font = "bold 11px 'Trebuchet MS', sans-serif";
       ctx.fillStyle = "rgba(255,255,255,0.4)";
-      ctx.fillText(`combo: ${Math.floor(state.combo)}`, W - 16, 60);
+      ctx.fillText(`${_t('prCombo')}: ${Math.floor(state.combo)}`, W - 16, 60);
 
       // Decay bar
       const decayW = 50;
@@ -2657,9 +2657,9 @@ function drawComboHUD() {
 
 function drawActivePowerUps() {
   const active = [];
-  if (state.activeShield) active.push({ label: "SHIELD", color: "#44aaff", timer: state.shieldTimer, max: 8 });
-  if (state.activeMagnet) active.push({ label: "MAGNET", color: "#cc44ff", timer: state.magnetTimer, max: 6 });
-  if (state.activeSlowmo) active.push({ label: "SLOW-MO", color: "#44ff88", timer: state.slowmoTimer, max: 4 });
+  if (state.activeShield) active.push({ label: _t('prShield').toUpperCase(), color: "#44aaff", timer: state.shieldTimer, max: 8 });
+  if (state.activeMagnet) active.push({ label: _t('prMagnet').toUpperCase(), color: "#cc44ff", timer: state.magnetTimer, max: 6 });
+  if (state.activeSlowmo) active.push({ label: _t('prSlowmo').toUpperCase(), color: "#44ff88", timer: state.slowmoTimer, max: 4 });
 
   if (active.length === 0) return;
 
@@ -2759,7 +2759,7 @@ function drawGameOverScreen() {
   // Score
   ctx.font = "bold 28px 'Trebuchet MS', sans-serif";
   ctx.fillStyle = "#fff";
-  ctx.fillText(`${state.score}m`, W / 2, H / 2 - 15);
+  ctx.fillText(`${state.score}${_t('prMeters')}`, W / 2, H / 2 - 15);
 
   // Best indicator
   if (state.wasNewBest && state.score > 0) {

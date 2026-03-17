@@ -128,8 +128,8 @@ function showPremiumModal(item) {
   titleEl.textContent = item.name;
   buyBtn.disabled = coins < cost;
   buyBtn.innerHTML = coins < cost
-    ? 'Not enough coins (' + cost + ')'
-    : 'Unlock (<span id="premiumCost">' + cost + '</span> coins)';
+    ? t('duNotEnoughCoins', 'Not enough coins') + ' (' + cost + ')'
+    : t('duUnlock', 'Unlock') + ' (<span id="premiumCost">' + cost + '</span> ' + t('duCoins', 'coins') + ')';
   buyBtn.onclick = function () {
     if (coins >= cost) {
       addCoins(-cost);
@@ -146,12 +146,12 @@ function showPremiumModal(item) {
    CHARACTERS
    ================================================================ */
 const CHARACTERS = [
-  { id:'human_girl', name:'Lumi',  emoji:'👧', skin:'#fce4d8', hair:'#6b3a2a', eyeColor:'#5ba3d9', accent:'#f8a4c0', blush:'#ff7090', lash:'#2a1a10' },
-  { id:'human_boy',  name:'Fenn',  emoji:'👦', skin:'#f8d8c4', hair:'#2c1810', eyeColor:'#4db882', accent:'#d4a040', blush:'#e8a080', lash:'#1a1008' },
-  { id:'wolf_furry', name:'Howl',  emoji:'🐺', skin:'#a0b0c0', hair:'#4a4a4a', eyeColor:'#f0a030', accent:'#d0c0b0', blush:'#c0a090', lash:'#3a3a3a' },
-  { id:'cat',        name:'Mika',  emoji:'🐱', skin:'#fde8d5', hair:'#e8a87c', eyeColor:'#50c878', accent:'#f8b4c8', blush:'#f0a0a0', lash:'#6a4030' },
-  { id:'elf',        name:'Sylvie',emoji:'🧝', skin:'#fde8e0', hair:'#f7dc6f', eyeColor:'#a06cc8', accent:'#7ec88a', blush:'#e8a0c0', lash:'#8a7040' },
-  { id:'fairy',      name:'Petal', emoji:'🧚', skin:'#fce0e4', hair:'#f1948a', eyeColor:'#e86aa0', accent:'#ffd700', blush:'#ff90b0', lash:'#8a4050' },
+  { id:'human_girl', get name() { return t('duCharLumi', 'Lumi'); },  emoji:'👧', skin:'#fce4d8', hair:'#6b3a2a', eyeColor:'#5ba3d9', accent:'#f8a4c0', blush:'#ff7090', lash:'#2a1a10' },
+  { id:'human_boy',  get name() { return t('duCharFenn', 'Fenn'); },  emoji:'👦', skin:'#f8d8c4', hair:'#2c1810', eyeColor:'#4db882', accent:'#d4a040', blush:'#e8a080', lash:'#1a1008' },
+  { id:'wolf_furry', get name() { return t('duCharHowl', 'Howl'); },  emoji:'🐺', skin:'#a0b0c0', hair:'#4a4a4a', eyeColor:'#f0a030', accent:'#d0c0b0', blush:'#c0a090', lash:'#3a3a3a' },
+  { id:'cat',        get name() { return t('duCharMika', 'Mika'); },  emoji:'🐱', skin:'#fde8d5', hair:'#e8a87c', eyeColor:'#50c878', accent:'#f8b4c8', blush:'#f0a0a0', lash:'#6a4030' },
+  { id:'elf',        get name() { return t('duCharSylvie', 'Sylvie'); },emoji:'🧝', skin:'#fde8e0', hair:'#f7dc6f', eyeColor:'#a06cc8', accent:'#7ec88a', blush:'#e8a0c0', lash:'#8a7040' },
+  { id:'fairy',      get name() { return t('duCharPetal', 'Petal'); }, emoji:'🧚', skin:'#fce0e4', hair:'#f1948a', eyeColor:'#e86aa0', accent:'#ffd700', blush:'#ff90b0', lash:'#8a4050' },
 ];
 
 /* ── Fashion-slim body metrics ── */
@@ -6788,26 +6788,26 @@ BG_DEFS.forEach(d => {
    CHALLENGE THEMES
    ================================================================ */
 const CHALLENGE_THEMES = [
-  { id:'beach_party',      name:'Beach Party',       tags:['summer','casual','sandals','beach'] },
-  { id:'medieval_knight',  name:'Medieval Knight',   tags:['medieval','warrior','armor'] },
-  { id:'space_explorer',   name:'Space Explorer',    tags:['scifi','cool','space'] },
-  { id:'punk_rock',        name:'Punk Rock',         tags:['punk','cool','retro'] },
-  { id:'royal_ball',       name:'Royal Ball',        tags:['royal','elegant','fancy'] },
-  { id:'forest_fairy',     name:'Forest Fairy',      tags:['natural','magic','fantasy'] },
-  { id:'cozy_winter',      name:'Cozy Winter',       tags:['cozy','warm','winter'] },
-  { id:'night_out',        name:'Night Out',         tags:['elegant','cool','fancy'] },
-  { id:'sporty_casual',    name:'Sporty Casual',     tags:['sporty','casual','simple'] },
-  { id:'wizard_academy',   name:'Wizard Academy',    tags:['magic','fantasy','smart'] },
-  { id:'urban_street',     name:'Urban Street',      tags:['urban','cool','casual'] },
-  { id:'garden_party',     name:'Garden Party',      tags:['natural','elegant','cute'] },
-  { id:'hero_costume',     name:'Hero Costume',      tags:['hero','cool','warrior'] },
-  { id:'retro_disco',      name:'Retro Disco',       tags:['retro','colorful','cool'] },
-  { id:'formal_gala',      name:'Formal Gala',       tags:['formal','elegant','fancy'] },
-  { id:'summer_festival',  name:'Summer Festival',   tags:['summer','casual','colorful'] },
-  { id:'enchanted_forest', name:'Enchanted Forest',  tags:['magic','natural','fantasy'] },
-  { id:'pirate_adventure', name:'Pirate Adventure',  tags:['cool','warrior','casual'] },
-  { id:'starlight_dream',  name:'Starlight Dream',   tags:['magical','fantasy','scifi'] },
-  { id:'spring_bloom',     name:'Spring Bloom',      tags:['natural','cute','colorful'] },
+  { id:'beach_party',      get name() { return t('duTheme_beach_party', 'Beach Party'); },       tags:['summer','casual','sandals','beach'] },
+  { id:'medieval_knight',  get name() { return t('duTheme_medieval_knight', 'Medieval Knight'); },tags:['medieval','warrior','armor'] },
+  { id:'space_explorer',   get name() { return t('duTheme_space_explorer', 'Space Explorer'); }, tags:['scifi','cool','space'] },
+  { id:'punk_rock',        get name() { return t('duTheme_punk_rock', 'Punk Rock'); },           tags:['punk','cool','retro'] },
+  { id:'royal_ball',       get name() { return t('duTheme_royal_ball', 'Royal Ball'); },         tags:['royal','elegant','fancy'] },
+  { id:'forest_fairy',     get name() { return t('duTheme_forest_fairy', 'Forest Fairy'); },     tags:['natural','magic','fantasy'] },
+  { id:'cozy_winter',      get name() { return t('duTheme_cozy_winter', 'Cozy Winter'); },       tags:['cozy','warm','winter'] },
+  { id:'night_out',        get name() { return t('duTheme_night_out', 'Night Out'); },           tags:['elegant','cool','fancy'] },
+  { id:'sporty_casual',    get name() { return t('duTheme_sporty_casual', 'Sporty Casual'); },   tags:['sporty','casual','simple'] },
+  { id:'wizard_academy',   get name() { return t('duTheme_wizard_academy', 'Wizard Academy'); }, tags:['magic','fantasy','smart'] },
+  { id:'urban_street',     get name() { return t('duTheme_urban_street', 'Urban Street'); },     tags:['urban','cool','casual'] },
+  { id:'garden_party',     get name() { return t('duTheme_garden_party', 'Garden Party'); },     tags:['natural','elegant','cute'] },
+  { id:'hero_costume',     get name() { return t('duTheme_hero_costume', 'Hero Costume'); },     tags:['hero','cool','warrior'] },
+  { id:'retro_disco',      get name() { return t('duTheme_retro_disco', 'Retro Disco'); },       tags:['retro','colorful','cool'] },
+  { id:'formal_gala',      get name() { return t('duTheme_formal_gala', 'Formal Gala'); },       tags:['formal','elegant','fancy'] },
+  { id:'summer_festival',  get name() { return t('duTheme_summer_festival', 'Summer Festival'); },tags:['summer','casual','colorful'] },
+  { id:'enchanted_forest', get name() { return t('duTheme_enchanted_forest', 'Enchanted Forest'); },tags:['magic','natural','fantasy'] },
+  { id:'pirate_adventure', get name() { return t('duTheme_pirate_adventure', 'Pirate Adventure'); },tags:['cool','warrior','casual'] },
+  { id:'starlight_dream',  get name() { return t('duTheme_starlight_dream', 'Starlight Dream'); },tags:['magical','fantasy','scifi'] },
+  { id:'spring_bloom',     get name() { return t('duTheme_spring_bloom', 'Spring Bloom'); },     tags:['natural','cute','colorful'] },
 ];
 
 /* ================================================================
@@ -6859,14 +6859,19 @@ function renderAchievements() {
    STYLE THEMES (Theme Generator)
    ================================================================ */
 const STYLE_THEMES = [
-  'Y2K', 'Dark Academia', 'Space Queen', 'Futuristic Explorer',
-  'Streetwear', 'Cottagecore', 'Cyberpunk', 'Fairy Tale',
-  'Goth Glam', 'Preppy', 'Boho Chic', 'Retro Disco',
-  'Pastel Dream', 'Punk Rock', 'Royal Elegance'
+  ['duStyleY2K', 'Y2K'], ['duStyleDarkAcademia', 'Dark Academia'],
+  ['duStyleSpaceQueen', 'Space Queen'], ['duStyleFuturisticExplorer', 'Futuristic Explorer'],
+  ['duStyleStreetwear', 'Streetwear'], ['duStyleCottagecore', 'Cottagecore'],
+  ['duStyleCyberpunk', 'Cyberpunk'], ['duStyleFairyTale', 'Fairy Tale'],
+  ['duStyleGothGlam', 'Goth Glam'], ['duStylePreppy', 'Preppy'],
+  ['duStyleBohoChic', 'Boho Chic'], ['duStyleRetroDiscoS', 'Retro Disco'],
+  ['duStylePastelDream', 'Pastel Dream'], ['duStylePunkRockS', 'Punk Rock'],
+  ['duStyleRoyalElegance', 'Royal Elegance'],
 ];
 
 function suggestTheme() {
-  const theme = STYLE_THEMES[Math.floor(Math.random() * STYLE_THEMES.length)];
+  const entry = STYLE_THEMES[Math.floor(Math.random() * STYLE_THEMES.length)];
+  const theme = t(entry[0], entry[1]);
   const overlay = document.getElementById('themeOverlay');
   const nameEl = document.getElementById('themeOverlayName');
   if (overlay && nameEl) {
@@ -7182,7 +7187,7 @@ function showLoadModal() {
   savedOutfitsEl.innerHTML = '';
 
   if (saved.length === 0) {
-    savedOutfitsEl.innerHTML = '<p style="color:var(--du-muted);font-size:0.8rem;grid-column:1/-1;">No saved outfits yet.</p>';
+    savedOutfitsEl.innerHTML = '<p style="color:var(--du-muted);font-size:0.8rem;grid-column:1/-1;">' + t('duNoSavedOutfits', 'No saved outfits yet.') + '</p>';
   } else {
     saved.forEach((outfit, i) => {
       const slot = document.createElement('div');
@@ -7620,13 +7625,13 @@ Shop.init({
   gameId: 'dress-up',
   buttonTarget: '#shopBtn',
   bundles: [
-    { id: 'fantasy', name: 'Fantasy Bundle', desc: 'Armor, Wizard Robe, Armor Greaves, Armored Boots, Crown, Castle BG', price: '~$2',
+    { id: 'fantasy', get name() { return t('duBundleFantasy', 'Fantasy Bundle'); }, get desc() { return t('duBundleFantasyDesc', 'Armor, Wizard Robe, Armor Greaves, Armored Boots, Crown, Castle BG'); }, price: '~$2',
       kofiUrl: 'https://ko-fi.com/s/FANTASY_PRODUCT_ID', items: ['top_armor','top_wizard_robe','bottom_armor_greaves','shoes_armored_boots','acc_crown','bg_castle'] },
-    { id: 'glam', name: 'Glam Bundle', desc: 'Corset, Kimono, Flowing Skirt, Heels, Long Flowing Hair, Rainbow BG, Ball Gown', price: '~$2',
+    { id: 'glam', get name() { return t('duBundleGlam', 'Glam Bundle'); }, get desc() { return t('duBundleGlamDesc', 'Corset, Kimono, Flowing Skirt, Heels, Long Flowing Hair, Rainbow BG, Ball Gown'); }, price: '~$2',
       kofiUrl: 'https://ko-fi.com/s/GLAM_PRODUCT_ID', items: ['top_corset','top_kimono','bottom_flowing_skirt','shoes_heels','hair_long_flowing','bg_rainbow','dress_ball_gown'] },
-    { id: 'adventure', name: 'Adventure Bundle', desc: 'Cape, Extra Wings, Braids, Curly Hair, Platforms, Space BG, Fairy Dress', price: '~$2',
+    { id: 'adventure', get name() { return t('duBundleAdventure', 'Adventure Bundle'); }, get desc() { return t('duBundleAdventureDesc', 'Cape, Extra Wings, Braids, Curly Hair, Platforms, Space BG, Fairy Dress'); }, price: '~$2',
       kofiUrl: 'https://ko-fi.com/s/ADVENTURE_PRODUCT_ID', items: ['acc_cape','acc_extra_wings','hair_braids','hair_curly','shoes_platforms','bg_space','dress_fairy_dress'] },
-    { id: 'premiumpass', name: 'Premium Pass', desc: 'ALL premium items unlocked!', price: '~$4',
+    { id: 'premiumpass', get name() { return t('duBundlePremium', 'Premium Pass'); }, get desc() { return t('duBundlePremiumDesc', 'ALL premium items unlocked!'); }, price: '~$4',
       kofiUrl: 'https://ko-fi.com/s/PREMIUMPASS_PRODUCT_ID', items: Array.from(PREMIUM_IDS) },
   ],
   codes: {

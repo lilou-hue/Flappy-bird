@@ -5,6 +5,9 @@
 (function() {
 'use strict';
 
+/* ── i18n helper ── */
+var _t = function(key) { return (typeof I18N !== 'undefined' && I18N.t) ? I18N.t(key) : key; };
+
 /* ── Constants ─────────────────────────────────────────────────── */
 var W = 360, H = 640;
 var FIXED_DT = 1/60; // fixed physics timestep
@@ -33,17 +36,17 @@ var fullscreenBtn = document.getElementById('fullscreenButton');
 
 /* ── Weapons ───────────────────────────────────────────────────── */
 var WEAPONS = {
-  pistol:    { cat: 'secondary', cost: 0,   dmg: 22, rate: 2.2, ammo: Infinity, speed: 6.5,spread: 0.06, bloom: 0.03, color: '#ffdd44', name: 'Pistol', trailLen: 6, bulletDrop: 0.08 },
-  smg:       { cat: 'primary',   cost: 200, dmg: 12, rate: 5.5, ammo: 30,  speed: 7,  spread: 0.12, bloom: 0.04, color: '#44ddff', name: 'SMG', trailLen: 5, bulletDrop: 0.06 },
-  shotgun:   { cat: 'primary',   cost: 300, dmg: 9,  rate: 0.9, ammo: 8,   speed: 6,  spread: 0.2,  bloom: 0,    color: '#ff8844', name: 'Shotgun', pellets: 6, trailLen: 3, bulletDrop: 0.12 },
-  rifle:     { cat: 'primary',   cost: 400, dmg: 28, rate: 2.8, ammo: 25,  speed: 8,  spread: 0.04, bloom: 0.035,color: '#88ff44', name: 'Rifle', trailLen: 8, bulletDrop: 0.04 },
-  sniper:    { cat: 'primary',   cost: 500, dmg: 60, rate: 0.5, ammo: 4,   speed: 14, spread: 0.02, bloom: 0.12, color: '#ff44ff', name: 'Sniper', trailLen: 18, bulletDrop: 0.01 },
-  knife:     { cat: 'melee',     cost: 0,   dmg: 55, rate: 2,   ammo: Infinity, range: 35, color: '#cccccc', name: 'Knife' }
+  pistol:    { cat: 'secondary', cost: 0,   dmg: 22, rate: 2.2, ammo: Infinity, speed: 6.5,spread: 0.06, bloom: 0.03, color: '#ffdd44', get name() { return _t('rvPistol'); }, trailLen: 6, bulletDrop: 0.08 },
+  smg:       { cat: 'primary',   cost: 200, dmg: 12, rate: 5.5, ammo: 30,  speed: 7,  spread: 0.12, bloom: 0.04, color: '#44ddff', get name() { return _t('rvSMG'); }, trailLen: 5, bulletDrop: 0.06 },
+  shotgun:   { cat: 'primary',   cost: 300, dmg: 9,  rate: 0.9, ammo: 8,   speed: 6,  spread: 0.2,  bloom: 0,    color: '#ff8844', get name() { return _t('rvShotgun'); }, pellets: 6, trailLen: 3, bulletDrop: 0.12 },
+  rifle:     { cat: 'primary',   cost: 400, dmg: 28, rate: 2.8, ammo: 25,  speed: 8,  spread: 0.04, bloom: 0.035,color: '#88ff44', get name() { return _t('rvRifle'); }, trailLen: 8, bulletDrop: 0.04 },
+  sniper:    { cat: 'primary',   cost: 500, dmg: 60, rate: 0.5, ammo: 4,   speed: 14, spread: 0.02, bloom: 0.12, color: '#ff44ff', get name() { return _t('rvSniper'); }, trailLen: 18, bulletDrop: 0.01 },
+  knife:     { cat: 'melee',     cost: 0,   dmg: 55, rate: 2,   ammo: Infinity, range: 35, color: '#cccccc', get name() { return _t('rvKnife'); } }
 };
 var UTILITY = {
-  grenade:   { cost: 100, dmg: 60,  radius: 60, name: 'Grenade' },
-  flashbang: { cost: 50,  dmg: 0,   radius: 80, name: 'Flashbang' },
-  medkit:    { cost: 150, heal: 50, name: 'Medkit' }
+  grenade:   { cost: 100, dmg: 60,  radius: 60, get name() { return _t('rvGrenade'); } },
+  flashbang: { cost: 50,  dmg: 0,   radius: 80, get name() { return _t('rvFlashbang'); } },
+  medkit:    { cost: 150, heal: 50, get name() { return _t('rvMedkit'); } }
 };
 var PRIMARY_LIST = ['smg', 'shotgun', 'rifle', 'sniper'];
 var UTILITY_LIST = ['grenade', 'flashbang', 'medkit'];
@@ -51,7 +54,7 @@ var BUY_ITEMS = PRIMARY_LIST.concat(UTILITY_LIST);
 
 /* ── Maps ──────────────────────────────────────────────────────── */
 var MAPS = [
-  { name: 'Warehouse', bg: '#0d1117', platforms: [
+  { get name() { return _t('rvMapWarehouse'); }, bg: '#0d1117', platforms: [
     { x: 0, y: 580, w: 360, h: 60 },
     { x: 40, y: 460, w: 80, h: 14 },
     { x: 240, y: 460, w: 80, h: 14 },
@@ -62,7 +65,7 @@ var MAPS = [
     { x: 90, y: 556, w: 24, h: 24 },
     { x: 246, y: 556, w: 24, h: 24 }
   ]},
-  { name: 'Rooftops', bg: '#0a0e1a', platforms: [
+  { get name() { return _t('rvMapRooftops'); }, bg: '#0a0e1a', platforms: [
     { x: 0, y: 590, w: 120, h: 50 },
     { x: 240, y: 590, w: 120, h: 50 },
     { x: 130, y: 580, w: 100, h: 10 },
@@ -75,7 +78,7 @@ var MAPS = [
     { x: 60, y: 200, w: 60, h: 14 },
     { x: 240, y: 200, w: 60, h: 14 }
   ]},
-  { name: 'Bunker', bg: '#0e0c14', platforms: [
+  { get name() { return _t('rvMapBunker'); }, bg: '#0e0c14', platforms: [
     { x: 0, y: 580, w: 360, h: 60 },
     { x: 0, y: 440, w: 100, h: 14 },
     { x: 260, y: 440, w: 100, h: 14 },
@@ -991,8 +994,8 @@ function damagePlayer(target, dmg, attacker, isSniperHeadshot) {
     if (attacker) {
       attacker.credits = Math.min(MAX_CREDITS, attacker.credits + KILL_REWARD);
       var weaponName = WEAPONS[attacker.weapon] ? WEAPONS[attacker.weapon].name : attacker.weapon;
-      var killerName = attacker === p1 ? 'P1' : (numPlayers === 1 ? 'Bot' : 'P2');
-      var victimName = target === p1 ? 'P1' : (numPlayers === 1 ? 'Bot' : 'P2');
+      var killerName = attacker === p1 ? _t('rvP1') : (numPlayers === 1 ? _t('rvBot') : _t('rvP2'));
+      var victimName = target === p1 ? _t('rvP1') : (numPlayers === 1 ? _t('rvBot') : _t('rvP2'));
       addKillFeed(killerName + ' [' + weaponName + '] ' + victimName, attacker.color);
 
       if (attacker === p1) {
@@ -1471,12 +1474,12 @@ function drawHUD() {
   ctx.textAlign = 'left';
 
   ctx.fillStyle = '#8899aa';
-  ctx.fillText('Round ' + roundNum + '/' + ROUNDS_TO_WIN, 8, 14);
+  ctx.fillText(_t('rvRound') + ' ' + roundNum + '/' + ROUNDS_TO_WIN, 8, 14);
 
   ctx.fillStyle = '#4488ff';
-  ctx.fillText('P1: ' + p1Score, 130, 14);
+  ctx.fillText(_t('rvP1') + ': ' + p1Score, 130, 14);
   ctx.fillStyle = '#ff4444';
-  ctx.fillText((numPlayers === 1 ? 'Bot' : 'P2') + ': ' + p2Score, 210, 14);
+  ctx.fillText((numPlayers === 1 ? _t('rvBot') : _t('rvP2')) + ': ' + p2Score, 210, 14);
 
   ctx.fillStyle = '#ffcc00';
   ctx.font = '10px monospace';
@@ -1487,7 +1490,7 @@ function drawHUD() {
   ctx.fillStyle = '#aabbcc';
   ctx.font = '10px monospace';
   ctx.textAlign = 'right';
-  ctx.fillText('Kills: ' + matchKills, W - 8, 14);
+  ctx.fillText(_t('rvKills') + ': ' + matchKills, W - 8, 14);
 
   // Bottom bar
   if (p1 && state === 'playing') {
@@ -1502,13 +1505,13 @@ function drawHUD() {
     ctx.fillText(wName, 8, H - 10);
 
     if (p1.weapon !== 'knife') {
-      var ammoCount = WEAPONS[p1.weapon].ammo === Infinity ? 'INF' : (p1.ammo[p1.weapon] || 0) + '';
+      var ammoCount = WEAPONS[p1.weapon].ammo === Infinity ? _t('rvINF') : (p1.ammo[p1.weapon] || 0) + '';
       ctx.fillStyle = (p1.ammo[p1.weapon] && p1.ammo[p1.weapon] <= 5) ? '#ff4444' : '#aabbcc';
-      ctx.fillText('Ammo: ' + ammoCount, 80, H - 10);
+      ctx.fillText(_t('rvAmmo') + ': ' + ammoCount, 80, H - 10);
     }
 
     ctx.fillStyle = p1.hp > 60 ? '#44cc44' : (p1.hp > 30 ? '#cccc44' : '#cc4444');
-    ctx.fillText('HP: ' + p1.hp, 170, H - 10);
+    ctx.fillText(_t('rvHP') + ': ' + p1.hp, 170, H - 10);
 
     if (p1.utility.length > 0) {
       ctx.fillStyle = '#88aacc';
@@ -1518,12 +1521,12 @@ function drawHUD() {
     // Dash indicator
     var dashReady = p1.dashCooldown <= 0 && p1.dashTimer <= 0;
     ctx.fillStyle = dashReady ? '#44ccff' : '#334455';
-    ctx.fillText('DASH', 300, H - 10);
+    ctx.fillText(_t('rvDash'), 300, H - 10);
 
     ctx.fillStyle = '#556677';
     ctx.font = '9px monospace';
     ctx.textAlign = 'right';
-    ctx.fillText('[R]sw [G]util [Shift]dash', W - 5, H - 10);
+    ctx.fillText(_t('rvControlsHint'), W - 5, H - 10);
   }
 }
 
@@ -1543,8 +1546,8 @@ function drawBuyPanel(player, cursorIdx, ox, pw, label, accentColor, ctrlHint) {
   if (player) {
     ctx.fillStyle = '#667788';
     ctx.font = '9px monospace';
-    var primary = player.primary ? WEAPONS[player.primary].name : 'None';
-    ctx.fillText(primary + ' + Pistol', ox + pw/2, 120);
+    var primary = player.primary ? WEAPONS[player.primary].name : _t('rvNone');
+    ctx.fillText(primary + ' + ' + _t('rvPistol'), ox + pw/2, 120);
     if (player.utility.length > 0) {
       ctx.fillText(player.utility.map(function(u) { return UTILITY[u].name; }).join(', '), ox + pw/2, 132);
     }
@@ -1591,9 +1594,9 @@ function drawBuyPanel(player, cursorIdx, ox, pw, label, accentColor, ctrlHint) {
         ctx.fillText('DMG:' + item.dmg + ' RPM:' + item.rate, ox + 90, iy + 32);
       } else {
         ctx.fillStyle = '#667788';
-        if (item.heal) ctx.fillText('Heals ' + item.heal + ' HP', ox + 90, iy + 32);
+        if (item.heal) ctx.fillText(_t('rvHeals') + ' ' + item.heal + ' ' + _t('rvHP'), ox + 90, iy + 32);
         else if (item.dmg) ctx.fillText('DMG:' + item.dmg + ' R:' + item.radius, ox + 90, iy + 32);
-        else ctx.fillText('Blinds enemies', ox + 90, iy + 32);
+        else ctx.fillText(_t('rvBlindsEnemies'), ox + 90, iy + 32);
       }
     }
 
@@ -1601,7 +1604,7 @@ function drawBuyPanel(player, cursorIdx, ox, pw, label, accentColor, ctrlHint) {
       ctx.fillStyle = '#44cc44';
       ctx.font = (numPlayers === 2 ? '8' : '10') + 'px monospace';
       ctx.textAlign = 'right';
-      ctx.fillText('OWN', ox + 5 + itemW - 4, iy + (numPlayers === 2 ? 14 : 20));
+      ctx.fillText(_t('rvOwn'), ox + 5 + itemW - 4, iy + (numPlayers === 2 ? 14 : 20));
       ctx.textAlign = 'left';
     }
   }
@@ -1621,11 +1624,11 @@ function drawBuyPhase() {
   ctx.textAlign = 'center';
   ctx.fillStyle = '#ff6b35';
   ctx.font = 'bold 18px monospace';
-  ctx.fillText('BUY PHASE', W/2, 40);
+  ctx.fillText(_t('rvBuyPhase'), W/2, 40);
 
   ctx.fillStyle = '#ffcc00';
   ctx.font = '12px monospace';
-  ctx.fillText('Round ' + roundNum + ' \u2014 ' + Math.ceil(buyTimer) + 's', W/2, 60);
+  ctx.fillText(_t('rvRound') + ' ' + roundNum + ' \u2014 ' + Math.ceil(buyTimer) + 's', W/2, 60);
 
   if (numPlayers === 2) {
     // Split screen: P1 left half, P2 right half
@@ -1638,21 +1641,21 @@ function drawBuyPhase() {
     ctx.lineTo(halfW, H - 20);
     ctx.stroke();
 
-    drawBuyPanel(p1, buyCursor.p1, 0, halfW, 'P1', '#4488ff', 'W/S + F');
-    drawBuyPanel(p2, buyCursor.p2, halfW, halfW, 'P2', '#ff4444', 'Up/Down + Enter');
+    drawBuyPanel(p1, buyCursor.p1, 0, halfW, _t('rvP1'), '#4488ff', _t('rvCtrlP1Buy'));
+    drawBuyPanel(p2, buyCursor.p2, halfW, halfW, _t('rvP2'), '#ff4444', _t('rvCtrlP2Buy'));
   } else {
-    drawBuyPanel(p1, buyCursor.p1, 0, W, 'YOUR LOADOUT', '#88ccff', 'W/S to browse, F to buy');
+    drawBuyPanel(p1, buyCursor.p1, 0, W, _t('rvYourLoadout'), '#88ccff', _t('rvCtrlBrowse'));
   }
 }
 
 /* ── Countdown Rendering ──────────────────────────────────────── */
 function drawCountdown() {
   var num = Math.ceil(countdownTimer);
-  if (num <= 0) num = 'GO!';
+  if (num <= 0) num = _t('rvGo');
 
   ctx.textAlign = 'center';
-  ctx.fillStyle = num === 'GO!' ? '#44ff44' : '#ff6b35';
-  ctx.font = 'bold ' + (num === 'GO!' ? 48 : 64) + 'px monospace';
+  ctx.fillStyle = num === _t('rvGo') ? '#44ff44' : '#ff6b35';
+  ctx.font = 'bold ' + (num === _t('rvGo') ? 48 : 64) + 'px monospace';
 
   // Pulsing scale effect
   var pulse = 1 + (countdownTimer % 1) * 0.15;
@@ -1664,7 +1667,7 @@ function drawCountdown() {
 
   ctx.fillStyle = '#8899aa';
   ctx.font = '12px monospace';
-  ctx.fillText('Get ready!', W/2, H/2 + 20);
+  ctx.fillText(_t('rvGetReady'), W/2, H/2 + 20);
 }
 
 /* ── Screen States ─────────────────────────────────────────────── */
@@ -1675,14 +1678,14 @@ function drawMenu(time) {
 
   ctx.fillStyle = '#ff6b35';
   ctx.font = 'bold 36px monospace';
-  ctx.fillText('RIVALS', W/2, 180);
+  ctx.fillText(_t('rvTitle'), W/2, 180);
 
   ctx.fillStyle = '#8899aa';
   ctx.font = '12px monospace';
-  ctx.fillText('Tactical Shooter', W/2, 210);
+  ctx.fillText(_t('rvSubtitle'), W/2, 210);
 
   ctx.font = '10px monospace';
-  ctx.fillText('Round-based combat with economy', W/2, 235);
+  ctx.fillText(_t('rvTagline'), W/2, 235);
 
   // Animated characters
   var t = time / 1000;
@@ -1710,7 +1713,7 @@ function drawMenu(time) {
   ctx.beginPath(); ctx.moveTo(237, p2y + 14); ctx.lineTo(223, p2y + 14); ctx.stroke();
 
   // Buttons
-  var btns = ['1 PLAYER', '2 PLAYERS'];
+  var btns = [_t('rv1Player'), _t('rv2Players')];
   for (var i = 0; i < 2; i++) {
     var by = 340 + i * 70;
     ctx.fillStyle = menuSel === i ? '#1a2538' : '#0d1320';
@@ -1725,8 +1728,8 @@ function drawMenu(time) {
 
   ctx.fillStyle = '#445566';
   ctx.font = '10px monospace';
-  ctx.fillText('W/S to select, F or Space to start', W/2, 520);
-  ctx.fillText('Best Kills: ' + bestKills, W/2, 545);
+  ctx.fillText(_t('rvCtrlMenuSelect'), W/2, 520);
+  ctx.fillText(_t('rvBestKills') + ': ' + bestKills, W/2, 545);
 }
 
 function drawModeSelect() {
@@ -1736,16 +1739,16 @@ function drawModeSelect() {
   ctx.textAlign = 'center';
   ctx.fillStyle = '#ff6b35';
   ctx.font = 'bold 20px monospace';
-  ctx.fillText('INPUT MODE', W/2, 100);
+  ctx.fillText(_t('rvInputMode'), W/2, 100);
 
   ctx.fillStyle = '#8899aa';
   ctx.font = '11px monospace';
-  ctx.fillText('Choose controls for 2 players', W/2, 130);
+  ctx.fillText(_t('rvChooseControls'), W/2, 130);
 
   var modes = [
-    { name: 'KEYBOARD', desc: 'P1: WASD+F  P2: Arrows+Enter' },
-    { name: 'TOUCH', desc: 'Split-screen touch controls' },
-    { name: 'MIXED', desc: 'P1: Keyboard  P2: Touch' }
+    { name: _t('rvKeyboard'), desc: _t('rvKeyboardDesc') },
+    { name: _t('rvTouch'), desc: _t('rvTouchDesc') },
+    { name: _t('rvMixed'), desc: _t('rvMixedDesc') }
   ];
 
   for (var i = 0; i < modes.length; i++) {
@@ -1766,7 +1769,7 @@ function drawModeSelect() {
 
   ctx.fillStyle = '#445566';
   ctx.font = '10px monospace';
-  ctx.fillText('W/S select, F confirm', W/2, 530);
+  ctx.fillText(_t('rvCtrlConfirm'), W/2, 530);
 }
 
 function drawRoundEnd() {
@@ -1775,18 +1778,18 @@ function drawRoundEnd() {
 
   ctx.textAlign = 'center';
   var winColor = roundWinner === 1 ? '#4488ff' : '#ff4444';
-  var winText = roundWinner === 1 ? (numPlayers === 1 ? 'YOU WIN' : 'P1 WINS') : (numPlayers === 1 ? 'BOT WINS' : 'P2 WINS');
+  var winText = roundWinner === 1 ? (numPlayers === 1 ? _t('rvYouWin') : _t('rvP1Wins')) : (numPlayers === 1 ? _t('rvBotWins') : _t('rvP2Wins'));
 
   ctx.fillStyle = winColor;
   ctx.font = 'bold 28px monospace';
-  ctx.fillText('ROUND ' + (roundNum), W/2, 260);
+  ctx.fillText(_t('rvRound') + ' ' + (roundNum), W/2, 260);
   ctx.font = 'bold 22px monospace';
   ctx.fillText(winText, W/2, 300);
 
   // Score pips
   ctx.fillStyle = '#aabbcc';
   ctx.font = '14px monospace';
-  ctx.fillText('P1: ' + p1Score + '  \u2014  ' + (numPlayers === 1 ? 'Bot' : 'P2') + ': ' + p2Score, W/2, 340);
+  ctx.fillText(_t('rvP1') + ': ' + p1Score + '  \u2014  ' + (numPlayers === 1 ? _t('rvBot') : _t('rvP2')) + ': ' + p2Score, W/2, 340);
 
   // Round score pips (visual dots)
   for (var i = 0; i < ROUNDS_TO_WIN; i++) {
@@ -1811,7 +1814,7 @@ function drawMatchEnd() {
 
   var winner = p1Score >= ROUNDS_TO_WIN ? 1 : 2;
   var winColor = winner === 1 ? '#4488ff' : '#ff4444';
-  var winText = winner === 1 ? (numPlayers === 1 ? 'VICTORY!' : 'P1 WINS!') : (numPlayers === 1 ? 'DEFEAT' : 'P2 WINS!');
+  var winText = winner === 1 ? (numPlayers === 1 ? _t('rvVictory') : _t('rvP1Wins') + '!') : (numPlayers === 1 ? _t('rvDefeat') : _t('rvP2Wins') + '!');
 
   ctx.fillStyle = winColor;
   ctx.font = 'bold 32px monospace';
@@ -1819,21 +1822,21 @@ function drawMatchEnd() {
 
   ctx.fillStyle = '#ff6b35';
   ctx.font = 'bold 20px monospace';
-  ctx.fillText('MATCH OVER', W/2, 250);
+  ctx.fillText(_t('rvMatchOver'), W/2, 250);
 
   ctx.fillStyle = '#aabbcc';
   ctx.font = '14px monospace';
-  ctx.fillText('Final Score: ' + p1Score + ' - ' + p2Score, W/2, 300);
-  ctx.fillText('Total Kills: ' + matchKills, W/2, 330);
+  ctx.fillText(_t('rvFinalScore') + ': ' + p1Score + ' - ' + p2Score, W/2, 300);
+  ctx.fillText(_t('rvTotalKills') + ': ' + matchKills, W/2, 330);
 
   if (matchKills >= bestKills && matchKills > 0) {
     ctx.fillStyle = '#ffcc00';
-    ctx.fillText('NEW BEST!', W/2, 360);
+    ctx.fillText(_t('rvNewBest'), W/2, 360);
   }
 
   ctx.fillStyle = '#556677';
   ctx.font = '12px monospace';
-  ctx.fillText('Press Space or tap to continue', W/2, 450);
+  ctx.fillText(_t('rvContinue'), W/2, 450);
 }
 
 /* ── Touch Control Overlay ─────────────────────────────────────── */

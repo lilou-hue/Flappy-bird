@@ -47,13 +47,21 @@
   };
 
   var CHAPTER_SOURCES = [null, 'Chapter1', 'Chapter2', 'Chapter3', 'Chapter4', 'Chapter5'];
-  var CHAPTER_NAMES = {
-    1: 'Just Five More Minutes',
-    2: 'The Comfort Zone',
-    3: 'The Scroll Hole',
-    4: 'The Wall',
-    5: 'Tomorrow Starts Today'
+  var CHAPTER_NAME_KEYS = {
+    1: 'aodnCh1Name',
+    2: 'aodnCh2Name',
+    3: 'aodnCh3Name',
+    4: 'aodnCh4Name',
+    5: 'aodnCh5Name'
   };
+  function getChapterName(ch) {
+    return I18N.t(CHAPTER_NAME_KEYS[ch]);
+  }
+  // Keep CHAPTER_NAMES as a getter-based object for backward compat
+  var CHAPTER_NAMES = {};
+  [1,2,3,4,5].forEach(function(ch) {
+    Object.defineProperty(CHAPTER_NAMES, ch, { get: function() { return getChapterName(ch); }, enumerable: true });
+  });
 
   /* ── Scene fade transition ── */
   var fadeAlpha = 0;       // 0 = no fade, 1 = fully black
@@ -118,7 +126,7 @@
     ctx.fillText(titleCardText, canvasW / 2, canvasH / 2 - 10);
     ctx.font = '12px "Space Grotesk", sans-serif';
     ctx.fillStyle = 'rgba(255,255,255,0.6)';
-    ctx.fillText('Chapter ' + currentChapter, canvasW / 2, canvasH / 2 + 15);
+    ctx.fillText(I18N.t('aodnChapter') + ' ' + currentChapter, canvasW / 2, canvasH / 2 + 15);
     ctx.textAlign = 'left';
     ctx.globalAlpha = 1;
   }
@@ -271,7 +279,7 @@
     ctx.font = '10px "Space Grotesk", sans-serif';
     ctx.textAlign = 'left';
     ctx.fillStyle = 'rgba(255,255,255,0.3)';
-    ctx.fillText('Ch.' + currentChapter, 8, 14);
+    ctx.fillText(I18N.t('aodnChAbbr') + currentChapter, 8, 14);
 
     // Title card overlay
     updateTitleCard();
@@ -505,7 +513,7 @@
     ctx.fillStyle = 'rgba(255,255,255,0.06)';
     ctx.font = '6px "Space Grotesk", sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('LIBRARY', lx + lw / 2, ly + lh * 0.58);
+    ctx.fillText(I18N.t('aodnLibrary'), lx + lw / 2, ly + lh * 0.58);
     ctx.textAlign = 'left';
 
     // Trees (multiple, with canopy detail)
@@ -699,7 +707,7 @@
     ctx.fillStyle = 'rgba(255,60,60,' + (0.15 + pulse * 0.08) + ')';
     ctx.font = 'bold 11px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('2:00 AM', clkX, clkY + clkR + 14);
+    ctx.fillText(I18N.t('aodn2AM'), clkX, clkY + clkR + 14);
     ctx.textAlign = 'left';
 
     // Scattered papers / sticky notes
@@ -931,7 +939,7 @@
     ctx.font = '9px "Space Grotesk", sans-serif';
     ctx.textAlign = 'center';
     ctx.fillStyle = 'rgba(255,255,255,0.45)';
-    ctx.fillText('Procrastination', canvasW / 2, my - 5);
+    ctx.fillText(I18N.t('aodnProcrastination'), canvasW / 2, my - 5);
     // Percentage
     ctx.fillStyle = 'rgba(255,255,255,0.3)';
     ctx.font = '8px "Space Grotesk", sans-serif';
@@ -1068,7 +1076,7 @@
 
     // Update subtitle
     var subtitle = document.querySelector('.game__header p');
-    if (subtitle) subtitle.textContent = 'Chapter ' + ch + ': ' + (CHAPTER_NAMES[ch] || '');
+    if (subtitle) subtitle.textContent = I18N.t('aodnChapter') + ' ' + ch + ': ' + (CHAPTER_NAMES[ch] || '');
 
     // Show title card
     showTitleCard(CHAPTER_NAMES[ch] || '');
@@ -1136,8 +1144,8 @@
     speakerLabel.style.display = 'none';
 
     var endingName = getEndingName(ch, ending);
-    var html = '<div class="ending-text">Chapter ' + ch + ' Complete</div>' +
-      '<div class="ending-subtitle">Ending: ' + endingName + '</div>';
+    var html = '<div class="ending-text">' + I18N.t('aodnChapter') + ' ' + ch + ' ' + I18N.t('aodnComplete') + '</div>' +
+      '<div class="ending-subtitle">' + I18N.t('aodnEnding') + ': ' + endingName + '</div>';
     dialogueText.innerHTML = html;
 
     // Show next chapter / chapter select buttons
@@ -1148,7 +1156,7 @@
     if (ch < 5) {
       var nextBtn = document.createElement('button');
       nextBtn.className = 'choice-btn chapter-nav-btn';
-      nextBtn.textContent = 'Next: Chapter ' + (ch + 1) + ' — ' + CHAPTER_NAMES[ch + 1];
+      nextBtn.textContent = I18N.t('aodnNext') + ': ' + I18N.t('aodnChapter') + ' ' + (ch + 1) + ' — ' + CHAPTER_NAMES[ch + 1];
       nextBtn.addEventListener('click', function () {
         choiceContainer.classList.remove('active');
         startChapter(ch + 1);
@@ -1161,7 +1169,7 @@
 
     var selectBtn = document.createElement('button');
     selectBtn.className = 'choice-btn chapter-nav-btn';
-    selectBtn.textContent = 'Chapter Select';
+    selectBtn.textContent = I18N.t('aodnChapterSelect');
     selectBtn.addEventListener('click', function () {
       choiceContainer.classList.remove('active');
       dialogueBox.classList.remove('active');
@@ -1171,7 +1179,7 @@
 
     var replayBtn = document.createElement('button');
     replayBtn.className = 'choice-btn chapter-nav-btn';
-    replayBtn.textContent = 'Replay Chapter ' + ch;
+    replayBtn.textContent = I18N.t('aodnReplayChapter') + ' ' + ch;
     replayBtn.addEventListener('click', function () {
       choiceContainer.classList.remove('active');
       startChapter(ch);
@@ -1214,15 +1222,15 @@
 
     var endText = '';
     if (growth >= 4) {
-      endText = 'Sam found a way forward. The sloth isn\'t gone — but it\'s honest now.';
+      endText = I18N.t('aodnFinalGood');
     } else if (growth >= 2) {
-      endText = 'Sam\'s journey was messy. But growth usually is.';
+      endText = I18N.t('aodnFinalMid');
     } else {
-      endText = 'The sloth\'s grip is strong. But awareness is the first step.';
+      endText = I18N.t('aodnFinalLow');
     }
 
     dialogueText.innerHTML += '<div class="ending-subtitle" style="margin-top:12px">' + endText + '</div>' +
-      '<div class="ending-subtitle">Final Score: ' + score + '</div>';
+      '<div class="ending-subtitle">' + I18N.t('aodnFinalScore') + ': ' + score + '</div>';
   }
 
   function updateScoreDisplay() {
@@ -1232,33 +1240,30 @@
     if (bestEl) bestEl.textContent = GameState.getBest();
   }
 
+  var ENDING_KEYS = {
+    comfort: 'aodnEndComfort',
+    productive: 'aodnEndProductive',
+    stress: 'aodnEndStress',
+    connection: 'aodnEndConnection',
+    effort: 'aodnEndEffort',
+    avoidance: 'aodnEndAvoidance',
+    isolation: 'aodnEndIsolation',
+    discipline: 'aodnEndDiscipline',
+    balance: 'aodnEndBalance',
+    recovery: 'aodnEndRecovery',
+    lost: 'aodnEndLost',
+    breakthrough: 'aodnEndBreakthrough',
+    grit: 'aodnEndGrit',
+    supported: 'aodnEndSupported',
+    surrender: 'aodnEndSurrender',
+    integration: 'aodnEndIntegration',
+    willpower: 'aodnEndWillpower',
+    growth: 'aodnEndGrowth'
+  };
+
   function getEndingName(ch, ending) {
-    var names = {
-      // Ch1
-      comfort: 'The Comfort of Later',
-      productive: 'A Fresh Start',
-      stress: 'The Panic Sets In',
-      // Ch2
-      connection: 'Strength in Numbers',
-      effort: 'Ugly but Real',
-      avoidance: 'The Safe Route',
-      isolation: 'Alone with Thoughts',
-      // Ch3
-      discipline: 'Master of Focus',
-      balance: 'Bent, Not Broken',
-      recovery: 'Climbing Out',
-      lost: 'Swallowed Whole',
-      // Ch4
-      breakthrough: 'Seeing Through',
-      grit: 'Brute Force',
-      supported: 'A Friend at 2 AM',
-      surrender: 'The White Flag',
-      // Ch5
-      integration: 'Together',
-      willpower: 'The Iron Wall',
-      growth: 'First Steps Forward'
-    };
-    return names[ending] || ending;
+    var key = ENDING_KEYS[ending];
+    return key ? I18N.t(key) : ending;
   }
 
   /* ── Chapter Select ── */
@@ -1281,10 +1286,10 @@
       var endings = window._.endingsDiscovered.filter(function (e) { return e.startsWith('ch' + i + '_'); });
       var maxEndings = [0, 3, 4, 5, 4, 3][i];
 
-      btn.innerHTML = '<span class="ch-num">Chapter ' + i + '</span>' +
+      btn.innerHTML = '<span class="ch-num">' + I18N.t('aodnChapter') + ' ' + i + '</span>' +
         '<span class="ch-title">' + CHAPTER_NAMES[i] + '</span>' +
-        '<span class="ch-endings">' + endings.length + '/' + maxEndings + ' endings</span>' +
-        (unlocked ? '' : '<span class="ch-lock">Locked</span>');
+        '<span class="ch-endings">' + endings.length + '/' + maxEndings + ' ' + I18N.t('aodnEndings') + '</span>' +
+        (unlocked ? '' : '<span class="ch-lock">' + I18N.t('aodnLocked') + '</span>');
 
       if (unlocked) {
         (function (ch) {

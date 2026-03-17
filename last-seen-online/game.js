@@ -546,14 +546,21 @@
    *  ACHIEVEMENTS                                                *
    * ──────────────────────────────────────────────────────────── */
 
+  var _t = function(key) { return typeof I18N !== 'undefined' ? I18N.t(key) : key; };
+
   const ACHIEVEMENTS = [
-    { id: 'lso_inbox',       icon: '\u{1F4F1}', name: 'Inbox Zero',      desc: 'Open first conversation' },
-    { id: 'lso_connections', icon: '\u{1F465}', name: 'Connections',      desc: 'Read all 5 contacts' },
-    { id: 'lso_shoes',       icon: '\u{1F45F}', name: 'In Their Shoes',   desc: 'Make all 6 choices' },
-    { id: 'lso_diary',       icon: '\u{1F4DD}', name: 'Dear Diary',       desc: 'Read all notes' },
-    { id: 'lso_lastseen',    icon: '\u{1F494}', name: 'Last Seen',        desc: 'Reach the ending' },
-    { id: 'lso_everyword',   icon: '\u2728',    name: 'Every Word',       desc: '100% completion' }
+    { id: 'lso_inbox',       icon: '\u{1F4F1}', nameKey: 'lsoAchInbox',       descKey: 'lsoAchInboxDesc' },
+    { id: 'lso_connections', icon: '\u{1F465}', nameKey: 'lsoAchConnections',  descKey: 'lsoAchConnectionsDesc' },
+    { id: 'lso_shoes',       icon: '\u{1F45F}', nameKey: 'lsoAchShoes',        descKey: 'lsoAchShoesDesc' },
+    { id: 'lso_diary',       icon: '\u{1F4DD}', nameKey: 'lsoAchDiary',        descKey: 'lsoAchDiaryDesc' },
+    { id: 'lso_lastseen',    icon: '\u{1F494}', nameKey: 'lsoAchLastSeen',     descKey: 'lsoAchLastSeenDesc' },
+    { id: 'lso_everyword',   icon: '\u2728',    nameKey: 'lsoAchEveryWord',    descKey: 'lsoAchEveryWordDesc' }
   ];
+  // Provide dynamic name/desc via getters
+  ACHIEVEMENTS.forEach(function(a) {
+    Object.defineProperty(a, 'name', { get: function() { return _t(a.nameKey); }, enumerable: true });
+    Object.defineProperty(a, 'desc', { get: function() { return _t(a.descKey); }, enumerable: true });
+  });
 
   function checkAchievements() {
     const earned = [];
@@ -654,9 +661,9 @@
     var notifs = $('lockNotifications');
     notifs.innerHTML = '';
     var previews = [
-      { name: 'Jordan', color: '#5856d6', text: 'I just need to know you\'re okay.', letter: 'J' },
-      { name: 'Mom', color: '#ff6b6b', text: 'I\'m coming over Saturday.', letter: 'M' },
-      { name: 'THE SQUAD', color: '#30d158', text: 'has anyone heard from Alex?', letter: 'S' },
+      { name: _t('lsoJordan'), color: '#5856d6', text: _t('lsoPreviewJordan'), letter: 'J' },
+      { name: _t('lsoMom'), color: '#ff6b6b', text: _t('lsoPreviewMom'), letter: 'M' },
+      { name: _t('lsoTheSquad'), color: '#30d158', text: _t('lsoPreviewSquad'), letter: 'S' },
     ];
     previews.forEach(function(p) {
       var el = document.createElement('div');
@@ -897,7 +904,7 @@
     if (m.type === 'receipt') {
       var el = document.createElement('div');
       el.className = m.status === 'unread' ? 'msg-delivered' : 'msg-read';
-      el.textContent = m.status === 'unread' ? 'Delivered' : 'Read \u2713\u2713';
+      el.textContent = m.status === 'unread' ? _t('lsoDelivered') : _t('lsoRead') + ' \u2713\u2713';
       chatMessages.appendChild(el);
       scrollChat();
       return;
@@ -1044,7 +1051,7 @@
       var isRead = state.notesRead.indexOf(i) !== -1;
       var plainText = entry.content.replace(/<[^>]+>/g, '').substring(0, 60);
       el.innerHTML =
-        '<div class="note-title" style="' + (isRead ? 'opacity:0.6' : '') + '">' + (entry.title || '(untitled)') + '</div>' +
+        '<div class="note-title" style="' + (isRead ? 'opacity:0.6' : '') + '">' + (entry.title || _t('lsoUntitled')) + '</div>' +
         '<div class="note-preview">' + plainText + '...</div>' +
         '<div class="note-date">' + entry.date + '</div>';
       el.addEventListener('click', function() { openNote(i); });
@@ -1183,7 +1190,7 @@
         var finalCompletion = calcCompletion();
         var subtitle = getEndingSubtitle();
         $('endingSubtitle').textContent = subtitle;
-        $('endingScore').textContent = finalCompletion + '% of Alex\'s story discovered';
+        $('endingScore').textContent = finalCompletion + '% ' + _t('lsoStoryDiscovered');
 
         // Arcade integration
         if (typeof Arcade !== 'undefined') {
@@ -1208,11 +1215,11 @@
     var tone = entries.length > 0 ? entries[0][0] : 'honest';
 
     var subtitles = {
-      tender: 'The people who love us don\'t stop. Even when we go quiet.',
-      sad: 'Some silences are louder than anything we could ever say.',
-      numb: 'Not every disappearance makes the news.',
-      honest: 'Check in on someone today.',
-      avoidant: 'The hardest door to open is the one you closed yourself.'
+      tender: _t('lsoEndTender'),
+      sad: _t('lsoEndSad'),
+      numb: _t('lsoEndNumb'),
+      honest: _t('lsoEndHonest'),
+      avoidant: _t('lsoEndAvoidant')
     };
     return subtitles[tone] || subtitles.honest;
   }
@@ -1238,7 +1245,7 @@
       if (typeof Audio_LSO !== 'undefined') {
         var muted = Audio_LSO.toggleMute();
         muteBtn.textContent = muted ? '\u{1F507}' : '\u{1F50A}';
-        muteBtn.title = muted ? 'Unmute' : 'Mute';
+        muteBtn.title = muted ? _t('unmute') : _t('mute');
       }
     });
   }
@@ -1265,7 +1272,7 @@
       showScreen('ending');
       $('endingFade').classList.add('visible');
       $('endingSubtitle').textContent = getEndingSubtitle();
-      $('endingScore').textContent = (state.completionPercent || calcCompletion()) + '% of Alex\'s story discovered';
+      $('endingScore').textContent = (state.completionPercent || calcCompletion()) + '% ' + _t('lsoStoryDiscovered');
       return;
     }
 

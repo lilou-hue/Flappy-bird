@@ -27,8 +27,8 @@
     { id: 'fully_loaded',     icon: '\uD83D\uDEE0\uFE0F', get title() { return _t('ucAchFullyLoaded'); },get desc() { return _t('ucAchFullyLoadedDesc'); },     check: s => s.allOneTime },
     { id: 'fashionista',      icon: '\uD83D\uDC57', get title() { return _t('ucAchFashionista'); },      get desc() { return _t('ucAchFashionistaDesc'); },      check: s => s.skinsUnlocked >= 5 },
     { id: 'tap_master',       icon: '\uD83D\uDC4B', get title() { return _t('ucAchTapMaster'); },        get desc() { return _t('ucAchTapMasterDesc'); },        check: s => s.totalClicks >= 1000 },
-    { id: 'ascended',         icon: '\u2728',       title: 'Ascended',       desc: 'Prestige once',            check: s => s.ascensionCount >= 1 },
-    { id: 'frenzy_master',    icon: '\u26A1',       title: 'Frenzy Master',  desc: 'Complete 5 tap frenzies',  check: s => s.frenzyCompleted >= 5 },
+    { id: 'ascended',         icon: '\u2728',       get title() { return _t('ucAscended'); },       get desc() { return _t('ucAscendedDesc'); },            check: s => s.ascensionCount >= 1 },
+    { id: 'frenzy_master',    icon: '\u26A1',       get title() { return _t('ucFrenzyMaster'); },  get desc() { return _t('ucFrenzyMasterDesc'); },  check: s => s.frenzyCompleted >= 5 },
   ];
 
   let ucUnlocked = new Set();
@@ -103,11 +103,11 @@
 
   /* ────────────────── Skins ────────────────── */
   const SKINS = [
-    { key: 'unicorn',      name: 'Unicorn',       cost: 0,      fartDx: -40, fartDy: 10, wingDx: 0,   wingDy: 0   },
-    { key: 'tuna',          name: 'Tuna',           cost: 1000,   fartDx: -50, fartDy: 5,  wingDx: -11, wingDy: 20  },
-    { key: 'volleyball',    name: 'Volleyball',     cost: 5000,   fartDx: 0,   fartDy: 35, wingDx: -16, wingDy: 17  },
-    { key: 'spidermonkey',  name: 'Spidermonkey',   cost: 25000,  fartDx: -35, fartDy: 20, wingDx: -12, wingDy: 18  },
-    { key: 'chewbacca',     name: 'Chewbacca',      cost: 100000, fartDx: -35, fartDy: 15, wingDx: -14, wingDy: 17  },
+    { key: 'unicorn',      get name() { return _t('ucSkinUnicorn'); },       cost: 0,      fartDx: -40, fartDy: 10, wingDx: 0,   wingDy: 0   },
+    { key: 'tuna',          get name() { return _t('ucSkinTuna'); },           cost: 1000,   fartDx: -50, fartDy: 5,  wingDx: -11, wingDy: 20  },
+    { key: 'volleyball',    get name() { return _t('ucSkinVolleyball'); },     cost: 5000,   fartDx: 0,   fartDy: 35, wingDx: -16, wingDy: 17  },
+    { key: 'spidermonkey',  get name() { return _t('ucSkinSpidermonkey'); },   cost: 25000,  fartDx: -35, fartDy: 20, wingDx: -12, wingDy: 18  },
+    { key: 'chewbacca',     get name() { return _t('ucSkinChewbacca'); },      cost: 100000, fartDx: -35, fartDy: 15, wingDx: -14, wingDy: 17  },
   ];
 
   /* ────────────────── State ────────────────── */
@@ -141,42 +141,42 @@
 
   /* ────────────────── Upgrades ────────────────── */
   const UPGRADES = [
-    { key: 'beefyBeans',      name: 'Beefy Beans',       desc: '+1 SP per tap',       baseCost: 10 },
-    { key: 'glitterGut',      name: 'Glitter Gut',        desc: '+1x tap multiplier',  baseCost: 100 },
-    { key: 'autoFairy',       name: 'Auto-Poot Fairy',    desc: '+1 SP/sec',           baseCost: 50 },
-    { key: 'rainbowTurbo',    name: 'Rainbow Turbo',      desc: '+5 SP/sec',           baseCost: 500 },
-    { key: 'goldenHay',       name: 'Golden Hay',         desc: '+20 SP/sec',          baseCost: 2500 },
-    { key: 'cloudCompressor', name: 'Cloud Compressor',   desc: 'All taps x2 (once)',  baseCost: 10000,  oneTime: true },
-    { key: 'enchantedBurrito',name: 'Enchanted Burrito',  desc: '+50 SP/sec',          baseCost: 15000 },
-    { key: 'quantumGas',      name: 'Quantum Gas',        desc: '+100 SP/sec',         baseCost: 75000 },
-    { key: 'megaMultiplier',  name: 'Mega Multiplier',    desc: 'All taps x3 (once)',  baseCost: 250000, oneTime: true },
-    { key: 'criticalFart',    name: 'Critical Fart',      desc: '10% chance 10x tap',  baseCost: 500000, oneTime: true },
-    { key: 'stellarCompost',  name: 'Stellar Compost',    desc: '+500 SP/sec',         baseCost: 400000 },
-    { key: 'autoTapper',      name: 'Auto-Tapper',        desc: '+1 auto-tap/sec',     baseCost: 1000000 },
-    { key: 'luckyClover',     name: 'Lucky Clover',       desc: 'Crit chance 25%',     baseCost: 2000000, oneTime: true },
-    { key: 'passiveDoubler',  name: 'Passive Doubler',    desc: 'All passive x2',      baseCost: 5000000, oneTime: true },
-    { key: 'galacticHayBale', name: 'Galactic Hay Bale',  desc: '+2,500 SP/sec',       baseCost: 10000000 },
-    { key: 'cosmicCompressor',name: 'Cosmic Compressor',  desc: 'All taps x5 (once)',  baseCost: 50000000, oneTime: true },
-    { key: 'nebulaFlatulence', name: 'Nebula Flatulence', desc: '+10,000 SP/sec',      baseCost: 100000000 },
-    { key: 'omnifart',        name: 'Omnifart',           desc: 'All passive x5',      baseCost: 500000000, oneTime: true },
+    { key: 'beefyBeans',      get name() { return _t('ucBeefyBeans'); },       get desc() { return _t('ucBeefyBeansDesc'); },       baseCost: 10 },
+    { key: 'glitterGut',      get name() { return _t('ucGlitterGut'); },       get desc() { return _t('ucGlitterGutDesc'); },       baseCost: 100 },
+    { key: 'autoFairy',       get name() { return _t('ucAutoFairy'); },        get desc() { return _t('ucAutoFairyDesc'); },        baseCost: 50 },
+    { key: 'rainbowTurbo',    get name() { return _t('ucRainbowTurbo'); },     get desc() { return _t('ucRainbowTurboDesc'); },     baseCost: 500 },
+    { key: 'goldenHay',       get name() { return _t('ucGoldenHay'); },        get desc() { return _t('ucGoldenHayDesc'); },        baseCost: 2500 },
+    { key: 'cloudCompressor', get name() { return _t('ucCloudCompressor'); },  get desc() { return _t('ucCloudCompressorDesc'); },  baseCost: 10000,  oneTime: true },
+    { key: 'enchantedBurrito',get name() { return _t('ucEnchantedBurrito'); }, get desc() { return _t('ucEnchantedBurritoDesc'); }, baseCost: 15000 },
+    { key: 'quantumGas',      get name() { return _t('ucQuantumGas'); },       get desc() { return _t('ucQuantumGasDesc'); },       baseCost: 75000 },
+    { key: 'megaMultiplier',  get name() { return _t('ucMegaMultiplier'); },   get desc() { return _t('ucMegaMultiplierDesc'); },   baseCost: 250000, oneTime: true },
+    { key: 'criticalFart',    get name() { return _t('ucCriticalFart'); },     get desc() { return _t('ucCriticalFartDesc'); },     baseCost: 500000, oneTime: true },
+    { key: 'stellarCompost',  get name() { return _t('ucStellarCompost'); },   get desc() { return _t('ucStellarCompostDesc'); },   baseCost: 400000 },
+    { key: 'autoTapper',      get name() { return _t('ucAutoTapper'); },       get desc() { return _t('ucAutoTapperDesc'); },       baseCost: 1000000 },
+    { key: 'luckyClover',     get name() { return _t('ucLuckyClover'); },      get desc() { return _t('ucLuckyCloverDesc'); },      baseCost: 2000000, oneTime: true },
+    { key: 'passiveDoubler',  get name() { return _t('ucPassiveDoubler'); },   get desc() { return _t('ucPassiveDoublerDesc'); },   baseCost: 5000000, oneTime: true },
+    { key: 'galacticHayBale', get name() { return _t('ucGalacticHayBale'); },  get desc() { return _t('ucGalacticHayBaleDesc'); },  baseCost: 10000000 },
+    { key: 'cosmicCompressor',get name() { return _t('ucCosmicCompressor'); }, get desc() { return _t('ucCosmicCompressorDesc'); }, baseCost: 50000000, oneTime: true },
+    { key: 'nebulaFlatulence', get name() { return _t('ucNebulaFlatulence'); },get desc() { return _t('ucNebulaFlatulenceDesc'); }, baseCost: 100000000 },
+    { key: 'omnifart',        get name() { return _t('ucOmnifart'); },         get desc() { return _t('ucOmnifartDesc'); },         baseCost: 500000000, oneTime: true },
   ];
 
   /* ────────────────── Cosmetics ────────────────── */
   const COSMETICS = {
     hats: [
-      { id: 'crown', name: 'Crown', unlock: () => state.evolution >= 3 },
-      { id: 'wizard', name: 'Wizard Hat', unlock: () => state.evolution >= 5 },
-      { id: 'galaxy', name: 'Galaxy Crown', unlock: () => state.evolution >= 7 },
+      { id: 'crown', get name() { return _t('ucCrown'); }, unlock: () => state.evolution >= 3 },
+      { id: 'wizard', get name() { return _t('ucWizardHat'); }, unlock: () => state.evolution >= 5 },
+      { id: 'galaxy', get name() { return _t('ucGalaxyCrown'); }, unlock: () => state.evolution >= 7 },
     ],
     trails: [
-      { id: 'sparkle', name: 'Sparkle', unlock: () => state.totalClicks >= 1000 },
-      { id: 'rainbow', name: 'Rainbow', unlock: () => state.totalClicks >= 10000 },
-      { id: 'fire', name: 'Fire', unlock: () => state.totalClicks >= 100000 },
+      { id: 'sparkle', get name() { return _t('ucSparkleTrail'); }, unlock: () => state.totalClicks >= 1000 },
+      { id: 'rainbow', get name() { return _t('ucRainbowTrail'); }, unlock: () => state.totalClicks >= 10000 },
+      { id: 'fire', get name() { return _t('ucFireTrail'); }, unlock: () => state.totalClicks >= 100000 },
     ],
     auras: [
-      { id: 'glow', name: 'Glow', unlock: () => state.ascensionCount >= 1 },
-      { id: 'pulse', name: 'Pulse', unlock: () => state.ascensionCount >= 3 },
-      { id: 'cosmic', name: 'Cosmic', unlock: () => state.ascensionCount >= 5 },
+      { id: 'glow', get name() { return _t('ucGlowAura'); }, unlock: () => state.ascensionCount >= 1 },
+      { id: 'pulse', get name() { return _t('ucPulseAura'); }, unlock: () => state.ascensionCount >= 3 },
+      { id: 'cosmic', get name() { return _t('ucCosmicAura'); }, unlock: () => state.ascensionCount >= 5 },
     ],
   };
 
@@ -217,14 +217,14 @@
 
   /* ────────────────── Evolutions ────────────────── */
   const EVOLUTIONS = [
-    { name: 'Baby Form',          threshold: 0,           cost: 500 },
-    { name: 'Sparkle Form',       threshold: 500,         cost: 5000 },
-    { name: 'Majestic Form',      threshold: 5000,        cost: 50000 },
-    { name: 'Cosmic Form',        threshold: 50000,       cost: 500000 },
-    { name: 'Fart God',           threshold: 500000,      cost: 5000000 },
-    { name: 'Nebula Beast',       threshold: 5000000,     cost: 50000000 },
-    { name: 'Dimension Ripper',   threshold: 50000000,    cost: 500000000 },
-    { name: 'The Omnifarter',     threshold: 500000000,   cost: Infinity },
+    { get name() { return _t('ucEvoBaby'); },          threshold: 0,           cost: 500 },
+    { get name() { return _t('ucEvoSparkle'); },       threshold: 500,         cost: 5000 },
+    { get name() { return _t('ucEvoMajestic'); },      threshold: 5000,        cost: 50000 },
+    { get name() { return _t('ucEvoCosmic'); },        threshold: 50000,       cost: 500000 },
+    { get name() { return _t('ucEvoFartGod'); },       threshold: 500000,      cost: 5000000 },
+    { get name() { return _t('ucEvoNebulaBeast'); },   threshold: 5000000,     cost: 50000000 },
+    { get name() { return _t('ucEvoDimensionRipper'); },threshold: 50000000,   cost: 500000000 },
+    { get name() { return _t('ucEvoOmnifarter'); },    threshold: 500000000,   cost: Infinity },
   ];
   const MAX_EVO = EVOLUTIONS.length - 1;
 
@@ -309,7 +309,7 @@
     frenzyTimer = 60;
     frenzyActive = false;
     frenzyTimeLeft = 0;
-    spawnFloatingText(W / 2, H * 0.3, 'ASCENDED! x' + state.ascensionMultiplier.toFixed(1), '#ff69b4');
+    spawnFloatingText(W / 2, H * 0.3, _t('ucAscended') + '! x' + state.ascensionMultiplier.toFixed(1), '#ff69b4');
     evoFlash = 1.5;
     // Spawn 30 radial particles from center
     for (let i = 0; i < 30; i++) {
@@ -436,7 +436,7 @@
           const earned = Math.floor(state.spPerSec * elapsed);
           state.sp += earned;
           state.lifetimeSP += earned;
-          spawnFloatingText(W / 2, H / 2, '+' + formatNum(earned) + ' offline!');
+          spawnFloatingText(W / 2, H / 2, '+' + formatNum(earned) + ' ' + _t('ucOffline'));
         }
       }
     } catch(e) {}
@@ -456,7 +456,7 @@
     shopScroll = 0;
     confirmRestart = false;
     sparkleTimer = 0;
-    spawnFloatingText(W / 2, H * 0.4, 'Fresh start!');
+    spawnFloatingText(W / 2, H * 0.4, _t('ucFreshStart'));
   }
 
   /* ────────────────── Number formatting ────────────────── */
@@ -2944,7 +2944,7 @@
       ctx.font = '12px "Segoe UI", system-ui, sans-serif';
       ctx.fillStyle = '#ff69b4';
       ctx.textAlign = 'center';
-      ctx.fillText('Ascension ' + state.ascensionMultiplier.toFixed(1) + 'x (' + state.ascensionCount + ')', W/2, 100);
+      ctx.fillText(_t('ucAscendLabel') + ' ' + state.ascensionMultiplier.toFixed(1) + 'x (' + state.ascensionCount + ')', W/2, 100);
     }
 
     // ── Bottom Buttons ──
@@ -2961,7 +2961,7 @@
 
     // Cosmetics button
     const cosX = W*0.56 - smallBtnW/2;
-    drawButton(cosX, btnY, smallBtnW, btnH, btnR, 'Cosmetic', '#ffa500', cosmeticsOpen);
+    drawButton(cosX, btnY, smallBtnW, btnH, btnR, _t('ucCosmetics'), '#ffa500', cosmeticsOpen);
 
     // Evolve button
     if (canEvolve()) {
@@ -2996,7 +2996,7 @@
       ctx.fillStyle = '#ff69b4';
       ctx.font = 'bold 13px "Segoe UI", system-ui, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('Ascend', ascX + smallBtnW/2, ascY + 26);
+      ctx.fillText(_t('ucAscend'), ascX + smallBtnW/2, ascY + 26);
     }
   }
 
@@ -3268,15 +3268,15 @@
     ctx.strokeStyle = 'rgba(255,200,100,0.4)'; ctx.lineWidth = 2; ctx.stroke();
 
     ctx.fillStyle = '#ffd700'; ctx.font = 'bold 22px "Segoe UI", system-ui, sans-serif';
-    ctx.textAlign = 'center'; ctx.fillText('Cosmetics', W/2, p.y+32);
+    ctx.textAlign = 'center'; ctx.fillText(_t('ucCosmetics'), W/2, p.y+32);
     ctx.fillStyle = '#ffd700'; ctx.font = 'bold 20px "Segoe UI", system-ui, sans-serif';
     ctx.textAlign = 'right'; ctx.fillText('X', p.x+p.w-16, p.y+28);
 
     let cy = p.y + 50;
     const categories = [
-      { label: 'Hats', items: COSMETICS.hats, type: 'equippedHat' },
-      { label: 'Trails', items: COSMETICS.trails, type: 'equippedTrail' },
-      { label: 'Auras', items: COSMETICS.auras, type: 'equippedAura' },
+      { label: _t('ucHats'), items: COSMETICS.hats, type: 'equippedHat' },
+      { label: _t('ucTrails'), items: COSMETICS.trails, type: 'equippedTrail' },
+      { label: _t('ucAuras'), items: COSMETICS.auras, type: 'equippedAura' },
     ];
 
     for (const cat of categories) {
@@ -3301,18 +3301,18 @@
         ctx.textAlign = 'left';
         ctx.fillStyle = unlocked ? '#fff' : '#555';
         ctx.font = '14px "Segoe UI", system-ui, sans-serif';
-        ctx.fillText(unlocked ? item.name : '???', p.x + 20, rowY + 22);
+        ctx.fillText(unlocked ? item.name : _t('ucUnknown'), p.x + 20, rowY + 22);
 
         ctx.textAlign = 'right';
         if (equipped) {
           ctx.fillStyle = '#ffd700'; ctx.font = 'bold 12px "Segoe UI", system-ui, sans-serif';
-          ctx.fillText('Equipped', p.x + p.w - 18, rowY + 22);
+          ctx.fillText(_t('ucEquipped'), p.x + p.w - 18, rowY + 22);
         } else if (unlocked) {
           ctx.fillStyle = '#98fb98'; ctx.font = 'bold 12px "Segoe UI", system-ui, sans-serif';
-          ctx.fillText('Equip', p.x + p.w - 18, rowY + 22);
+          ctx.fillText(_t('ucEquip'), p.x + p.w - 18, rowY + 22);
         } else {
           ctx.fillStyle = '#666'; ctx.font = '12px "Segoe UI", system-ui, sans-serif';
-          ctx.fillText('Locked', p.x + p.w - 18, rowY + 22);
+          ctx.fillText(_t('ucLocked'), p.x + p.w - 18, rowY + 22);
         }
 
         cy += rowH;
@@ -3340,11 +3340,11 @@
     ctx.shadowColor = '#ffd700';
     ctx.shadowBlur = 15;
     ctx.fillStyle = '#ffd700';
-    ctx.fillText('TAP FRENZY!', 0, 0);
+    ctx.fillText(_t('ucTapFrenzy'), 0, 0);
     ctx.shadowBlur = 0;
     ctx.fillStyle = '#fff';
     ctx.font = 'bold 20px "Segoe UI", system-ui, sans-serif';
-    ctx.fillText(Math.ceil(frenzyTimeLeft).toFixed(0) + 's  (5x taps!)', 0, 30);
+    ctx.fillText(Math.ceil(frenzyTimeLeft).toFixed(0) + _t('ucFrenzyTimer'), 0, 30);
     ctx.restore();
   }
 
@@ -3368,18 +3368,18 @@
     ctx.fillStyle = '#ff69b4';
     ctx.font = 'bold 20px "Segoe UI", system-ui, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('Ascend?', W / 2, dy + 35);
+    ctx.fillText(_t('ucAscendConfirm'), W / 2, dy + 35);
 
     ctx.fillStyle = '#ccc';
     ctx.font = '13px "Segoe UI", system-ui, sans-serif';
-    ctx.fillText('Reset SP, upgrades & evolution', W / 2, dy + 60);
-    ctx.fillText('Gain permanent 1.5x multiplier', W / 2, dy + 80);
+    ctx.fillText(_t('ucAscendReset'), W / 2, dy + 60);
+    ctx.fillText(_t('ucAscendGain'), W / 2, dy + 80);
     ctx.fillStyle = '#ffd700';
     ctx.font = 'bold 14px "Segoe UI", system-ui, sans-serif';
-    ctx.fillText('Current: ' + state.ascensionMultiplier.toFixed(1) + 'x -> ' + (state.ascensionMultiplier * 1.5).toFixed(1) + 'x', W / 2, dy + 105);
+    ctx.fillText(_t('ucCurrent') + ' ' + state.ascensionMultiplier.toFixed(1) + 'x -> ' + (state.ascensionMultiplier * 1.5).toFixed(1) + 'x', W / 2, dy + 105);
     ctx.fillStyle = '#aaa';
     ctx.font = '12px "Segoe UI", system-ui, sans-serif';
-    ctx.fillText('Ascensions: ' + state.ascensionCount, W / 2, dy + 125);
+    ctx.fillText(_t('ucAscensions') + ' ' + state.ascensionCount, W / 2, dy + 125);
 
     // Yes button
     const yBtnX = dx + 30, yBtnY = dy + dh - 60, yBtnW = 110, yBtnH = 38;
@@ -3391,7 +3391,7 @@
     ctx.strokeStyle = '#ff69b4'; ctx.lineWidth = 1.5; ctx.stroke();
     ctx.fillStyle = '#ff69b4'; ctx.font = 'bold 16px "Segoe UI", system-ui, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('Ascend!', yBtnX + yBtnW / 2, yBtnY + 25);
+    ctx.fillText(_t('ucAscend') + '!', yBtnX + yBtnW / 2, yBtnY + 25);
 
     // No button
     const nBtnX = dx + dw - 140, nBtnY = yBtnY, nBtnW = 110, nBtnH = 38;
@@ -3402,7 +3402,7 @@
     ctx.fill();
     ctx.strokeStyle = '#6bd66b'; ctx.lineWidth = 1.5; ctx.stroke();
     ctx.fillStyle = '#6bd66b'; ctx.font = 'bold 16px "Segoe UI", system-ui, sans-serif';
-    ctx.fillText('Cancel', nBtnX + nBtnW / 2, nBtnY + 25);
+    ctx.fillText(_t('ucCancel'), nBtnX + nBtnW / 2, nBtnY + 25);
   }
 
   /* ────────────────── Update ────────────────── */
