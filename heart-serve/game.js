@@ -19,8 +19,8 @@
       hairHighlight: '#ff8050',
       eyeColor: '#e8740c',
       desc: 'Bold, competitive, secretly sweet',
-      aiSpeed: 0.82,
-      aiReact: 0.03,
+      aiSpeed: 0.38,
+      aiReact: 0.06,
       pongStyle: 'aggressive'
     },
     yuki: {
@@ -33,8 +33,8 @@
       hairHighlight: '#bbdefb',
       eyeColor: '#7e57c2',
       desc: 'Kind, shy, quietly determined',
-      aiSpeed: 0.55,
-      aiReact: 0.01,
+      aiSpeed: 0.25,
+      aiReact: 0.04,
       pongStyle: 'defensive'
     },
     rin: {
@@ -47,8 +47,8 @@
       hairHighlight: '#66bb6a',
       eyeColor: '#f9a825',
       desc: 'Playful, witty, surprisingly deep',
-      aiSpeed: 0.68,
-      aiReact: 0.05,
+      aiSpeed: 0.32,
+      aiReact: 0.08,
       pongStyle: 'tricky'
     }
   };
@@ -987,25 +987,54 @@
     p.y += (targetY - p.y) * 0.3;
     p.y = Math.max(0, Math.min(PH - PADDLE_H, p.y));
 
-    // AI movement
+    // AI movement — only track ball when it's heading toward AI side
     var aiTargetY = b.y - PADDLE_H / 2;
-    // Add character-specific AI behavior
+    var ballComingToAI = b.vx > 0;
+    var dayBonus = Math.min((state.day - 1) * 0.03, 0.15); // slight scaling with day
+
     if (CHARS[pong.charKey].pongStyle === 'tricky') {
-      // Rin: unpredictable, sometimes feints
-      if (Math.random() < 0.02) pong.aiTarget = PH * Math.random();
-      else pong.aiTarget = aiTargetY + (Math.random() - 0.5) * 30;
+      // Rin: commits to feints for many frames, genuinely loses track
+      if (!pong.feintTimer) pong.feintTimer = 0;
+      if (!pong.feintTarget) pong.feintTarget = null;
+      pong.feintTimer--;
+      if (pong.feintTimer <= 0) {
+        if (Math.random() < 0.08) {
+          // Commit to a wild feint for 30-80 frames
+          pong.feintTarget = PH * Math.random();
+          pong.feintTimer = 30 + Math.floor(Math.random() * 50);
+        } else {
+          pong.feintTarget = null;
+          pong.feintTimer = 10 + Math.floor(Math.random() * 20);
+        }
+      }
+      if (pong.feintTarget !== null) {
+        pong.aiTarget = pong.feintTarget;
+      } else if (ballComingToAI) {
+        pong.aiTarget = aiTargetY + (Math.random() - 0.5) * 50;
+      } else {
+        pong.aiTarget = PH / 2 - PADDLE_H / 2; // drift to center when ball away
+      }
     } else if (CHARS[pong.charKey].pongStyle === 'defensive') {
-      // Yuki: stays near center, reacts to ball position
-      pong.aiTarget = aiTargetY * 0.7 + (PH / 2 - PADDLE_H / 2) * 0.3;
+      // Yuki: slow, drifts to center, only tracks when ball is close
+      if (ballComingToAI && b.x > PW * 0.4) {
+        pong.aiTarget = aiTargetY * 0.6 + (PH / 2 - PADDLE_H / 2) * 0.4;
+      } else {
+        pong.aiTarget = PH / 2 - PADDLE_H / 2; // hang out near center
+      }
     } else {
-      // Hana: aggressive tracking
-      pong.aiTarget = aiTargetY;
+      // Hana: tracks ball but only when coming toward her
+      if (ballComingToAI) {
+        pong.aiTarget = aiTargetY;
+      } else {
+        pong.aiTarget = ai.y * 0.8 + (PH / 2 - PADDLE_H / 2) * 0.2; // slow drift center
+      }
     }
 
+    var aiSpeedNow = (pong.aiSpeed + dayBonus) * 3.5;
     var aiDiff = pong.aiTarget - ai.y;
-    var aiMaxSpeed = pong.aiSpeed * 5;
-    if (Math.abs(aiDiff) > pong.aiReact * PH) {
-      ai.y += Math.sign(aiDiff) * Math.min(Math.abs(aiDiff) * pong.aiSpeed, aiMaxSpeed);
+    var deadZone = pong.aiReact * PH;
+    if (Math.abs(aiDiff) > deadZone) {
+      ai.y += Math.sign(aiDiff) * Math.min(Math.abs(aiDiff) * 0.08, aiSpeedNow);
     }
     ai.y = Math.max(0, Math.min(PH - PADDLE_H, ai.y));
 
@@ -1022,10 +1051,10 @@
         b.y >= p.y && b.y <= p.y + p.h) {
       b.x = p.x + p.w + BALL_R;
       var hitPos = (b.y - p.y) / p.h - 0.5; // -0.5 to 0.5
-      b.speed = Math.min(b.speed + 0.2, 9);
+      b.speed = Math.min(b.speed + 0.15, 7);
       b.vx = Math.cos(hitPos * 1.2) * b.speed;
       b.vy = Math.sin(hitPos * 1.2) * b.speed;
-      if (b.vx < 1) b.vx = 1;
+      if (b.vx < 1.5) b.vx = 1.5;
       pong.rally++;
       pongSpawnHit(p.x + p.w, b.y);
       if (typeof HSAudio !== 'undefined') HSAudio.hit();
@@ -1036,10 +1065,10 @@
         b.y >= ai.y && b.y <= ai.y + ai.h) {
       b.x = ai.x - BALL_R;
       var hitPos2 = (b.y - ai.y) / ai.h - 0.5;
-      b.speed = Math.min(b.speed + 0.15, 9);
+      b.speed = Math.min(b.speed + 0.1, 7);
       b.vx = -Math.cos(hitPos2 * 1.2) * b.speed;
       b.vy = Math.sin(hitPos2 * 1.2) * b.speed;
-      if (b.vx > -1) b.vx = -1;
+      if (b.vx > -1.5) b.vx = -1.5;
       pong.rally++;
       pongSpawnHit(ai.x, b.y);
       if (typeof HSAudio !== 'undefined') HSAudio.hit();

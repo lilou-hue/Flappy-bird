@@ -506,29 +506,36 @@ body {
 }
 
 /* ═══ RESULTS SCREEN ═══ */
+#resultsScreen {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  justify-content: safe center;
+}
 .results-card {
   background: #fff;
   border-radius: var(--radius-lg);
   border: 2px solid rgba(0,0,0,0.05);
-  padding: 28px 32px;
+  padding: 20px 24px;
   text-align: center;
-  max-width: 420px;
+  max-width: 400px;
   width: 100%;
   box-shadow: 0 8px 32px var(--shadow);
+  flex-shrink: 0;
 }
 .results-card canvas {
   border-radius: 50%;
   border: 3px solid #fff;
   box-shadow: 0 3px 12px var(--shadow);
-  margin-bottom: 12px;
+  margin-bottom: 8px;
+  width: 80px; height: 100px;
 }
 .results-title {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 800;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 .results-rating {
-  font-size: 32px;
+  font-size: 26px;
   margin-bottom: 4px;
 }
 .results-scoreline {
@@ -596,6 +603,9 @@ body {
 /* ═══ ENDING SCREEN ═══ */
 #endingScreen {
   background: linear-gradient(135deg, #fff5f7 0%, #f8f0ff 50%, #f0f4ff 100%);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  justify-content: safe center;
 }
 .ending-card {
   display: flex;
