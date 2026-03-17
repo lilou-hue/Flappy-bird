@@ -449,6 +449,7 @@
     shakeAmount = 0;
     shopOpen = false;
     skinsOpen = false;
+    cosmeticsOpen = false;
     shopScroll = 0;
     confirmRestart = false;
     sparkleTimer = 0;

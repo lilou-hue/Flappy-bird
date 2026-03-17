@@ -361,8 +361,11 @@ if (skinButton) {
 // ── State ────────────────────────────────────────────────
 let state;
 
+var _prGeneration = 0;
 function initState() {
+  _prGeneration++;
   state = {
+    generation: _prGeneration,
     phase: "start",
     lastTime: 0,
 
@@ -767,7 +770,7 @@ function gameOver() {
   // Persist stats for skin unlocks
   try {
     localStorage.setItem('prTotalCoins', (parseInt(localStorage.getItem('prTotalCoins') || '0', 10) + state.totalCoins));
-    localStorage.setItem('prPoliceEvasions', Math.max(parseInt(localStorage.getItem('prPoliceEvasions') || '0', 10), state.policeEvaded));
+    localStorage.setItem('prPoliceEvasions', parseInt(localStorage.getItem('prPoliceEvasions') || '0', 10) + state.policeEvaded);
   } catch (_) {}
 
   if (typeof Leaderboard !== 'undefined' && state.score > 0) {
@@ -1186,7 +1189,8 @@ function update(dt) {
     spawnTraffic();
     // Sometimes spawn pairs (only later in the game)
     if (Math.random() < 0.2 && state.distance > 600) {
-      setTimeout(() => { if (state.phase === "playing") spawnTraffic(); }, 350);
+      const gen = state.generation;
+      setTimeout(() => { if (state.generation === gen && state.phase === "playing") spawnTraffic(); }, 350);
     }
   }
 

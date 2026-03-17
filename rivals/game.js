@@ -276,14 +276,25 @@ canvas.addEventListener('click', function(e) {
 /* ── P1/P2 Input Mapping ──────────────────────────────────────── */
 function updateInputs() {
   if (p1) {
-    p1.input.left = keys['a'] || keys['A'] || keys['ArrowLeft'] || touchState.p1.left;
-    p1.input.right = keys['d'] || keys['D'] || keys['ArrowRight'] || touchState.p1.right;
-    p1.input.up = keys['w'] || keys['W'] || keys[' '] || keys['ArrowUp'] || touchState.p1.up;
-    p1.input.down = keys['s'] || keys['S'] || keys['ArrowDown'] || touchState.p1.down;
-    p1.input.shoot = keys['f'] || keys['F'] || keys['j'] || keys['J'] || touchState.p1.shoot;
-    p1.input.switchWeapon = keys['r'] || keys['R'];
-    p1.input.useUtility = keys['g'] || keys['G'];
-    p1.input.dash = keys['Shift'] || keys['e'] || keys['E'];
+    if (numPlayers === 2 && inputMode === 'keyboard') {
+      p1.input.left = keys['a'] || keys['A'] || touchState.p1.left;
+      p1.input.right = keys['d'] || keys['D'] || touchState.p1.right;
+      p1.input.up = keys['w'] || keys['W'] || keys[' '] || touchState.p1.up;
+      p1.input.down = keys['s'] || keys['S'] || touchState.p1.down;
+      p1.input.shoot = keys['f'] || keys['F'] || keys['j'] || keys['J'] || touchState.p1.shoot;
+      p1.input.switchWeapon = keys['r'] || keys['R'];
+      p1.input.useUtility = keys['g'] || keys['G'];
+      p1.input.dash = keys['e'] || keys['E'];
+    } else {
+      p1.input.left = keys['a'] || keys['A'] || keys['ArrowLeft'] || touchState.p1.left;
+      p1.input.right = keys['d'] || keys['D'] || keys['ArrowRight'] || touchState.p1.right;
+      p1.input.up = keys['w'] || keys['W'] || keys[' '] || keys['ArrowUp'] || touchState.p1.up;
+      p1.input.down = keys['s'] || keys['S'] || keys['ArrowDown'] || touchState.p1.down;
+      p1.input.shoot = keys['f'] || keys['F'] || keys['j'] || keys['J'] || touchState.p1.shoot;
+      p1.input.switchWeapon = keys['r'] || keys['R'];
+      p1.input.useUtility = keys['g'] || keys['G'];
+      p1.input.dash = keys['Shift'] || keys['e'] || keys['E'];
+    }
   }
   if (p2 && numPlayers === 2) {
     if (inputMode === 'keyboard') {
@@ -301,12 +312,6 @@ function updateInputs() {
       p2.input.up = touchState.p2.up;
       p2.input.down = touchState.p2.down;
       p2.input.shoot = touchState.p2.shoot;
-    }
-    if (inputMode === 'keyboard' && numPlayers === 2) {
-      p1.input.left = keys['a'] || keys['A'] || touchState.p1.left;
-      p1.input.right = keys['d'] || keys['D'] || touchState.p1.right;
-      p1.input.up = keys['w'] || keys['W'] || keys[' '] || touchState.p1.up;
-      p1.input.down = keys['s'] || keys['S'] || touchState.p1.down;
     }
   }
 }

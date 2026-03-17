@@ -372,6 +372,10 @@
       .rivals-preview      { background: linear-gradient(180deg, #0a0c14, #0d1117, #0a0c14); }
       .gravity-garden-preview { background: linear-gradient(180deg, #060818, #0c1030, #040610); }
       .lso-preview { background: linear-gradient(180deg, #0f0c29, #302b63, #24243e); }
+      .the-deep-preview { background: linear-gradient(180deg, #001220, #002040, #000a14); }
+      .spend-preview { background: linear-gradient(180deg, #0a1a0a, #142814, #0a1a0a); }
+      .life-weeks-preview { background: linear-gradient(180deg, #1a1a2e, #16213e, #0f3460); }
+      .art-nothing-preview { background: linear-gradient(180deg, #1a1020, #241530, #1a1020); }
 
       .flappy-tag    { background: rgba(123,228,149,0.12); color: #7be495; border: 1px solid rgba(123,228,149,0.2); }
       .methane-tag   { background: rgba(23,205,211,0.12); color: #17cdd3; border: 1px solid rgba(23,205,211,0.2); }
@@ -2784,7 +2788,7 @@
       (function() {
         const bestKeys = [
           'flappyBest', 'methaneDriftBest', 'snakeBest', 'luminaBest',
-          'phantomRoadBest', 'unicorn', 'tetrisBest', 'gunGameBest', 'astroMinerBest', 'starFuryBest', 'inkognitoBest', null,
+          'phantomRoadBest', 'unicorn', 'tetrisBest', 'gunGameBest', 'astroMinerBest', 'starFuryBest', 'inkognitoBest', 'dressUpBest',
           'stackTowerBest', 'neonPongBest', 'beatDropBest', 'rivalsBest', 'gravityGardenBest',
           null, null, null, 'lastSeenOnlineBest', 'artOfDoingNothingBest'
         ];
@@ -2869,24 +2873,10 @@
           combinedBest += Math.floor(Number(ucSave.lifetimeSP) || 0);
         } catch(e) {}
 
-        const today = new Date().toISOString().split('T')[0];
         let streakData;
         try {
           streakData = JSON.parse(localStorage.getItem('arcade_playStreak') || '{}');
         } catch(e) { streakData = {}; }
-
-        if (streakData.lastDate === today) {
-          // Already visited today
-        } else {
-          const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-          if (streakData.lastDate === yesterday) {
-            streakData.streak = (streakData.streak || 0) + 1;
-          } else {
-            streakData.streak = 1;
-          }
-          streakData.lastDate = today;
-          try { localStorage.setItem('arcade_playStreak', JSON.stringify(streakData)); } catch(e) {}
-        }
 
         const streak = streakData.streak || 1;
 

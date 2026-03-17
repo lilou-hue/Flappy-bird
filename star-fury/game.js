@@ -1756,7 +1756,9 @@ function loadBestScore() {
   }
 }
 function saveBestScore() {
+  game.wasNewBest = false;
   if (game.score > game.best) {
+    game.wasNewBest = true;
     game.best = game.score;
     bestScoreLabel.textContent = game.best;
     localStorage.setItem('starFuryBest', String(game.best));
@@ -1907,7 +1909,7 @@ function drawHUD() {
 /* ══════════════════════════════════════════════════════════════════
    TITLE SCREEN
    ══════════════════════════════════════════════════════════════════ */
-function drawTitleScreen() {
+function drawTitleScreen(titleDt) {
   game.titlePulse += 0.02;
 
   /* Background starfield already drawn */
@@ -1915,8 +1917,8 @@ function drawTitleScreen() {
   /* Animated floating debris/asteroid silhouettes */
   ctx.save();
   for (const d of titleDebris) {
-    d.y += d.speed * 0.016; // approximate dt
-    d.rot += d.rotSpeed * 0.016;
+    d.y += d.speed * titleDt;
+    d.rot += d.rotSpeed * titleDt;
     if (d.y > GAME_H + 20) { d.y = -20; d.x = Math.random() * GAME_W; }
     ctx.save();
     ctx.translate(d.x, d.y);
@@ -2058,7 +2060,7 @@ function drawGameOverScreen() {
   ctx.font = '13px "Trebuchet MS", sans-serif';
   ctx.fillText(I18N.t('sfWave') + ': ' + game.wave, GAME_W / 2, GAME_H * 0.52);
 
-  if (game.score >= game.best && game.score > 0) {
+  if (game.wasNewBest && game.score > 0) {
     ctx.save();
     ctx.shadowBlur = 10;
     ctx.shadowColor = '#ffcc00';
@@ -2110,7 +2112,7 @@ function draw() {
   if (debrisBelt.length > 0) drawDebrisBelt();
 
   if (game.state === 'title') {
-    drawTitleScreen();
+    drawTitleScreen(dt);
   } else if (game.state === 'playing') {
     drawPowerups();
     drawEnemyBullets();

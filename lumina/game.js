@@ -1500,9 +1500,14 @@
     c.fillStyle = g; c.fillRect(0,0,CFG.W,CFG.H);
   }
 
+  var _chromSnap = document.createElement('canvas');
+  _chromSnap.width = CFG.W; _chromSnap.height = CFG.H;
+  var _chromCtx = _chromSnap.getContext('2d');
   function drawChromaticAberration(c) {
+    _chromCtx.clearRect(0, 0, CFG.W, CFG.H);
+    _chromCtx.drawImage(canvas, 0, 0);
     c.globalCompositeOperation = "lighter"; c.globalAlpha = 0.06;
-    c.drawImage(canvas, chromAb, 0); c.drawImage(canvas, -chromAb, 0);
+    c.drawImage(_chromSnap, chromAb, 0); c.drawImage(_chromSnap, -chromAb, 0);
     c.globalAlpha = 1; c.globalCompositeOperation = "source-over";
   }
 

@@ -277,8 +277,9 @@ const loadBestScore = () => {
 };
 
 const saveBestScore = () => {
-  if (gameState.score > gameState.best) {
-    gameState.best = gameState.score;
+  const totalScore = gameState.score + gunState.totalDestroyed * 2;
+  if (totalScore > gameState.best) {
+    gameState.best = totalScore;
     bestScoreLabel.textContent = gameState.best;
     window.localStorage.setItem("gunGameBest", String(gameState.best));
   }
@@ -1991,8 +1992,8 @@ const update = (deltaSeconds) => {
   }
 
   if (gameState.shakeTimer > 0) {
-    gameState.shakeTimer -= 1;
-    gameState.shakeIntensity *= 0.82;
+    gameState.shakeTimer -= deltaSeconds;
+    gameState.shakeIntensity *= Math.pow(0.82, deltaSeconds * 60);
   }
 };
 

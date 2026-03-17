@@ -832,6 +832,9 @@
       state.lockResets = 0;
       state.isLanding = false;
       state.dropAccumulator = 0;
+      if (!isValid(swap, 0, 0, spawnCol)) {
+        triggerGameOver();
+      }
     }
     state.holdUsed = true;
   }
@@ -870,7 +873,9 @@
     Audio.stopDrone();
     state.shakeTimer = 15;
     state.shakeIntensity = 8;
+    state.wasNewBest = false;
     if (state.score > state.best) {
+      state.wasNewBest = true;
       state.best = state.score;
       localStorage.setItem("tetrisBest", String(state.best));
     }
@@ -1292,6 +1297,7 @@
     const m = Audio.toggle();
     muteBtn.textContent = m ? "\u{1F507}" : "\u{1F50A}";
     state.muted = m;
+    localStorage.setItem("tetrisMuted", String(m));
   });
 
   restartBtn.addEventListener("click", () => {
@@ -1956,7 +1962,7 @@
         CH / 2 + 24
       );
 
-      if (state.score === state.best && state.score > 0) {
+      if (state.wasNewBest && state.score > 0) {
         ctx2d.fillStyle = "#ffd700";
         ctx2d.font = '700 16px "Trebuchet MS", system-ui, sans-serif';
         ctx2d.fillText("New Best!", CW / 2, CH / 2 + 52);

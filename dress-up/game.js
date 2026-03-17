@@ -47,7 +47,7 @@ let challengeInterval = null;
 let currentChallengeTheme = null;
 let colorCycleCount = {};
 
-const CATEGORIES = ['top','bottom','dress','shoes','accessory','background'];
+const CATEGORIES = ['hair','top','bottom','dress','shoes','accessory','background'];
 const SAVE_KEY = 'dressUpOutfits';
 const ACHIEVE_KEY = 'dressUpAchievements';
 const STATS_KEY = 'dressUpStats';
@@ -6823,7 +6823,7 @@ const ACHIEVE_DEFS = [
   { id:'challenge_10',  icon:'👑', title:'Style Master',       desc:'Complete 10 challenges' },
   { id:'all_categories',icon:'📦', title:'Category Explorer',  desc:'Use one item from every category' },
   { id:'color_lover',   icon:'🎨', title:'Color Lover',        desc:'Cycle through all color variants' },
-  { id:'high_scorer',   icon:'💎', title:'Top Model',          desc:'Score 28+ on a single challenge' },
+  { id:'high_scorer',   icon:'💎', title:'Top Model',          desc:'Score 35+ on a single challenge' },
 ];
 
 function checkAchievement(id) {

@@ -739,6 +739,7 @@ function getAudio() {
   if (!audioCtx) {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     masterGain = audioCtx.createGain();
+    masterGain.gain.setValueAtTime(state.muted ? 0 : 1, audioCtx.currentTime);
     masterGain.connect(audioCtx.destination);
   }
   if (audioCtx.state === "suspended") audioCtx.resume();

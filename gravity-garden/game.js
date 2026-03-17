@@ -414,8 +414,8 @@ function plantPlanet(x, y, vx, vy) {
   if (dist < sun.radius + 10) return; // Too close to sun
 
   const typeDef = OBJ_TYPES[selectedType];
-  const mass = typeDef.mass[0] + Math.random() * typeDef.mass[1];
-  const radius = typeDef.radius[0] + Math.random() * typeDef.radius[1];
+  const mass = typeDef.mass[0] + Math.random() * (typeDef.mass[1] - typeDef.mass[0]);
+  const radius = typeDef.radius[0] + Math.random() * (typeDef.radius[1] - typeDef.radius[0]);
 
   // Type-specific hue
   let hue;

@@ -136,6 +136,8 @@ function loadData() {
     stats.totalCrystals = Number(saved.totalCrystals) || 0;
     stats.totalGravTransitions = Number(saved.totalGravTransitions) || 0;
     stats.blackHoleEscapes = Number(saved.blackHoleEscapes) || 0;
+    stats.longestTime = Number(saved.longestTime) || 0;
+    stats.noJetpackScore = Number(saved.noJetpackScore) || 0;
     stats.bestScore = bestScore;
   } catch (e) { achUnlocked = []; }
 }
@@ -148,6 +150,8 @@ function saveData() {
       totalCrystals: stats.totalCrystals,
       totalGravTransitions: stats.totalGravTransitions,
       blackHoleEscapes: stats.blackHoleEscapes,
+      longestTime: stats.longestTime,
+      noJetpackScore: stats.noJetpackScore,
     }));
   } catch (e) { /* storage full */ }
 }

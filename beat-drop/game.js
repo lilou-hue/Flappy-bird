@@ -610,7 +610,7 @@ function update(dt) {
   for (let i = notes.length - 1; i >= 0; i--) {
     const n = notes[i];
     if (n.hit) { notes.splice(i, 1); continue; }
-    n.y += noteSpeed;
+    n.y += noteSpeed * dt * 60;
 
     // Check for miss
     if (!n.missed && n.y > STRIKE_Y + MISS_PX) {

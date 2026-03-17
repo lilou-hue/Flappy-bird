@@ -369,6 +369,7 @@
   let state = STATES.MENU;
   let score = 0;
   let bestScore = Number(localStorage.getItem('inkognitoBest')) || 0;
+  let wasNewBest = false;
   let round = 0;
   let targetWord = '';
   let timer = 0;
@@ -1131,7 +1132,9 @@
   function endGame() {
     state = STATES.GAME_OVER;
     gameOverFlash = 1.0; gameOverRingRadius = 0; gameOverRingAlpha = 0.8;
+    wasNewBest = false;
     if (score > bestScore) {
+      wasNewBest = true;
       bestScore = score;
       localStorage.setItem('inkognitoBest', bestScore);
       bestEl.textContent = bestScore;
@@ -1655,7 +1658,7 @@
     ctx.fillStyle = PAL.textDim;
     ctx.fillText('Best: ' + bestScore, CFG.W / 2, 280);
 
-    if (score > bestScore && score > 0) {
+    if (wasNewBest && score > 0) {
       ctx.font = 'bold 20px "Trebuchet MS", system-ui, sans-serif';
       ctx.fillStyle = '#ffd700';
       ctx.fillText('\u2B50 NEW BEST! \u2B50', CFG.W / 2, 310);
