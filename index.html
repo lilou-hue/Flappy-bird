@@ -771,6 +771,17 @@
           <span class="card-tag" style="background:rgba(88,86,214,0.15);color:#5856d6">Story</span>
         </div>
       </a>
+
+      <a href="/art-of-doing-nothing/" class="game-card">
+        <div class="card-preview art-nothing-preview">
+          <canvas id="artNothingCanvas" width="360" height="200"></canvas>
+        </div>
+        <div class="card-body">
+          <h2 data-i18n="artNothingTitle">The Art of Doing Nothing</h2>
+          <p data-i18n="artNothingDesc">A narrative game about procrastination and the sloth inside your head.</p>
+          <span class="card-tag" style="background:rgba(196,169,125,0.15);color:#C4A97D">Story</span>
+        </div>
+      </a>
     </div>
 
     <footer class="footer">
@@ -2695,6 +2706,72 @@
         draw();
       })();
 
+      /* ─ Art of Doing Nothing Preview ─ */
+      (function() {
+        var c = document.getElementById('artNothingCanvas');
+        if (!c) return;
+        var x = c.getContext('2d');
+        var t = 0;
+        var zParticles = [];
+        function draw() {
+          t += 0.016;
+          // Purple gradient bg
+          var bg = x.createLinearGradient(0,0,0,H);
+          bg.addColorStop(0,'#2D1B4E'); bg.addColorStop(1,'#1a1025');
+          x.fillStyle = bg; x.fillRect(0,0,W,H);
+          // Stars
+          x.fillStyle = 'rgba(255,255,255,0.3)';
+          for (var i=0;i<15;i++){
+            var sx=(i*67+t*3)%W, sy=(i*41)%(H*0.5);
+            x.globalAlpha=0.15+Math.sin(t*2+i)*0.1;
+            x.fillRect(sx,sy,1.5,1.5);
+          }
+          x.globalAlpha=1;
+          // Sloth body
+          var sy=H*0.5+Math.sin(t*1.5)*3;
+          x.fillStyle='#8B7355';
+          x.beginPath(); x.ellipse(W*0.4,sy,22,28,0,0,Math.PI*2); x.fill();
+          x.fillStyle='#D4C5A9';
+          x.beginPath(); x.ellipse(W*0.4,sy+4,13,16,0,0,Math.PI*2); x.fill();
+          // Head
+          x.fillStyle='#8B7355';
+          x.beginPath(); x.arc(W*0.4,sy-24,18,0,Math.PI*2); x.fill();
+          x.fillStyle='#D4C5A9';
+          x.beginPath(); x.ellipse(W*0.4,sy-22,14,12,0,0,Math.PI*2); x.fill();
+          // Eye patches
+          x.fillStyle='#5C4A3A';
+          x.beginPath(); x.ellipse(W*0.4-7,sy-26,6,5,-0.1,0,Math.PI*2); x.fill();
+          x.beginPath(); x.ellipse(W*0.4+7,sy-26,6,5,0.1,0,Math.PI*2); x.fill();
+          // Sleepy eyes (half closed)
+          x.fillStyle='#fff';
+          x.beginPath(); x.ellipse(W*0.4-7,sy-26,3.5,2,0,0,Math.PI*2); x.fill();
+          x.beginPath(); x.ellipse(W*0.4+7,sy-26,3.5,2,0,0,Math.PI*2); x.fill();
+          x.fillStyle='#1a1a1a';
+          x.beginPath(); x.arc(W*0.4-7,sy-25.5,1.5,0,Math.PI*2); x.fill();
+          x.beginPath(); x.arc(W*0.4+7,sy-25.5,1.5,0,Math.PI*2); x.fill();
+          // Smile
+          x.strokeStyle='#3A2A1A'; x.lineWidth=1.5; x.lineCap='round';
+          x.beginPath(); x.moveTo(W*0.4-4,sy-18); x.quadraticCurveTo(W*0.4,sy-14,W*0.4+4,sy-18); x.stroke();
+          // Z particles
+          if(Math.random()<0.03) zParticles.push({x:W*0.4+10,y:sy-40,vy:-0.4,life:1,s:8+Math.random()*6});
+          x.font='bold 10px sans-serif'; x.fillStyle='#C4A97D';
+          for(var p=zParticles.length-1;p>=0;p--){
+            var pt=zParticles[p]; pt.y+=pt.vy; pt.x+=0.2; pt.life-=0.008;
+            if(pt.life<=0){zParticles.splice(p,1);continue;}
+            x.globalAlpha=pt.life*0.5;
+            x.font='bold '+Math.round(pt.s)+'px sans-serif';
+            x.fillText('z',pt.x,pt.y);
+          }
+          x.globalAlpha=1;
+          // Title
+          x.fillStyle='#C4A97D'; x.font='bold 13px "Space Grotesk",sans-serif'; x.textAlign='center';
+          x.fillText('The Art of Doing Nothing',W/2,H-16);
+          x.textAlign='left';
+          requestAnimationFrame(draw);
+        }
+        draw();
+      })();
+
     })();
     </script>
     <script src="i18n.js"></script>
@@ -2707,13 +2784,15 @@
       (function() {
         const bestKeys = [
           'flappyBest', 'methaneDriftBest', 'snakeBest', 'luminaBest',
-          'phantomRoadBest', null, 'tetrisBest', 'gunGameBest', 'astroMinerBest', 'starFuryBest', 'inkognitoBest', null,
-          'stackTowerBest', 'neonPongBest', 'beatDropBest', null, 'gravityGardenBest'
+          'phantomRoadBest', 'unicorn', 'tetrisBest', 'gunGameBest', 'astroMinerBest', 'starFuryBest', 'inkognitoBest', null,
+          'stackTowerBest', 'neonPongBest', 'beatDropBest', 'rivalsBest', 'gravityGardenBest',
+          null, null, null, 'lastSeenOnlineBest', 'artOfDoingNothingBest'
         ];
         const cards = document.querySelectorAll('.game-card');
         cards.forEach((card, i) => {
           const key = bestKeys[i];
-          if (!key) {
+          if (!key) return;
+          if (key === 'unicorn') {
             try {
               const save = JSON.parse(localStorage.getItem('unicornClickerSave') || '{}');
               const sp = Number(save.lifetimeSP) || 0;
@@ -2753,13 +2832,15 @@
           { key: 'astroMinerAch', total: 0 },
           { key: 'starFuryAch', total: 0 },
           { key: 'inkognitoAch', total: 0 },
+          { key: 'dressUpAchievements', total: 0 },
           { key: 'stackTowerAch', total: 0 },
           { key: 'neonPongAch', total: 0 },
           { key: 'beatDropAch', total: 0 },
+          { key: 'rivalsAch', total: 0 },
           { key: 'gravityGardenAch', total: 0 },
         ];
 
-        const gameNames = ['Flappy Bird', 'Methane Drift', 'Snake', 'Lumina', 'Phantom Road', 'Unicorn Clicker', 'Tetris', 'Gun Game', 'Astro Miner', 'Star Fury', 'Inkognito', 'Dress-Up', 'Stack Tower', 'Neon Pong', 'Beat Drop', 'Gravity Garden'];
+        const gameNames = ['Flappy Bird', 'Methane Drift', 'Snake', 'Lumina', 'Phantom Road', 'Unicorn Clicker', 'Tetris', 'Gun Game', 'Astro Miner', 'Star Fury', 'Inkognito', 'Dress-Up', 'Stack Tower', 'Neon Pong', 'Beat Drop', 'Rivals', 'Gravity Garden'];
 
         let totalAch = 0;
         let maxPlayed = 0;
@@ -2778,7 +2859,7 @@
           } catch(e) {}
         }
 
-        const bestKeys = ['flappyBest', 'methaneDriftBest', 'snakeBest', 'luminaBest', 'phantomRoadBest', 'tetrisBest', 'gunGameBest', 'astroMinerBest', 'starFuryBest', 'inkognitoBest', 'stackTowerBest', 'neonPongBest', 'beatDropBest', 'gravityGardenBest'];
+        const bestKeys = ['flappyBest', 'methaneDriftBest', 'snakeBest', 'luminaBest', 'phantomRoadBest', 'tetrisBest', 'gunGameBest', 'astroMinerBest', 'starFuryBest', 'inkognitoBest', 'stackTowerBest', 'neonPongBest', 'beatDropBest', 'gravityGardenBest', 'artOfDoingNothingBest'];
         let combinedBest = 0;
         for (const key of bestKeys) {
           combinedBest += Number(localStorage.getItem(key)) || 0;

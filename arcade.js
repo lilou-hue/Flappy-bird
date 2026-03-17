@@ -25,6 +25,7 @@
     'rivals':         { name: 'Rivals',              bestKey: 'rivalsBest',       thresholds: [5, 15, 30] },
     'gravity-garden': { name: 'Gravity Garden',      bestKey: 'gravityGardenBest',thresholds: [50, 200, 500] },
     'last-seen-online': { name: 'Last Seen Online',  bestKey: 'lastSeenOnlineBest', thresholds: [30, 60, 90] },
+    'art-of-doing-nothing': { name: 'The Art of Doing Nothing', bestKey: 'artOfDoingNothingBest', thresholds: [100, 300, 500] },
   };
 
   const GAME_IDS = Object.keys(GAMES);
@@ -34,7 +35,7 @@
     { id: 'first_steps',       name: 'First Steps',       desc: 'Play your first game',           icon: '👶', reward: 10 },
     { id: 'getting_hooked',    name: 'Getting Hooked',     desc: 'Play 5 games',                   icon: '🎣', reward: 25 },
     { id: 'arcade_rat',        name: 'Arcade Rat',         desc: 'Play 50 games',                  icon: '🐀', reward: 100 },
-    { id: 'explorer',          name: 'Explorer',           desc: 'Try all 16 games',               icon: '🧭', reward: 75 },
+    { id: 'explorer',          name: 'Explorer',           desc: 'Try all games',                  icon: '🧭', reward: 75 },
     { id: 'coin_collector',    name: 'Coin Collector',     desc: 'Earn 500 total coins',           icon: '🪙', reward: 50 },
     { id: 'big_spender',       name: 'Big Spender',        desc: 'Earn 2000 total coins',          icon: '💰', reward: 100 },
     { id: 'hat_trick',         name: 'Hat Trick',          desc: '3-day play streak',              icon: '🎩', reward: 30 },
@@ -173,7 +174,7 @@
       first_steps:        s.totalGamesPlayed >= 1,
       getting_hooked:     s.totalGamesPlayed >= 5,
       arcade_rat:         s.totalGamesPlayed >= 50,
-      explorer:           s.uniqueGamesPlayed.length >= 16,
+      explorer:           s.uniqueGamesPlayed.length >= GAME_IDS.length,
       coin_collector:     s.totalCoinsEarned >= 500,
       big_spender:        s.totalCoinsEarned >= 2000,
       hat_trick:          streak.streak >= 3,
