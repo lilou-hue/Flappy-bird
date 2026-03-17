@@ -1,4 +1,4 @@
-const CACHE_NAME = 'slayplay-v9';
+const CACHE_NAME = 'slayplay-v10';
 
 const PRECACHE_URLS = [
   '/',
@@ -73,6 +73,9 @@ const PRECACHE_URLS = [
   '/rivals/game.js',
   '/rivals/audio.js',
   '/rivals/styles.css',
+  '/gravity-garden/',
+  '/gravity-garden/game.js',
+  '/gravity-garden/styles.css',
   '/the-deep/',
   '/the-deep/game.js',
   '/the-deep/styles.css',
@@ -82,6 +85,21 @@ const PRECACHE_URLS = [
   '/life-in-weeks/',
   '/life-in-weeks/game.js',
   '/life-in-weeks/styles.css',
+  '/last-seen-online/',
+  '/last-seen-online/game.js',
+  '/last-seen-online/styles.css',
+  '/art-of-doing-nothing/',
+  '/art-of-doing-nothing/state.js',
+  '/art-of-doing-nothing/dialogue-engine.js',
+  '/art-of-doing-nothing/characters.js',
+  '/art-of-doing-nothing/audio.js',
+  '/art-of-doing-nothing/game.js',
+  '/art-of-doing-nothing/styles.css',
+  '/art-of-doing-nothing/scenes/chapter1.js',
+  '/art-of-doing-nothing/scenes/chapter2.js',
+  '/art-of-doing-nothing/scenes/chapter3.js',
+  '/art-of-doing-nothing/scenes/chapter4.js',
+  '/art-of-doing-nothing/scenes/chapter5.js',
 ];
 
 const NETWORK_FIRST_HOSTS = [
