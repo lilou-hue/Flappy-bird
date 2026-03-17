@@ -390,7 +390,7 @@ const SKINS = {
     },
   },
   dragon: {
-    name: "Dragon",
+    name: _t('skinDragon') || "Dragon",
     premium: true,
     drawHead(cx, cy, half, headSize, dir) {
       const grad = ctx.createRadialGradient(cx - 2, cy - 2, 2, cx, cy, half);
@@ -2076,7 +2076,7 @@ function drawComboText() {
   ctx.shadowBlur = 12;
   ctx.shadowColor = "rgba(255,200,0,0.8)";
   ctx.fillStyle = "#ffcc00";
-  ctx.fillText("COMBO x3!", 0, 0);
+  ctx.fillText(_t('snakeComboX3') || "COMBO x3!", 0, 0);
   ctx.restore();
 }
 
@@ -2397,7 +2397,7 @@ muteButton.addEventListener("click", () => { toggleMute(); });
 if (shrinkModeButton) {
   shrinkModeButton.addEventListener("click", () => {
     state.shrinkMode = !state.shrinkMode;
-    shrinkModeButton.textContent = state.shrinkMode ? "Shrink: ON" : "Shrink";
+    shrinkModeButton.textContent = state.shrinkMode ? (_t('snakeShrinkOn') || "Shrink: ON") : (_t('snakeShrinkMode') || "Shrink");
     resetGame();
   });
 }

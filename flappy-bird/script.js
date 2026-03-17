@@ -19,14 +19,14 @@ window.addEventListener('langchange', () => {
 
 /* ── Achievements ────────────────────────────────────────── */
 const FB_ACHIEVEMENTS = [
-  { id: 'first_flight',  icon: '\u2708\uFE0F', title: 'First Flight',   desc: 'Pass your first pipe',     check: s => s.bestScore >= 1 },
-  { id: 'score_10',      icon: '\uD83D\uDD1F', title: 'Double Digits',  desc: 'Score 10 in one game',     check: s => s.bestScore >= 10 },
-  { id: 'score_25',      icon: '\uD83D\uDE80', title: 'High Flyer',     desc: 'Score 25 in one game',     check: s => s.bestScore >= 25 },
-  { id: 'score_50',      icon: '\uD83D\uDC51', title: 'Sky King',       desc: 'Score 50 in one game',     check: s => s.bestScore >= 50 },
-  { id: 'flap_500',      icon: '\uD83D\uDCAA', title: 'Flap Master',    desc: 'Flap 500 times total',     check: s => s.totalFlaps >= 500 },
-  { id: 'games_10',      icon: '\uD83C\uDFAE', title: 'Dedicated',      desc: 'Play 10 games',            check: s => s.gamesPlayed >= 10 },
-  { id: 'night_owl',     icon: '\uD83E\uDD89', title: 'Night Owl',      desc: 'Reach score 40+',          check: s => s.bestScore >= 40 },
-  { id: 'zen_master',    icon: '\uD83E\uDDD8', title: 'Zen Master',     desc: 'Survive 2 min in zen mode', check: s => s.zenMaster === true },
+  { id: 'first_flight',  icon: '\u2708\uFE0F', get title() { return I18N.t('fbAchFirstFlight') || 'First Flight'; },   get desc() { return I18N.t('fbAchFirstFlightDesc') || 'Pass your first pipe'; },     check: s => s.bestScore >= 1 },
+  { id: 'score_10',      icon: '\uD83D\uDD1F', get title() { return I18N.t('fbAchDoubleDigits') || 'Double Digits'; },  get desc() { return I18N.t('fbAchDoubleDigitsDesc') || 'Score 10 in one game'; },     check: s => s.bestScore >= 10 },
+  { id: 'score_25',      icon: '\uD83D\uDE80', get title() { return I18N.t('fbAchHighFlyer') || 'High Flyer'; },     get desc() { return I18N.t('fbAchHighFlyerDesc') || 'Score 25 in one game'; },     check: s => s.bestScore >= 25 },
+  { id: 'score_50',      icon: '\uD83D\uDC51', get title() { return I18N.t('fbAchSkyKing') || 'Sky King'; },       get desc() { return I18N.t('fbAchSkyKingDesc') || 'Score 50 in one game'; },     check: s => s.bestScore >= 50 },
+  { id: 'flap_500',      icon: '\uD83D\uDCAA', get title() { return I18N.t('fbAchFlapMaster') || 'Flap Master'; },    get desc() { return I18N.t('fbAchFlapMasterDesc') || 'Flap 500 times total'; },     check: s => s.totalFlaps >= 500 },
+  { id: 'games_10',      icon: '\uD83C\uDFAE', get title() { return I18N.t('fbAchDedicated') || 'Dedicated'; },      get desc() { return I18N.t('fbAchDedicatedDesc') || 'Play 10 games'; },            check: s => s.gamesPlayed >= 10 },
+  { id: 'night_owl',     icon: '\uD83E\uDD89', get title() { return I18N.t('fbNightOwl') || 'Night Owl'; },      get desc() { return I18N.t('fbNightOwlDesc') || 'Reach score 40+'; },          check: s => s.bestScore >= 40 },
+  { id: 'zen_master',    icon: '\uD83E\uDDD8', get title() { return I18N.t('fbZenMaster') || 'Zen Master'; },     get desc() { return I18N.t('fbZenMasterDesc') || 'Survive 2 min in zen mode'; }, check: s => s.zenMaster === true },
 ];
 
 let fbAchStats = { bestScore: 0, totalFlaps: 0, gamesPlayed: 0, zenMaster: false };
@@ -1694,7 +1694,7 @@ if (muteButton) {
 const zenModeButton = document.getElementById("zenModeButton");
 if (zenModeButton) {
   const updateZenLabel = () => {
-    zenModeButton.textContent = gameState.zenMode ? "Zen: ON" : "Zen";
+    zenModeButton.textContent = gameState.zenMode ? (I18N.t('fbZenModeOn') || "Zen: ON") : (I18N.t('fbZenMode') || "Zen");
   };
   zenModeButton.addEventListener("click", () => {
     gameState.zenMode = !gameState.zenMode;

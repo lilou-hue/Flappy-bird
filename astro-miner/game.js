@@ -629,7 +629,7 @@ function update(dt) {
 
   /* Update HUD gravity display */
   const gravLabels = { normal: t('amGravNormal', 'Normal'), low: t('amGravLow', 'Low-G'), high: t('amGravHigh', 'High-G') };
-  gravityNode.textContent = gravLabels[player.currentGravity] || 'Normal';
+  gravityNode.textContent = gravLabels[player.currentGravity] || t('amGravNormal', 'Normal');
 
   /* Update fuel bar */
   fuelBar.style.width = (player.fuel / CONFIG.fuelMax * 100) + '%';

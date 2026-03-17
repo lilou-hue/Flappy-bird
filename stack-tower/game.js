@@ -29,8 +29,8 @@ const THEMES = {
   sunset: { name: () => I18N.t('stThemeSunset') || 'Sunset', bg: '#2d1b3d', bg2: '#1a0a18', starColor: 'rgba(255,180,200,0.3)', blockSat: 60, blockLight: 68, accent: '#fd79a8' },
   ice:    { name: () => I18N.t('stThemeIce')    || 'Ice',    bg: '#1a1a2e', bg2: '#0a0a1e', starColor: 'rgba(162,155,254,0.3)', blockSat: 55, blockLight: 70, accent: '#a29bfe' },
   retro:  { name: () => I18N.t('stThemeRetro')  || 'Retro',  bg: '#2d1b2d', bg2: '#100a10', starColor: 'rgba(250,177,160,0.3)', blockSat: 65, blockLight: 60, accent: '#fab1a0' },
-  aurora: { name: () => 'Aurora', bg: '#0a1a2e', bg2: '#061018', starColor: 'rgba(100,255,218,0.3)', blockSat: 75, blockLight: 70, accent: '#64ffda', premium: true },
-  lava:   { name: () => 'Lava',   bg: '#2a0a0a', bg2: '#180404', starColor: 'rgba(255,100,50,0.3)',  blockSat: 80, blockLight: 60, accent: '#ff6432', premium: true },
+  aurora: { name: () => I18N.t('stThemeAurora') || 'Aurora', bg: '#0a1a2e', bg2: '#061018', starColor: 'rgba(100,255,218,0.3)', blockSat: 75, blockLight: 70, accent: '#64ffda', premium: true },
+  lava:   { name: () => I18N.t('stThemeLava') || 'Lava',   bg: '#2a0a0a', bg2: '#180404', starColor: 'rgba(255,100,50,0.3)',  blockSat: 80, blockLight: 60, accent: '#ff6432', premium: true },
 };
 
 const ST_PREMIUM_ITEMS = ['aurora', 'lava'];
@@ -557,7 +557,7 @@ function render() {
     ctx.font = 'bold 18px "Segoe UI", system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillStyle = `rgba(232, 67, 147, ${0.6 + Math.sin(time * 5) * 0.3})`;
-    ctx.fillText(`${perfectStreak}x PERFECT`, CW / 2, 40);
+    ctx.fillText(`${perfectStreak}x ${I18N.t('stPerfect') || 'PERFECT'}`, CW / 2, 40);
     ctx.restore();
   }
 

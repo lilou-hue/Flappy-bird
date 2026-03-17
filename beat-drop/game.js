@@ -47,8 +47,8 @@ const THEMES = {
   vapor:      { name: () => I18N.t('bdThemeVapor')      || 'Vapor',      bg: '#2d1b3d', bg2: '#1a0a28', laneBg: 'rgba(162,155,254,0.04)' },
   monochrome: { name: () => I18N.t('bdThemeMonochrome') || 'Monochrome', bg: '#1a1a2e', bg2: '#0a0a1e', laneBg: 'rgba(255,255,255,0.02)' },
   sakura:     { name: () => I18N.t('bdThemeSakura')     || 'Sakura',     bg: '#2d1020', bg2: '#1a0a18', laneBg: 'rgba(255,150,180,0.04)' },
-  midnight:   { name: () => 'Midnight',  bg: '#08081a', bg2: '#040410', laneBg: 'rgba(80,80,200,0.03)', premium: true },
-  tropical:   { name: () => 'Tropical',  bg: '#0a2018', bg2: '#061410', laneBg: 'rgba(0,255,150,0.03)', premium: true },
+  midnight:   { name: () => I18N.t('bdThemeMidnight') || 'Midnight',  bg: '#08081a', bg2: '#040410', laneBg: 'rgba(80,80,200,0.03)', premium: true },
+  tropical:   { name: () => I18N.t('bdThemeTropical') || 'Tropical',  bg: '#0a2018', bg2: '#061410', laneBg: 'rgba(0,255,150,0.03)', premium: true },
 };
 
 const BD_PREMIUM_ITEMS = ['midnight', 'tropical'];
@@ -789,7 +789,7 @@ function render() {
     ctx.fillStyle = '#e84393';
     ctx.shadowBlur = 20;
     ctx.shadowColor = '#e84393';
-    ctx.fillText(`${combo} COMBO!`, CW / 2, CH / 2);
+    ctx.fillText(`${combo} ${I18N.t('bdCombo') || 'COMBO!'}`, CW / 2, CH / 2);
     ctx.restore();
   }
 
@@ -806,7 +806,7 @@ function render() {
   ctx.font = '12px "Segoe UI", system-ui, sans-serif';
   ctx.textAlign = 'right';
   ctx.fillStyle = 'rgba(162,155,254,0.4)';
-  ctx.fillText(`${Math.round(bpm)} BPM`, CW - 10, 25);
+  ctx.fillText(`${Math.round(bpm)} ${I18N.t('bdBPM') || 'BPM'}`, CW - 10, 25);
 
   // Practice mode indicator
   if (practiceMode) {
@@ -845,7 +845,7 @@ function render() {
     ctx.fillText(I18N.t('beatDropTitle') || 'Beat Drop', CW / 2, CH / 2 - 30);
     ctx.font = '18px "Segoe UI", system-ui, sans-serif';
     ctx.fillStyle = 'rgba(232,67,147,0.6)';
-    ctx.fillText('D  F  J  K', CW / 2, CH / 2 + 10);
+    ctx.fillText(I18N.t('bdKeyGuide') || 'D  F  J  K', CW / 2, CH / 2 + 10);
     ctx.font = '14px "Segoe UI", system-ui, sans-serif';
     ctx.fillStyle = 'rgba(255,200,220,0.4)';
     ctx.fillText(I18N.t('tapToStart') || 'Tap or press any key to start', CW / 2, CH / 2 + 40);
