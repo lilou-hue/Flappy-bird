@@ -6,21 +6,21 @@
   var multiplier = 1;
 
   var items = [
-    { name: "Park Bench", emoji: "🪑", price: 500, qty: 0 },
-    { name: "Street Light", emoji: "🔦", price: 2000, qty: 0 },
-    { name: "Bus Stop", emoji: "🚏", price: 15000, qty: 0 },
-    { name: "Playground", emoji: "🛝", price: 50000, qty: 0 },
-    { name: "Public Library", emoji: "📚", price: 2000000, qty: 0 },
-    { name: "Fire Station", emoji: "🚒", price: 5000000, qty: 0 },
-    { name: "Community Pool", emoji: "🏊", price: 8000000, qty: 0 },
-    { name: "School", emoji: "🏫", price: 15000000, qty: 0 },
-    { name: "Hospital", emoji: "🏥", price: 50000000, qty: 0 },
-    { name: "Sports Stadium", emoji: "🏟️", price: 100000000, qty: 0 },
-    { name: "Metro Line", emoji: "🚇", price: 150000000, qty: 0 },
-    { name: "Concert Hall", emoji: "🎭", price: 200000000, qty: 0 },
-    { name: "University", emoji: "🎓", price: 300000000, qty: 0 },
-    { name: "Airport", emoji: "✈️", price: 500000000, qty: 0 },
-    { name: "Space Center", emoji: "🚀", price: 2000000000, qty: 0, alwaysUnaffordable: true }
+    { name: "Park Bench", emoji: "🪑", price: 500, qty: 0, i18nKey: "bcParkBench" },
+    { name: "Street Light", emoji: "🔦", price: 2000, qty: 0, i18nKey: "bcStreetLight" },
+    { name: "Bus Stop", emoji: "🚏", price: 15000, qty: 0, i18nKey: "bcBusStop" },
+    { name: "Playground", emoji: "🛝", price: 50000, qty: 0, i18nKey: "bcPlayground" },
+    { name: "Public Library", emoji: "📚", price: 2000000, qty: 0, i18nKey: "bcPublicLibrary" },
+    { name: "Fire Station", emoji: "🚒", price: 5000000, qty: 0, i18nKey: "bcFireStation" },
+    { name: "Community Pool", emoji: "🏊", price: 8000000, qty: 0, i18nKey: "bcCommunityPool" },
+    { name: "School", emoji: "🏫", price: 15000000, qty: 0, i18nKey: "bcSchool" },
+    { name: "Hospital", emoji: "🏥", price: 50000000, qty: 0, i18nKey: "bcHospital" },
+    { name: "Sports Stadium", emoji: "🏟️", price: 100000000, qty: 0, i18nKey: "bcSportsStadium" },
+    { name: "Metro Line", emoji: "🚇", price: 150000000, qty: 0, i18nKey: "bcMetroLine" },
+    { name: "Concert Hall", emoji: "🎭", price: 200000000, qty: 0, i18nKey: "bcConcertHall" },
+    { name: "University", emoji: "🎓", price: 300000000, qty: 0, i18nKey: "bcUniversity" },
+    { name: "Airport", emoji: "✈️", price: 500000000, qty: 0, i18nKey: "bcAirport" },
+    { name: "Space Center", emoji: "🚀", price: 2000000000, qty: 0, alwaysUnaffordable: true, i18nKey: "bcSpaceCenter" }
   ];
 
   // DOM refs
@@ -72,7 +72,7 @@
 
       var nameDiv = document.createElement("div");
       nameDiv.className = "item-name";
-      nameDiv.textContent = item.name;
+      nameDiv.textContent = I18N.t(item.i18nKey);
 
       var priceDiv = document.createElement("div");
       priceDiv.className = "item-price";
@@ -81,7 +81,7 @@
       var noteDiv = document.createElement("div");
       noteDiv.className = "item-note";
       if (item.alwaysUnaffordable) {
-        noteDiv.textContent = "Not even a billion covers this...";
+        noteDiv.textContent = I18N.t("buildCityCantAfford");
       }
 
       var qtyDiv = document.createElement("div");
@@ -93,7 +93,7 @@
 
       var buyBtn = document.createElement("button");
       buyBtn.className = "btn-buy";
-      buyBtn.textContent = "Build";
+      buyBtn.textContent = I18N.t("buildCityBuildBtn");
       buyBtn.setAttribute("data-buy", i);
       buyBtn.addEventListener("click", function () {
         buyItem(i);
@@ -101,7 +101,7 @@
 
       var sellBtn = document.createElement("button");
       sellBtn.className = "btn-sell";
-      sellBtn.textContent = "Demolish";
+      sellBtn.textContent = I18N.t("buildCityDemolishBtn");
       sellBtn.setAttribute("data-sell", i);
       sellBtn.addEventListener("click", function () {
         sellItem(i);
@@ -158,7 +158,7 @@
 
       // Quantity display
       if (item.qty > 0) {
-        qtyEl.textContent = "Built: " + fmt(item.qty);
+        qtyEl.textContent = I18N.t("buildCityBuilt") + ": " + fmt(item.qty);
       } else {
         qtyEl.textContent = "";
       }
@@ -198,7 +198,7 @@
         row.className = "receipt-row";
 
         var left = document.createElement("span");
-        left.textContent = item.emoji + " " + item.name + " x" + fmt(item.qty);
+        left.textContent = item.emoji + " " + I18N.t(item.i18nKey) + " x" + fmt(item.qty);
 
         var right = document.createElement("span");
         right.textContent = "$" + fmt(item.price * item.qty);
@@ -209,7 +209,7 @@
       }
     });
 
-    spentDisplayEl.textContent = "Allocated: $" + fmt(spent) + "  |  Remaining: $" + fmt(remaining);
+    spentDisplayEl.textContent = I18N.t("buildCityAllocated") + ": $" + fmt(spent) + "  |  " + I18N.t("buildCityRemaining") + ": $" + fmt(remaining);
 
     if (hasPurchases) {
       receiptEmptyEl.style.display = "none";
@@ -236,7 +236,15 @@
     });
   });
 
+  // Listen for language changes
+  window.addEventListener("langchange", function () {
+    buildGrid();
+    updateAll();
+    I18N.applyDOM();
+  });
+
   // Init
   buildGrid();
   updateAll();
+  I18N.applyDOM();
 })();

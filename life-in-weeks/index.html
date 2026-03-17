@@ -18,16 +18,16 @@
     </script>
 </head>
 <body>
-    <a href="/" class="back-link">&larr; Back</a>
+    <a href="/" class="back-link" data-i18n="liwBack">&larr; Back</a>
 
     <div class="container">
         <header class="header">
-            <h1 class="title">Life in Weeks</h1>
-            <p class="subtitle">Your life in the context of history.</p>
+            <h1 class="title" data-i18n="liwTitle">Life in Weeks</h1>
+            <p class="subtitle" data-i18n="liwSubtitle">Your life in the context of history.</p>
         </header>
 
         <div class="input-section" id="inputSection">
-            <label class="input-label">Enter your birthday</label>
+            <label class="input-label" data-i18n="liwEnterBirthday">Enter your birthday</label>
             <div class="date-selects">
                 <select id="birthMonth" class="date-select">
                     <option value="" disabled selected>Month</option>
@@ -38,12 +38,12 @@
                 <select id="birthYear" class="date-select">
                     <option value="" disabled selected>Year</option>
                 </select>
-                <button id="goBtn" class="go-btn">Go</button>
+                <button id="goBtn" class="go-btn" data-i18n="liwGo">Go</button>
             </div>
         </div>
 
         <div class="grid-wrapper">
-            <div class="column-label">Weeks &rarr;</div>
+            <div class="column-label" data-i18n="liwWeeks">Weeks &rarr;</div>
             <div class="grid-container">
                 <div class="age-labels" id="ageLabels"></div>
                 <div class="grid" id="grid"></div>
@@ -55,6 +55,7 @@
 
     <div class="tooltip" id="tooltip"></div>
 
+    <script src="../i18n.js"></script>
     <script src="game.js"></script>
 </body>
 </html>

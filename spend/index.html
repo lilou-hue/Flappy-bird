@@ -18,15 +18,15 @@
   </script>
 </head>
 <body>
-  <a href="/" class="back-link">&larr; Back</a>
+  <a href="/" class="back-link" data-i18n="buildCityBack">&larr; Back</a>
 
   <div id="money-display">
-    <div class="money-label">City Budget</div>
+    <div class="money-label" data-i18n="buildCityBudget">City Budget</div>
     <div id="remaining" class="money-amount">$1,000,000,000</div>
   </div>
 
   <div id="multiplier-bar">
-    <span class="multiplier-label">Build:</span>
+    <span class="multiplier-label" data-i18n="buildCityBuild">Build:</span>
     <button class="multiplier-btn active" data-mult="1">&times;1</button>
     <button class="multiplier-btn" data-mult="10">&times;10</button>
     <button class="multiplier-btn" data-mult="100">&times;100</button>
@@ -35,17 +35,18 @@
   <div id="items-grid"></div>
 
   <div id="receipt-section">
-    <h2>City Plan</h2>
+    <h2 data-i18n="buildCityPlan">City Plan</h2>
     <div id="spent-display">Allocated: $0</div>
     <div id="receipt-list"></div>
-    <div id="receipt-empty">Start building your city!</div>
+    <div id="receipt-empty" data-i18n="buildCityStartBuilding">Start building your city!</div>
   </div>
 
   <div id="congrats" class="hidden">
-    <h1>Your city is complete!</h1>
-    <p>Every dollar invested. What a mayor you are.</p>
+    <h1 data-i18n="buildCityComplete">Your city is complete!</h1>
+    <p data-i18n="buildCityCompleteDesc">Every dollar invested. What a mayor you are.</p>
   </div>
 
+  <script src="../i18n.js"></script>
   <script src="game.js"></script>
 </body>
 </html>

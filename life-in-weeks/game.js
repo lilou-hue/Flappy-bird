@@ -17,46 +17,51 @@
         { maxYear: 90, color: '#9ca3af', label: null }
     ];
 
-    var MILESTONES = {
-        5: 'Started school',
-        13: 'Teenager',
-        18: 'Adult',
-        30: 'Thirty',
-        50: 'Half century',
-        65: 'Retirement age'
+    var MILESTONE_KEYS = {
+        5: 'liwStartedSchool',
+        13: 'liwTeenager',
+        18: 'liwAdult',
+        30: 'liwThirty',
+        50: 'liwHalfCentury',
+        65: 'liwRetirement'
     };
 
+    function getMilestoneLabel(year) {
+        var key = MILESTONE_KEYS[year];
+        return key ? I18N.t(key) : null;
+    }
+
     var WORLD_EVENTS = [
-        { date: '1945-08-15', name: 'WWII Ends' },
-        { date: '1953-04-25', name: 'DNA discovered' },
-        { date: '1961-04-12', name: 'First human in space' },
-        { date: '1963-08-28', name: 'MLK "I Have a Dream"' },
-        { date: '1969-07-20', name: 'Moon landing' },
-        { date: '1973-04-03', name: 'First mobile phone call' },
-        { date: '1977-05-25', name: 'Star Wars released' },
-        { date: '1981-04-12', name: 'First Space Shuttle' },
-        { date: '1989-11-09', name: 'Fall of Berlin Wall' },
-        { date: '1990-12-25', name: 'World Wide Web invented' },
-        { date: '1991-12-26', name: 'Soviet Union dissolves' },
-        { date: '1997-02-22', name: 'Dolly the sheep cloned' },
-        { date: '1998-09-04', name: 'Google founded' },
-        { date: '2001-09-11', name: 'September 11' },
-        { date: '2004-02-04', name: 'Facebook launched' },
-        { date: '2007-06-29', name: 'First iPhone' },
-        { date: '2008-11-04', name: 'Obama elected' },
-        { date: '2010-10-06', name: 'Instagram launched' },
-        { date: '2011-05-02', name: 'Bin Laden killed' },
-        { date: '2012-08-06', name: 'Curiosity lands on Mars' },
-        { date: '2015-12-12', name: 'Paris Climate Agreement' },
-        { date: '2016-03-15', name: 'AlphaGo beats human' },
-        { date: '2020-03-11', name: 'COVID-19 pandemic' },
-        { date: '2022-07-12', name: 'James Webb first images' },
-        { date: '2024-01-01', name: 'ChatGPT era' }
+        { date: '1945-08-15', name: 'WWII Ends', i18nKey: 'liwEventWWII' },
+        { date: '1953-04-25', name: 'DNA discovered', i18nKey: 'liwEventDNA' },
+        { date: '1961-04-12', name: 'First human in space', i18nKey: 'liwEventSpace' },
+        { date: '1963-08-28', name: 'MLK "I Have a Dream"', i18nKey: 'liwEventMLK' },
+        { date: '1969-07-20', name: 'Moon landing', i18nKey: 'liwEventMoon' },
+        { date: '1973-04-03', name: 'First mobile phone call', i18nKey: 'liwEventPhone' },
+        { date: '1977-05-25', name: 'Star Wars released', i18nKey: 'liwEventStarWars' },
+        { date: '1981-04-12', name: 'First Space Shuttle', i18nKey: 'liwEventShuttle' },
+        { date: '1989-11-09', name: 'Fall of Berlin Wall', i18nKey: 'liwEventBerlinWall' },
+        { date: '1990-12-25', name: 'World Wide Web invented', i18nKey: 'liwEventWWW' },
+        { date: '1991-12-26', name: 'Soviet Union dissolves', i18nKey: 'liwEventUSSR' },
+        { date: '1997-02-22', name: 'Dolly the sheep cloned', i18nKey: 'liwEventDolly' },
+        { date: '1998-09-04', name: 'Google founded', i18nKey: 'liwEventGoogle' },
+        { date: '2001-09-11', name: 'September 11', i18nKey: 'liwEvent911' },
+        { date: '2004-02-04', name: 'Facebook launched', i18nKey: 'liwEventFacebook' },
+        { date: '2007-06-29', name: 'First iPhone', i18nKey: 'liwEventIPhone' },
+        { date: '2008-11-04', name: 'Obama elected', i18nKey: 'liwEventObama' },
+        { date: '2010-10-06', name: 'Instagram launched', i18nKey: 'liwEventInstagram' },
+        { date: '2011-05-02', name: 'Bin Laden killed', i18nKey: 'liwEventBinLaden' },
+        { date: '2012-08-06', name: 'Curiosity lands on Mars', i18nKey: 'liwEventMars' },
+        { date: '2015-12-12', name: 'Paris Climate Agreement', i18nKey: 'liwEventParis' },
+        { date: '2016-03-15', name: 'AlphaGo beats human', i18nKey: 'liwEventAlphaGo' },
+        { date: '2020-03-11', name: 'COVID-19 pandemic', i18nKey: 'liwEventCovid' },
+        { date: '2022-07-12', name: 'James Webb first images', i18nKey: 'liwEventJWebb' },
+        { date: '2024-01-01', name: 'ChatGPT era', i18nKey: 'liwEventChatGPT' }
     ];
 
-    var MONTH_NAMES = [
-        'January', 'February', 'March', 'April', 'May', 'June',
-        'July', 'August', 'September', 'October', 'November', 'December'
+    var MONTH_I18N_KEYS = [
+        'liwJanuary', 'liwFebruary', 'liwMarch', 'liwApril', 'liwMay', 'liwJune',
+        'liwJuly', 'liwAugust', 'liwSeptember', 'liwOctober', 'liwNovember', 'liwDecember'
     ];
 
     var grid = document.getElementById('grid');
@@ -71,17 +76,26 @@
 
     var weekElements = [];
     var birthday = null;
-    var eventsByWeek = {}; // weekIndex -> event name
+    var eventsByWeek = {}; // weekIndex -> event object
+    var lastWeeksLived = null;
 
     // Populate dropdowns
-    function populateSelects() {
-        var i;
-        for (i = 0; i < 12; i++) {
+    function populateMonthOptions() {
+        // Remove existing month options (keep the first disabled placeholder)
+        while (monthSelect.options.length > 1) {
+            monthSelect.removeChild(monthSelect.lastChild);
+        }
+        for (var i = 0; i < 12; i++) {
             var opt = document.createElement('option');
             opt.value = i;
-            opt.textContent = MONTH_NAMES[i];
+            opt.textContent = I18N.t(MONTH_I18N_KEYS[i]);
             monthSelect.appendChild(opt);
         }
+    }
+
+    function populateSelects() {
+        var i;
+        populateMonthOptions();
         for (i = 1; i <= 31; i++) {
             var opt = document.createElement('option');
             opt.value = i;
@@ -123,6 +137,24 @@
         };
     }
 
+    function updateAgeLabels() {
+        var labels = ageLabels.children;
+        for (var y = 0; y < TOTAL_YEARS; y++) {
+            var label = labels[y];
+            if (!label) continue;
+            var showLabel = (y === 0 || y % 5 === 0 || MILESTONE_KEYS[y]);
+            if (showLabel) {
+                var text = '';
+                var milestoneText = getMilestoneLabel(y);
+                if (milestoneText) {
+                    text = '<span class="milestone">' + milestoneText + '</span>';
+                }
+                text += y;
+                label.innerHTML = text;
+            }
+        }
+    }
+
     function buildGrid() {
         var fragment = document.createDocumentFragment();
 
@@ -147,11 +179,12 @@
             label.style.height = '0';
             label.style.flex = '1';
 
-            var showLabel = (y === 0 || y % 5 === 0 || MILESTONES[y]);
+            var showLabel = (y === 0 || y % 5 === 0 || MILESTONE_KEYS[y]);
             if (showLabel) {
                 var text = '';
-                if (MILESTONES[y]) {
-                    text = '<span class="milestone">' + MILESTONES[y] + '</span>';
+                var milestoneText = getMilestoneLabel(y);
+                if (milestoneText) {
+                    text = '<span class="milestone">' + milestoneText + '</span>';
                 }
                 text += y;
                 label.innerHTML = text;
@@ -196,7 +229,7 @@
             var weekIndex = Math.floor(diffMs / MS_PER_WEEK);
             if (weekIndex >= TOTAL_WEEKS) continue; // beyond 90 years
 
-            eventsByWeek[weekIndex] = evt.name;
+            eventsByWeek[weekIndex] = evt;
             weekElements[weekIndex].classList.add('has-event');
         }
     }
@@ -236,15 +269,16 @@
     }
 
     function showStats(weeksLived) {
+        lastWeeksLived = weeksLived;
         var weeksLeft = Math.max(0, TOTAL_WEEKS - weeksLived);
         var daysLived = weeksLived * 7;
         var summersLeft = Math.floor(weeksLeft / 52);
 
         statsEl.innerHTML =
-            '<div class="stat-line">You\'ve lived <strong>' + weeksLived.toLocaleString() + ' weeks</strong></div>' +
-            '<div class="stat-line">That\'s <strong>' + daysLived.toLocaleString() + ' days</strong></div>' +
-            '<div class="stat-line">You have approximately <strong>' + weeksLeft.toLocaleString() + ' weeks</strong> left</div>' +
-            '<div class="stat-line subtle">That\'s about <strong>' + summersLeft + ' summers</strong> left</div>';
+            '<div class="stat-line">' + I18N.t('liwWeeksLived') + ' <strong>' + weeksLived.toLocaleString() + '</strong> ' + I18N.t('liwWeeks2') + '</div>' +
+            '<div class="stat-line">' + I18N.t('liwThatsAbout') + ' <strong>' + daysLived.toLocaleString() + '</strong> ' + I18N.t('liwDays') + '</div>' +
+            '<div class="stat-line">' + I18N.t('liwWeeksLeft') + ' <strong>' + weeksLeft.toLocaleString() + '</strong> ' + I18N.t('liwWeeksLeftSuffix') + '</div>' +
+            '<div class="stat-line subtle">' + I18N.t('liwSummersLeft') + ' <strong>' + summersLeft + '</strong> ' + I18N.t('liwSummersLeftSuffix') + '</div>';
 
         statsEl.classList.add('visible');
     }
@@ -261,7 +295,7 @@
             var week = parseInt(target.getAttribute('data-week'), 10);
             var weekIndex = year * WEEKS_PER_YEAR + week;
 
-            var text = 'Age ' + year + ', Week ' + (week + 1);
+            var text = I18N.t('liwAge') + ' ' + year + ', Week ' + (week + 1);
 
             if (birthday) {
                 var range = getWeekDateRange(birthday, weekIndex);
@@ -270,7 +304,8 @@
 
             // Append world event if present
             if (eventsByWeek[weekIndex]) {
-                text += ' \u2014 \u2B50 ' + eventsByWeek[weekIndex];
+                var evt = eventsByWeek[weekIndex];
+                text += ' \u2014 \u2B50 ' + I18N.t(evt.i18nKey);
             }
 
             tooltip.textContent = text;
@@ -341,9 +376,20 @@
         }, 100);
     }
 
+    // Language change handler
+    document.addEventListener('langchange', function () {
+        I18N.applyDOM();
+        populateMonthOptions();
+        updateAgeLabels();
+        if (lastWeeksLived !== null && statsEl.classList.contains('visible')) {
+            showStats(lastWeeksLived);
+        }
+    });
+
     // Init
     populateSelects();
     buildGrid();
     setupTooltip();
     goBtn.addEventListener('click', onGoClick);
+    I18N.applyDOM();
 })();

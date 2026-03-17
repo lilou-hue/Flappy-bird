@@ -113,7 +113,7 @@
   // Title card
   var titleCard = document.createElement('div');
   titleCard.className = 'title-card';
-  titleCard.innerHTML = '<h1>The Deep</h1><div class="expedition-subtitle">A sonar expedition</div><div class="subtitle">Scroll down</div>';
+  titleCard.innerHTML = '<h1>' + I18N.t('theDeepTitle') + '</h1><div class="expedition-subtitle">' + I18N.t('theDeepSubtitle') + '</div><div class="subtitle">' + I18N.t('theDeepScrollDown') + '</div>';
   ocean.appendChild(titleCard);
 
   // Discovery counter
@@ -126,7 +126,7 @@
     var count = getDiscoveredCount();
     discoveredCountEl.textContent = count;
     if (count >= TOTAL_CREATURES) {
-      discoveryCounter.innerHTML = '🎉 All species discovered!';
+      discoveryCounter.innerHTML = '🎉 ' + I18N.t('theDeepAllDiscovered');
       discoveryCounter.classList.add('complete');
     }
   }
@@ -254,9 +254,9 @@
         '<div class="fact">' + creature.fact + '</div>';
     } else {
       return '<span class="emoji sonar-blip">?</span>' +
-        '<div class="name">Unknown Signal</div>' +
+        '<div class="name">' + I18N.t('theDeepUnknownSignal') + '</div>' +
         '<div class="depth-label">' + creature.depth.toLocaleString() + ' m</div>' +
-        '<div class="fact">Tap to identify</div>';
+        '<div class="fact">' + I18N.t('theDeepTapToIdentify') + '</div>';
     }
   }
 
@@ -387,6 +387,30 @@
       p.el.style.opacity = baseOpacity;
     });
   }
+
+  // --- i18n support ---
+  window.addEventListener('langchange', function () {
+    // Re-apply title card
+    titleCard.innerHTML = '<h1>' + I18N.t('theDeepTitle') + '</h1><div class="expedition-subtitle">' + I18N.t('theDeepSubtitle') + '</div><div class="subtitle">' + I18N.t('theDeepScrollDown') + '</div>';
+
+    // Re-apply discovery counter
+    updateCounter();
+
+    // Re-apply undiscovered creature text
+    creatureElements.forEach(function (c) {
+      if (c.el.classList.contains('undiscovered')) {
+        var creature = CREATURES.filter(function (cr) { return cr.depth === c.depth; })[0];
+        if (creature) {
+          c.el.innerHTML = buildCreatureHTML(creature, false);
+        }
+      }
+    });
+
+    // Apply data-i18n attributes
+    I18N.applyDOM();
+  });
+
+  I18N.applyDOM();
 
   // Start
   requestAnimationFrame(update);

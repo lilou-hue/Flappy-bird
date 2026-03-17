@@ -121,6 +121,7 @@ const Audio = (() => {
   }
 
   function playGameOver() {
+    if (!actx || muted) return;
     [330, 294, 262].forEach((f, i) => {
       setTimeout(() => playTone(f, 0.3, 'sine', 0.25), i * 200);
     });
@@ -266,12 +267,13 @@ function spawnExplosion(x, y, hue1, hue2) {
   for (let i = 0; i < 40; i++) {
     const angle = Math.random() * Math.PI * 2;
     const speed = 30 + Math.random() * 120;
+    const life = 0.8 + Math.random() * 0.6;
     particles.push({
       x, y,
       vx: Math.cos(angle) * speed,
       vy: Math.sin(angle) * speed,
-      life: 0.8 + Math.random() * 0.6,
-      maxLife: 1.4,
+      life,
+      maxLife: life,
       size: 1.5 + Math.random() * 3,
       hue: i < 20 ? hue1 + (Math.random() - 0.5) * 30 : hue2 + (Math.random() - 0.5) * 30,
     });
@@ -458,9 +460,11 @@ function updatePhysics(dt) {
       p.y += p.vy * dt;
     }
 
-    // Trail
-    p.trail.push({ x: p.x, y: p.y });
-    if (p.trail.length > TRAIL_LEN) p.trail.shift();
+    // Trail (skip for stationary objects like the sun)
+    if (!p.isStationary) {
+      p.trail.push({ x: p.x, y: p.y });
+      if (p.trail.length > TRAIL_LEN) p.trail.shift();
+    }
 
     // Escape check (non-sun only)
     if (!p.isStationary) {

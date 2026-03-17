@@ -1091,7 +1091,7 @@
   }
 
   // Arcade restart support
-  window.addEventListener('arcade-restart', () => {
+  document.addEventListener('arcade-restart', () => {
     localStorage.removeItem(SAVE_KEY);
     localStorage.removeItem('lso_achievements');
     state = defaultState();
