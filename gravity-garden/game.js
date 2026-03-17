@@ -565,6 +565,7 @@ function updatePhysics(dt) {
       if (realDist < a.radius + b.radius) {
         spawnExplosion((a.x + b.x) / 2, (a.y + b.y) / 2, a.hue, b.hue);
         Audio.playCollision();
+        nearMissCombo = 0;
         lastCollisionTime = gameTime;
 
         // Sun collision
@@ -608,6 +609,7 @@ function updatePhysics(dt) {
               return;
             }
           }
+          continue;
         }
 
         // Planet-planet collision = merge! Bigger absorbs smaller
@@ -777,6 +779,7 @@ function getCanvasCoords(e) {
 
 canvas.addEventListener('pointerdown', e => {
   e.preventDefault();
+  canvas.setPointerCapture(e.pointerId);
   const pos = getCanvasCoords(e);
 
   if (gameOver) { resetGame(); return; }
@@ -831,7 +834,7 @@ canvas.addEventListener('pointerup', e => {
   predictedPath = [];
 });
 
-canvas.addEventListener('pointerleave', () => {
+canvas.addEventListener('lostpointercapture', () => {
   if (isDragging) {
     isDragging = false;
     predictedPath = [];

@@ -470,7 +470,7 @@
   /* ── Compute actual message counts from data (exclude headers/system markers) ── */
   function countRealMessages(contact) {
     if (!contact.messages) return 0;
-    return contact.messages.filter(m => m.type !== 'header').length;
+    return contact.messages.filter(m => m.type !== 'header' && m.type !== 'receipt' && m.type !== 'system' && !m.systemText).length;
   }
 
   const MSG_COUNTS = {};
@@ -780,9 +780,12 @@
     for (var i = 0; i < msgs.length; i++) {
       var m = msgs[i];
       if (m.type === 'header') {
-        // Only show header if there are revealed messages after it
-        // (or if we haven't reached the reveal point yet)
         appendTimestamp(m.ts);
+        continue;
+      }
+      // Receipt/system messages don't count toward reveal progress
+      if (m.type === 'receipt' || m.type === 'system' || m.systemText) {
+        appendMessage(m, key, false);
         continue;
       }
       if (realMsgIndex < revealed) {
@@ -830,6 +833,13 @@
 
     if (m.type === 'header') {
       appendTimestamp(m.ts);
+      revealNext(key, msgs, idx + 1);
+      return;
+    }
+
+    // Receipt/system messages: show instantly without counting toward progress
+    if (m.type === 'receipt' || m.type === 'system' || m.systemText) {
+      appendMessage(m, key, true);
       revealNext(key, msgs, idx + 1);
       return;
     }
@@ -1000,19 +1010,23 @@
       thoughtBubble.classList.add('visible');
       setTimeout(function() {
         thoughtBubble.classList.remove('visible');
-        // Continue revealing after thought fades
+        // Continue revealing after thought fades (only if still on same chat)
         setTimeout(function() {
           isRevealing = false;
           currentRevealKey = null;
-          startRevealing(contactKey, nextIdx);
+          if (state.currentScreen === 'chat' && state.currentContact === contactKey) {
+            startRevealing(contactKey, nextIdx);
+          }
         }, 400);
       }, 4000);
     } else {
-      // Continue revealing
+      // Continue revealing (only if still on same chat)
       setTimeout(function() {
         isRevealing = false;
         currentRevealKey = null;
-        startRevealing(contactKey, nextIdx);
+        if (state.currentScreen === 'chat' && state.currentContact === contactKey) {
+          startRevealing(contactKey, nextIdx);
+        }
       }, 600);
     }
   }
