@@ -369,6 +369,7 @@
       .neon-pong-preview   { background: linear-gradient(180deg, #060612, #0a0a20, #060612); }
       .beat-drop-preview   { background: linear-gradient(180deg, #140a20, #0a0a1a, #140a20); }
       .rivals-preview      { background: linear-gradient(180deg, #0a0c14, #0d1117, #0a0c14); }
+      .gravity-garden-preview { background: linear-gradient(180deg, #060818, #0c1030, #040610); }
 
       .flappy-tag    { background: rgba(123,228,149,0.12); color: #7be495; border: 1px solid rgba(123,228,149,0.2); }
       .methane-tag   { background: rgba(23,205,211,0.12); color: #17cdd3; border: 1px solid rgba(23,205,211,0.2); }
@@ -386,6 +387,7 @@
       .neon-pong-tag   { background: rgba(0,210,255,0.12); color: #00d2ff; border: 1px solid rgba(0,210,255,0.2); }
       .beat-drop-tag   { background: rgba(255,50,150,0.12); color: #ff3296; border: 1px solid rgba(255,50,150,0.2); }
       .rivals-tag      { background: rgba(255,107,53,0.12); color: #ff6b35; border: 1px solid rgba(255,107,53,0.2); }
+      .gravity-garden-tag { background: rgba(255,200,50,0.12); color: #ffc832; border: 1px solid rgba(255,200,50,0.2); }
 
       .card-best {
         position: absolute;
@@ -713,13 +715,24 @@
         </div>
       </a>
 
+      <a href="/gravity-garden/" class="game-card">
+        <div class="card-preview gravity-garden-preview">
+          <canvas id="gravityGardenCanvas" width="360" height="200"></canvas>
+        </div>
+        <div class="card-body">
+          <h2 data-i18n="gravityGardenTitle">Gravity Garden</h2>
+          <p data-i18n="gravityGardenDesc">Plant planets and build a solar system. Newtonian gravity — collisions end it all!</p>
+          <span class="card-tag gravity-garden-tag" data-i18n="physics">Physics</span>
+        </div>
+      </a>
+
       <a href="/the-deep/" class="game-card">
         <div class="card-preview the-deep-preview">
           <canvas id="theDeepCanvas" width="360" height="200"></canvas>
         </div>
         <div class="card-body">
           <h2>The Deep</h2>
-          <p>Scroll to the bottom of the ocean. Real creatures at real depths.</p>
+          <p>A sonar expedition. Discover creatures hiding in the abyss.</p>
           <span class="card-tag" style="background:rgba(0,119,190,0.15);color:#0077be">Experience</span>
         </div>
       </a>
@@ -729,9 +742,9 @@
           <canvas id="spendCanvas" width="360" height="200"></canvas>
         </div>
         <div class="card-body">
-          <h2>Spend a Billion</h2>
-          <p>You have $1,000,000,000. Try to spend it all.</p>
-          <span class="card-tag" style="background:rgba(34,197,94,0.15);color:#22c55e">Experience</span>
+          <h2>Build a City</h2>
+          <p>You're the mayor. $1 billion budget. Build your dream city.</p>
+          <span class="card-tag" style="background:rgba(14,165,233,0.15);color:#0ea5e9">Experience</span>
         </div>
       </a>
 
@@ -741,7 +754,7 @@
         </div>
         <div class="card-body">
           <h2>Life in Weeks</h2>
-          <p>Your entire life as a grid of tiny boxes. How many are left?</p>
+          <p>Your life in the context of history. Every week, every milestone.</p>
           <span class="card-tag" style="background:rgba(251,191,36,0.15);color:#f59e0b">Experience</span>
         </div>
       </a>
@@ -2405,6 +2418,59 @@
         requestAnimationFrame(draw);
       })();
 
+      /* ─ Gravity Garden Preview ─ */
+      (function() {
+        var c = document.getElementById('gravityGardenCanvas');
+        if (!c) return;
+        var x = c.getContext('2d');
+        var W = 360, H = 200;
+        var t = 0;
+        var orbiters = [];
+        for (var i = 0; i < 4; i++) {
+          var dist = 40 + i * 22;
+          var hue = [120, 210, 30, 300][i];
+          orbiters.push({ dist: dist, angle: i * 1.5, speed: 0.5 + 0.3 / (i + 1), r: 4 + i, hue: hue });
+        }
+        var stars = [];
+        for (var i = 0; i < 40; i++) stars.push({ x: Math.random() * W, y: Math.random() * H, s: 0.3 + Math.random() * 1, tw: Math.random() * 6.28 });
+        function draw() {
+          t += 0.016;
+          var bg = x.createLinearGradient(0, 0, 0, H);
+          bg.addColorStop(0, '#060818'); bg.addColorStop(1, '#040610');
+          x.fillStyle = bg; x.fillRect(0, 0, W, H);
+          for (var i = 0; i < stars.length; i++) {
+            var s = stars[i];
+            x.fillStyle = 'rgba(150,180,255,' + (0.1 + Math.sin(t * 1.5 + s.tw) * 0.1).toFixed(2) + ')';
+            x.beginPath(); x.arc(s.x, s.y, s.s, 0, Math.PI * 2); x.fill();
+          }
+          var sx = W / 2, sy = H / 2;
+          x.save();
+          x.shadowBlur = 20; x.shadowColor = 'rgba(255,200,50,0.5)';
+          var sg = x.createRadialGradient(sx - 2, sy - 2, 1, sx, sy, 14);
+          sg.addColorStop(0, '#fffbe0'); sg.addColorStop(0.4, '#ffd700'); sg.addColorStop(1, '#cc6600');
+          x.fillStyle = sg; x.beginPath(); x.arc(sx, sy, 14, 0, Math.PI * 2); x.fill();
+          x.shadowBlur = 0; x.restore();
+          for (var i = 0; i < orbiters.length; i++) {
+            var o = orbiters[i];
+            o.angle += o.speed * 0.016;
+            var px = sx + Math.cos(o.angle) * o.dist;
+            var py = sy + Math.sin(o.angle) * o.dist * 0.6;
+            x.strokeStyle = 'hsla(' + o.hue + ',60%,50%,0.15)';
+            x.lineWidth = 1; x.beginPath(); x.ellipse(sx, sy, o.dist, o.dist * 0.6, 0, 0, Math.PI * 2); x.stroke();
+            x.save(); x.shadowBlur = 8; x.shadowColor = 'hsla(' + o.hue + ',70%,50%,0.4)';
+            var pg = x.createRadialGradient(px - o.r * 0.2, py - o.r * 0.2, o.r * 0.1, px, py, o.r);
+            pg.addColorStop(0, 'hsl(' + o.hue + ',65%,70%)'); pg.addColorStop(1, 'hsl(' + o.hue + ',55%,35%)');
+            x.fillStyle = pg; x.beginPath(); x.arc(px, py, o.r, 0, Math.PI * 2); x.fill();
+            x.shadowBlur = 0; x.restore();
+          }
+          x.fillStyle = 'rgba(255,200,50,' + (0.6 + Math.sin(t * 3) * 0.2).toFixed(2) + ')';
+          x.font = 'bold 12px Trebuchet MS'; x.textAlign = 'center';
+          x.fillText('GRAVITY GARDEN', W / 2, H - 8);
+          requestAnimationFrame(draw);
+        }
+        requestAnimationFrame(draw);
+      })();
+
       /* ─ The Deep Preview ─ */
       (function() {
         var c = document.getElementById('theDeepCanvas');
@@ -2459,7 +2525,7 @@
         requestAnimationFrame(draw);
       })();
 
-      /* ─ Spend Preview ─ */
+      /* ─ Build a City Preview ─ */
       (function() {
         var c = document.getElementById('spendCanvas');
         if (!c) return;
@@ -2469,22 +2535,21 @@
         function draw() {
           t += 0.015;
           x.fillStyle = '#fafafa'; x.fillRect(0, 0, W, H);
-          // Money amount
+          x.fillStyle = '#888'; x.font = '11px "Space Grotesk", sans-serif'; x.textAlign = 'center';
+          x.fillText('CITY BUDGET', W / 2, 25);
           var show = Math.floor(displayMoney - Math.abs(Math.sin(t * 0.5)) * 347892156);
           if (show < 0) show += 1000000000;
           var formatted = '$' + show.toLocaleString('en-US');
           x.fillStyle = '#111';
-          x.font = 'bold 32px "Space Grotesk", sans-serif';
-          x.textAlign = 'center';
-          x.fillText(formatted, W / 2, 55);
-          // Item cards
+          x.font = 'bold 28px "Space Grotesk", sans-serif';
+          x.fillText(formatted, W / 2, 52);
           var items = [
-            ['🍔', '$5'], ['🎮', '$70'], ['📱', '$1K'],
-            ['🚗', '$40K'], ['🏠', '$400K'], ['✈️', '$70M']
+            ['🪑', '$500'], ['🚏', '$15K'], ['📚', '$2M'],
+            ['🏫', '$15M'], ['🏥', '$50M'], ['🚇', '$150M']
           ];
           for (var i = 0; i < items.length; i++) {
             var ix = 30 + (i % 3) * 115;
-            var iy = 80 + Math.floor(i / 3) * 55;
+            var iy = 70 + Math.floor(i / 3) * 55;
             x.fillStyle = '#fff';
             x.beginPath();
             x.roundRect(ix, iy, 100, 45, 8); x.fill();
@@ -2493,7 +2558,7 @@
             x.fillText(items[i][0], ix + 8, iy + 28);
             x.fillStyle = '#666'; x.font = '12px "Space Grotesk", sans-serif';
             x.fillText(items[i][1], ix + 32, iy + 28);
-            x.fillStyle = '#22c55e'; x.beginPath(); x.roundRect(ix + 72, iy + 12, 22, 22, 4); x.fill();
+            x.fillStyle = '#0ea5e9'; x.beginPath(); x.roundRect(ix + 72, iy + 12, 22, 22, 4); x.fill();
             x.fillStyle = '#fff'; x.font = 'bold 14px sans-serif'; x.textAlign = 'center';
             x.fillText('+', ix + 83, iy + 28);
           }
@@ -2564,7 +2629,7 @@
         const bestKeys = [
           'flappyBest', 'methaneDriftBest', 'snakeBest', 'luminaBest',
           'phantomRoadBest', null, 'tetrisBest', 'gunGameBest', 'astroMinerBest', 'starFuryBest', 'inkognitoBest', null,
-          'stackTowerBest', 'neonPongBest', 'beatDropBest'
+          'stackTowerBest', 'neonPongBest', 'beatDropBest', null, 'gravityGardenBest'
         ];
         const cards = document.querySelectorAll('.game-card');
         cards.forEach((card, i) => {
@@ -2612,9 +2677,10 @@
           { key: 'stackTowerAch', total: 0 },
           { key: 'neonPongAch', total: 0 },
           { key: 'beatDropAch', total: 0 },
+          { key: 'gravityGardenAch', total: 0 },
         ];
 
-        const gameNames = ['Flappy Bird', 'Methane Drift', 'Snake', 'Lumina', 'Phantom Road', 'Unicorn Clicker', 'Tetris', 'Gun Game', 'Astro Miner', 'Star Fury', 'Inkognito', 'Dress-Up', 'Stack Tower', 'Neon Pong', 'Beat Drop'];
+        const gameNames = ['Flappy Bird', 'Methane Drift', 'Snake', 'Lumina', 'Phantom Road', 'Unicorn Clicker', 'Tetris', 'Gun Game', 'Astro Miner', 'Star Fury', 'Inkognito', 'Dress-Up', 'Stack Tower', 'Neon Pong', 'Beat Drop', 'Gravity Garden'];
 
         let totalAch = 0;
         let maxPlayed = 0;
@@ -2633,7 +2699,7 @@
           } catch(e) {}
         }
 
-        const bestKeys = ['flappyBest', 'methaneDriftBest', 'snakeBest', 'luminaBest', 'phantomRoadBest', 'tetrisBest', 'gunGameBest', 'astroMinerBest', 'starFuryBest', 'inkognitoBest', 'stackTowerBest', 'neonPongBest', 'beatDropBest'];
+        const bestKeys = ['flappyBest', 'methaneDriftBest', 'snakeBest', 'luminaBest', 'phantomRoadBest', 'tetrisBest', 'gunGameBest', 'astroMinerBest', 'starFuryBest', 'inkognitoBest', 'stackTowerBest', 'neonPongBest', 'beatDropBest', 'gravityGardenBest'];
         let combinedBest = 0;
         for (const key of bestKeys) {
           combinedBest += Number(localStorage.getItem(key)) || 0;
@@ -2715,7 +2781,7 @@
         var lbList = document.getElementById('lbPreviewList');
         if (lbList && typeof Leaderboard !== 'undefined') {
           lbList.innerHTML = '<div style="color:rgba(255,255,255,0.4);padding:0.5rem;font-size:0.85rem;">Loading…</div>';
-          var gameIds = ['flappy-bird','snake','tetris','lumina','phantom-road','methane-drift','gun-game','astro-miner','star-fury','inkognito','stack-tower','neon-pong','beat-drop'];
+          var gameIds = ['flappy-bird','snake','tetris','lumina','phantom-road','methane-drift','gun-game','astro-miner','star-fury','inkognito','stack-tower','neon-pong','beat-drop','gravity-garden'];
           Promise.all(gameIds.map(function (id) {
             return Leaderboard.getTopScores(id).catch(function () { return []; });
           })).then(function (results) {
