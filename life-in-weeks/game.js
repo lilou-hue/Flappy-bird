@@ -26,15 +26,76 @@
         65: 'Retirement age'
     };
 
+    var WORLD_EVENTS = [
+        { date: '1945-08-15', name: 'WWII Ends' },
+        { date: '1953-04-25', name: 'DNA discovered' },
+        { date: '1961-04-12', name: 'First human in space' },
+        { date: '1963-08-28', name: 'MLK "I Have a Dream"' },
+        { date: '1969-07-20', name: 'Moon landing' },
+        { date: '1973-04-03', name: 'First mobile phone call' },
+        { date: '1977-05-25', name: 'Star Wars released' },
+        { date: '1981-04-12', name: 'First Space Shuttle' },
+        { date: '1989-11-09', name: 'Fall of Berlin Wall' },
+        { date: '1990-12-25', name: 'World Wide Web invented' },
+        { date: '1991-12-26', name: 'Soviet Union dissolves' },
+        { date: '1997-02-22', name: 'Dolly the sheep cloned' },
+        { date: '1998-09-04', name: 'Google founded' },
+        { date: '2001-09-11', name: 'September 11' },
+        { date: '2004-02-04', name: 'Facebook launched' },
+        { date: '2007-06-29', name: 'First iPhone' },
+        { date: '2008-11-04', name: 'Obama elected' },
+        { date: '2010-10-06', name: 'Instagram launched' },
+        { date: '2011-05-02', name: 'Bin Laden killed' },
+        { date: '2012-08-06', name: 'Curiosity lands on Mars' },
+        { date: '2015-12-12', name: 'Paris Climate Agreement' },
+        { date: '2016-03-15', name: 'AlphaGo beats human' },
+        { date: '2020-03-11', name: 'COVID-19 pandemic' },
+        { date: '2022-07-12', name: 'James Webb first images' },
+        { date: '2024-01-01', name: 'ChatGPT era' }
+    ];
+
+    var MONTH_NAMES = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+
     var grid = document.getElementById('grid');
     var ageLabels = document.getElementById('ageLabels');
     var tooltip = document.getElementById('tooltip');
     var statsEl = document.getElementById('stats');
     var inputSection = document.getElementById('inputSection');
-    var birthdayInput = document.getElementById('birthday');
+    var monthSelect = document.getElementById('birthMonth');
+    var daySelect = document.getElementById('birthDay');
+    var yearSelect = document.getElementById('birthYear');
+    var goBtn = document.getElementById('goBtn');
 
     var weekElements = [];
     var birthday = null;
+    var eventsByWeek = {}; // weekIndex -> event name
+
+    // Populate dropdowns
+    function populateSelects() {
+        var i;
+        for (i = 0; i < 12; i++) {
+            var opt = document.createElement('option');
+            opt.value = i;
+            opt.textContent = MONTH_NAMES[i];
+            monthSelect.appendChild(opt);
+        }
+        for (i = 1; i <= 31; i++) {
+            var opt = document.createElement('option');
+            opt.value = i;
+            opt.textContent = i;
+            daySelect.appendChild(opt);
+        }
+        var currentYear = new Date().getFullYear();
+        for (i = currentYear; i >= 1920; i--) {
+            var opt = document.createElement('option');
+            opt.value = i;
+            opt.textContent = i;
+            yearSelect.appendChild(opt);
+        }
+    }
 
     function getStageColor(year) {
         for (var i = 0; i < LIFE_STAGES.length; i++) {
@@ -80,13 +141,9 @@
 
         // Age labels
         var labelFragment = document.createDocumentFragment();
-        // Compute row height: we need to match the grid rows
         for (var y = 0; y < TOTAL_YEARS; y++) {
             var label = document.createElement('div');
             label.className = 'age-label';
-
-            // Calculate height to match grid row
-            // The grid gap + cell will determine this, we use the same sizing
             label.style.height = '0';
             label.style.flex = '1';
 
@@ -111,9 +168,42 @@
         return Math.floor(diff / MS_PER_WEEK);
     }
 
+    function parseEventDate(dateStr) {
+        var parts = dateStr.split('-');
+        return new Date(
+            parseInt(parts[0], 10),
+            parseInt(parts[1], 10) - 1,
+            parseInt(parts[2], 10)
+        );
+    }
+
+    function placeWorldEvents(birthdayDate) {
+        // Clear previous event markers
+        eventsByWeek = {};
+        for (var i = 0; i < weekElements.length; i++) {
+            weekElements[i].classList.remove('has-event');
+        }
+
+        var birthMs = birthdayDate.getTime();
+
+        for (var e = 0; e < WORLD_EVENTS.length; e++) {
+            var evt = WORLD_EVENTS[e];
+            var evtDate = parseEventDate(evt.date);
+            var diffMs = evtDate.getTime() - birthMs;
+
+            if (diffMs < 0) continue; // before birth
+
+            var weekIndex = Math.floor(diffMs / MS_PER_WEEK);
+            if (weekIndex >= TOTAL_WEEKS) continue; // beyond 90 years
+
+            eventsByWeek[weekIndex] = evt.name;
+            weekElements[weekIndex].classList.add('has-event');
+        }
+    }
+
     function animateFill(weeksLived) {
-        var ANIMATION_DURATION = 2000; // ms
-        var batchSize = Math.max(1, Math.ceil(weeksLived / 60)); // ~60 frames
+        var ANIMATION_DURATION = 2000;
+        var batchSize = Math.max(1, Math.ceil(weeksLived / 60));
         var delay = ANIMATION_DURATION / Math.ceil(weeksLived / batchSize);
         var index = 0;
 
@@ -178,6 +268,11 @@
                 text += ' \u2014 ' + formatDate(range.start) + ' to ' + formatDate(range.end);
             }
 
+            // Append world event if present
+            if (eventsByWeek[weekIndex]) {
+                text += ' \u2014 \u2B50 ' + eventsByWeek[weekIndex];
+            }
+
             tooltip.textContent = text;
             tooltip.classList.add('visible');
 
@@ -207,20 +302,22 @@
             weekElements[i].className = 'week';
             weekElements[i].style.backgroundColor = '';
         }
+        eventsByWeek = {};
         statsEl.classList.remove('visible');
         statsEl.innerHTML = '';
     }
 
-    function onBirthdayChange() {
-        var value = birthdayInput.value;
-        if (!value) return;
+    function onGoClick() {
+        var m = monthSelect.value;
+        var d = daySelect.value;
+        var y = yearSelect.value;
 
-        // Parse as local date (not UTC)
-        var parts = value.split('-');
+        if (m === '' || d === '' || y === '') return;
+
         var birthdayDate = new Date(
-            parseInt(parts[0], 10),
-            parseInt(parts[1], 10) - 1,
-            parseInt(parts[2], 10)
+            parseInt(y, 10),
+            parseInt(m, 10),
+            parseInt(d, 10)
         );
 
         if (isNaN(birthdayDate.getTime())) return;
@@ -235,6 +332,9 @@
         var weeksLived = calculateWeeksLived(birthdayDate);
         weeksLived = Math.min(weeksLived, TOTAL_WEEKS);
 
+        // Place world event markers
+        placeWorldEvents(birthdayDate);
+
         // Small delay so reset is visible before animation
         setTimeout(function () {
             animateFill(weeksLived);
@@ -242,7 +342,8 @@
     }
 
     // Init
+    populateSelects();
     buildGrid();
     setupTooltip();
-    birthdayInput.addEventListener('change', onBirthdayChange);
+    goBtn.addEventListener('click', onGoClick);
 })();

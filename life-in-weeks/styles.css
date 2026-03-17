@@ -74,10 +74,18 @@ body {
     font-weight: 400;
 }
 
-.date-input {
+.date-selects {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.date-select {
     font-family: 'Space Grotesk', sans-serif;
-    font-size: 16px;
-    padding: 10px 16px;
+    font-size: 15px;
+    padding: 10px 12px;
     border: 1.5px solid #ddd;
     border-radius: 8px;
     background: #fff;
@@ -85,10 +93,55 @@ body {
     outline: none;
     transition: border-color 0.2s;
     cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 28px;
 }
 
-.date-input:focus {
+.date-select:focus {
     border-color: #999;
+}
+
+.go-btn {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    background: #1a1a1a;
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.go-btn:hover {
+    background: #333;
+}
+
+.go-btn:active {
+    transform: scale(0.97);
+}
+
+/* Event markers */
+.week.has-event::after {
+    content: '';
+    position: absolute;
+    top: -1px;
+    right: -1px;
+    width: 5px;
+    height: 5px;
+    background: #f43f5e;
+    transform: rotate(45deg);
+    z-index: 3;
+    pointer-events: none;
+}
+
+.week.has-event {
+    z-index: 3;
 }
 
 /* Grid */
@@ -298,6 +351,22 @@ body {
 
     .stat-line.subtle {
         font-size: 11px;
+    }
+
+    .date-select {
+        font-size: 13px;
+        padding: 8px 10px;
+        padding-right: 24px;
+    }
+
+    .go-btn {
+        font-size: 13px;
+        padding: 8px 16px;
+    }
+
+    .week.has-event::after {
+        width: 4px;
+        height: 4px;
     }
 
     @keyframes pulse {

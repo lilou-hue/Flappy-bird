@@ -23,12 +23,23 @@
     <div class="container">
         <header class="header">
             <h1 class="title">Life in Weeks</h1>
-            <p class="subtitle">Each box is one week of a 90-year life.</p>
+            <p class="subtitle">Your life in the context of history.</p>
         </header>
 
         <div class="input-section" id="inputSection">
-            <label for="birthday" class="input-label">Enter your birthday</label>
-            <input type="date" id="birthday" class="date-input">
+            <label class="input-label">Enter your birthday</label>
+            <div class="date-selects">
+                <select id="birthMonth" class="date-select">
+                    <option value="" disabled selected>Month</option>
+                </select>
+                <select id="birthDay" class="date-select">
+                    <option value="" disabled selected>Day</option>
+                </select>
+                <select id="birthYear" class="date-select">
+                    <option value="" disabled selected>Year</option>
+                </select>
+                <button id="goBtn" class="go-btn">Go</button>
+            </div>
         </div>
 
         <div class="grid-wrapper">
