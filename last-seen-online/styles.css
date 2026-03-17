@@ -45,6 +45,23 @@ body {
 }
 .back-link:hover { opacity: 1; }
 
+.mute-btn {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 50%;
+  width: 36px; height: 36px;
+  font-size: 16px;
+  cursor: pointer;
+  z-index: 1000;
+  color: var(--text-primary);
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s;
+}
+.mute-btn:hover { background: rgba(255,255,255,0.15); }
+
 /* ── Phone Frame ── */
 #phone-container {
   display: flex;
@@ -662,6 +679,14 @@ body {
   transition: background 0.2s;
 }
 .ending-btn:hover { background: rgba(255,255,255,0.18); }
+.ending-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+.ending-buttons .ending-btn {
+  margin-top: 0;
+}
 
 /* ── Mobile Responsive ── */
 @media (max-width: 420px) {
@@ -678,6 +703,7 @@ body {
   }
   #phone-notch { display: none; }
   #phone-screen { border-radius: 0; }
+  .mute-btn { top: auto; bottom: 16px; right: 16px; }
   :root {
     --radius: 0px;
     --bezel: 0px;

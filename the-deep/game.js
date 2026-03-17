@@ -5,16 +5,16 @@
   var METERS_PER_PX = 1 / 8; // 8px per meter
   var MAX_DEPTH = 10994;
   var TOTAL_HEIGHT = Math.ceil(MAX_DEPTH / METERS_PER_PX);
-  var VIEWPORT_PADDING = 800; // px above/below viewport for visibility checks
+  var VIEWPORT_PADDING = 1200; // wider visibility range
 
   // --- Color zones ---
   var COLOR_STOPS = [
-    { depth: 0,     color: [0, 119, 190] },  // #0077be
-    { depth: 200,   color: [0, 64, 128] },    // #004080
-    { depth: 1000,  color: [0, 0, 51] },      // #000033
-    { depth: 4000,  color: [10, 10, 10] },    // #0a0a0a
-    { depth: 6000,  color: [5, 5, 5] },       // #050505
-    { depth: 10994, color: [0, 0, 0] }        // #000
+    { depth: 0,     color: [0, 119, 190] },
+    { depth: 200,   color: [0, 64, 128] },
+    { depth: 1000,  color: [0, 0, 51] },
+    { depth: 4000,  color: [10, 10, 10] },
+    { depth: 6000,  color: [5, 5, 5] },
+    { depth: 10994, color: [0, 0, 0] }
   ];
 
   // --- Creatures / landmarks ---
@@ -128,6 +128,7 @@
     if (count >= TOTAL_CREATURES) {
       discoveryCounter.innerHTML = '🎉 ' + I18N.t('theDeepAllDiscovered');
       discoveryCounter.classList.add('complete');
+      nextSignalEl.classList.add('hidden');
     }
   }
   updateCounter();
@@ -137,6 +138,106 @@
   depthIndicator.className = 'depth-indicator';
   depthIndicator.textContent = '0m';
   document.body.appendChild(depthIndicator);
+
+  // --- Minimap ---
+  var minimapEl = document.getElementById('minimap');
+  var minimapDots = [];
+
+  CREATURES.forEach(function (c, i) {
+    var dot = document.createElement('div');
+    dot.className = 'minimap-dot';
+    var depthKey = String(c.depth);
+    if (discoveredSet[depthKey]) {
+      dot.classList.add('found');
+    }
+    // Position: percentage of max depth
+    var pct = (c.depth / MAX_DEPTH) * 100;
+    dot.style.top = pct + '%';
+    dot.title = discoveredSet[depthKey] ? c.name + ' — ' + c.depth + 'm' : '??? — ' + c.depth + 'm';
+
+    // Click to scroll to that depth
+    dot.addEventListener('click', function () {
+      var targetPx = depthToPx(c.depth);
+      window.scrollTo({ top: targetPx, behavior: 'smooth' });
+    });
+
+    minimapEl.appendChild(dot);
+    minimapDots.push({ el: dot, depth: c.depth, creature: c });
+  });
+
+  // Minimap scroll position indicator
+  var minimapThumb = document.createElement('div');
+  minimapThumb.className = 'minimap-thumb';
+  minimapEl.appendChild(minimapThumb);
+
+  // --- Next signal indicator ---
+  var nextSignalEl = document.getElementById('next-signal');
+
+  function findNearestUndiscovered(currentDepth) {
+    var nearest = null;
+    var nearestDist = Infinity;
+    for (var i = 0; i < CREATURES.length; i++) {
+      var depthKey = String(CREATURES[i].depth);
+      if (discoveredSet[depthKey]) continue;
+      var dist = Math.abs(CREATURES[i].depth - currentDepth);
+      if (dist < nearestDist) {
+        nearestDist = dist;
+        nearest = CREATURES[i];
+      }
+    }
+    return nearest;
+  }
+
+  function updateNextSignal(currentDepth) {
+    if (getDiscoveredCount() >= TOTAL_CREATURES) {
+      nextSignalEl.classList.add('hidden');
+      return;
+    }
+    var nearest = findNearestUndiscovered(currentDepth);
+    if (!nearest) {
+      nextSignalEl.classList.add('hidden');
+      return;
+    }
+    nextSignalEl.classList.remove('hidden');
+    var diff = nearest.depth - currentDepth;
+    var dist = Math.abs(diff);
+    var arrow = diff > 0 ? '▼' : '▲';
+    var distText = dist < 10 ? '< 10m' : Math.round(dist).toLocaleString() + 'm';
+    nextSignalEl.innerHTML = '<span class="signal-arrow">' + arrow + '</span> Signal ' + distText + (diff > 0 ? ' below' : ' above');
+
+    // Brighter when close
+    var closeness = Math.max(0, 1 - dist / 1000);
+    nextSignalEl.style.opacity = 0.35 + closeness * 0.5;
+  }
+
+  // --- Proximity warning ---
+  var proximityEl = document.getElementById('proximity-warning');
+  var proximityTimeout = null;
+
+  function updateProximity(currentDepth) {
+    // Check if any undiscovered creature is within ~150m
+    var closest = null;
+    var closestDist = Infinity;
+    for (var i = 0; i < CREATURES.length; i++) {
+      var depthKey = String(CREATURES[i].depth);
+      if (discoveredSet[depthKey]) continue;
+      var dist = Math.abs(CREATURES[i].depth - currentDepth);
+      if (dist < closestDist) {
+        closestDist = dist;
+        closest = CREATURES[i];
+      }
+    }
+
+    if (closest && closestDist < 150) {
+      proximityEl.classList.add('active');
+      // Pulse speed increases with proximity
+      var intensity = Math.max(0.3, 1 - closestDist / 150);
+      proximityEl.style.opacity = intensity * 0.6;
+    } else {
+      proximityEl.classList.remove('active');
+      proximityEl.style.opacity = '0';
+    }
+  }
 
   // Sonar sweep background
   var sonarSweep = document.createElement('div');
@@ -205,10 +306,8 @@
     var yPos = depthToPx(c.depth);
     div.style.top = (yPos + window.innerHeight * 0.4) + 'px';
 
-    // Build inner HTML — undiscovered shows sonar blip, discovered shows real info
     div.innerHTML = buildCreatureHTML(c, alreadyDiscovered);
 
-    // Store data attributes for reveal
     div.setAttribute('data-depth', depthKey);
     div.setAttribute('data-emoji', c.emoji);
     div.setAttribute('data-name', c.name);
@@ -219,26 +318,30 @@
     div.addEventListener('click', function (e) {
       if (!div.classList.contains('undiscovered') || !div.classList.contains('visible')) return;
 
-      // Start pinging
       div.classList.remove('undiscovered');
       div.classList.add('pinging');
 
-      // Create ping rings at click position relative to the creature
       var rect = div.getBoundingClientRect();
       var pingX = rect.left + rect.width / 2;
       var pingY = rect.top + rect.height * 0.3;
       createPingRings(pingX, pingY);
 
-      // After ping animation, reveal
       setTimeout(function () {
         div.classList.remove('pinging');
         div.classList.add('discovered');
         div.innerHTML = buildCreatureHTML(c, true);
 
-        // Save discovery
         discoveredSet[depthKey] = true;
         saveDiscoveries();
         updateCounter();
+
+        // Update minimap dot
+        minimapDots.forEach(function (md) {
+          if (md.depth === c.depth) {
+            md.el.classList.add('found');
+            md.el.title = c.name + ' — ' + c.depth + 'm';
+          }
+        });
       }, 600);
     });
 
@@ -253,10 +356,10 @@
         '<div class="depth-label">' + creature.depth.toLocaleString() + ' m</div>' +
         '<div class="fact">' + creature.fact + '</div>';
     } else {
-      return '<span class="emoji sonar-blip">?</span>' +
+      return '<div class="sonar-blip-container"><span class="emoji sonar-blip">?</span><div class="sonar-rings"><div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div></div></div>' +
         '<div class="name">' + I18N.t('theDeepUnknownSignal') + '</div>' +
         '<div class="depth-label">' + creature.depth.toLocaleString() + ' m</div>' +
-        '<div class="fact">' + I18N.t('theDeepTapToIdentify') + '</div>';
+        '<div class="fact tap-hint">' + I18N.t('theDeepTapToIdentify') + '</div>';
     }
   }
 
@@ -306,7 +409,7 @@
 
     var scrollY = window.pageYOffset || document.documentElement.scrollTop;
 
-    // Always animate particles regardless of scroll
+    // Always animate particles
     updateParticles(dt, scrollY);
 
     if (Math.abs(scrollY - lastScrollY) < 0.5) {
@@ -319,10 +422,10 @@
     if (currentDepth < 0) currentDepth = 0;
     if (currentDepth > MAX_DEPTH) currentDepth = MAX_DEPTH;
 
-    // Update depth indicator
+    // Depth indicator
     depthIndicator.textContent = Math.round(currentDepth).toLocaleString() + 'm';
 
-    // Update background color
+    // Background color
     var color = getColorAtDepth(currentDepth);
     document.body.style.backgroundColor = 'rgb(' + color[0] + ',' + color[1] + ',' + color[2] + ')';
 
@@ -335,19 +438,34 @@
     var rayOpacity = 1 - Math.min(1, currentDepth / 200);
     lightRaysContainer.style.opacity = rayOpacity;
 
-    // Sonar sweep visibility — more visible in deeper zones
+    // Sonar sweep
     var sweepOpacity = Math.min(0.06, currentDepth / 8000 * 0.06);
     sonarSweep.style.opacity = sweepOpacity;
 
-    // Update creature visibility
-    var viewTop = scrollY - VIEWPORT_PADDING;
-    var viewBottom = scrollY + window.innerHeight + VIEWPORT_PADDING;
+    // Minimap thumb position
+    var thumbPct = (currentDepth / MAX_DEPTH) * 100;
+    minimapThumb.style.top = thumbPct + '%';
 
+    // Highlight nearest minimap dot
+    minimapDots.forEach(function (md) {
+      var dist = Math.abs(md.depth - currentDepth);
+      if (dist < 200) {
+        md.el.classList.add('nearby');
+      } else {
+        md.el.classList.remove('nearby');
+      }
+    });
+
+    // Next signal indicator
+    updateNextSignal(currentDepth);
+
+    // Proximity warning
+    updateProximity(currentDepth);
+
+    // Creature visibility — much wider range (1.5× viewport)
     creatureElements.forEach(function (c) {
-      var inView = c.yPos > viewTop && c.yPos < viewBottom;
-      // Fade in when creature is near center of viewport
       var distFromCenter = Math.abs(c.yPos - (scrollY + window.innerHeight * 0.5));
-      var visible = distFromCenter < window.innerHeight * 0.8;
+      var visible = distFromCenter < window.innerHeight * 1.5;
       if (visible) {
         c.el.classList.add('visible');
       } else {
@@ -355,7 +473,7 @@
       }
     });
 
-    // Update zone label visibility
+    // Zone label visibility
     zoneElements.forEach(function (z) {
       var distFromCenter = Math.abs(z.yPos - (scrollY + window.innerHeight * 0.5));
       var visible = distFromCenter < window.innerHeight * 0.7;
@@ -371,11 +489,10 @@
 
   function updateParticles(dt, scrollY) {
     var currentDepth = pxToDepth(scrollY);
-    // Increase particle opacity slightly in deep zones
     var baseOpacity = 0.06 + Math.min(0.12, currentDepth / 10000 * 0.12);
 
     particles.forEach(function (p) {
-      p.y -= p.speed * dt * 3; // float upward
+      p.y -= p.speed * dt * 3;
       p.x += p.drift * dt;
 
       if (p.y < -2) p.y = 102;
@@ -390,13 +507,8 @@
 
   // --- i18n support ---
   window.addEventListener('langchange', function () {
-    // Re-apply title card
     titleCard.innerHTML = '<h1>' + I18N.t('theDeepTitle') + '</h1><div class="expedition-subtitle">' + I18N.t('theDeepSubtitle') + '</div><div class="subtitle">' + I18N.t('theDeepScrollDown') + '</div>';
-
-    // Re-apply discovery counter
     updateCounter();
-
-    // Re-apply undiscovered creature text
     creatureElements.forEach(function (c) {
       if (c.el.classList.contains('undiscovered')) {
         var creature = CREATURES.filter(function (cr) { return cr.depth === c.depth; })[0];
@@ -405,8 +517,6 @@
         }
       }
     });
-
-    // Apply data-i18n attributes
     I18N.applyDOM();
   });
 
