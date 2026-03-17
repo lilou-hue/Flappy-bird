@@ -1,0 +1,309 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Space Grotesk', sans-serif;
+  background: #fafafa;
+  color: #111;
+  min-height: 100vh;
+  padding-bottom: 80px;
+}
+
+/* Back link */
+.back-link {
+  position: fixed;
+  top: 16px;
+  left: 20px;
+  text-decoration: none;
+  color: #999;
+  font-size: 14px;
+  z-index: 100;
+  transition: color 0.2s;
+}
+.back-link:hover {
+  color: #333;
+}
+
+/* Money display - sticky at top */
+#money-display {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: #fafafa;
+  text-align: center;
+  padding: 32px 20px 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.money-label {
+  font-size: 16px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 4px;
+}
+
+.money-amount {
+  font-size: clamp(2.5rem, 8vw, 6rem);
+  font-weight: 700;
+  color: #111;
+  transition: transform 0.15s ease, color 0.3s ease;
+  line-height: 1.1;
+}
+
+.money-amount.pulse-green {
+  color: #22c55e;
+  transform: scale(1.04);
+}
+
+.money-amount.pulse-red {
+  color: #ef4444;
+  transform: scale(1.04);
+}
+
+/* Multiplier bar */
+#multiplier-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 20px;
+}
+
+.multiplier-label {
+  font-size: 14px;
+  color: #888;
+  margin-right: 4px;
+}
+
+.multiplier-btn {
+  font-family: 'Space Grotesk', sans-serif;
+  padding: 6px 16px;
+  border: 2px solid #ddd;
+  border-radius: 20px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: #555;
+  transition: all 0.15s ease;
+}
+
+.multiplier-btn:hover {
+  border-color: #111;
+  color: #111;
+}
+
+.multiplier-btn.active {
+  background: #111;
+  color: #fff;
+  border-color: #111;
+}
+
+/* Items grid */
+#items-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+@media (max-width: 900px) {
+  #items-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  #items-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Item card */
+.item-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px 20px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  text-align: center;
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.item-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  transform: translateY(-2px);
+}
+
+.item-card.unaffordable {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.item-card.unaffordable .item-note {
+  display: block;
+}
+
+.item-emoji {
+  font-size: 48px;
+  line-height: 1;
+}
+
+.item-name {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.item-price {
+  font-size: 14px;
+  color: #888;
+}
+
+.item-note {
+  display: none;
+  font-size: 12px;
+  color: #ef4444;
+  font-style: italic;
+}
+
+.item-quantity {
+  font-size: 14px;
+  color: #555;
+  min-height: 20px;
+}
+
+.item-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.btn-buy, .btn-sell {
+  font-family: 'Space Grotesk', sans-serif;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  user-select: none;
+}
+
+.btn-buy {
+  background: #22c55e;
+  color: #fff;
+}
+
+.btn-buy:hover:not(:disabled) {
+  background: #16a34a;
+  transform: scale(1.05);
+}
+
+.btn-buy:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.btn-buy:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.btn-sell {
+  background: #ef4444;
+  color: #fff;
+}
+
+.btn-sell:hover {
+  background: #dc2626;
+  transform: scale(1.05);
+}
+
+.btn-sell:active {
+  transform: scale(0.97);
+}
+
+/* Receipt section */
+#receipt-section {
+  max-width: 700px;
+  margin: 40px auto;
+  padding: 32px 24px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+#receipt-section h2 {
+  font-size: 22px;
+  margin-bottom: 12px;
+}
+
+#spent-display {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #555;
+}
+
+#receipt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.receipt-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 15px;
+}
+
+.receipt-row span:last-child {
+  font-weight: 600;
+}
+
+#receipt-empty {
+  color: #bbb;
+  font-size: 14px;
+  font-style: italic;
+}
+
+/* Congrats overlay */
+#congrats {
+  position: fixed;
+  inset: 0;
+  background: rgba(255,255,255,0.96);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  text-align: center;
+  padding: 40px;
+}
+
+#congrats h1 {
+  font-size: clamp(2rem, 6vw, 4rem);
+  margin-bottom: 16px;
+}
+
+#congrats p {
+  font-size: 20px;
+  color: #555;
+}
+
+.hidden {
+  display: none !important;
+}
