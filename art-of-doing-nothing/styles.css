@@ -213,6 +213,121 @@ body {
   transform: translateX(2px) scale(0.98);
 }
 
+/* ── Chapter navigation buttons ── */
+.chapter-nav-btn {
+  background: rgba(176,136,212,0.1) !important;
+  border-color: rgba(176,136,212,0.3) !important;
+  color: var(--accent2) !important;
+}
+
+.chapter-nav-btn:hover {
+  background: rgba(176,136,212,0.2) !important;
+  border-color: var(--accent2) !important;
+}
+
+/* ── Chapter select overlay ── */
+#chapterSelectOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(26,16,37,0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 150;
+  padding: 20px;
+}
+
+.chapter-select-inner {
+  max-width: 420px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chapter-select-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  text-align: center;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.chapter-select-btn {
+  background: var(--card-bg);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+  font-family: inherit;
+  color: var(--text);
+}
+
+.chapter-select-btn:hover:not(.locked) {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(196,169,125,0.3);
+  transform: translateX(4px);
+}
+
+.chapter-select-btn.completed {
+  border-color: rgba(74,222,128,0.3);
+}
+
+.chapter-select-btn.locked {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.ch-num {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ch-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.ch-endings {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+
+.ch-lock {
+  font-size: 0.7rem;
+  color: rgba(239,68,68,0.7);
+  font-weight: 600;
+}
+
+.ch-select-close {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text-dim);
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85rem;
+  margin-top: 8px;
+  transition: all 0.2s;
+}
+
+.ch-select-close:hover {
+  color: var(--text);
+  border-color: rgba(255,255,255,0.2);
+}
+
 /* ── Start overlay ── */
 #startOverlay {
   position: fixed;

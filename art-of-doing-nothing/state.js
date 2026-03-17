@@ -19,7 +19,32 @@
       snoozed: false,
       snoozeCount: 0,
       checkedPhone: false,
+      scrolledDeep: false,
+      gotUpFirst: false,
       ch1_ending: null,
+
+      // Ch2 flags
+      wentToGroup: false,
+      madeExcuse: false,
+      ignoredAlex: false,
+      joinedGroup: false,
+      satAlone: false,
+      ch2_ending: null,
+
+      // Ch3 flags
+      wroteGarbage: false,
+      deepScrolled: false,
+      hidPhone: false,
+      ch3_ending: null,
+
+      // Ch4 flags
+      calledForHelp: false,
+      ch4_ending: null,
+
+      // Ch5 flags
+      fourthWall: false,
+      ch5_ending: null,
+      ch5_complete: false,
 
       // Cross-chapter
       choicesMade: 0,

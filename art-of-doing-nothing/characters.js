@@ -268,11 +268,165 @@
     ctx.restore();
   }
 
+  /* ── Sam standing (Ch2+): circle head, simple body ── */
+  function drawSamStanding(ctx, x, y, scale) {
+    var s = scale || 1;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(s, s);
+
+    // Shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.12)';
+    ctx.beginPath();
+    ctx.ellipse(0, 60, 20, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Body (hoodie)
+    var hoodieGrad = ctx.createLinearGradient(-18, -10, 18, 50);
+    hoodieGrad.addColorStop(0, '#6B5B95');
+    hoodieGrad.addColorStop(1, '#4A3F6B');
+    ctx.fillStyle = hoodieGrad;
+    ctx.beginPath();
+    ctx.moveTo(-18, -5);
+    ctx.lineTo(-20, 50);
+    ctx.lineTo(20, 50);
+    ctx.lineTo(18, -5);
+    ctx.quadraticCurveTo(0, -12, -18, -5);
+    ctx.closePath();
+    ctx.fill();
+
+    // Hoodie pocket
+    ctx.fillStyle = 'rgba(0,0,0,0.1)';
+    ctx.fillRect(-12, 25, 24, 10);
+
+    // Arms
+    ctx.fillStyle = '#6B5B95';
+    ctx.beginPath();
+    ctx.ellipse(-22, 15, 7, 18, -0.1, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(22, 15, 7, 18, 0.1, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Hands
+    ctx.fillStyle = '#D4A574';
+    ctx.beginPath();
+    ctx.arc(-22, 32, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(22, 32, 5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Legs (jeans)
+    ctx.fillStyle = '#3A4A6B';
+    ctx.fillRect(-12, 48, 10, 22);
+    ctx.fillRect(2, 48, 10, 22);
+
+    // Shoes
+    ctx.fillStyle = '#333';
+    ctx.beginPath();
+    ctx.ellipse(-7, 70, 8, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(7, 70, 8, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Neck
+    ctx.fillStyle = '#D4A574';
+    ctx.fillRect(-4, -12, 8, 8);
+
+    // Head
+    ctx.fillStyle = '#D4A574';
+    ctx.beginPath();
+    ctx.arc(0, -22, 16, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Hair
+    ctx.fillStyle = '#3A2A1A';
+    ctx.beginPath();
+    ctx.arc(0, -26, 16, Math.PI, 0);
+    ctx.fill();
+    // Side hair
+    ctx.fillRect(-16, -28, 4, 10);
+    ctx.fillRect(12, -28, 4, 10);
+
+    // Eyes (simple dots)
+    ctx.fillStyle = '#1a1a1a';
+    ctx.beginPath();
+    ctx.arc(-5, -22, 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(5, -22, 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Mouth (small line)
+    ctx.strokeStyle = '#8B6B5A';
+    ctx.lineWidth = 1.5;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(-3, -15);
+    ctx.lineTo(3, -15);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  /* ── Sam at desk (Ch3/4): sitting with laptop ── */
+  function drawSamDesk(ctx, x, y) {
+    ctx.save();
+    ctx.translate(x, y);
+
+    // Desk
+    ctx.fillStyle = '#5C4A3A';
+    ctx.fillRect(-50, 10, 100, 8);
+    // Desk legs
+    ctx.fillRect(-45, 18, 4, 25);
+    ctx.fillRect(41, 18, 4, 25);
+
+    // Laptop
+    ctx.fillStyle = '#555';
+    ctx.fillRect(-20, -15, 40, 25);
+    // Screen glow
+    ctx.fillStyle = 'rgba(100,200,255,0.15)';
+    ctx.fillRect(-18, -13, 36, 21);
+    // Screen content (lines)
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    for (var i = 0; i < 4; i++) {
+      ctx.fillRect(-14, -10 + i * 5, 20 + Math.random() * 8, 2);
+    }
+
+    // Chair back
+    ctx.fillStyle = '#4A3F6B';
+    ctx.fillRect(-18, -40, 36, 30);
+
+    // Sam's upper body (from behind the desk)
+    ctx.fillStyle = '#6B5B95';
+    ctx.beginPath();
+    ctx.ellipse(0, -25, 16, 12, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Head
+    ctx.fillStyle = '#D4A574';
+    ctx.beginPath();
+    ctx.arc(0, -42, 12, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Hair
+    ctx.fillStyle = '#3A2A1A';
+    ctx.beginPath();
+    ctx.arc(0, -45, 12, Math.PI, 0);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
   /* ── Public API ── */
   window.Characters = {
     sloth: slothState,
     drawSloth: drawSloth,
     drawSamBed: drawSamBed,
+    drawSamStanding: drawSamStanding,
+    drawSamDesk: drawSamDesk,
     Spring: Spring,
 
     setExpression: function (eyes, mouth) {

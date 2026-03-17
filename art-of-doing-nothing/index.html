@@ -24,6 +24,15 @@
       <div class="start-prompt">Click anywhere to begin</div>
     </div>
 
+    <!-- Chapter select overlay -->
+    <div id="chapterSelectOverlay" style="display:none">
+      <div class="chapter-select-inner">
+        <div class="chapter-select-title">Chapter Select</div>
+        <div class="chapter-list"></div>
+        <button class="ch-select-close">Back</button>
+      </div>
+    </div>
+
     <main class="game" id="gameContainer">
       <header class="game__header">
         <a href="/" class="back-link" data-i18n="backToGames">&larr; Back to Games</a>
@@ -45,6 +54,7 @@
           <strong id="bestScore">0</strong>
         </div>
         <button id="muteButton" class="hud__mute" type="button" aria-label="Toggle sound">🔊</button>
+        <button id="chapterSelectBtn" class="hud__button" type="button">Chapters</button>
         <button id="leaderboardToggle" class="lb-toggle-btn" type="button" aria-label="Toggle leaderboard">🏆</button>
         <button id="restartButton" class="hud__button" type="button" data-i18n="restart">Restart</button>
       </div>
@@ -76,6 +86,10 @@
     <script src="characters.js"></script>
     <script src="audio.js"></script>
     <script src="scenes/chapter1.js"></script>
+    <script src="scenes/chapter2.js"></script>
+    <script src="scenes/chapter3.js"></script>
+    <script src="scenes/chapter4.js"></script>
+    <script src="scenes/chapter5.js"></script>
     <script src="game.js"></script>
     <script>if(typeof Arcade!=='undefined')Arcade.injectNavHUD();</script>
   </body>
