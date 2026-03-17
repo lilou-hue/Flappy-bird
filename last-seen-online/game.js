@@ -747,11 +747,11 @@
     if (typeof Audio_LSO !== 'undefined') Audio_LSO.openChat();
 
     if (CONTACTS[key].isNotes) {
-      renderNotesList();
       showScreen('notes', { slide: true });
+      renderNotesList();
     } else {
-      renderChat(key);
       showScreen('chat', { slide: true });
+      renderChat(key);
     }
   }
 
