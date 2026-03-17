@@ -1245,11 +1245,11 @@
     grad.addColorStop(0.5, '#00dca0');
     grad.addColorStop(1, '#a855f7');
     ctx.fillStyle = grad;
-    ctx.fillText('INKOGNITO', CFG.W / 2, 220);
+    ctx.fillText(_t('inkTitle'), CFG.W / 2, 220);
 
     ctx.font = '18px "Trebuchet MS", system-ui, sans-serif';
     ctx.fillStyle = PAL.textDim;
-    ctx.fillText('A I   D R A W I N G   C H A L L E N G E', CFG.W / 2, 260);
+    ctx.fillText(_t('inkSubtitle'), CFG.W / 2, 260);
 
     // Animated pencil icon
     const pencilY = 340 + Math.sin(animTime * 2) * 8;
@@ -1259,19 +1259,19 @@
     // Instructions
     ctx.font = '16px "Trebuchet MS", system-ui, sans-serif';
     ctx.fillStyle = PAL.textPrimary;
-    ctx.fillText('Draw what the AI asks you to draw', CFG.W / 2, 420);
-    ctx.fillText('The AI will try to guess in real-time!', CFG.W / 2, 445);
+    ctx.fillText(_t('inkMenuLine1'), CFG.W / 2, 420);
+    ctx.fillText(_t('inkMenuLine2'), CFG.W / 2, 445);
 
     ctx.font = '15px "Trebuchet MS", system-ui, sans-serif';
     ctx.fillStyle = PAL.textDim;
-    ctx.fillText('10 rounds \u2022 20 seconds each \u2022 Score = speed', CFG.W / 2, 485);
+    ctx.fillText(_t('inkMenuSummary'), CFG.W / 2, 485);
 
     // Start prompt
     const pulse = 0.5 + Math.sin(animTime * 3) * 0.3;
     ctx.font = 'bold 18px "Trebuchet MS", system-ui, sans-serif';
     ctx.fillStyle = `rgba(168, 85, 247, ${pulse + 0.2})`;
     const isMobile = 'ontouchstart' in window;
-    ctx.fillText(isMobile ? 'Tap to Start' : 'Click or Press Space to Start', CFG.W / 2, 560);
+    ctx.fillText(isMobile ? _t('inkTapStart') : _t('inkSpaceStart'), CFG.W / 2, 560);
 
     ctx.restore();
   }
@@ -1301,7 +1301,7 @@
     ctx.font = `bold ${Math.round(80 * scale)}px "Trebuchet MS", system-ui, sans-serif`;
     ctx.fillStyle = num === 0 ? PAL.accent2 : PAL.accent;
     ctx.globalAlpha = 0.3 + (countdownTimer % 1) * 0.7;
-    ctx.fillText(num > 0 ? String(num) : 'GO!', CFG.W / 2, DRAW_Y + CFG.DRAW_SIZE / 2);
+    ctx.fillText(num > 0 ? String(num) : _t('inkGo'), CFG.W / 2, DRAW_Y + CFG.DRAW_SIZE / 2);
     ctx.restore();
   }
 
@@ -1317,7 +1317,7 @@
     ctx.font = 'bold 14px "Trebuchet MS", system-ui, sans-serif';
     ctx.fillStyle = PAL.textDim;
     ctx.textAlign = 'left';
-    ctx.fillText(`Round ${round}/${CFG.TOTAL_ROUNDS}`, 16, 20);
+    ctx.fillText(_t('inkRound') + ` ${round}/${CFG.TOTAL_ROUNDS}`, 16, 20);
 
     // Score
     ctx.font = 'bold 22px "Trebuchet MS", system-ui, sans-serif';
@@ -1361,7 +1361,7 @@
     // "Draw a ___"
     ctx.font = '16px "Trebuchet MS", system-ui, sans-serif';
     ctx.fillStyle = PAL.textDim;
-    ctx.fillText('Draw a', CFG.W / 2, HUD_H + 20);
+    ctx.fillText(_t('inkDrawA'), CFG.W / 2, HUD_H + 20);
 
     ctx.font = 'bold 28px "Trebuchet MS", system-ui, sans-serif';
     ctx.fillStyle = PAL.accent;
@@ -1386,7 +1386,7 @@
     ctx.fillStyle = strokes.length > 0 ? PAL.textPrimary : PAL.textDim;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('\u21A9 Undo', DRAW_X + 40, TOOLS_Y + 14);
+    ctx.fillText('\u21A9 ' + _t('inkUndo'), DRAW_X + 40, TOOLS_Y + 14);
 
     // Clear button
     ctx.fillStyle = strokes.length > 0 ? 'rgba(255, 85, 119, 0.15)' : 'rgba(255,255,255,0.05)';
@@ -1398,7 +1398,7 @@
     ctx.roundRect(DRAW_X + 90, TOOLS_Y, 80, 28, 6);
     ctx.stroke();
     ctx.fillStyle = strokes.length > 0 ? '#ff5577' : PAL.textDim;
-    ctx.fillText('\u2716 Clear', DRAW_X + 130, TOOLS_Y + 14);
+    ctx.fillText('\u2716 ' + _t('inkClear'), DRAW_X + 130, TOOLS_Y + 14);
 
     ctx.restore();
   }
@@ -1461,7 +1461,7 @@
     ctx.font = 'bold 12px "Trebuchet MS", system-ui, sans-serif';
     ctx.fillStyle = PAL.textDim;
     ctx.textAlign = 'left';
-    ctx.fillText('AI Guesses:', DRAW_X, y);
+    ctx.fillText(_t('inkAiGuesses'), DRAW_X, y);
     y += 16;
 
     for (let i = 0; i < 3; i++) {
@@ -1574,7 +1574,7 @@
     if (roundCorrect) {
       ctx.font = 'bold 36px "Trebuchet MS", system-ui, sans-serif';
       ctx.fillStyle = PAL.correct;
-      ctx.fillText('\u2714 CORRECT!', CFG.W / 2, centerY - 30);
+      ctx.fillText('\u2714 ' + _t('inkCorrect'), CFG.W / 2, centerY - 30);
 
       ctx.font = 'bold 24px "Trebuchet MS", system-ui, sans-serif';
       ctx.fillStyle = PAL.textPrimary;
@@ -1582,11 +1582,11 @@
     } else {
       ctx.font = 'bold 36px "Trebuchet MS", system-ui, sans-serif';
       ctx.fillStyle = PAL.wrong;
-      ctx.fillText('\u2716 TIME\'S UP!', CFG.W / 2, centerY - 30);
+      ctx.fillText('\u2716 ' + _t('inkTimesUp'), CFG.W / 2, centerY - 30);
 
       ctx.font = '18px "Trebuchet MS", system-ui, sans-serif';
       ctx.fillStyle = PAL.textDim;
-      ctx.fillText('The word was: ' + targetWord.toUpperCase(), CFG.W / 2, centerY + 15);
+      ctx.fillText(_t('inkWordWas') + ' ' + targetWord.toUpperCase(), CFG.W / 2, centerY + 15);
 
       roundStats.perfectGame = false;
     }
@@ -1643,7 +1643,7 @@
     // Title
     ctx.font = 'bold 42px "Trebuchet MS", system-ui, sans-serif';
     ctx.fillStyle = PAL.textPrimary;
-    ctx.fillText('GAME OVER', CFG.W / 2, 160);
+    ctx.fillText(_t('gameOver'), CFG.W / 2, 160);
 
     // Score
     ctx.font = 'bold 64px "Trebuchet MS", system-ui, sans-serif';
@@ -1656,21 +1656,21 @@
     // Best
     ctx.font = '18px "Trebuchet MS", system-ui, sans-serif';
     ctx.fillStyle = PAL.textDim;
-    ctx.fillText('Best: ' + bestScore, CFG.W / 2, 280);
+    ctx.fillText(_t('best') + ': ' + bestScore, CFG.W / 2, 280);
 
     if (wasNewBest && score > 0) {
       ctx.font = 'bold 20px "Trebuchet MS", system-ui, sans-serif';
       ctx.fillStyle = '#ffd700';
-      ctx.fillText('\u2B50 NEW BEST! \u2B50', CFG.W / 2, 310);
+      ctx.fillText('\u2B50 ' + _t('newBest') + ' \u2B50', CFG.W / 2, 310);
     }
 
     // Stats
     ctx.font = '15px "Trebuchet MS", system-ui, sans-serif';
     ctx.fillStyle = PAL.textDim;
     const statsY = 360;
-    ctx.fillText(`Correct: ${roundStats.correctRounds}/${CFG.TOTAL_ROUNDS}`, CFG.W / 2, statsY);
+    ctx.fillText(_t('inkCorrectLabel') + `: ${roundStats.correctRounds}/${CFG.TOTAL_ROUNDS}`, CFG.W / 2, statsY);
     if (roundStats.correctRounds > 0) {
-      ctx.fillText(`Fastest: ${(CFG.ROUND_TIME - roundStats.fastestRound).toFixed(1)}s`, CFG.W / 2, statsY + 25);
+      ctx.fillText(_t('inkFastest') + `: ${(CFG.ROUND_TIME - roundStats.fastestRound).toFixed(1)}s`, CFG.W / 2, statsY + 25);
     }
 
     // Play again
@@ -1678,7 +1678,7 @@
     ctx.font = 'bold 18px "Trebuchet MS", system-ui, sans-serif';
     ctx.fillStyle = `rgba(168, 85, 247, ${pulse + 0.2})`;
     const isMobile = 'ontouchstart' in window;
-    ctx.fillText(isMobile ? 'Tap to Play Again' : 'Click or Press Space to Play Again', CFG.W / 2, 500);
+    ctx.fillText(isMobile ? _t('inkTapReplay') : _t('inkSpaceReplay'), CFG.W / 2, 500);
 
     ctx.restore();
   }

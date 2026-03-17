@@ -279,14 +279,14 @@
 
   // ── Achievements ──────────────────────────────────────────
   const LM_ACHIEVEMENTS = [
-    { id: "first_dive",  icon: "\uD83C\uDF0A", title: "First Dive",       desc: "Reach depth 1",    check: s => s.bestDepth >= 1 },
-    { id: "depth_10",    icon: "\uD83C\uDFC5", title: "Deep Diver",       desc: "Reach depth 10",   check: s => s.bestDepth >= 10 },
-    { id: "depth_25",    icon: "\uD83C\uDFC6", title: "Abyssal Explorer", desc: "Reach depth 25",   check: s => s.bestDepth >= 25 },
-    { id: "depth_50",    icon: "\uD83D\uDC51", title: "Depth Master",     desc: "Reach depth 50",   check: s => s.bestDepth >= 50 },
-    { id: "depth_100",   icon: "\u2B50",       title: "Abyss Lord",       desc: "Reach depth 100",  check: s => s.bestDepth >= 100 },
-    { id: "dedicated",   icon: "\uD83C\uDFAE", title: "Dedicated",        desc: "Play 10 games",    check: s => s.gamesPlayed >= 10 },
-    { id: 'accessibility', icon: '♿', title: 'Accessibility', desc: 'Play with colorblind mode enabled', check: s => s.colorblindPlayed === true },
-    { id: 'chain_master', icon: '⛓️', title: 'Chain Master', desc: 'Reach a 5x chain', check: s => s.maxChain >= 5 },
+    { id: "first_dive",  icon: "\uD83C\uDF0A", get title(){ return _t('lumAchFirstDive'); },       get desc(){ return _t('lumAchFirstDiveDesc'); },    check: s => s.bestDepth >= 1 },
+    { id: "depth_10",    icon: "\uD83C\uDFC5", get title(){ return _t('lumAchDeepDiver'); },       get desc(){ return _t('lumAchDeepDiverDesc'); },   check: s => s.bestDepth >= 10 },
+    { id: "depth_25",    icon: "\uD83C\uDFC6", get title(){ return _t('lumAchAbyssalExplorer'); }, get desc(){ return _t('lumAchAbyssalExplorerDesc'); },   check: s => s.bestDepth >= 25 },
+    { id: "depth_50",    icon: "\uD83D\uDC51", get title(){ return _t('lumAchDepthMaster'); },     get desc(){ return _t('lumAchDepthMasterDesc'); },   check: s => s.bestDepth >= 50 },
+    { id: "depth_100",   icon: "\u2B50",       get title(){ return _t('lumAchAbyssLord'); },       get desc(){ return _t('lumAchAbyssLordDesc'); },  check: s => s.bestDepth >= 100 },
+    { id: "dedicated",   icon: "\uD83C\uDFAE", get title(){ return _t('lumAchDedicated'); },        get desc(){ return _t('lumAchDedicatedDesc'); },    check: s => s.gamesPlayed >= 10 },
+    { id: 'accessibility', icon: '\u267F', get title(){ return _t('luminaAccessibility'); }, get desc(){ return _t('luminaAccessibilityDesc'); }, check: s => s.colorblindPlayed === true },
+    { id: 'chain_master', icon: '\u26D3\uFE0F', get title(){ return _t('luminaChainMaster'); }, get desc(){ return _t('luminaChainMasterDesc'); }, check: s => s.maxChain >= 5 },
   ];
 
   let lmAchStats = { bestDepth: 0, gamesPlayed: 0, colorblindPlayed: false, maxChain: 0 };
@@ -341,12 +341,12 @@
 
   // ── Tutorial ──────────────────────────────────────────────
   const TUTORIAL_STEPS = [
-    { title: "Welcome to Lumina!", text: "You are a luminous crystal descending through a dark cavern. Your light is your life.", visual: "\uD83D\uDD2E" },
-    { title: "Controls", text: "Use arrow keys (or A/D) to move left and right. Press Space to pulse your light upward. On mobile, use the on-screen buttons.", visual: "\u2B05\uFE0F\u27A1\uFE0F\uD83D\uDCA5" },
-    { title: "Shards & Light", text: "Collect crystal shards to restore your light and score points. Your light drains constantly - keep collecting!", visual: "\uD83D\uDC8E\u2728" },
-    { title: "Special Pickups", text: "Shield (blue ring) = block one hit. Teleport (spiral) = warp forward. Light Bomb (sun) = full light. Dark Shard (black) = drains light!", visual: "\uD83D\uDEE1\uFE0F\uD83C\uDF00\u2600\uFE0F\uD83C\uDF11" },
-    { title: "Hazards & Zones", text: "Avoid spikes, shadow creatures, and falling stalactites. As you go deeper, you'll enter new zones with unique colours.", visual: "\u26A0\uFE0F\uD83D\uDC7E" },
-    { title: "Customise", text: "Change colour themes and crystal skins from the dropdowns. Earn achievements as you play!", visual: "\uD83C\uDFA8" },
+    { get title(){ return _t('lumTutWelcomeTitle'); }, get text(){ return _t('lumTutWelcomeText'); }, visual: "\uD83D\uDD2E" },
+    { get title(){ return _t('lumTutControlsTitle'); }, get text(){ return _t('lumTutControlsText'); }, visual: "\u2B05\uFE0F\u27A1\uFE0F\uD83D\uDCA5" },
+    { get title(){ return _t('lumTutShardsTitle'); }, get text(){ return _t('lumTutShardsText'); }, visual: "\uD83D\uDC8E\u2728" },
+    { get title(){ return _t('lumTutPickupsTitle'); }, get text(){ return _t('lumTutPickupsText'); }, visual: "\uD83D\uDEE1\uFE0F\uD83C\uDF00\u2600\uFE0F\uD83C\uDF11" },
+    { get title(){ return _t('lumTutHazardsTitle'); }, get text(){ return _t('lumTutHazardsText'); }, visual: "\u26A0\uFE0F\uD83D\uDC7E" },
+    { get title(){ return _t('lumTutCustomiseTitle'); }, get text(){ return _t('lumTutCustomiseText'); }, visual: "\uD83C\uDFA8" },
   ];
   let tutorialStep = 0;
   const tutorialOverlay = document.getElementById("tutorialOverlay");
@@ -764,7 +764,7 @@
   if (colorblindBtn) {
     colorblindBtn.addEventListener("click", () => {
       colorblindMode = !colorblindMode;
-      colorblindBtn.textContent = colorblindMode ? "Colorblind: ON" : "Colorblind";
+      colorblindBtn.textContent = colorblindMode ? _t('luminaColorblindOn') : _t('luminaColorblind');
       if (colorblindMode) {
         lmAchStats.colorblindPlayed = true;
         saveLmAch(); checkLmAch(); showLmAchPopup();
@@ -1585,7 +1585,7 @@
     c.shadowColor = rgb(pal.crystal, 0.8); c.shadowBlur = 20;
     c.font = "bold 28px 'Trebuchet MS', sans-serif";
     c.fillStyle = rgb([255, 255, 100], 0.95);
-    c.fillText("BONUS ROUND!", CFG.W / 2, CFG.H * 0.08);
+    c.fillText(_t('luminaBonusRound'), CFG.W / 2, CFG.H * 0.08);
     c.shadowBlur = 0;
     c.font = "bold 18px 'Trebuchet MS', sans-serif";
     c.fillStyle = rgb([255, 255, 200], 0.8);
@@ -1603,10 +1603,10 @@
     c.globalAlpha = clamp(chainAlpha, 0.3, 1);
     c.shadowColor = rgb(pal.crystal, 0.6); c.shadowBlur = 8;
     c.fillStyle = chainMultiplier >= 3 ? "rgba(255,100,100,0.95)" : chainMultiplier >= 2 ? "rgba(255,200,100,0.95)" : "rgba(255,255,200,0.9)";
-    c.fillText("x" + chainCount + " CHAIN!", player.x, screenY - 28);
+    c.fillText("x" + chainCount + " " + _t('luminaChain') + "!", player.x, screenY - 28);
     if (chainMultiplier > 1) {
       c.font = "bold 11px 'Trebuchet MS', sans-serif";
-      c.fillText(chainMultiplier + "x multiplier", player.x, screenY - 16);
+      c.fillText(chainMultiplier + "x " + _t('lumMultiplier'), player.x, screenY - 16);
     }
     c.shadowBlur = 0; c.globalAlpha = 1;
     c.restore();

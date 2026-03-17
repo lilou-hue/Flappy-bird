@@ -1824,7 +1824,7 @@ function drawHUD() {
   /* Combo counter with background pill */
   if (game.comboCount > 1) {
     ctx.save();
-    const comboText = game.comboCount + 'x COMBO';
+    const comboText = game.comboCount + 'x ' + I18N.t('sfCombo');
     ctx.font = 'bold 16px "Trebuchet MS", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -1891,7 +1891,7 @@ function drawHUD() {
     ctx.textAlign = 'center';
     ctx.shadowBlur = 10;
     ctx.shadowColor = '#ff3333';
-    ctx.fillText('!! BOSS !!', GAME_W / 2, 48);
+    ctx.fillText(I18N.t('sfBossWarning'), GAME_W / 2, 48);
     ctx.restore();
   }
 
@@ -1901,7 +1901,7 @@ function drawHUD() {
     ctx.font = '11px "Trebuchet MS", sans-serif';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
-    const label = player.shielded ? 'SHIELD' : player.rapidFire ? 'RAPID FIRE' : 'SPREAD';
+    const label = player.shielded ? I18N.t('sfShield') : player.rapidFire ? I18N.t('sfRapidFire') : I18N.t('sfSpread');
     ctx.fillText(label + ' ' + Math.ceil(player.powerTimer) + 's', 8, 26);
   }
 }
