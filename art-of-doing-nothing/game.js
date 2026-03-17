@@ -572,10 +572,13 @@
     });
     choiceContainer.appendChild(replayBtn);
 
-    // SlayPlay integration
+    // SlayPlay integration — only show score card overlay on final chapter
+    // (intermediate chapters show our own next/select/replay buttons)
     if (typeof Arcade !== 'undefined') {
       Arcade.onGameOver('art-of-doing-nothing', score);
-      document.body.appendChild(Arcade.createScoreCard('art-of-doing-nothing', score, GameState.getBest()));
+      if (ch === 5) {
+        document.body.appendChild(Arcade.createScoreCard('art-of-doing-nothing', score, GameState.getBest()));
+      }
     }
     if (typeof Leaderboard !== 'undefined' && score > 0) {
       Leaderboard.submitScore('art-of-doing-nothing', score).then(function () {
