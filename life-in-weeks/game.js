@@ -314,13 +314,18 @@
             var x = e.clientX + 12;
             var y = e.clientY - 30;
 
-            // Keep tooltip on screen
-            var rect = tooltip.getBoundingClientRect();
-            if (x + 200 > window.innerWidth) {
-                x = e.clientX - 12 - 200;
+            // Measure actual tooltip size and keep on screen
+            var tw = tooltip.offsetWidth;
+            var th = tooltip.offsetHeight;
+            if (x + tw + 8 > window.innerWidth) {
+                x = e.clientX - 12 - tw;
             }
+            if (x < 4) x = 4;
             if (y < 4) {
                 y = e.clientY + 16;
+            }
+            if (y + th > window.innerHeight) {
+                y = window.innerHeight - th - 4;
             }
 
             tooltip.style.left = x + 'px';
