@@ -1,4 +1,4 @@
-const CACHE_NAME = 'slayplay-v13';
+const CACHE_NAME = 'slayplay-v14';
 
 const PRECACHE_URLS = [
   '/',
@@ -100,6 +100,10 @@ const PRECACHE_URLS = [
   '/art-of-doing-nothing/scenes/chapter3.js',
   '/art-of-doing-nothing/scenes/chapter4.js',
   '/art-of-doing-nothing/scenes/chapter5.js',
+  '/heart-serve/',
+  '/heart-serve/game.js',
+  '/heart-serve/audio.js',
+  '/heart-serve/styles.css',
 ];
 
 const NETWORK_FIRST_HOSTS = [

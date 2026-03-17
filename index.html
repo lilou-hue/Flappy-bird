@@ -2834,9 +2834,12 @@
           // Paddles
           var py = H*0.6 + Math.sin(t*2)*15;
           x.fillStyle = '#ff6bb5';
-          x.beginPath(); x.roundRect(30, py-18, 8, 36, 4); x.fill();
+          if (x.roundRect) { x.beginPath(); x.roundRect(30, py-18, 8, 36, 4); x.fill(); }
+          else { x.fillRect(30, py-18, 8, 36); }
           x.fillStyle = '#c084fc';
-          x.beginPath(); x.roundRect(W-38, H*0.6 + Math.sin(t*2.5+1)*15 - 18, 8, 36, 4); x.fill();
+          var opy = H*0.6 + Math.sin(t*2.5+1)*15;
+          if (x.roundRect) { x.beginPath(); x.roundRect(W-38, opy-18, 8, 36, 4); x.fill(); }
+          else { x.fillRect(W-38, opy-18, 8, 36); }
 
           // Ball
           var bx = W/2 + Math.sin(t*3)*120;
