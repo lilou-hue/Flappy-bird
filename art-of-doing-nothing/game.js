@@ -319,197 +319,623 @@
   }
 
   function drawBedroomBg() {
-    // Window with moonlight
-    ctx.fillStyle = 'rgba(100,120,180,0.08)';
-    ctx.fillRect(canvasW * 0.75, canvasH * 0.05, canvasW * 0.2, canvasH * 0.3);
-    // Window frame
-    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(canvasW * 0.75, canvasH * 0.05, canvasW * 0.2, canvasH * 0.3);
+    var W = canvasW, H = canvasH, t = animTime;
+    // Wall texture
+    var wallGrad = ctx.createLinearGradient(0, 0, 0, H * 0.78);
+    wallGrad.addColorStop(0, 'rgba(50,30,60,0.12)');
+    wallGrad.addColorStop(1, 'rgba(35,20,45,0.18)');
+    ctx.fillStyle = wallGrad;
+    ctx.fillRect(0, 0, W, H * 0.78);
+    // Wallpaper pattern (subtle vertical stripes)
+    ctx.strokeStyle = 'rgba(80,50,100,0.04)';
+    ctx.lineWidth = 1;
+    for (var ws = 0; ws < W; ws += 18) {
+      ctx.beginPath(); ctx.moveTo(ws, 0); ctx.lineTo(ws, H * 0.78); ctx.stroke();
+    }
+
+    // Window with moonlit sky
+    var wx = W * 0.75, wy = H * 0.04, ww = W * 0.21, wh = H * 0.32;
+    // Sky gradient through window
+    var skyGrad = ctx.createLinearGradient(wx, wy, wx, wy + wh);
+    skyGrad.addColorStop(0, 'rgba(20,25,60,0.3)');
+    skyGrad.addColorStop(0.6, 'rgba(40,45,90,0.2)');
+    skyGrad.addColorStop(1, 'rgba(30,35,70,0.15)');
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(wx, wy, ww, wh);
+    // Moon with glow halo
+    var moonX = wx + ww * 0.65, moonY = wy + wh * 0.25;
+    var moonGlow = ctx.createRadialGradient(moonX, moonY, 3, moonX, moonY, 30);
+    moonGlow.addColorStop(0, 'rgba(255,245,220,0.3)');
+    moonGlow.addColorStop(0.4, 'rgba(255,245,220,0.08)');
+    moonGlow.addColorStop(1, 'rgba(255,245,220,0)');
+    ctx.fillStyle = moonGlow;
+    ctx.beginPath(); ctx.arc(moonX, moonY, 30, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,245,220,0.5)';
+    ctx.beginPath(); ctx.arc(moonX, moonY, 7, 0, Math.PI * 2); ctx.fill();
+    // Crescent shadow
+    ctx.fillStyle = 'rgba(20,25,60,0.4)';
+    ctx.beginPath(); ctx.arc(moonX + 3, moonY - 1, 6, 0, Math.PI * 2); ctx.fill();
+    // Stars in window
+    for (var si = 0; si < 8; si++) {
+      var starA = 0.15 + Math.sin(t * 3 + si * 2.3) * 0.1;
+      ctx.fillStyle = 'rgba(255,255,255,' + starA + ')';
+      ctx.fillRect(wx + 5 + (si * 17) % ww, wy + 3 + (si * 11) % (wh * 0.6), 1.5, 1.5);
+    }
+    // Window frame (wooden)
+    ctx.strokeStyle = 'rgba(140,110,80,0.2)';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(wx, wy, ww, wh);
+    ctx.beginPath(); ctx.moveTo(wx + ww / 2, wy); ctx.lineTo(wx + ww / 2, wy + wh); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(wx, wy + wh / 2); ctx.lineTo(wx + ww, wy + wh / 2); ctx.stroke();
+    // Window sill
+    ctx.fillStyle = 'rgba(140,110,80,0.15)';
+    ctx.fillRect(wx - 3, wy + wh, ww + 6, 5);
+
+    // Curtains (draped, with folds)
+    ctx.fillStyle = 'rgba(80,50,110,0.2)';
+    // Left curtain
     ctx.beginPath();
-    ctx.moveTo(canvasW * 0.85, canvasH * 0.05);
-    ctx.lineTo(canvasW * 0.85, canvasH * 0.35);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(canvasW * 0.75, canvasH * 0.2);
-    ctx.lineTo(canvasW * 0.95, canvasH * 0.2);
-    ctx.stroke();
-    // Moon
-    ctx.fillStyle = 'rgba(240,230,200,0.25)';
-    ctx.beginPath();
-    ctx.arc(canvasW * 0.88, canvasH * 0.12, 8, 0, Math.PI * 2);
+    ctx.moveTo(wx - 8, wy - 5);
+    ctx.quadraticCurveTo(wx - 2, wy + wh * 0.3, wx - 6, wy + wh + 8);
+    ctx.lineTo(wx - 14, wy + wh + 8);
+    ctx.quadraticCurveTo(wx - 12, wy + wh * 0.5, wx - 14, wy - 5);
     ctx.fill();
-    // Curtain
-    ctx.fillStyle = 'rgba(80,50,100,0.15)';
-    ctx.fillRect(canvasW * 0.72, canvasH * 0.03, 6, canvasH * 0.34);
-    ctx.fillRect(canvasW * 0.95, canvasH * 0.03, 6, canvasH * 0.34);
-    // Floor
-    ctx.fillStyle = 'rgba(60,45,35,0.15)';
-    ctx.fillRect(0, canvasH * 0.78, canvasW, canvasH * 0.22);
+    // Right curtain
+    ctx.beginPath();
+    ctx.moveTo(wx + ww + 8, wy - 5);
+    ctx.quadraticCurveTo(wx + ww + 2, wy + wh * 0.3, wx + ww + 6, wy + wh + 8);
+    ctx.lineTo(wx + ww + 14, wy + wh + 8);
+    ctx.quadraticCurveTo(wx + ww + 12, wy + wh * 0.5, wx + ww + 14, wy - 5);
+    ctx.fill();
+    // Curtain rod
+    ctx.strokeStyle = 'rgba(180,150,120,0.15)';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(wx - 18, wy - 6); ctx.lineTo(wx + ww + 18, wy - 6); ctx.stroke();
+
+    // Moon light beam on floor
+    ctx.save();
+    ctx.globalAlpha = 0.04 + Math.sin(t * 0.5) * 0.01;
+    ctx.fillStyle = '#C0D0FF';
+    ctx.beginPath();
+    ctx.moveTo(wx, wy + wh);
+    ctx.lineTo(wx - 40, H);
+    ctx.lineTo(wx + ww + 40, H);
+    ctx.lineTo(wx + ww, wy + wh);
+    ctx.fill();
+    ctx.restore();
+
+    // Floor (wood planks)
+    var floorY = H * 0.78;
+    var floorGrad = ctx.createLinearGradient(0, floorY, 0, H);
+    floorGrad.addColorStop(0, 'rgba(80,60,45,0.2)');
+    floorGrad.addColorStop(1, 'rgba(60,45,35,0.25)');
+    ctx.fillStyle = floorGrad;
+    ctx.fillRect(0, floorY, W, H - floorY);
+    // Plank lines
+    ctx.strokeStyle = 'rgba(40,30,20,0.06)';
+    ctx.lineWidth = 1;
+    for (var pl = 0; pl < W; pl += 30 + (pl % 3) * 10) {
+      ctx.beginPath(); ctx.moveTo(pl, floorY); ctx.lineTo(pl, H); ctx.stroke();
+    }
+    // Baseboard
+    ctx.fillStyle = 'rgba(100,80,60,0.1)';
+    ctx.fillRect(0, floorY - 3, W, 6);
+
+    // Poster on wall (small rectangle)
+    ctx.fillStyle = 'rgba(80,100,120,0.08)';
+    ctx.fillRect(W * 0.05, H * 0.12, 28, 36);
+    ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+    ctx.strokeRect(W * 0.05, H * 0.12, 28, 36);
+
+    // Pile of clothes on floor
+    ctx.fillStyle = 'rgba(90,70,110,0.1)';
+    ctx.beginPath();
+    ctx.ellipse(W * 0.15, H * 0.82, 18, 8, 0.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(60,80,60,0.08)';
+    ctx.beginPath();
+    ctx.ellipse(W * 0.18, H * 0.84, 12, 5, -0.3, 0, Math.PI * 2);
+    ctx.fill();
   }
 
   function drawCampusBg() {
-    // Ground / grass
-    ctx.fillStyle = 'rgba(40,80,40,0.12)';
-    ctx.fillRect(0, canvasH * 0.7, canvasW, canvasH * 0.3);
-    // Path
-    ctx.fillStyle = 'rgba(180,170,150,0.08)';
+    var W = canvasW, H = canvasH, t = animTime;
+    // Sky with clouds
+    var skyGrad = ctx.createLinearGradient(0, 0, 0, H * 0.5);
+    skyGrad.addColorStop(0, 'rgba(60,80,140,0.08)');
+    skyGrad.addColorStop(1, 'rgba(80,100,160,0)');
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(0, 0, W, H * 0.5);
+
+    // Clouds (slow moving)
+    ctx.fillStyle = 'rgba(150,160,180,0.06)';
+    for (var ci = 0; ci < 3; ci++) {
+      var cx = ((ci * 180 + t * 4) % (W + 120)) - 60;
+      var cy = H * 0.08 + ci * 20;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, 40 + ci * 8, 12, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(cx + 25, cy - 5, 25, 10, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(cx - 20, cy + 3, 22, 8, 0, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // Distant buildings (skyline)
+    ctx.fillStyle = 'rgba(25,35,55,0.1)';
+    var buildings = [
+      { x: 0.02, w: 0.06, h: 0.25 }, { x: 0.09, w: 0.04, h: 0.35 },
+      { x: 0.14, w: 0.07, h: 0.2 }, { x: 0.22, w: 0.03, h: 0.4 }
+    ];
+    for (var bi = 0; bi < buildings.length; bi++) {
+      var b = buildings[bi];
+      ctx.fillRect(W * b.x, H * (0.7 - b.h), W * b.w, H * b.h);
+      // Windows
+      ctx.fillStyle = 'rgba(255,220,120,' + (0.06 + Math.sin(t + bi * 2) * 0.03) + ')';
+      for (var bwy = 0; bwy < 4; bwy++) {
+        for (var bwx = 0; bwx < 2; bwx++) {
+          ctx.fillRect(W * b.x + 4 + bwx * (W * b.w * 0.4), H * (0.7 - b.h) + 8 + bwy * (H * b.h * 0.22), 4, 6);
+        }
+      }
+      ctx.fillStyle = 'rgba(25,35,55,0.1)';
+    }
+
+    // Library building (main, detailed)
+    var lx = W * 0.04, ly = H * 0.18, lw = W * 0.17, lh = H * 0.52;
+    var libGrad = ctx.createLinearGradient(lx, ly, lx + lw, ly + lh);
+    libGrad.addColorStop(0, 'rgba(40,50,75,0.2)');
+    libGrad.addColorStop(1, 'rgba(30,40,60,0.25)');
+    ctx.fillStyle = libGrad;
+    ctx.fillRect(lx, ly, lw, lh);
+    // Roof
+    ctx.fillStyle = 'rgba(50,60,80,0.2)';
     ctx.beginPath();
-    ctx.moveTo(0, canvasH * 0.85);
-    ctx.quadraticCurveTo(canvasW * 0.5, canvasH * 0.75, canvasW, canvasH * 0.82);
-    ctx.lineTo(canvasW, canvasH);
-    ctx.lineTo(0, canvasH);
-    ctx.fill();
-    // Library building silhouette
-    ctx.fillStyle = 'rgba(30,40,60,0.15)';
-    ctx.fillRect(canvasW * 0.05, canvasH * 0.2, canvasW * 0.15, canvasH * 0.5);
-    // Windows (warm glow)
+    ctx.moveTo(lx - 5, ly); ctx.lineTo(lx + lw / 2, ly - 15); ctx.lineTo(lx + lw + 5, ly); ctx.fill();
+    // Door
+    ctx.fillStyle = 'rgba(100,80,60,0.15)';
+    ctx.fillRect(lx + lw * 0.35, ly + lh * 0.6, lw * 0.3, lh * 0.4);
+    // Warm windows (3 rows)
     for (var wy = 0; wy < 3; wy++) {
-      for (var wx = 0; wx < 2; wx++) {
-        ctx.fillStyle = 'rgba(255,220,120,' + (0.1 + Math.sin(animTime + wy + wx) * 0.05) + ')';
-        ctx.fillRect(canvasW * 0.07 + wx * 18, canvasH * 0.25 + wy * 40, 10, 14);
+      for (var wx2 = 0; wx2 < 3; wx2++) {
+        var winGlow = 0.08 + Math.sin(t * 1.5 + wy * 1.2 + wx2 * 0.8) * 0.04;
+        ctx.fillStyle = 'rgba(255,220,120,' + winGlow + ')';
+        ctx.fillRect(lx + 6 + wx2 * (lw * 0.3), ly + 10 + wy * (lh * 0.18), lw * 0.2, lh * 0.12);
       }
     }
-    // Tree
-    ctx.fillStyle = 'rgba(40,30,20,0.2)';
-    ctx.fillRect(canvasW * 0.88, canvasH * 0.35, 6, canvasH * 0.35);
-    ctx.fillStyle = 'rgba(50,90,40,0.15)';
+    // "LIBRARY" text
+    ctx.fillStyle = 'rgba(255,255,255,0.06)';
+    ctx.font = '6px "Space Grotesk", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('LIBRARY', lx + lw / 2, ly + lh * 0.58);
+    ctx.textAlign = 'left';
+
+    // Trees (multiple, with canopy detail)
+    var trees = [{ x: 0.86, s: 1 }, { x: 0.92, s: 0.7 }, { x: 0.78, s: 0.5 }];
+    for (var ti = 0; ti < trees.length; ti++) {
+      var tr = trees[ti];
+      // Trunk
+      ctx.fillStyle = 'rgba(60,45,30,' + (0.15 * tr.s + 0.05) + ')';
+      ctx.fillRect(W * tr.x - 2, H * 0.35, 5 * tr.s, H * 0.35 * tr.s);
+      // Canopy layers
+      var leafSway = Math.sin(t * 0.8 + ti) * 2 * tr.s;
+      ctx.fillStyle = 'rgba(40,80,40,' + (0.12 * tr.s + 0.03) + ')';
+      ctx.beginPath();
+      ctx.arc(W * tr.x + leafSway, H * 0.32, 22 * tr.s, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = 'rgba(60,100,50,' + (0.08 * tr.s + 0.02) + ')';
+      ctx.beginPath();
+      ctx.arc(W * tr.x + 8 * tr.s + leafSway, H * 0.28, 16 * tr.s, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath();
+      ctx.arc(W * tr.x - 6 * tr.s + leafSway, H * 0.3, 14 * tr.s, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // Ground (layered grass with path)
+    var grassGrad = ctx.createLinearGradient(0, H * 0.68, 0, H);
+    grassGrad.addColorStop(0, 'rgba(45,85,40,0.12)');
+    grassGrad.addColorStop(0.3, 'rgba(55,95,45,0.15)');
+    grassGrad.addColorStop(1, 'rgba(35,70,30,0.18)');
+    ctx.fillStyle = grassGrad;
+    ctx.fillRect(0, H * 0.68, W, H * 0.32);
+    // Winding path
+    ctx.fillStyle = 'rgba(200,190,170,0.1)';
     ctx.beginPath();
-    ctx.arc(canvasW * 0.91, canvasH * 0.3, 25, 0, Math.PI * 2);
+    ctx.moveTo(0, H * 0.88);
+    ctx.bezierCurveTo(W * 0.2, H * 0.8, W * 0.4, H * 0.82, W * 0.6, H * 0.78);
+    ctx.bezierCurveTo(W * 0.8, H * 0.74, W * 0.9, H * 0.8, W, H * 0.82);
+    ctx.lineTo(W, H * 0.88);
+    ctx.bezierCurveTo(W * 0.9, H * 0.86, W * 0.8, H * 0.8, W * 0.6, H * 0.84);
+    ctx.bezierCurveTo(W * 0.4, H * 0.88, W * 0.2, H * 0.86, 0, H * 0.94);
     ctx.fill();
+
+    // Lamp post
+    ctx.strokeStyle = 'rgba(80,80,80,0.15)';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(W * 0.5, H * 0.35); ctx.lineTo(W * 0.5, H * 0.72); ctx.stroke();
+    // Lamp glow
+    var lampGlow = ctx.createRadialGradient(W * 0.5, H * 0.34, 2, W * 0.5, H * 0.34, 20);
+    lampGlow.addColorStop(0, 'rgba(255,220,150,' + (0.12 + Math.sin(t) * 0.03) + ')');
+    lampGlow.addColorStop(1, 'rgba(255,220,150,0)');
+    ctx.fillStyle = lampGlow;
+    ctx.beginPath(); ctx.arc(W * 0.5, H * 0.34, 20, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,240,200,0.2)';
+    ctx.beginPath(); ctx.arc(W * 0.5, H * 0.34, 4, 0, Math.PI * 2); ctx.fill();
+
+    // Bench
+    ctx.fillStyle = 'rgba(90,70,50,0.12)';
+    ctx.fillRect(W * 0.42, H * 0.73, 24, 4);
+    ctx.fillRect(W * 0.43, H * 0.68, 22, 5);
+    ctx.fillRect(W * 0.44, H * 0.77, 2, 6);
+    ctx.fillRect(W * 0.62, H * 0.77, 2, 6);
   }
 
   function drawNightDeskBg() {
-    // Dark room, only screen light
-    ctx.fillStyle = 'rgba(0,0,0,0.15)';
-    ctx.fillRect(0, 0, canvasW, canvasH);
-    // Screen cone of light
+    var W = canvasW, H = canvasH, t = animTime;
+    // Very dark room overlay
+    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+    ctx.fillRect(0, 0, W, H);
+
+    // Screen cone of light (volumetric)
     ctx.save();
-    var glow = ctx.createRadialGradient(canvasW * 0.68, canvasH * 0.4, 10, canvasW * 0.68, canvasH * 0.4, 120);
-    glow.addColorStop(0, 'rgba(80,180,255,0.08)');
+    var glow = ctx.createRadialGradient(W * 0.68, H * 0.35, 5, W * 0.68, H * 0.45, 150);
+    glow.addColorStop(0, 'rgba(80,180,255,0.1)');
+    glow.addColorStop(0.3, 'rgba(80,180,255,0.04)');
     glow.addColorStop(1, 'rgba(80,180,255,0)');
     ctx.fillStyle = glow;
-    ctx.fillRect(0, 0, canvasW, canvasH);
+    ctx.fillRect(0, 0, W, H);
     ctx.restore();
-    // Window (dark, nighttime)
-    ctx.strokeStyle = 'rgba(255,255,255,0.04)';
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(canvasW * 0.82, canvasH * 0.08, canvasW * 0.12, canvasH * 0.2);
-    // City lights through window
-    for (var ci = 0; ci < 5; ci++) {
-      ctx.fillStyle = 'rgba(255,200,100,' + (0.03 + Math.random() * 0.03) + ')';
-      ctx.fillRect(canvasW * 0.84 + ci * 6, canvasH * 0.18, 2, 3);
+
+    // Wall with shelf
+    ctx.fillStyle = 'rgba(50,45,55,0.08)';
+    ctx.fillRect(W * 0.02, H * 0.2, W * 0.2, 4);
+    // Books on shelf
+    var bookColors = ['rgba(180,60,60,0.1)', 'rgba(60,60,180,0.1)', 'rgba(60,140,60,0.08)', 'rgba(180,140,60,0.08)', 'rgba(120,60,140,0.1)'];
+    for (var bk = 0; bk < 5; bk++) {
+      ctx.fillStyle = bookColors[bk];
+      var bkh = 12 + (bk * 3) % 8;
+      ctx.fillRect(W * 0.03 + bk * 10, H * 0.2 - bkh, 7, bkh);
     }
+
+    // Window (dark cityscape)
+    var winX = W * 0.82, winY = H * 0.06, winW = W * 0.14, winH = H * 0.24;
+    ctx.fillStyle = 'rgba(10,15,30,0.3)';
+    ctx.fillRect(winX, winY, winW, winH);
+    ctx.strokeStyle = 'rgba(80,70,60,0.12)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(winX, winY, winW, winH);
+    ctx.beginPath(); ctx.moveTo(winX + winW / 2, winY); ctx.lineTo(winX + winW / 2, winY + winH); ctx.stroke();
+    // City skyline
+    ctx.fillStyle = 'rgba(20,25,40,0.3)';
+    var skyline = [0.15, 0.25, 0.1, 0.3, 0.18, 0.22, 0.12];
+    for (var sk = 0; sk < skyline.length; sk++) {
+      ctx.fillRect(winX + 2 + sk * (winW / 7), winY + winH * (1 - skyline[sk]), winW / 8, winH * skyline[sk]);
+    }
+    // Tiny city lights (twinkling)
+    for (var cl = 0; cl < 12; cl++) {
+      var clA = 0.1 + Math.sin(t * 4 + cl * 3.7) * 0.08;
+      ctx.fillStyle = 'rgba(255,200,100,' + clA + ')';
+      ctx.fillRect(winX + 3 + (cl * 9) % winW, winY + winH * 0.5 + (cl * 7) % (winH * 0.4), 1.5, 1.5);
+    }
+
+    // Notification light on phone (red blink)
+    if (Math.sin(t * 2) > 0.5) {
+      ctx.fillStyle = 'rgba(255,60,60,0.3)';
+      ctx.beginPath(); ctx.arc(W * 0.15, H * 0.65, 2, 0, Math.PI * 2); ctx.fill();
+      var phonGlow = ctx.createRadialGradient(W * 0.15, H * 0.65, 1, W * 0.15, H * 0.65, 8);
+      phonGlow.addColorStop(0, 'rgba(255,60,60,0.1)');
+      phonGlow.addColorStop(1, 'rgba(255,60,60,0)');
+      ctx.fillStyle = phonGlow;
+      ctx.beginPath(); ctx.arc(W * 0.15, H * 0.65, 8, 0, Math.PI * 2); ctx.fill();
+    }
+
     // Floor
-    ctx.fillStyle = 'rgba(40,35,45,0.1)';
-    ctx.fillRect(0, canvasH * 0.82, canvasW, canvasH * 0.18);
+    ctx.fillStyle = 'rgba(35,30,40,0.12)';
+    ctx.fillRect(0, H * 0.82, W, H * 0.18);
+
+    // Crumpled paper near desk
+    ctx.fillStyle = 'rgba(200,195,185,0.06)';
+    ctx.beginPath(); ctx.arc(W * 0.45, H * 0.85, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(W * 0.48, H * 0.87, 3, 0, Math.PI * 2); ctx.fill();
   }
 
   function drawPanicRoomBg() {
-    // Pulsing red vignette
-    var pulse = 0.03 + Math.sin(animTime * 2) * 0.02;
-    var vig = ctx.createRadialGradient(canvasW * 0.5, canvasH * 0.5, canvasH * 0.2, canvasW * 0.5, canvasH * 0.5, canvasH * 0.7);
+    var W = canvasW, H = canvasH, t = animTime;
+    // Intense pulsing red vignette
+    var pulse = Math.sin(t * 2);
+    var vigIntensity = 0.04 + pulse * 0.03;
+    var vig = ctx.createRadialGradient(W * 0.5, H * 0.5, H * 0.15, W * 0.5, H * 0.5, H * 0.8);
     vig.addColorStop(0, 'rgba(0,0,0,0)');
-    vig.addColorStop(1, 'rgba(120,20,20,' + pulse + ')');
+    vig.addColorStop(0.6, 'rgba(100,15,15,' + vigIntensity * 0.5 + ')');
+    vig.addColorStop(1, 'rgba(120,20,20,' + vigIntensity + ')');
     ctx.fillStyle = vig;
-    ctx.fillRect(0, 0, canvasW, canvasH);
-    // Clock on wall
-    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+    ctx.fillRect(0, 0, W, H);
+
+    // Screen light (harsh, blue-white)
+    var screenGlow = ctx.createRadialGradient(W * 0.68, H * 0.4, 5, W * 0.68, H * 0.4, 100);
+    screenGlow.addColorStop(0, 'rgba(100,140,255,0.08)');
+    screenGlow.addColorStop(1, 'rgba(100,140,255,0)');
+    ctx.fillStyle = screenGlow;
+    ctx.fillRect(0, 0, W, H);
+
+    // Wall clock (large, prominent)
+    var clkX = W * 0.12, clkY = H * 0.16, clkR = 22;
+    // Clock face
+    ctx.fillStyle = 'rgba(30,25,35,0.2)';
+    ctx.beginPath(); ctx.arc(clkX, clkY, clkR, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(clkX, clkY, clkR, 0, Math.PI * 2); ctx.stroke();
+    // Hour markers
+    for (var hm = 0; hm < 12; hm++) {
+      var ha = (hm / 12) * Math.PI * 2 - Math.PI / 2;
+      ctx.fillStyle = 'rgba(255,255,255,0.1)';
+      ctx.fillRect(clkX + Math.cos(ha) * (clkR - 5) - 1, clkY + Math.sin(ha) * (clkR - 5) - 1, 2, 2);
+    }
+    // Hands (pointing to ~2:00)
+    var minAngle = t * 0.8;
+    var hourAngle = -Math.PI / 3; // ~2 o'clock
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(clkX, clkY);
+    ctx.lineTo(clkX + Math.cos(hourAngle) * (clkR * 0.5), clkY + Math.sin(hourAngle) * (clkR * 0.5));
+    ctx.stroke();
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.arc(canvasW * 0.12, canvasH * 0.15, 15, 0, Math.PI * 2);
+    ctx.moveTo(clkX, clkY);
+    ctx.lineTo(clkX + Math.cos(minAngle) * (clkR * 0.7), clkY + Math.sin(minAngle) * (clkR * 0.7));
     ctx.stroke();
-    // Clock hands
-    var clockAngle = animTime * 0.5;
+    // Second hand (red, sweeping)
+    ctx.strokeStyle = 'rgba(255,80,80,0.2)';
+    ctx.lineWidth = 1;
+    var secAngle = t * 6;
     ctx.beginPath();
-    ctx.moveTo(canvasW * 0.12, canvasH * 0.15);
-    ctx.lineTo(canvasW * 0.12 + Math.cos(clockAngle) * 10, canvasH * 0.15 + Math.sin(clockAngle) * 10);
+    ctx.moveTo(clkX, clkY);
+    ctx.lineTo(clkX + Math.cos(secAngle) * (clkR * 0.65), clkY + Math.sin(secAngle) * (clkR * 0.65));
     ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(canvasW * 0.12, canvasH * 0.15);
-    ctx.lineTo(canvasW * 0.12 + Math.cos(clockAngle * 12) * 7, canvasH * 0.15 + Math.sin(clockAngle * 12) * 7);
-    ctx.stroke();
-    // "2:00 AM" text
-    ctx.fillStyle = 'rgba(255,80,80,0.15)';
-    ctx.font = '9px "Space Grotesk", sans-serif';
+    // Center dot
+    ctx.fillStyle = 'rgba(255,80,80,0.3)';
+    ctx.beginPath(); ctx.arc(clkX, clkY, 2, 0, Math.PI * 2); ctx.fill();
+
+    // "2:00 AM" digital display
+    ctx.fillStyle = 'rgba(255,60,60,' + (0.15 + pulse * 0.08) + ')';
+    ctx.font = 'bold 11px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('2:00 AM', canvasW * 0.12, canvasH * 0.15 + 25);
+    ctx.fillText('2:00 AM', clkX, clkY + clkR + 14);
     ctx.textAlign = 'left';
+
+    // Scattered papers / sticky notes
+    ctx.save();
+    ctx.globalAlpha = 0.08;
+    ctx.fillStyle = '#FFE066';
+    ctx.save(); ctx.translate(W * 0.08, H * 0.5); ctx.rotate(-0.1);
+    ctx.fillRect(0, 0, 16, 16); ctx.restore();
+    ctx.fillStyle = '#FF9999';
+    ctx.save(); ctx.translate(W * 0.13, H * 0.48); ctx.rotate(0.15);
+    ctx.fillRect(0, 0, 14, 14); ctx.restore();
+    ctx.fillStyle = '#99CCFF';
+    ctx.save(); ctx.translate(W * 0.06, H * 0.55); ctx.rotate(-0.2);
+    ctx.fillRect(0, 0, 15, 15); ctx.restore();
+    ctx.restore();
+
+    // Energy drink cans
+    ctx.fillStyle = 'rgba(60,200,60,0.08)';
+    ctx.fillRect(W * 0.2, H * 0.72, 6, 12);
+    ctx.fillStyle = 'rgba(200,60,60,0.08)';
+    ctx.fillRect(W * 0.23, H * 0.73, 6, 12);
+
+    // Floor
+    ctx.fillStyle = 'rgba(40,25,25,0.12)';
+    ctx.fillRect(0, H * 0.82, W, H * 0.18);
+
+    // Stress lines radiating from center (subtle)
+    ctx.save();
+    ctx.globalAlpha = 0.02 + pulse * 0.015;
+    ctx.strokeStyle = '#FF4444';
+    ctx.lineWidth = 1;
+    for (var sl = 0; sl < 12; sl++) {
+      var sa = (sl / 12) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.moveTo(W * 0.5 + Math.cos(sa) * 60, H * 0.5 + Math.sin(sa) * 45);
+      ctx.lineTo(W * 0.5 + Math.cos(sa) * 200, H * 0.5 + Math.sin(sa) * 150);
+      ctx.stroke();
+    }
+    ctx.restore();
   }
 
   function drawMindscapeBg() {
-    // Abstract golden dawn landscape
-    // Horizon glow
-    var dawnGrad = ctx.createLinearGradient(0, canvasH * 0.3, 0, canvasH);
-    dawnGrad.addColorStop(0, 'rgba(255,180,60,0)');
-    dawnGrad.addColorStop(0.5, 'rgba(255,180,60,0.06)');
-    dawnGrad.addColorStop(1, 'rgba(255,150,40,0.1)');
+    var W = canvasW, H = canvasH, t = animTime;
+    // Dawn horizon gradient (complex)
+    var dawnGrad = ctx.createLinearGradient(0, 0, 0, H);
+    dawnGrad.addColorStop(0, 'rgba(50,35,20,0.1)');
+    dawnGrad.addColorStop(0.3, 'rgba(120,80,30,0.05)');
+    dawnGrad.addColorStop(0.5, 'rgba(255,160,50,0.08)');
+    dawnGrad.addColorStop(0.7, 'rgba(255,200,80,0.1)');
+    dawnGrad.addColorStop(1, 'rgba(255,220,120,0.12)');
     ctx.fillStyle = dawnGrad;
-    ctx.fillRect(0, canvasH * 0.3, canvasW, canvasH * 0.7);
-    // Floating abstract shapes (memories)
-    ctx.globalAlpha = 0.04;
-    for (var mi = 0; mi < 6; mi++) {
-      var mx = (mi * 89 + animTime * 8) % (canvasW + 60) - 30;
-      var my = canvasH * 0.2 + Math.sin(animTime * 0.5 + mi * 1.5) * 30;
-      ctx.fillStyle = mi % 2 === 0 ? '#FFD700' : '#C4A97D';
-      ctx.beginPath();
-      ctx.arc(mx, my, 12 + mi * 3, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.globalAlpha = 1;
-    // Light rays from top
+    ctx.fillRect(0, 0, W, H);
+
+    // Sun rising (bottom center)
+    var sunY = H * 0.65 + Math.sin(t * 0.2) * 5;
+    var sunGlow = ctx.createRadialGradient(W * 0.5, sunY, 5, W * 0.5, sunY, 120);
+    sunGlow.addColorStop(0, 'rgba(255,220,100,0.15)');
+    sunGlow.addColorStop(0.3, 'rgba(255,180,60,0.06)');
+    sunGlow.addColorStop(1, 'rgba(255,150,30,0)');
+    ctx.fillStyle = sunGlow;
+    ctx.beginPath(); ctx.arc(W * 0.5, sunY, 120, 0, Math.PI * 2); ctx.fill();
+    // Sun disc
+    ctx.fillStyle = 'rgba(255,230,150,0.2)';
+    ctx.beginPath(); ctx.arc(W * 0.5, sunY, 18, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,245,200,0.25)';
+    ctx.beginPath(); ctx.arc(W * 0.5, sunY, 10, 0, Math.PI * 2); ctx.fill();
+
+    // Light rays (god rays, rotating slowly)
     ctx.save();
-    ctx.globalAlpha = 0.03;
-    for (var ri = 0; ri < 5; ri++) {
-      ctx.fillStyle = '#FFD700';
+    ctx.globalAlpha = 0.025;
+    for (var ri = 0; ri < 8; ri++) {
+      var rayAngle = (ri / 8) * Math.PI * 2 + t * 0.05;
+      ctx.fillStyle = ri % 2 === 0 ? '#FFD700' : '#FFA500';
       ctx.beginPath();
-      ctx.moveTo(canvasW * (0.3 + ri * 0.1), 0);
-      ctx.lineTo(canvasW * (0.25 + ri * 0.1), canvasH);
-      ctx.lineTo(canvasW * (0.35 + ri * 0.1), canvasH);
+      ctx.moveTo(W * 0.5, sunY);
+      ctx.lineTo(W * 0.5 + Math.cos(rayAngle - 0.04) * 300, sunY + Math.sin(rayAngle - 0.04) * 300);
+      ctx.lineTo(W * 0.5 + Math.cos(rayAngle + 0.04) * 300, sunY + Math.sin(rayAngle + 0.04) * 300);
       ctx.fill();
     }
     ctx.restore();
+
+    // Floating memory orbs (larger, with inner detail)
+    for (var mi = 0; mi < 8; mi++) {
+      var mx = (mi * 73 + t * 6) % (W + 80) - 40;
+      var my = H * 0.15 + Math.sin(t * 0.4 + mi * 1.3) * 35;
+      var ms = 8 + mi * 2.5;
+      var ma = 0.03 + Math.sin(t * 0.6 + mi) * 0.015;
+      // Outer glow
+      var orbGlow = ctx.createRadialGradient(mx, my, ms * 0.3, mx, my, ms * 2);
+      orbGlow.addColorStop(0, 'rgba(255,200,80,' + ma + ')');
+      orbGlow.addColorStop(1, 'rgba(255,200,80,0)');
+      ctx.fillStyle = orbGlow;
+      ctx.beginPath(); ctx.arc(mx, my, ms * 2, 0, Math.PI * 2); ctx.fill();
+      // Core
+      ctx.fillStyle = 'rgba(255,220,120,' + (ma * 2) + ')';
+      ctx.beginPath(); ctx.arc(mx, my, ms, 0, Math.PI * 2); ctx.fill();
+      // Inner highlight
+      ctx.fillStyle = 'rgba(255,255,255,' + (ma * 0.8) + ')';
+      ctx.beginPath(); ctx.arc(mx - ms * 0.2, my - ms * 0.2, ms * 0.3, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // Abstract ground (rolling hills)
+    ctx.fillStyle = 'rgba(80,60,20,0.06)';
+    ctx.beginPath();
+    ctx.moveTo(0, H * 0.75);
+    for (var hx = 0; hx <= W; hx += 20) {
+      ctx.lineTo(hx, H * 0.75 + Math.sin(hx * 0.015 + t * 0.3) * 8);
+    }
+    ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.fill();
+
+    // Second hill layer
+    ctx.fillStyle = 'rgba(100,75,25,0.04)';
+    ctx.beginPath();
+    ctx.moveTo(0, H * 0.82);
+    for (var hx2 = 0; hx2 <= W; hx2 += 20) {
+      ctx.lineTo(hx2, H * 0.82 + Math.sin(hx2 * 0.02 + 1 + t * 0.2) * 6);
+    }
+    ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.fill();
+
+    // Tiny flowers on ground
+    ctx.globalAlpha = 0.06;
+    var flowerColors = ['#FFD700', '#FF8C00', '#C4A97D', '#FFA07A'];
+    for (var fi = 0; fi < 12; fi++) {
+      ctx.fillStyle = flowerColors[fi % flowerColors.length];
+      var fx = (fi * 47) % W;
+      var fy = H * 0.78 + Math.sin(fx * 0.015 + t * 0.3) * 8 + (fi % 3) * 4;
+      ctx.beginPath(); ctx.arc(fx, fy, 2, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
   }
 
   function drawMeter() {
     meterDisplay += (window._.procrastination - meterDisplay) * 0.08;
 
     var mw = canvasW * 0.6;
-    var mh = 10;
+    var mh = 12;
     var mx = (canvasW - mw) / 2;
-    var my = canvasH - 25;
+    var my = canvasH - 28;
+    var fillW = Math.max(0, (meterDisplay / 100) * mw);
+    var t = animTime;
 
-    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    // Meter shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
     ctx.beginPath();
-    ctx.roundRect(mx, my, mw, mh, 5);
+    ctx.roundRect(mx + 1, my + 2, mw, mh, 6);
     ctx.fill();
 
-    var fillW = (meterDisplay / 100) * mw;
-    if (fillW > 0) {
+    // Background track
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+    ctx.beginPath();
+    ctx.roundRect(mx, my, mw, mh, 6);
+    ctx.fill();
+    // Inner track texture
+    ctx.fillStyle = 'rgba(255,255,255,0.02)';
+    ctx.beginPath();
+    ctx.roundRect(mx + 1, my + 1, mw - 2, mh / 2, 4);
+    ctx.fill();
+
+    // Fill gradient (multi-stop)
+    if (fillW > 2) {
       var mGrad = ctx.createLinearGradient(mx, 0, mx + mw, 0);
-      mGrad.addColorStop(0, '#4ade80');
-      mGrad.addColorStop(0.5, '#facc15');
+      mGrad.addColorStop(0, '#22c55e');
+      mGrad.addColorStop(0.3, '#84cc16');
+      mGrad.addColorStop(0.5, '#eab308');
+      mGrad.addColorStop(0.7, '#f97316');
       mGrad.addColorStop(1, '#ef4444');
       ctx.fillStyle = mGrad;
       ctx.beginPath();
-      ctx.roundRect(mx, my, fillW, mh, 5);
+      ctx.roundRect(mx, my, fillW, mh, 6);
       ctx.fill();
-    }
 
-    if (meterDisplay > 80 || meterDisplay < 20) {
-      var pulse = Math.sin(animTime * 6) * 0.3 + 0.3;
-      ctx.fillStyle = meterDisplay > 80
-        ? 'rgba(239,68,68,' + pulse + ')'
-        : 'rgba(74,222,128,' + pulse + ')';
+      // Glossy highlight on fill
+      ctx.fillStyle = 'rgba(255,255,255,0.12)';
       ctx.beginPath();
-      ctx.roundRect(mx, my, fillW, mh, 5);
+      ctx.roundRect(mx + 1, my + 1, fillW - 2, mh * 0.4, 4);
       ctx.fill();
+
+      // Animated shimmer on fill
+      var shimmerX = mx + ((t * 60) % (mw + 40)) - 20;
+      if (shimmerX < mx + fillW) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.roundRect(mx, my, fillW, mh, 6);
+        ctx.clip();
+        ctx.fillStyle = 'rgba(255,255,255,0.08)';
+        ctx.beginPath();
+        ctx.moveTo(shimmerX, my);
+        ctx.lineTo(shimmerX + 15, my);
+        ctx.lineTo(shimmerX + 8, my + mh);
+        ctx.lineTo(shimmerX - 7, my + mh);
+        ctx.fill();
+        ctx.restore();
+      }
     }
 
-    ctx.font = '10px "Space Grotesk", sans-serif';
+    // Extreme pulse (more dramatic)
+    if (meterDisplay > 80 || meterDisplay < 20) {
+      var pulse = Math.sin(t * 6) * 0.4 + 0.3;
+      var pulseColor = meterDisplay > 80 ? 'rgba(239,68,68,' : 'rgba(74,222,128,';
+      // Outer glow
+      ctx.save();
+      ctx.shadowColor = meterDisplay > 80 ? '#ef4444' : '#4ade80';
+      ctx.shadowBlur = 8 + pulse * 6;
+      ctx.fillStyle = pulseColor + (pulse * 0.5) + ')';
+      ctx.beginPath();
+      ctx.roundRect(mx, my, fillW, mh, 6);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Notch marks
+    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+    ctx.lineWidth = 1;
+    for (var ni = 1; ni < 4; ni++) {
+      var nx = mx + (mw * ni / 4);
+      ctx.beginPath(); ctx.moveTo(nx, my + 2); ctx.lineTo(nx, my + mh - 2); ctx.stroke();
+    }
+
+    // Sloth icon (left)
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('🦥', mx - 4, my + mh - 1);
+
+    // Clock icon (right)
+    ctx.textAlign = 'left';
+    ctx.fillText('⏰', mx + mw + 4, my + mh - 1);
+
+    // Label
+    ctx.font = '9px "Space Grotesk", sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillStyle = 'rgba(255,255,255,0.5)';
-    ctx.fillText('Procrastination', canvasW / 2, my - 4);
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    ctx.fillText('Procrastination', canvasW / 2, my - 5);
+    // Percentage
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.font = '8px "Space Grotesk", sans-serif';
+    ctx.fillText(Math.round(meterDisplay) + '%', canvasW / 2, my + mh + 10);
     ctx.textAlign = 'left';
   }
 
