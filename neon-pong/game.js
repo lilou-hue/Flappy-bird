@@ -711,6 +711,9 @@ function endMatch() {
     }
   } else {
     Audio.playDefeat();
+    if (typeof Arcade !== 'undefined') {
+      Arcade.onGameOver('neon-pong', 0);
+    }
   }
   checkAch();
 }

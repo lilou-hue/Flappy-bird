@@ -5,7 +5,14 @@
 // ── i18n ──
 I18N.createSelector(document.querySelector('.game__header'));
 I18N.applyDOM();
-window.addEventListener('langchange', () => { I18N.applyDOM(); renderAchList(); });
+window.addEventListener('langchange', () => {
+  I18N.applyDOM();
+  renderAchList();
+  for (const opt of themeSelect.options) {
+    const th = THEMES[opt.value];
+    if (th) opt.textContent = th.name();
+  }
+});
 
 // ── Constants ──
 const CW = 480, CH = 640;
@@ -178,9 +185,11 @@ function updateCanvasSize() {
 document.getElementById('fullscreenButton').addEventListener('click', () => {
   const el = document.getElementById('gameContainer');
   if (!document.fullscreenElement) {
-    (el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen).call(el);
+    const fn = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+    if (fn) fn.call(el);
   } else {
-    (document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen).call(document);
+    const fn = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+    if (fn) fn.call(document);
   }
 });
 document.addEventListener('fullscreenchange', () => { isFullscreen = !!document.fullscreenElement; requestAnimationFrame(updateCanvasSize); });
@@ -342,6 +351,10 @@ function resetGame() {
   isDragging = false;
   predictedPath = [];
   document.getElementById('score').textContent = '0';
+
+  // Remove old score card if present
+  const oldCard = document.querySelector('.arc-scorecard');
+  if (oldCard) oldCard.remove();
 
   Audio.init();
   Audio.resume();
@@ -972,8 +985,9 @@ function update(dt) {
 }
 
 // ── Game loop ──
-let lastTime = 0;
+let lastTime = null;
 function loop(timestamp) {
+  if (lastTime === null) lastTime = timestamp;
   const dt = Math.min((timestamp - lastTime) / 1000, 0.05);
   lastTime = timestamp;
   update(dt);
