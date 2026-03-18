@@ -1049,6 +1049,9 @@
   var screenTimer = null;
   function showScreen(name) {
     if (screenTimer) { clearTimeout(screenTimer); screenTimer = null; }
+    // Clear lingering particles on screen change
+    particles.length = 0;
+    if (pCtx && particleCanvas) pCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
     Object.keys(screens).forEach(function(k) {
       var s = screens[k];
       s.classList.remove('active');
@@ -1720,7 +1723,7 @@
       var p = particles[i];
       p.x += p.vx;
       p.y += p.vy;
-      p.alpha -= 0.015;
+      p.alpha -= 0.035;
       if (p.rotation !== undefined) p.rotation += p.spin || 0;
       if (p.alpha <= 0) { particles.splice(i, 1); continue; }
       pCtx.save();
@@ -3034,8 +3037,8 @@
     // Spawn celebration
     if (won) {
       var gcRect = $('gameContainer').getBoundingClientRect();
-      spawnHeart(gcRect.width / 2, gcRect.height / 3, 6);
-      spawnSparkles(gcRect.width / 2, gcRect.height / 3, 8);
+      spawnHeart(gcRect.width / 2, gcRect.height / 3, 3);
+      spawnSparkles(gcRect.width / 2, gcRect.height / 3, 4);
     }
 
     // Affection meters
