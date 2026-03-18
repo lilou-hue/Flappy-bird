@@ -1,0 +1,345 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg: #0a0a0a;
+  --panel: #111;
+  --green: #33ff33;
+  --green-dim: #1a8c1a;
+  --red: #ff3333;
+  --text: #ccc;
+  --text-dim: #555;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Space Grotesk', monospace, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.game {
+  max-width: 540px;
+  width: 100%;
+  padding: 0 8px 24px;
+}
+
+.game__header {
+  padding: 12px 0 8px;
+  text-align: center;
+}
+
+.game__header h1 {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--green);
+  text-shadow: 0 0 10px rgba(51, 255, 51, 0.3);
+}
+
+.game__header p {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+.back-link {
+  display: inline-block;
+  text-decoration: none;
+  color: var(--text-dim);
+  font-size: 13px;
+  margin-bottom: 4px;
+  transition: color 0.2s;
+}
+.back-link:hover { color: var(--text); }
+
+.game__panel {
+  position: relative;
+}
+
+/* ── Canvas ── */
+#gameCanvas {
+  width: 100%;
+  height: auto;
+  display: block;
+  border: 2px solid #1a1a1a;
+  border-radius: 4px;
+  background: #000;
+  image-rendering: pixelated;
+}
+
+/* CRT scanlines overlay */
+#gameCanvas::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 2px,
+    rgba(0,0,0,0.08) 2px,
+    rgba(0,0,0,0.08) 4px
+  );
+}
+
+/* ── Camera bar ── */
+#cameraBar {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.cam-btn {
+  flex: 1;
+  font-family: 'Space Grotesk', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 0;
+  border: 1px solid #2a2a2a;
+  border-radius: 4px;
+  background: #151515;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.15s;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.cam-btn:hover {
+  border-color: var(--green-dim);
+  color: var(--green-dim);
+}
+
+.cam-btn.active {
+  background: #0d1a0d;
+  border-color: var(--green);
+  color: var(--green);
+  box-shadow: 0 0 8px rgba(51, 255, 51, 0.15);
+}
+
+.cam-btn.has-entity {
+  animation: camAlert 0.8s ease-in-out infinite;
+}
+
+@keyframes camAlert {
+  0%, 100% { border-color: #2a2a2a; }
+  50% { border-color: rgba(255, 50, 50, 0.4); }
+}
+
+/* ── Status bar ── */
+#statusBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  padding: 8px 10px;
+  background: #111;
+  border: 1px solid #1a1a1a;
+  border-radius: 4px;
+}
+
+.power-display {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+}
+
+.power-bar {
+  flex: 1;
+  height: 8px;
+  background: #1a1a1a;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.power-fill {
+  height: 100%;
+  width: 100%;
+  background: var(--green);
+  border-radius: 4px;
+  transition: width 0.3s, background-color 0.5s;
+}
+
+.power-fill.low {
+  background: #ff8800;
+}
+
+.power-fill.critical {
+  background: var(--red);
+  animation: powerFlash 0.5s ease-in-out infinite;
+}
+
+@keyframes powerFlash {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.door-controls {
+  display: flex;
+  gap: 4px;
+}
+
+.door-btn {
+  font-family: 'Space Grotesk', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border: 1px solid #2a2a2a;
+  border-radius: 4px;
+  background: #151515;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 1px;
+}
+
+.door-btn:hover {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.door-btn.locked {
+  background: #1a0d0d;
+  border-color: var(--red);
+  color: var(--red);
+  box-shadow: 0 0 6px rgba(255, 51, 51, 0.15);
+}
+
+/* ── HUD ── */
+.game__hud {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.hud__score {
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+}
+
+.hud__score strong {
+  font-size: 18px;
+  color: var(--green);
+  font-variant-numeric: tabular-nums;
+}
+
+.hud__mute, .lb-toggle-btn, .hud__button {
+  font-family: 'Space Grotesk', monospace;
+  font-size: 13px;
+  padding: 6px 12px;
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  background: #151515;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.hud__mute:hover, .lb-toggle-btn:hover, .hud__button:hover {
+  border-color: #444;
+  color: var(--text);
+}
+
+/* ── Tutorial overlay ── */
+.tutorial-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 20px;
+}
+
+.tutorial-overlay.hidden {
+  display: none;
+}
+
+.tutorial-card {
+  max-width: 400px;
+  text-align: center;
+  color: var(--text);
+}
+
+.tutorial-card h2 {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: 6px;
+  color: var(--green);
+  text-shadow: 0 0 20px rgba(51, 255, 51, 0.3);
+  margin-bottom: 16px;
+}
+
+.tutorial-card p {
+  font-size: 15px;
+  color: #999;
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.tutorial-card ul {
+  text-align: left;
+  list-style: none;
+  margin-bottom: 24px;
+}
+
+.tutorial-card li {
+  font-size: 13px;
+  color: #888;
+  padding: 6px 0;
+  border-bottom: 1px solid #1a1a1a;
+  padding-left: 20px;
+  position: relative;
+}
+
+.tutorial-card li::before {
+  content: '›';
+  position: absolute;
+  left: 4px;
+  color: var(--green-dim);
+}
+
+.start-btn {
+  font-family: 'Space Grotesk', monospace;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 12px 32px;
+  border: 2px solid var(--green);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--green);
+  cursor: pointer;
+  letter-spacing: 3px;
+  transition: all 0.2s;
+}
+
+.start-btn:hover {
+  background: var(--green);
+  color: #000;
+  box-shadow: 0 0 20px rgba(51, 255, 51, 0.3);
+}
+
+/* ── Mobile ── */
+@media (max-width: 520px) {
+  .cam-btn { font-size: 10px; padding: 7px 0; }
+  .door-btn { font-size: 10px; padding: 5px 8px; }
+  .power-display { font-size: 10px; }
+  .game__header h1 { font-size: 20px; }
+}

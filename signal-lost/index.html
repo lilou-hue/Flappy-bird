@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-VMLC97VBGN"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-VMLC97VBGN');
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Signal Lost</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="../shop.css" />
+    <script src="../i18n.js"></script>
+  </head>
+  <body>
+    <main class="game" id="gameContainer">
+      <header class="game__header">
+        <a href="/" class="back-link" data-i18n="backToGames">&larr; Back to Games</a>
+        <h1 data-i18n="slTitle">Signal Lost</h1>
+        <p class="game__instructions" data-i18n="slInstructions">Monitor the cameras. Don't let it reach you.</p>
+      </header>
+      <section class="game__panel">
+        <canvas id="gameCanvas" width="480" height="640" aria-label="Signal Lost game"></canvas>
+
+        <div id="cameraBar">
+          <button class="cam-btn active" data-cam="0">CAM 1</button>
+          <button class="cam-btn" data-cam="1">CAM 2</button>
+          <button class="cam-btn" data-cam="2">CAM 3</button>
+          <button class="cam-btn" data-cam="3">CAM 4</button>
+          <button class="cam-btn" data-cam="4">CAM 5</button>
+        </div>
+
+        <div id="statusBar">
+          <div class="power-display">
+            <span data-i18n="slPower">POWER</span>
+            <div class="power-bar"><div class="power-fill" id="powerFill"></div></div>
+            <span id="powerPct">100%</span>
+          </div>
+          <div class="door-controls">
+            <button class="door-btn" id="doorLeft" data-i18n="slDoorLeft">DOOR L</button>
+            <button class="door-btn" id="doorRight" data-i18n="slDoorRight">DOOR R</button>
+          </div>
+        </div>
+
+        <div class="game__hud">
+          <div class="hud__score">
+            <span data-i18n="slSurvived">Survived</span>
+            <strong id="score">0:00</strong>
+          </div>
+          <div class="hud__score">
+            <span data-i18n="best">Best</span>
+            <strong id="bestScore">0:00</strong>
+          </div>
+          <button id="muteButton" class="hud__mute" type="button" aria-label="Toggle sound">&#x1F50A;</button>
+          <button id="leaderboardToggle" class="lb-toggle-btn" type="button" aria-label="Toggle leaderboard">&#x1F3C6;</button>
+          <button id="fullscreenButton" class="hud__mute" type="button" aria-label="Toggle fullscreen">&#x26F6;</button>
+          <button id="restartButton" class="hud__button" type="button" data-i18n="restart">Restart</button>
+        </div>
+      </section>
+
+      <div id="tutorialOverlay" class="tutorial-overlay">
+        <div class="tutorial-card">
+          <h2 data-i18n="slTutTitle">SIGNAL LOST</h2>
+          <p data-i18n="slTutDesc">You are the night shift security operator. Something is moving through the facility.</p>
+          <ul>
+            <li data-i18n="slTut1">Switch cameras (1-5 keys or tap) to monitor rooms</li>
+            <li data-i18n="slTut2">The entity freezes when you watch its room</li>
+            <li data-i18n="slTut3">Lock doors (Q/E) to block its path — costs power</li>
+            <li data-i18n="slTut4">Survive until dawn. Don't run out of power.</li>
+          </ul>
+          <button id="startBtn" class="start-btn" data-i18n="slStart">BEGIN SHIFT</button>
+        </div>
+      </div>
+    </main>
+
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    <link rel="stylesheet" href="../leaderboard.css" />
+    <script src="../leaderboard.js"></script>
+    <link rel="stylesheet" href="../arcade.css" />
+    <script src="../arcade.js"></script>
+    <script src="../shop.js"></script>
+    <script src="audio.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>
