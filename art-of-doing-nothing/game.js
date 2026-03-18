@@ -63,6 +63,18 @@
     Object.defineProperty(CHAPTER_NAMES, ch, { get: function() { return getChapterName(ch); }, enumerable: true });
   });
 
+  /** Return translated chapter script if available, else English source */
+  function getChapterScript(chapterNum) {
+    if (typeof I18N !== 'undefined') {
+      var key = 'aodnCh' + chapterNum + 'Script';
+      var translated = I18N.t(key);
+      if (translated !== key) return translated;
+    }
+    // Fall back to English scene file
+    var srcName = CHAPTER_SOURCES[chapterNum];
+    return (srcName && window[srcName]) ? window[srcName] : null;
+  }
+
   /* ── Scene fade transition ── */
   var fadeAlpha = 0;       // 0 = no fade, 1 = fully black
   var fadeDirection = 0;   // 1 = fading out, -1 = fading in, 0 = idle
@@ -1084,14 +1096,14 @@
     // Fade in
     fadeIn();
 
-    // Load chapter source
-    var srcName = CHAPTER_SOURCES[ch];
-    if (!srcName || !window[srcName]) {
+    // Load chapter source — prefer translated script, fall back to English
+    var chapterScript = getChapterScript(ch);
+    if (!chapterScript) {
       console.error('Chapter ' + ch + ' not loaded');
       return;
     }
 
-    var sections = DialogueEngine.parse(window[srcName]);
+    var sections = DialogueEngine.parse(chapterScript);
 
     executor = new DialogueEngine.Executor(sections, {
       onDialogue: showDialogue,

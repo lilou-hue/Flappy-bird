@@ -6,10 +6,17 @@
   'use strict';
 
   /* ── Speaker config ── */
+  function getSpeakerName(key, fallback) {
+    if (typeof I18N !== 'undefined') {
+      var t = I18N.t(key);
+      if (t !== key) return t;
+    }
+    return fallback;
+  }
   const SPEAKERS = {
-    s: { name: 'Sloth', color: '#C4A97D', blipPitch: 'low' },
+    s: { get name() { return getSpeakerName('aodnSloth', 'Sloth'); }, color: '#C4A97D', blipPitch: 'low' },
     n: { name: '',      color: '#999',    blipPitch: 'mid' },
-    m: { name: 'Sam',   color: '#B088D4', blipPitch: 'high' }
+    m: { get name() { return getSpeakerName('aodnSam', 'Sam'); },   color: '#B088D4', blipPitch: 'high' }
   };
 
   /* ── Parser ── */
