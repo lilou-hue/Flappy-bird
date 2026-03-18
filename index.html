@@ -2795,63 +2795,212 @@
         if (!c) return;
         var x = c.getContext('2d');
         var t = 0;
-        var hearts = [];
-        for (var i = 0; i < 8; i++) hearts.push({x: Math.random()*W, y: Math.random()*H, s: 6+Math.random()*10, speed: 0.3+Math.random()*0.5, phase: Math.random()*Math.PI*2});
 
-        function drawHeart(cx, cy, size) {
+        // Floating hearts with varied colors
+        var hearts = [];
+        var hColors = ['#ff6b9d','#c084fc','#ff8fab','#e879a8','#b388ff','#ffb3c6','#f48fb1'];
+        for (var i = 0; i < 12; i++) hearts.push({
+          x: Math.random()*W, y: Math.random()*H,
+          s: 4+Math.random()*12, speed: 0.2+Math.random()*0.5,
+          phase: Math.random()*Math.PI*2,
+          color: hColors[Math.floor(Math.random()*hColors.length)],
+          rot: (Math.random()-0.5)*0.4
+        });
+
+        // Sparkle stars
+        var sparkles = [];
+        for (var i = 0; i < 18; i++) sparkles.push({
+          x: Math.random()*W, y: Math.random()*H*0.7,
+          s: 1+Math.random()*2.5, phase: Math.random()*Math.PI*2
+        });
+
+        function drawHeart(cx, cy, size, rot) {
+          x.save();
+          x.translate(cx, cy);
+          if (rot) x.rotate(rot);
           x.beginPath();
-          x.moveTo(cx, cy + size * 0.3);
-          x.bezierCurveTo(cx - size * 0.5, cy - size * 0.3, cx - size, cy + size * 0.1, cx, cy + size * 0.7);
-          x.bezierCurveTo(cx + size, cy + size * 0.1, cx + size * 0.5, cy - size * 0.3, cx, cy + size * 0.3);
+          x.moveTo(0, size * 0.15);
+          x.bezierCurveTo(-size*0.5, -size*0.4, -size*0.9, size*0.05, 0, size*0.6);
+          x.bezierCurveTo(size*0.9, size*0.05, size*0.5, -size*0.4, 0, size*0.15);
           x.fill();
+          x.restore();
         }
+
+        function drawStar(cx, cy, r) {
+          x.beginPath();
+          for (var j = 0; j < 4; j++) {
+            var a = j * Math.PI / 2;
+            x.moveTo(cx + Math.cos(a)*r, cy + Math.sin(a)*r);
+            x.lineTo(cx, cy);
+          }
+          x.stroke();
+        }
+
+        // Chibi character data
+        var chars = [
+          { cx: W*0.22, color: '#ff6b35', hair: '#e84820', skin: '#fde0c8', hl: '#ff8050' },
+          { cx: W*0.5,  color: '#7c4dff', hair: '#90caf9', skin: '#fce8e0', hl: '#bbdefb' },
+          { cx: W*0.78, color: '#00c853', hair: '#2e7d32', skin: '#fde8d0', hl: '#66bb6a' }
+        ];
+
+        function drawChibi(ch, time) {
+          var cy = H*0.48 + Math.sin(time*1.8 + ch.cx)*4;
+          var s = 16;
+          // Body
+          x.fillStyle = ch.color;
+          x.beginPath(); x.ellipse(ch.cx, cy+s*0.8, s*0.55, s*0.3, 0, 0, Math.PI); x.fill();
+          // Neck
+          x.fillStyle = ch.skin;
+          x.fillRect(ch.cx-s*0.08, cy+s*0.38, s*0.16, s*0.12);
+          // Head
+          x.fillStyle = ch.skin;
+          x.beginPath(); x.ellipse(ch.cx, cy-s*0.05, s*0.38, s*0.44, 0, 0, Math.PI*2); x.fill();
+          // Hair back
+          x.fillStyle = ch.hair;
+          x.beginPath(); x.ellipse(ch.cx, cy-s*0.12, s*0.42, s*0.48, 0, 0, Math.PI*2); x.fill();
+          // Face (skin over hair)
+          x.fillStyle = ch.skin;
+          x.beginPath(); x.ellipse(ch.cx, cy+s*0.02, s*0.33, s*0.35, 0, 0, Math.PI*2); x.fill();
+          // Bangs
+          x.fillStyle = ch.hair;
+          x.beginPath();
+          x.ellipse(ch.cx, cy-s*0.25, s*0.36, s*0.22, 0, Math.PI, Math.PI*2);
+          x.fill();
+          // Eyes (happy arc ^_^)
+          x.strokeStyle = ch.color; x.lineWidth = 1.5; x.lineCap = 'round';
+          x.beginPath(); x.arc(ch.cx-s*0.14, cy-s*0.02, s*0.07, Math.PI*1.15, Math.PI*1.85); x.stroke();
+          x.beginPath(); x.arc(ch.cx+s*0.14, cy-s*0.02, s*0.07, Math.PI*1.15, Math.PI*1.85); x.stroke();
+          // Blush
+          x.fillStyle = 'rgba(255,130,150,0.35)';
+          x.beginPath(); x.ellipse(ch.cx-s*0.22, cy+s*0.08, s*0.07, s*0.04, 0, 0, Math.PI*2); x.fill();
+          x.beginPath(); x.ellipse(ch.cx+s*0.22, cy+s*0.08, s*0.07, s*0.04, 0, 0, Math.PI*2); x.fill();
+          // Smile
+          x.strokeStyle = '#c27070'; x.lineWidth = 1;
+          x.beginPath(); x.arc(ch.cx, cy+s*0.12, s*0.06, 0.15, Math.PI-0.15); x.stroke();
+          // Hair highlight
+          x.fillStyle = ch.hl; x.globalAlpha = 0.3;
+          x.beginPath(); x.ellipse(ch.cx-s*0.08, cy-s*0.32, s*0.1, s*0.04, -0.3, 0, Math.PI*2); x.fill();
+          x.globalAlpha = 1;
+        }
+
+        // Ball trail positions
+        var trail = [];
 
         function draw() {
           t += 0.016;
+
+          // Soft gradient bg with subtle radial glow
           var bg = x.createLinearGradient(0,0,0,H);
-          bg.addColorStop(0,'#ffe0ec'); bg.addColorStop(0.5,'#ffc8dd'); bg.addColorStop(1,'#ffb3c6');
+          bg.addColorStop(0,'#ffe0ec'); bg.addColorStop(0.4,'#ffd6e8'); bg.addColorStop(0.7,'#f5d0ff'); bg.addColorStop(1,'#e8d0ff');
           x.fillStyle = bg; x.fillRect(0,0,W,H);
+
+          // Radial glow in center
+          var glow = x.createRadialGradient(W/2, H*0.5, 0, W/2, H*0.5, W*0.4);
+          glow.addColorStop(0, 'rgba(255,255,255,0.35)');
+          glow.addColorStop(1, 'rgba(255,255,255,0)');
+          x.fillStyle = glow; x.fillRect(0,0,W,H);
+
+          // Sparkle stars
+          x.strokeStyle = 'rgba(255,255,255,0.5)'; x.lineWidth = 1;
+          for (var i = 0; i < sparkles.length; i++) {
+            var sp = sparkles[i];
+            var sa = 0.2 + Math.sin(t*3 + sp.phase) * 0.25;
+            x.globalAlpha = sa;
+            drawStar(sp.x, sp.y, sp.s + Math.sin(t*2+sp.phase)*0.5);
+          }
+          x.globalAlpha = 1;
 
           // Floating hearts
           for (var i = 0; i < hearts.length; i++) {
             var h = hearts[i];
             h.y -= h.speed;
-            h.x += Math.sin(t * 2 + h.phase) * 0.3;
-            if (h.y < -20) { h.y = H + 10; h.x = Math.random() * W; }
-            x.globalAlpha = 0.2 + Math.sin(t + h.phase) * 0.1;
-            x.fillStyle = i % 2 === 0 ? '#ff6b9d' : '#c084fc';
-            drawHeart(h.x, h.y, h.s);
+            h.x += Math.sin(t*1.5 + h.phase) * 0.4;
+            if (h.y < -20) { h.y = H + 15; h.x = Math.random() * W; }
+            x.globalAlpha = 0.15 + Math.sin(t*0.8 + h.phase) * 0.1;
+            x.fillStyle = h.color;
+            drawHeart(h.x, h.y, h.s, h.rot + Math.sin(t+h.phase)*0.1);
           }
           x.globalAlpha = 1;
 
-          // Ping pong table line
-          x.strokeStyle = 'rgba(255,255,255,0.4)';
-          x.lineWidth = 2;
-          x.setLineDash([4, 4]);
-          x.beginPath(); x.moveTo(W/2, H*0.35); x.lineTo(W/2, H*0.85); x.stroke();
+          // Ping pong table — soft rounded surface
+          x.fillStyle = 'rgba(255,255,255,0.2)';
+          x.beginPath();
+          x.ellipse(W/2, H*0.62, W*0.38, H*0.22, 0, 0, Math.PI*2);
+          x.fill();
+
+          // Table net (dashed line)
+          x.strokeStyle = 'rgba(255,255,255,0.45)';
+          x.lineWidth = 1.5;
+          x.setLineDash([3, 4]);
+          x.beginPath(); x.moveTo(W/2, H*0.42); x.lineTo(W/2, H*0.82); x.stroke();
           x.setLineDash([]);
 
-          // Paddles
-          var py = H*0.6 + Math.sin(t*2)*15;
-          x.fillStyle = '#ff6bb5';
-          if (x.roundRect) { x.beginPath(); x.roundRect(30, py-18, 8, 36, 4); x.fill(); }
-          else { x.fillRect(30, py-18, 8, 36); }
-          x.fillStyle = '#c084fc';
-          var opy = H*0.6 + Math.sin(t*2.5+1)*15;
-          if (x.roundRect) { x.beginPath(); x.roundRect(W-38, opy-18, 8, 36, 4); x.fill(); }
-          else { x.fillRect(W-38, opy-18, 8, 36); }
+          // Chibi characters
+          for (var i = 0; i < chars.length; i++) drawChibi(chars[i], t);
 
+          // Paddles with gradient and glow
+          var py = H*0.6 + Math.sin(t*2)*14;
+          // Left paddle glow
+          x.fillStyle = 'rgba(255,107,181,0.2)';
+          x.beginPath(); x.ellipse(34, py, 12, 24, 0, 0, Math.PI*2); x.fill();
+          // Left paddle
+          var pg = x.createLinearGradient(28,py-16,40,py-16);
+          pg.addColorStop(0,'#ff8fca'); pg.addColorStop(1,'#ff5ca8');
+          x.fillStyle = pg;
+          if (x.roundRect) { x.beginPath(); x.roundRect(28, py-16, 10, 32, 5); x.fill(); }
+          else { x.fillRect(28, py-16, 10, 32); }
+
+          // Right paddle glow
+          var opy = H*0.6 + Math.sin(t*2.5+1)*14;
+          x.fillStyle = 'rgba(192,132,252,0.2)';
+          x.beginPath(); x.ellipse(W-34, opy, 12, 24, 0, 0, Math.PI*2); x.fill();
+          // Right paddle
+          var pg2 = x.createLinearGradient(W-40,opy-16,W-28,opy-16);
+          pg2.addColorStop(0,'#b78aff'); pg2.addColorStop(1,'#9c5fff');
+          x.fillStyle = pg2;
+          if (x.roundRect) { x.beginPath(); x.roundRect(W-38, opy-16, 10, 32, 5); x.fill(); }
+          else { x.fillRect(W-38, opy-16, 10, 32); }
+
+          // Ball with trail
+          var bx = W/2 + Math.sin(t*3)*110;
+          var by = H*0.6 + Math.cos(t*4)*18;
+          trail.push({x:bx, y:by});
+          if (trail.length > 8) trail.shift();
+          for (var i = 0; i < trail.length; i++) {
+            var ta = (i/trail.length) * 0.2;
+            x.fillStyle = 'rgba(255,140,180,' + ta + ')';
+            var tr = 2 + (i/trail.length)*3;
+            x.beginPath(); x.arc(trail[i].x, trail[i].y, tr, 0, Math.PI*2); x.fill();
+          }
           // Ball
-          var bx = W/2 + Math.sin(t*3)*120;
-          var by = H*0.6 + Math.cos(t*4)*20;
-          x.fillStyle = '#fff';
-          x.beginPath(); x.arc(bx, by, 5, 0, Math.PI*2); x.fill();
-          x.fillStyle = 'rgba(255,255,255,0.3)';
-          x.beginPath(); x.arc(bx-3, by, 4, 0, Math.PI*2); x.fill();
+          var bgr = x.createRadialGradient(bx-1.5, by-1.5, 0, bx, by, 6);
+          bgr.addColorStop(0, '#fff');
+          bgr.addColorStop(0.5, '#ffb3d0');
+          bgr.addColorStop(1, '#ff6b9d');
+          x.fillStyle = bgr;
+          x.beginPath(); x.arc(bx, by, 5.5, 0, Math.PI*2); x.fill();
+          // Ball shine
+          x.fillStyle = 'rgba(255,255,255,0.7)';
+          x.beginPath(); x.arc(bx-1.5, by-1.5, 2, 0, Math.PI*2); x.fill();
 
-          // Title
-          x.fillStyle = '#d6336c'; x.font = 'bold 14px "Space Grotesk",sans-serif'; x.textAlign = 'center';
+          // Burst hearts near paddle hits
+          if (Math.abs(Math.sin(t*3)) > 0.98) {
+            var side = Math.sin(t*3) > 0 ? W-34 : 34;
+            x.globalAlpha = 0.5;
+            x.fillStyle = '#ff6b9d';
+            drawHeart(side + (Math.random()-0.5)*10, by + (Math.random()-0.5)*10, 5+Math.random()*4, (Math.random()-0.5)*0.6);
+            x.globalAlpha = 1;
+          }
+
+          // Title with shadow
+          x.fillStyle = 'rgba(214,51,108,0.15)';
+          x.font = 'bold 14px "Space Grotesk",sans-serif'; x.textAlign = 'center';
+          x.fillText('HeartServe', W/2+1, H-13);
+          x.fillStyle = '#d6336c';
           x.fillText('HeartServe', W/2, H-14);
+          // Subtitle
+          x.fillStyle = 'rgba(179,136,255,0.6)'; x.font = '10px "Space Grotesk",sans-serif';
+          x.fillText('Love & Ping Pong', W/2, H-3);
           x.textAlign = 'left';
 
           requestAnimationFrame(draw);
