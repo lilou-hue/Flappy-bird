@@ -54,7 +54,7 @@
   };
   var CHAR_KEYS = ['hana', 'yuki', 'rin'];
   var TOTAL_DAYS = 7;
-  var WIN_SCORE = 5;
+  var WIN_SCORE = 3;
   var MAX_AFFECTION = 100;
 
   /* ════════════════════════════════════════════════════════════
@@ -239,6 +239,144 @@
       loss: "Hehe~ Looks like the trickster wins today. Better luck next time~",
       bad_loss: "Oh honey... that was rough. Let me teach you my ways~"
     }
+  };
+
+  /* ════════════════════════════════════════════════════════════
+     FOLLOW-UP DIALOGUE — 2 extra conversation beats per day
+     ════════════════════════════════════════════════════════════ */
+  var FOLLOWUPS = {
+    hana: [
+      [{ text: "You know, most people flinch when I serve. You didn't.", choices: [
+          { text: "I was too focused on you to flinch.", aff: 2, react: "On me?! I mean\u2014 on my FORM. Right.", expr: 'flustered' },
+          { text: "I've got nerves of steel.", aff: 1, react: "We'll see about that.", expr: 'smirk' }]},
+       { text: "Ready to put your money where your mouth is?", choices: [
+          { text: "Always.", aff: 1, react: "Good answer.", expr: 'smirk' },
+          { text: "Only if you promise a rematch.", aff: 2, react: "Ha! Already planning ahead. I respect that.", expr: 'happy' }]}],
+      [{ text: "Your backhand is terrible, by the way. Want me to fix it?", choices: [
+          { text: "Yes please, coach.", aff: 2, react: "*adjusts your grip* There. ...Your hand is warm.", expr: 'flustered' },
+          { text: "My backhand is fine!", aff: 0, react: "It's really not. But okay.", expr: 'annoyed' }]},
+       { text: "I don't usually offer to help people, you know.", choices: [
+          { text: "I feel special.", aff: 2, react: "Don't let it go to your head.", expr: 'smirk' },
+          { text: "Why me?", aff: 1, react: "...Good question. Next topic.", expr: 'flustered' }]}],
+      [{ text: "I heard you've been asking about me. Cute.", choices: [
+          { text: "Guilty. I wanted to know everything.", aff: 3, react: "*ears turn red* E-everything?!", expr: 'flustered' },
+          { text: "Just doing research on my opponent.", aff: 1, react: "Smart. Know your enemy.", expr: 'smirk' }]},
+       { text: "Ask me anything. One question. Go.", choices: [
+          { text: "What makes you happy?", aff: 2, react: "...This. Right now. Don't make it weird.", expr: 'happy' },
+          { text: "What's your win record?", aff: 0, react: "147-3. The three haunt me.", expr: 'neutral' }]}],
+      [{ text: "I brought an extra water bottle. For you. Don't read into it.", choices: [
+          { text: "Too late, I'm reading into it.", aff: 2, react: "UGH. You're impossible.", expr: 'flustered' },
+          { text: "Thanks, Hana.", aff: 1, react: "...You're welcome. Whatever.", expr: 'happy' }]},
+       { text: "My sister says I talk about you too much. She's wrong.", choices: [
+          { text: "What do you say about me?", aff: 2, react: "NOTHING. She's LYING. Let's play.", expr: 'flustered' },
+          { text: "Tell her I said hi.", aff: 1, react: "Absolutely not.", expr: 'annoyed' }]}],
+      [{ text: "Remember when I said I only care about winning?", choices: [
+          { text: "That was clearly a lie.", aff: 2, react: "...Yeah. It was.", expr: 'happy' },
+          { text: "People change.", aff: 1, react: "Shut up. Let's play before I get sappy.", expr: 'flustered' }]},
+       { text: "After this match, wanna grab food? I know a place.", choices: [
+          { text: "Like a date?", aff: 3, react: "Like a\u2014 I said FOOD. It's just FOOD.", expr: 'flustered' },
+          { text: "Sure, I'm starving.", aff: 1, react: "Cool. Casual. No big deal. Let's go.", expr: 'happy' }]}],
+      [{ text: "I couldn't sleep last night. Kept thinking about... the tournament.", choices: [
+          { text: "Just the tournament?", aff: 2, react: "...Mostly.", expr: 'flustered' },
+          { text: "Nervous?", aff: 1, react: "Me? Never. ...Okay, maybe a little.", expr: 'neutral' }]},
+       { text: "If I win the whole thing, I'm dedicating it to... someone.", choices: [
+          { text: "To me?", aff: 2, react: "DON'T FLATTER YOURSELF. ...But also don't not.", expr: 'flustered' },
+          { text: "Your family?", aff: 1, react: "Yeah. Them too.", expr: 'happy' }]}],
+      [{ text: "Whatever happens today... I need you to know something.", choices: [
+          { text: "I'm listening.", aff: 2, react: "You always are. That's what I need you to know.", expr: 'happy' },
+          { text: "You're scaring me.", aff: 1, react: "Ha. The great Hana Takeda, scary. ...Sorry.", expr: 'smirk' }]},
+       { text: "One more rally. Just you and me. No score.", choices: [
+          { text: "For fun?", aff: 2, react: "For us.", expr: 'happy' },
+          { text: "You're going soft, Takeda.", aff: 1, react: "Tell anyone and you're dead.", expr: 'smirk' }]}]
+    ],
+    yuki: [
+      [{ text: "I-I made you a bookmark! It has a little ping pong ball on it...", choices: [
+          { text: "This is the cutest thing I've ever received.", aff: 2, react: "R-really?! I was worried it was too much...", expr: 'flustered' },
+          { text: "Thanks, Yuki!", aff: 1, react: "I'm glad you like it! I made five before getting one right...", expr: 'happy' }]},
+       { text: "Um... do you have a favorite book? I want to know more about you.", choices: [
+          { text: "I'd rather hear about yours.", aff: 2, react: "O-oh! I have a list! A very long list...", expr: 'happy' },
+          { text: "I'm more of a movie person.", aff: 0, react: "Movies are good too! W-we could watch one sometime...", expr: 'surprised' }]}],
+      [{ text: "I practiced my serve 200 times last night. I counted.", choices: [
+          { text: "Your dedication is incredible.", aff: 2, react: "I just... wanted to be worth playing against...", expr: 'flustered' },
+          { text: "200?! Don't hurt yourself.", aff: 1, react: "My arm is a little sore... but it's worth it.", expr: 'happy' }]},
+       { text: "Can I tell you something weird? I dream about ping pong now.", choices: [
+          { text: "Am I in the dreams?", aff: 2, react: "I\u2014 th-that's\u2014 MOVING ON.", expr: 'flustered' },
+          { text: "That's not weird at all.", aff: 1, react: "Really? You don't think I'm strange?", expr: 'happy' }]}],
+      [{ text: "The sunset is beautiful tonight. Like the inside of a seashell.", choices: [
+          { text: "Not as beautiful as you.", aff: 3, react: "*drops books* I\u2014 you can't just SAY things like\u2014!", expr: 'flustered' },
+          { text: "You should write poetry.", aff: 1, react: "I... actually do. In secret.", expr: 'surprised' }]},
+       { text: "Nobody's ever spent this much time with me before. On purpose.", choices: [
+          { text: "Their loss. Seriously.", aff: 2, react: "...Thank you. That means everything.", expr: 'happy' },
+          { text: "You're easy to be around.", aff: 1, react: "That's... the nicest thing anyone's said.", expr: 'happy' }]}],
+      [{ text: "I was reading about how stars form. It's a lot like friendship.", choices: [
+          { text: "Tell me about it.", aff: 2, react: "Really? You want to hear? *lights up* So, gravity pulls dust together...", expr: 'happy' },
+          { text: "You're such a nerd.", aff: -1, react: "O-oh... sorry, I know it's boring...", expr: 'sad' }]},
+       { text: "I brought us tea. Chamomile. I-it's calming before a match.", choices: [
+          { text: "You thought of everything.", aff: 2, react: "I like taking care of... people.", expr: 'flustered' },
+          { text: "I could use some calm.", aff: 1, react: "Me too. *sips together in comfortable silence*", expr: 'happy' }]}],
+      [{ text: "My mom asked about you. I didn't know what to say.", choices: [
+          { text: "Tell her I'm your biggest fan.", aff: 2, react: "*covers face* She'd never stop teasing me!", expr: 'flustered' },
+          { text: "What did she ask?", aff: 1, react: "If you're... nice. I said the nicest.", expr: 'happy' }]},
+       { text: "I wrote a haiku about today. Want to hear?", choices: [
+          { text: "Please. I'd love that.", aff: 2, react: "'Ping pong ball bounces / Your smile across the table / My heart returns serve'", expr: 'flustered' },
+          { text: "Go for it!", aff: 1, react: "Okay... *takes deep breath* It's about... us. Sort of.", expr: 'happy' }]}],
+      [{ text: "I've been braver lately. I even ordered food without stuttering.", choices: [
+          { text: "I'm so proud of you, Yuki.", aff: 2, react: "*tears up a little* Y-you always believe in me...", expr: 'happy' },
+          { text: "Growth looks good on you.", aff: 2, react: "...That's the kind of thing that makes me brave.", expr: 'flustered' }]},
+       { text: "After today's match... can we sit on the roof again?", choices: [
+          { text: "I'd follow you anywhere.", aff: 2, react: "P-please don't say things like that when I'm trying not to cry!", expr: 'flustered' },
+          { text: "Our spot. I'll be there.", aff: 1, react: "*smiles quietly* Our spot. I like that.", expr: 'happy' }]}],
+      [{ text: "I want to say something I've been practicing. Out loud. To you.", choices: [
+          { text: "Take your time. I'm here.", aff: 2, react: "*deep breath* You make the world less scary. There. I said it.", expr: 'happy' },
+          { text: "You can tell me anything.", aff: 1, react: "I know. That's why this is so hard. And so easy.", expr: 'flustered' }]},
+       { text: "One last game. Then... whatever comes next.", choices: [
+          { text: "Together.", aff: 2, react: "Together. *squeezes paddle* ...Let's play.", expr: 'happy' },
+          { text: "You're going to do great.", aff: 1, react: "Because of you.", expr: 'happy' }]}]
+    ],
+    rin: [
+      [{ text: "Fun fact: I once won a match playing left-handed. Blindfolded.", choices: [
+          { text: "I don't believe you but I love you for it.", aff: 2, react: "Love?! On day one?! Bold move~!", expr: 'happy' },
+          { text: "Pics or it didn't happen.", aff: 1, react: "The pics are classified. Top secret pong intel.", expr: 'smirk' }]},
+       { text: "So what's YOUR deal? Why ping pong?", choices: [
+          { text: "I came for the pong, stayed for you.", aff: 2, react: "Oh STOP. ...No wait, continue. I like this.", expr: 'happy' },
+          { text: "I just like hitting things.", aff: 1, react: "A kindred spirit of violence! Beautiful~", expr: 'smirk' }]}],
+      [{ text: "I have a theory: you can tell everything about a person by how they serve.", choices: [
+          { text: "What does my serve say about me?", aff: 2, react: "That you're earnest. Genuine. ...It's annoying how charming that is.", expr: 'happy' },
+          { text: "That's ridiculous.", aff: 0, react: "See? Skeptic serve. Exactly what I predicted.", expr: 'smirk' }]},
+       { text: "Want to see something cool? I modified a paddle with LED lights.", choices: [
+          { text: "You're an absolute menace and I'm here for it.", aff: 2, react: "FINALLY someone who appreciates art!", expr: 'happy' },
+          { text: "Is that tournament legal?", aff: -1, react: "You sound like the ref. Boring~", expr: 'annoyed' }]}],
+      [{ text: "I bet you think I'm always this chaotic. The truth is... I choose to be.", choices: [
+          { text: "The real question is who you are when you choose not to be.", aff: 3, react: "...You're dangerously perceptive. I like it and I hate it.", expr: 'surprised' },
+          { text: "Chaos is fun.", aff: 1, react: "It IS! See, you get it~", expr: 'happy' }]},
+       { text: "When I was little, I was actually really quiet. Hard to believe, right?", choices: [
+          { text: "I can see it, actually.", aff: 2, react: "...How? Nobody else can.", expr: 'surprised' },
+          { text: "What changed?", aff: 1, react: "I got tired of being invisible. So I became... impossible to ignore.", expr: 'neutral' }]}],
+      [{ text: "Okay real talk. Rate our chemistry. Scale of 1 to dynamite.", choices: [
+          { text: "Nuclear.", aff: 2, react: "Nuclear?! That's past my scale! I need a bigger chart~!", expr: 'happy' },
+          { text: "Solid 7.", aff: 1, react: "SEVEN? I'm offended but motivated. Watch me make it a 10.", expr: 'smirk' }]},
+       { text: "My friends say I flirt with everyone. But with you it's... different.", choices: [
+          { text: "Different how?", aff: 2, react: "Different like... I actually mean it. Wow, did I just say that out loud?", expr: 'flustered' },
+          { text: "I noticed.", aff: 1, react: "Of course you did. You notice everything about me.", expr: 'happy' }]}],
+      [{ text: "I learned a new trick shot. Named it after you.", choices: [
+          { text: "What's it called?", aff: 2, react: "The Heartbreaker. Because it always lands. *winks*", expr: 'smirk' },
+          { text: "I'm honored.", aff: 1, react: "You should be. I don't name shots after just anyone.", expr: 'happy' }]},
+       { text: "Do you think people can change? Like, really change?", choices: [
+          { text: "I think you already are.", aff: 3, react: "...Okay, that actually got me. Point to you.", expr: 'flustered' },
+          { text: "Why do you ask?", aff: 1, react: "No reason. ...Every reason. Same thing.", expr: 'neutral' }]}],
+      [{ text: "I didn't sleep. I was thinking about what you said yesterday.", choices: [
+          { text: "Which part?", aff: 1, react: "All of it. Every word. I have a very specific problem and it's you.", expr: 'happy' },
+          { text: "Good thoughts?", aff: 2, react: "The best kind. The scary kind. ...Same thing.", expr: 'flustered' }]},
+       { text: "After this match, I want to show you my real laugh. Not the performance one.", choices: [
+          { text: "I've been waiting for that.", aff: 2, react: "...How did you know there was a difference?", expr: 'surprised' },
+          { text: "Deal.", aff: 1, react: "Deal. *genuine small smile*", expr: 'happy' }]}],
+      [{ text: "No tricks today. No jokes. Just... us.", choices: [
+          { text: "I like 'us.'", aff: 2, react: "Me too. And it terrifies me. In the best way.", expr: 'happy' },
+          { text: "The real Rin. Finally.", aff: 2, react: "She's been here the whole time. You're just the first to look.", expr: 'flustered' }]},
+       { text: "Whatever I wrote in that note... just know every word is true.", choices: [
+          { text: "I already know.", aff: 2, react: "...Then let's play. One last time. For real.", expr: 'happy' },
+          { text: "I can't wait to read it.", aff: 1, react: "Be gentle with it. It's the most honest thing I've ever done.", expr: 'flustered' }]}]
+    ]
   };
 
   /* Ending confessions */
@@ -836,37 +974,66 @@
     });
   }
 
+  var followupStep = 0; // tracks which follow-up we're on (0 = first, 1 = second)
+
   function handleChoice(charKey, dayIdx, choiceIdx) {
     if (typeof HSAudio !== 'undefined') HSAudio.click();
     var d = DIALOGUE[charKey][dayIdx];
     var choice = d.choices[choiceIdx];
+    applyChoice(charKey, choice);
+    // Show first follow-up after reaction
+    followupStep = 0;
+    showFollowupOrMatch(charKey, dayIdx);
+  }
 
-    // Add affection
+  function applyChoice(charKey, choice) {
     addAffection(charKey, choice.aff);
-
-    // Spawn hearts if positive
     if (choice.aff > 0) {
       var rect = $('portraitCanvas').getBoundingClientRect();
       var containerRect = $('gameContainer').getBoundingClientRect();
       spawnHeart(rect.left - containerRect.left + rect.width / 2, rect.top - containerRect.top + 50, choice.aff);
     }
-
-    // Update portrait expression
     renderPortrait($('portraitCanvas'), charKey, choice.expr || 'neutral');
-
-    // Show reaction
     $('reactionBox').textContent = CHARS[charKey].name.split(' ')[0] + ': ' + choice.react;
     $('reactionBox').classList.add('visible');
-
-    // Hide choices, show "continue to match" button
     $('choicesPanel').innerHTML = '';
-    setTimeout(function() {
-      var btn = document.createElement('button');
-      btn.className = 'btn btn-primary';
-      btn.textContent = 'Time for ping pong!';
-      btn.addEventListener('click', function() { goToMatch(charKey); });
-      $('choicesPanel').appendChild(btn);
-    }, 800);
+  }
+
+  function showFollowupOrMatch(charKey, dayIdx) {
+    var dayFollowups = FOLLOWUPS[charKey] && FOLLOWUPS[charKey][dayIdx];
+    if (dayFollowups && followupStep < dayFollowups.length) {
+      var fu = dayFollowups[followupStep];
+      setTimeout(function() {
+        // Update dialogue text with follow-up
+        $('dialogueText').textContent = fu.text;
+        $('reactionBox').classList.remove('visible');
+        renderPortrait($('portraitCanvas'), charKey, 'neutral');
+        // Render follow-up choices
+        var panel = $('choicesPanel');
+        panel.innerHTML = '';
+        fu.choices.forEach(function(choice, i) {
+          var btn = document.createElement('button');
+          btn.className = 'choice-btn';
+          btn.textContent = choice.text;
+          btn.addEventListener('click', function() {
+            if (typeof HSAudio !== 'undefined') HSAudio.click();
+            applyChoice(charKey, choice);
+            followupStep++;
+            showFollowupOrMatch(charKey, dayIdx);
+          });
+          panel.appendChild(btn);
+        });
+      }, 1000);
+    } else {
+      // All follow-ups done, show match button
+      setTimeout(function() {
+        var btn = document.createElement('button');
+        btn.className = 'btn btn-primary';
+        btn.textContent = 'Time for ping pong!';
+        btn.addEventListener('click', function() { goToMatch(charKey); });
+        $('choicesPanel').appendChild(btn);
+      }, 800);
+    }
   }
 
   /* ════════════════════════════════════════════════════════════
@@ -1234,20 +1401,20 @@
     var diff = pScore - aScore;
     var ch = CHARS[charKey];
 
-    // Rating
+    // Rating (adjusted for first-to-3 matches)
     var rating, ratingEmoji, affBonus;
-    if (won && diff >= 4) { rating = 'Perfect!'; ratingEmoji = '\u2728\u{1F496}\u2728'; affBonus = 8; }
-    else if (won && diff >= 2) { rating = 'Nice!'; ratingEmoji = '\u{1F31F}'; affBonus = 5; }
+    if (won && diff >= 3) { rating = 'Perfect!'; ratingEmoji = '\u2728\u{1F496}\u2728'; affBonus = 6; }
+    else if (won && diff >= 2) { rating = 'Nice!'; ratingEmoji = '\u{1F31F}'; affBonus = 4; }
     else if (won) { rating = 'Close!'; ratingEmoji = '\u{1F4AA}'; affBonus = 3; }
-    else if (diff >= -2) { rating = 'Almost!'; ratingEmoji = '\u{1F60A}'; affBonus = 2; }
+    else if (diff >= -1) { rating = 'Almost!'; ratingEmoji = '\u{1F60A}'; affBonus = 2; }
     else { rating = 'Oof...'; ratingEmoji = '\u{1F605}'; affBonus = 1; }
 
     // Get reaction
     var reactKey;
-    if (won && diff >= 4) reactKey = 'perfect';
+    if (won && diff >= 3) reactKey = 'perfect';
     else if (won && diff >= 2) reactKey = 'nice';
     else if (won) reactKey = 'close';
-    else if (diff >= -2) reactKey = 'loss';
+    else if (diff >= -1) reactKey = 'loss';
     else reactKey = 'bad_loss';
     var reaction = MATCH_REACTIONS[charKey][reactKey];
 
