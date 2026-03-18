@@ -1568,12 +1568,15 @@
     $('vsOppLabel').textContent = ch.name.split(' ')[0];
     $('vsPaddleAi').style.background = ch.color;
 
-    $('matchStartBtn').onclick = function() {
+    var startBtn = $('matchStartBtn');
+    var newStartBtn = startBtn.cloneNode(true);
+    startBtn.parentNode.replaceChild(newStartBtn, startBtn);
+    newStartBtn.addEventListener('click', function() {
       if (typeof HSAudio !== 'undefined') HSAudio.serve();
       $('matchReady').style.display = 'none';
       $('matchPlaying').style.display = '';
       startPong(charKey);
-    };
+    });
   }
 
   /* ════════════════════════════════════════════════════════════
@@ -2032,12 +2035,16 @@
     renderResultsMeters();
 
     // Button — show post-match walk inline, then advance
-    var btn = $('nextDayBtn');
+    // Clone button to remove any stale listeners from previous rounds
+    var oldBtn = $('nextDayBtn');
+    var btn = oldBtn.cloneNode(true);
+    oldBtn.parentNode.replaceChild(btn, oldBtn);
+    btn.id = 'nextDayBtn';
     btn.textContent = 'Walk together...';
-    btn.onclick = function() {
-      btn.onclick = null; // prevent double-click
+    btn.addEventListener('click', function handler() {
+      btn.removeEventListener('click', handler);
       showPostMatchInline(charKey, won);
-    };
+    });
   }
 
   function showPostMatchInline(charKey, won) {

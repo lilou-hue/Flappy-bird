@@ -511,36 +511,35 @@ body {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   justify-content: flex-start;
-  padding-top: 0;
-  padding-bottom: 0;
+  padding-top: 12px;
+  padding-bottom: 12px;
 }
 .results-card {
   background: #fff;
   border-radius: var(--radius-lg);
   border: 2px solid rgba(0,0,0,0.05);
-  padding: 18px 22px;
+  padding: 14px 18px;
   text-align: center;
   max-width: 380px;
   width: 100%;
   box-shadow: 0 8px 32px var(--shadow);
   flex-shrink: 0;
-  margin: auto 0;
 }
 .results-card canvas {
   border-radius: 50%;
   border: 3px solid #fff;
   box-shadow: 0 3px 12px var(--shadow);
-  margin-bottom: 8px;
-  width: 80px; height: 100px;
+  margin-bottom: 4px;
+  width: 60px; height: 75px;
 }
 .results-title {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 800;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 .results-rating {
-  font-size: 26px;
-  margin-bottom: 4px;
+  font-size: 22px;
+  margin-bottom: 2px;
 }
 .results-scoreline {
   font-size: 14px;
@@ -559,22 +558,22 @@ body {
   margin-bottom: 8px;
 }
 .results-reaction {
-  font-size: 14px;
+  font-size: 13px;
   font-style: italic;
   color: var(--text-light);
-  margin-bottom: 12px;
-  line-height: 1.5;
+  margin-bottom: 8px;
+  line-height: 1.4;
 }
 .results-divider {
   border: none;
   border-top: 1px solid rgba(0,0,0,0.06);
-  margin: 8px 0;
+  margin: 6px 0;
 }
 .results-meters {
   display: flex;
   justify-content: center;
-  gap: 20px;
-  margin-bottom: 16px;
+  gap: 16px;
+  margin-bottom: 10px;
 }
 .meter-mini {
   display: flex;
