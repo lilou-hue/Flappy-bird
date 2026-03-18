@@ -2031,63 +2031,89 @@
     // Affection meters
     renderResultsMeters();
 
-    // Button — show post-match walk conversation before advancing
+    // Button — show post-match walk inline, then advance
     var btn = $('nextDayBtn');
-    if (state.day >= TOTAL_DAYS) {
-      btn.textContent = 'Walk together...';
-      btn.onclick = function() { showPostMatch(charKey, won, function() { triggerEnding(); }); };
-    } else {
-      btn.textContent = 'Walk together...';
-      btn.onclick = function() {
-        showPostMatch(charKey, won, function() {
-          state.day++;
-          saveState();
-          goToSelect();
-        });
-      };
-    }
+    btn.textContent = 'Walk together...';
+    btn.onclick = function() {
+      btn.onclick = null; // prevent double-click
+      showPostMatchInline(charKey, won);
+    };
   }
 
-  function showPostMatch(charKey, won, onDone) {
-    var pool = POST_MATCH[charKey][won ? 'win' : 'loss'];
-    if (!pool || pool.length === 0) { onDone(); return; }
-    // Pick one based on day (cycle through available)
-    var pm = pool[(state.day - 1) % pool.length];
-
-    // Reuse dialogue screen for the walk scene
-    showScreen('dialogue');
+  function showPostMatchInline(charKey, won) {
+    var pool = POST_MATCH[charKey] && POST_MATCH[charKey][won ? 'win' : 'loss'];
+    var pm = pool && pool.length > 0 ? pool[(state.day - 1) % pool.length] : null;
     var ch = CHARS[charKey];
-    renderPortrait($('portraitCanvas'), charKey, 'happy');
-    $('charNameplate').textContent = ch.name;
-    $('charNameplate').style.color = ch.color;
-    $('sceneText').textContent = won
+    var card = document.querySelector('.results-card');
+    if (!card || !pm) {
+      advanceDay();
+      return;
+    }
+
+    // Replace results card content with walk scene
+    card.innerHTML = '';
+
+    var scene = document.createElement('div');
+    scene.style.cssText = 'font-size:13px;color:#78909c;font-style:italic;margin-bottom:12px;line-height:1.4;';
+    scene.textContent = won
       ? 'The match is over. ' + ch.name.split(' ')[0] + ' catches up to you outside.'
       : 'The match is over. ' + ch.name.split(' ')[0] + ' walks alongside you.';
-    $('dialogueSpeaker').textContent = ch.name.split(' ')[0];
-    $('dialogueSpeaker').style.color = ch.color;
-    $('dialogueText').textContent = pm.text;
-    $('reactionBox').classList.remove('visible');
+    card.appendChild(scene);
 
-    var panel = $('choicesPanel');
-    panel.innerHTML = '';
+    var speaker = document.createElement('div');
+    speaker.style.cssText = 'font-weight:700;font-size:14px;margin-bottom:4px;color:' + ch.color;
+    speaker.textContent = ch.name.split(' ')[0];
+    card.appendChild(speaker);
+
+    var text = document.createElement('div');
+    text.style.cssText = 'font-size:15px;line-height:1.5;margin-bottom:16px;color:#37474f;';
+    text.textContent = pm.text;
+    card.appendChild(text);
+
+    var reactionEl = document.createElement('div');
+    reactionEl.style.cssText = 'font-size:14px;font-style:italic;color:#78909c;margin-bottom:16px;display:none;';
+    card.appendChild(reactionEl);
+
+    var btnContainer = document.createElement('div');
+    btnContainer.style.cssText = 'display:flex;flex-direction:column;gap:8px;';
+    card.appendChild(btnContainer);
+
     pm.choices.forEach(function(choice) {
-      var btn = document.createElement('button');
-      btn.className = 'choice-btn';
-      btn.textContent = choice.text;
-      btn.addEventListener('click', function() {
+      var choiceBtn = document.createElement('button');
+      choiceBtn.className = 'choice-btn';
+      choiceBtn.textContent = choice.text;
+      choiceBtn.addEventListener('click', function() {
         if (typeof HSAudio !== 'undefined') HSAudio.click();
-        applyChoice(charKey, choice);
-        panel.innerHTML = '';
+        addAffection(charKey, choice.aff);
+        if (choice.aff > 0) {
+          var gcRect = $('gameContainer').getBoundingClientRect();
+          spawnHeart(gcRect.width / 2, gcRect.height / 3, choice.aff);
+        }
+        // Show reaction
+        reactionEl.textContent = ch.name.split(' ')[0] + ': ' + choice.react;
+        reactionEl.style.display = '';
+        // Replace choices with advance button
+        btnContainer.innerHTML = '';
         setTimeout(function() {
-          var doneBtn = document.createElement('button');
-          doneBtn.className = 'btn btn-primary';
-          doneBtn.textContent = state.day >= TOTAL_DAYS ? 'See Ending' : 'Next Day \u2192';
-          doneBtn.addEventListener('click', onDone);
-          panel.appendChild(doneBtn);
-        }, 800);
+          var advBtn = document.createElement('button');
+          advBtn.className = 'btn btn-primary';
+          advBtn.textContent = state.day >= TOTAL_DAYS ? 'See Ending' : 'Next Day \u2192';
+          advBtn.addEventListener('click', function() { advanceDay(); });
+          btnContainer.appendChild(advBtn);
+        }, 600);
       });
-      panel.appendChild(btn);
+      btnContainer.appendChild(choiceBtn);
     });
+  }
+
+  function advanceDay() {
+    if (state.day >= TOTAL_DAYS) {
+      triggerEnding();
+    } else {
+      state.day++;
+      saveState();
+      goToSelect();
+    }
   }
 
   function renderResultsMeters() {
