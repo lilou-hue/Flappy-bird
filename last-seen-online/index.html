@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Last Seen Online</title>
+  <title data-i18n="lsoTitle">Last Seen Online</title>
   <link rel="stylesheet" href="styles.css">
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-VMLC97VBGN"></script>
   <script>
@@ -14,7 +14,7 @@
   </script>
 </head>
 <body>
-  <a href="/" class="back-link">&larr; Back</a>
+  <a href="/" class="back-link" data-i18n="lsoBack">&larr; Back</a>
   <button class="mute-btn" id="muteBtn" title="Mute">&#x1F50A;</button>
   <div id="phone-container">
     <div id="phone">
@@ -28,7 +28,7 @@
             <div class="lock-notifications" id="lockNotifications"></div>
             <div class="lock-swipe">
               <div class="swipe-indicator"></div>
-              <span>swipe up to unlock</span>
+              <span data-i18n="lsoSwipeUnlock">swipe up to unlock</span>
             </div>
           </div>
 
@@ -39,7 +39,7 @@
                 <span class="status-time">9:41</span>
                 <span class="status-icons">&#x2630; &#x1F50B;</span>
               </div>
-              <h1 class="home-title">Messages</h1>
+              <h1 class="home-title" data-i18n="lsoMessages">Messages</h1>
             </div>
             <div class="contact-list" id="contactList"></div>
           </div>
@@ -58,7 +58,7 @@
             </div>
             <div class="chat-messages" id="chatMessages"></div>
             <div class="chat-input-fake">
-              <span>iMessage</span>
+              <span data-i18n="lsoInputPlaceholder">iMessage</span>
             </div>
           </div>
 
@@ -66,7 +66,7 @@
           <div class="screen" id="notesScreen">
             <div class="notes-header">
               <button class="chat-back" id="notesBack">&larr;</button>
-              <h2>Notes</h2>
+              <h2 data-i18n="lsoNotes">Notes</h2>
             </div>
             <div class="notes-list" id="notesList"></div>
           </div>
@@ -94,18 +94,18 @@
               <div class="ending-notification" id="endingNotification">
                 <div class="notif-icon">📞</div>
                 <div class="notif-text">
-                  <strong>1 Missed Call</strong>
-                  <span>Jordan</span>
+                  <strong data-i18n="lsoMissedCall">1 Missed Call</strong>
+                  <span data-i18n="lsoJordan">Jordan</span>
                 </div>
               </div>
             </div>
             <div class="ending-fade" id="endingFade">
-              <h1 class="ending-title">Last Seen Online</h1>
-              <p class="ending-subtitle" id="endingSubtitle">Check in on someone today.</p>
+              <h1 class="ending-title" data-i18n="lsoTitle">Last Seen Online</h1>
+              <p class="ending-subtitle" id="endingSubtitle" data-i18n="lsoCheckIn">Check in on someone today.</p>
               <div class="ending-score" id="endingScore"></div>
               <div class="ending-buttons">
-                <button class="ending-btn" id="replayBtn">Play Again</button>
-                <button class="ending-btn" id="endingBtn">Back to Arcade</button>
+                <button class="ending-btn" id="replayBtn" data-i18n="lsoPlayAgain">Play Again</button>
+                <button class="ending-btn" id="endingBtn" data-i18n="lsoBackArcade">Back to Arcade</button>
               </div>
             </div>
           </div>
@@ -124,6 +124,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <link rel="stylesheet" href="../leaderboard.css">
   <link rel="stylesheet" href="../arcade.css">
+  <script src="../i18n.js"></script>
   <script src="../arcade.js"></script>
   <script src="../leaderboard.js"></script>
   <script src="audio.js"></script>
