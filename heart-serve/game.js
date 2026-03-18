@@ -379,6 +379,170 @@
     ]
   };
 
+  /* ════════════════════════════════════════════════════════════
+     THIRD FOLLOW-UP — one more conversation beat before the match
+     ════════════════════════════════════════════════════════════ */
+  var FOLLOWUPS_3 = {
+    hana: [
+      { text: "You know what? You're the first person who doesn't bore me.", choices: [
+        { text: "High praise from the champion.", aff: 2, react: "Don't get used to compliments.", expr: 'smirk' },
+        { text: "You don't bore me either.", aff: 1, react: "Obviously. I'm fascinating.", expr: 'happy' }]},
+      { text: "I watched your match against Sato. You've got potential.", choices: [
+        { text: "You watched my match?!", aff: 2, react: "For RESEARCH. Don't be weird.", expr: 'flustered' },
+        { text: "Any tips?", aff: 1, react: "Hit harder. Care less. ...One of those is bad advice.", expr: 'smirk' }]},
+      { text: "My hands are shaking. I never shake. What are you doing to me?", choices: [
+        { text: "Maybe you're excited.", aff: 2, react: "Excited? About YOU? ...Maybe.", expr: 'flustered' },
+        { text: "Maybe you need to eat.", aff: 0, react: "Romance: zero. But you're probably right.", expr: 'annoyed' }]},
+      { text: "I called you my rival to my team. They said that's not what rivals look like.", choices: [
+        { text: "What do rivals look like?", aff: 2, react: "Not like... this. Apparently I smile too much around you.", expr: 'flustered' },
+        { text: "We're more than rivals.", aff: 2, react: "Don't say that before a match. I need to focus.", expr: 'flustered' }]},
+      { text: "I keep the scorecard from our first match. It's in my locker.", choices: [
+        { text: "Sentimental for someone who 'only cares about winning.'", aff: 2, react: "I WILL destroy you. ...Right after being emotional.", expr: 'flustered' },
+        { text: "I kept mine too.", aff: 2, react: "...We're both idiots, aren't we?", expr: 'happy' }]},
+      { text: "I want to tell you something after the match. Promise you'll stay.", choices: [
+        { text: "I'm not going anywhere.", aff: 2, react: "*deep breath* Okay. Good. Let's play.", expr: 'happy' },
+        { text: "Wild horses couldn't drag me away.", aff: 1, react: "Dramatic. I like it. Now let's GO.", expr: 'smirk' }]},
+      { text: "I'm going to play my absolute best. Because you deserve that.", choices: [
+        { text: "So will I. For you.", aff: 2, react: "May the best heart win. ...I said heart. I meant player.", expr: 'flustered' },
+        { text: "Bring it on, Takeda.", aff: 1, react: "There's the fire. I've been waiting for that.", expr: 'happy' }]}
+    ],
+    yuki: [
+      { text: "I-I've been meaning to ask... what's your favorite color? For... research.", choices: [
+        { text: "Whatever color your eyes are.", aff: 3, react: "*drops everything* Y-you can't just\u2014! My heart\u2014!", expr: 'flustered' },
+        { text: "Blue. Like the sky.", aff: 1, react: "Blue is calming. I like blue too.", expr: 'happy' }]},
+      { text: "I made flashcards for spin techniques. There are 47.", choices: [
+        { text: "Show me all 47.", aff: 2, react: "Really?! Most people give up after three!", expr: 'happy' },
+        { text: "You're the most dedicated person I know.", aff: 2, react: "O-only because you give me something to be dedicated for...", expr: 'flustered' }]},
+      { text: "Someone was mean to me and I stood up for myself. First time ever.", choices: [
+        { text: "Yuki, that's HUGE.", aff: 2, react: "I kept thinking 'what would they think?' ...Them being you.", expr: 'flustered' },
+        { text: "What did you say?", aff: 1, react: "I said 'no thank you.' But I said it FIRMLY.", expr: 'happy' }]},
+      { text: "I pressed flowers from the day we first met. Is that weird?", choices: [
+        { text: "It's the most Yuki thing ever. I love it.", aff: 2, react: "You say my name like it's something precious...", expr: 'flustered' },
+        { text: "Which flowers?", aff: 1, react: "Daisies. Growing by the ping pong table.", expr: 'happy' }]},
+      { text: "My anxiety was bad today. But then I remembered we'd play together.", choices: [
+        { text: "I'm glad I can be that for you.", aff: 2, react: "You're my favorite kind of calm.", expr: 'happy' },
+        { text: "We don't have to play if you're not up for it.", aff: 1, react: "No\u2014 I WANT to. You make it better.", expr: 'happy' }]},
+      { text: "I finished a whole poem about someone. Want the first line?", choices: [
+        { text: "Every word.", aff: 2, react: "'In the space between serves, I found a home.' ...You're the home.", expr: 'flustered' },
+        { text: "Save it for after the match.", aff: 1, react: "O-okay. Something to look forward to.", expr: 'happy' }]},
+      { text: "No matter what happens today: you changed my life.", choices: [
+        { text: "You changed mine too, Yuki.", aff: 2, react: "*tears falling but smiling* Let's play. Through the tears.", expr: 'happy' },
+        { text: "We changed each other.", aff: 2, react: "That's the most beautiful thing I've ever heard.", expr: 'flustered' }]}
+    ],
+    rin: [
+      { text: "Pop quiz! What's my favorite food? 3 seconds. Go.", choices: [
+        { text: "Something chaotic. Pineapple pizza.", aff: 2, react: "CORRECT! Are you psychic or just perfect?!", expr: 'happy' },
+        { text: "No idea.", aff: 0, react: "Unacceptable. You have homework now.", expr: 'smirk' }]},
+      { text: "I ranked everyone here. You're number one.", choices: [
+        { text: "Too late. It's gone to my heart.", aff: 2, react: "CORNY! ...But effective. Ugh.", expr: 'flustered' },
+        { text: "What's the criteria?", aff: 1, react: "Vibes, chaos tolerance, smile quality. You aced all three.", expr: 'smirk' }]},
+      { text: "My best friend says I sound 'dangerously smitten.'", choices: [
+        { text: "Dangerously? So on-brand.", aff: 2, react: "Everything I do is dangerous, darling~", expr: 'smirk' },
+        { text: "Are you? Smitten?", aff: 2, react: "...Next question.", expr: 'flustered' }]},
+      { text: "I've been less funny lately. Want to know why?", choices: [
+        { text: "Because you're being real instead.", aff: 3, react: "Stop seeing through me. It's rude. And amazing.", expr: 'flustered' },
+        { text: "You're still pretty funny.", aff: 1, react: "Thanks. But funny isn't what I'm going for anymore.", expr: 'happy' }]},
+      { text: "I carved our initials into the ping pong table. Janitor was NOT happy.", choices: [
+        { text: "You're unhinged and I adore you.", aff: 2, react: "That's the nicest\u2014 I'm not crying, you're crying.", expr: 'flustered' },
+        { text: "We're going to get in trouble.", aff: 0, react: "Worth it. Some things need to be permanent.", expr: 'happy' }]},
+      { text: "Can I ask something real? No jokes, no deflecting.", choices: [
+        { text: "Always.", aff: 2, react: "Do you see me? The real me? Not the show?", expr: 'surprised' },
+        { text: "I'm listening.", aff: 1, react: "...You always are. That's the answer, isn't it?", expr: 'happy' }]},
+      { text: "I'm scared. Not of losing. Of what happens when the games are over.", choices: [
+        { text: "Then we'll find new games. Together.", aff: 2, react: "...Promise?", expr: 'happy' },
+        { text: "Endings are just new beginnings.", aff: 1, react: "The old me would mock that. The new me believes it.", expr: 'flustered' }]}
+    ]
+  };
+  CHAR_KEYS.forEach(function(k) {
+    for (var d = 0; d < FOLLOWUPS[k].length; d++) {
+      FOLLOWUPS[k][d].push(FOLLOWUPS_3[k][d]);
+    }
+  });
+
+  /* ════════════════════════════════════════════════════════════
+     POST-MATCH WALKS — after results, before next day
+     ════════════════════════════════════════════════════════════ */
+  var POST_MATCH = {
+    hana: { win: [
+      { text: "Okay fine. You won. ...Walk me home?", choices: [
+        { text: "Lead the way.", aff: 2, react: "*falls into step, unusually quiet, but smiling*", expr: 'happy' },
+        { text: "Only if you admit I'm good.", aff: 1, react: "You're... adequate. *tries not to smile*", expr: 'smirk' }]},
+      { text: "Two wins now. You're starting to scare me.", choices: [
+        { text: "Scared looks cute on you.", aff: 2, react: "I am NOT cute. I am FORMIDABLE.", expr: 'flustered' },
+        { text: "Good.", aff: 1, react: "...Yeah. It is good.", expr: 'happy' }]},
+      { text: "I'm buying you a victory drink. Non-negotiable.", choices: [
+        { text: "Is this a date?", aff: 2, react: "It's a DRINK. ...fine. Maybe.", expr: 'flustered' },
+        { text: "You're being nice. Who are you?", aff: 1, react: "Temporary insanity. Enjoy it.", expr: 'smirk' }]}
+    ], loss: [
+      { text: "Better luck next time. ...You okay though?", choices: [
+        { text: "Losing to you doesn't feel like losing.", aff: 2, react: "...Smoothest thing you've ever said.", expr: 'flustered' },
+        { text: "I'll get you next time.", aff: 1, react: "THAT'S the spirit!", expr: 'happy' }]},
+      { text: "Hey. Chin up. You played better than you think.", choices: [
+        { text: "Are you... comforting me?", aff: 2, react: "NO. Stating facts. ...Are you okay?", expr: 'flustered' },
+        { text: "Thanks, Hana.", aff: 1, react: "Don't mention it. Seriously. To anyone.", expr: 'happy' }]},
+      { text: "I pushed you hard. You took it. That takes guts.", choices: [
+        { text: "I'd take anything from you.", aff: 2, react: "W-what is THAT supposed to mean?!", expr: 'flustered' },
+        { text: "You make me want to be better.", aff: 1, react: "...Good. That's really good.", expr: 'happy' }]}
+    ]},
+    yuki: { win: [
+      { text: "You were amazing! C-can I walk with you? I'm not ready to say goodbye.", choices: [
+        { text: "I'm never ready to say goodbye to you.", aff: 2, react: "*links her arm with yours* S-sorry! Was that okay?!", expr: 'flustered' },
+        { text: "Of course, Yuki.", aff: 1, react: "*happy silence, walking in step*", expr: 'happy' }]},
+      { text: "I made us matching keychains. Ping pong paddles. T-too much?", choices: [
+        { text: "I'm putting this on my keys right now.", aff: 2, react: "*watches with shining eyes* It looks perfect...", expr: 'happy' },
+        { text: "This is adorable!", aff: 1, react: "I stayed up until 2am...", expr: 'flustered' }]},
+      { text: "Walking home is my favorite part of the day now. Because of... the walk.", choices: [
+        { text: "Because of the company.", aff: 2, react: "...Y-yes. Specifically... yours.", expr: 'flustered' },
+        { text: "Mine too.", aff: 1, react: "*smiles at the ground all the way home*", expr: 'happy' }]}
+    ], loss: [
+      { text: "I-I'm sorry I beat you! Please don't be upset!", choices: [
+        { text: "Yuki, you SHOULD be proud.", aff: 2, react: "...No one's ever told me to be proud before.", expr: 'happy' },
+        { text: "I'm happy for you.", aff: 1, react: "That makes me happier than winning...", expr: 'flustered' }]},
+      { text: "Want to study together? M-maybe that would help...", choices: [
+        { text: "I'd love a study date.", aff: 2, react: "D-D-DATE?! I said STUDY! *face on fire*", expr: 'flustered' },
+        { text: "That would be great.", aff: 1, react: "I'll bring snacks and color-coded notes!", expr: 'happy' }]},
+      { text: "You let me win, didn't you? Please tell me you didn't.", choices: [
+        { text: "You won fair and square.", aff: 2, react: "Then... I really AM getting better... *tears up*", expr: 'happy' },
+        { text: "You were just better today.", aff: 1, react: "B-better? Me? I need to sit down...", expr: 'flustered' }]}
+    ]},
+    rin: { win: [
+      { text: "Well played, champ~ Walk of victory. I'll be your entourage.", choices: [
+        { text: "I'd rather you walk beside me.", aff: 2, react: "...Beside. Not behind. Noted. *softens*", expr: 'happy' },
+        { text: "Entourage of one?", aff: 1, react: "Quality over quantity, baby~", expr: 'smirk' }]},
+      { text: "I owe you ice cream. Winner's rules. I just invented this rule.", choices: [
+        { text: "I love rules you invent.", aff: 2, react: "New rule: this is now weekly.", expr: 'happy' },
+        { text: "What flavor?", aff: 1, react: "Chaos flavor. Chocolate with everything.", expr: 'smirk' }]},
+      { text: "Fun fact: I've never walked anyone home before. You're the beta test.", choices: [
+        { text: "How am I doing?", aff: 2, react: "Five stars. Would walk again.", expr: 'happy' },
+        { text: "I'm honored.", aff: 1, react: "Cutest guinea pig, if we're being specific~", expr: 'smirk' }]}
+    ], loss: [
+      { text: "Don't feel bad~ I cheat at everything. Except feelings.", choices: [
+        { text: "You have feelings?", aff: 2, react: "Rude! But fair. Not hidden from you, though.", expr: 'flustered' },
+        { text: "What feelings?", aff: 1, react: "Wouldn't YOU like to know~ ...Yes.", expr: 'smirk' }]},
+      { text: "Consolation prize: you pick the music for our walk.", choices: [
+        { text: "Something we can sing badly together.", aff: 2, react: "PERFECT answer. You really do get me.", expr: 'happy' },
+        { text: "Your choice.", aff: 1, react: "Bold. You trust my taste? Dangerous.", expr: 'smirk' }]},
+      { text: "Losing to me isn't really losing. It's... delayed winning.", choices: [
+        { text: "Is that Rin philosophy?", aff: 2, react: "It's OUR philosophy now. Exclusively.", expr: 'happy' },
+        { text: "That's actually comforting.", aff: 1, react: "Don't tell anyone I comfort people.", expr: 'smirk' }]}
+    ]}
+  };
+
+  /* ════════════════════════════════════════════════════════════
+     MORNING TEXTS — shown on character select cards
+     ════════════════════════════════════════════════════════════ */
+  var MORNING_TEXTS = {
+    hana: [null, "Don't be late. I warmed up EXTRA.", "Dreamed I lost to you. Woke up furious.",
+      "Bring your A-game. I'm in a mood.", "...Hey. Thanks for yesterday.",
+      "Almost texted you last night. Almost.", "Last day. Don't make it easy."],
+    yuki: [null, "G-good morning! Hope you slept well...", "Found a four-leaf clover for you!",
+      "Been smiling all morning. Mom noticed.", "Wrote three poems last night. About... ping pong.",
+      "Nervous about today. But the good kind.", "Whatever happens, thank you. For everything."],
+    rin: [null, "rise and shine superstar~ round 2?", "wildest dream. you were in it. no details~",
+      "fun fact: thinking about you for 14 hours", "real talk. I missed you. there I said it.",
+      "learned a new trick. but I'd rather just talk.", "last day. no tricks. just us."]
+  };
+
   /* Ending confessions */
   var ENDINGS = {
     hana: {
@@ -1263,6 +1427,14 @@
       hearts.className = 'char-card-hearts';
       renderHeartPips(hearts, k);
       card.appendChild(hearts);
+      // Morning text message
+      var morningMsg = MORNING_TEXTS[k] && MORNING_TEXTS[k][state.day - 1];
+      if (morningMsg) {
+        var msgDiv = document.createElement('div');
+        msgDiv.className = 'char-card-msg';
+        msgDiv.textContent = '\u{1F4AC} ' + morningMsg;
+        card.appendChild(msgDiv);
+      }
       grid.appendChild(card);
       renderPortrait(canvas, k, 'happy', 0.85);
       card.addEventListener('click', function() { selectCharacter(k); });
@@ -1859,19 +2031,63 @@
     // Affection meters
     renderResultsMeters();
 
-    // Button
+    // Button — show post-match walk conversation before advancing
     var btn = $('nextDayBtn');
     if (state.day >= TOTAL_DAYS) {
-      btn.textContent = 'See Ending';
-      btn.onclick = function() { triggerEnding(); };
+      btn.textContent = 'Walk together...';
+      btn.onclick = function() { showPostMatch(charKey, won, function() { triggerEnding(); }); };
     } else {
-      btn.textContent = 'Next Day \u2192';
+      btn.textContent = 'Walk together...';
       btn.onclick = function() {
-        state.day++;
-        saveState();
-        goToSelect();
+        showPostMatch(charKey, won, function() {
+          state.day++;
+          saveState();
+          goToSelect();
+        });
       };
     }
+  }
+
+  function showPostMatch(charKey, won, onDone) {
+    var pool = POST_MATCH[charKey][won ? 'win' : 'loss'];
+    if (!pool || pool.length === 0) { onDone(); return; }
+    // Pick one based on day (cycle through available)
+    var pm = pool[(state.day - 1) % pool.length];
+
+    // Reuse dialogue screen for the walk scene
+    showScreen('dialogue');
+    var ch = CHARS[charKey];
+    renderPortrait($('portraitCanvas'), charKey, 'happy');
+    $('charNameplate').textContent = ch.name;
+    $('charNameplate').style.color = ch.color;
+    $('sceneText').textContent = won
+      ? 'The match is over. ' + ch.name.split(' ')[0] + ' catches up to you outside.'
+      : 'The match is over. ' + ch.name.split(' ')[0] + ' walks alongside you.';
+    $('dialogueSpeaker').textContent = ch.name.split(' ')[0];
+    $('dialogueSpeaker').style.color = ch.color;
+    $('dialogueText').textContent = pm.text;
+    $('reactionBox').classList.remove('visible');
+
+    var panel = $('choicesPanel');
+    panel.innerHTML = '';
+    pm.choices.forEach(function(choice) {
+      var btn = document.createElement('button');
+      btn.className = 'choice-btn';
+      btn.textContent = choice.text;
+      btn.addEventListener('click', function() {
+        if (typeof HSAudio !== 'undefined') HSAudio.click();
+        applyChoice(charKey, choice);
+        panel.innerHTML = '';
+        setTimeout(function() {
+          var doneBtn = document.createElement('button');
+          doneBtn.className = 'btn btn-primary';
+          doneBtn.textContent = state.day >= TOTAL_DAYS ? 'See Ending' : 'Next Day \u2192';
+          doneBtn.addEventListener('click', onDone);
+          panel.appendChild(doneBtn);
+        }, 800);
+      });
+      panel.appendChild(btn);
+    });
   }
 
   function renderResultsMeters() {

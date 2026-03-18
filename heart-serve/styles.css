@@ -304,6 +304,16 @@ body {
 }
 .heart-pip.filled { color: var(--heart-red); }
 .heart-pip.empty { color: #ddd; }
+.char-card-msg {
+  font-size: 11px;
+  color: #888;
+  font-style: italic;
+  margin-top: 6px;
+  padding: 4px 8px;
+  background: rgba(0,0,0,0.04);
+  border-radius: 8px;
+  line-height: 1.3;
+}
 
 /* ═══ DIALOGUE SCREEN ═══ */
 #dialogueScreen { padding: 20px; }
