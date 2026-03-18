@@ -118,8 +118,81 @@ var HSAudio = (function() {
     });
   }
 
+  function powerUp() {
+    play(function(c) {
+      var t = c.currentTime;
+      [600, 800, 1000, 1200].forEach(function(f, i) {
+        var o = c.createOscillator(), g = c.createGain();
+        o.type = 'square'; o.frequency.value = f;
+        g.gain.setValueAtTime(0.06, t + i * 0.06);
+        g.gain.exponentialRampToValueAtTime(0.001, t + i * 0.06 + 0.12);
+        o.connect(g).connect(c.destination);
+        o.start(t + i * 0.06); o.stop(t + i * 0.06 + 0.12);
+      });
+    });
+  }
+
+  function giftGive() {
+    play(function(c) {
+      var t = c.currentTime;
+      [523, 659, 784, 1047, 1319].forEach(function(f, i) {
+        var o = c.createOscillator(), g = c.createGain();
+        o.type = 'sine'; o.frequency.value = f;
+        g.gain.setValueAtTime(0.08, t + i * 0.1);
+        g.gain.exponentialRampToValueAtTime(0.001, t + i * 0.1 + 0.3);
+        o.connect(g).connect(c.destination);
+        o.start(t + i * 0.1); o.stop(t + i * 0.1 + 0.3);
+      });
+    });
+  }
+
+  function jealousy() {
+    play(function(c) {
+      var t = c.currentTime;
+      var o = c.createOscillator(), g = c.createGain();
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(300, t);
+      o.frequency.exponentialRampToValueAtTime(200, t + 0.4);
+      g.gain.setValueAtTime(0.05, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+      o.connect(g).connect(c.destination);
+      o.start(t); o.stop(t + 0.5);
+    });
+  }
+
+  function fever() {
+    play(function(c) {
+      var t = c.currentTime;
+      [880, 1100, 880, 1100, 1320, 1760].forEach(function(f, i) {
+        var o = c.createOscillator(), g = c.createGain();
+        o.type = 'sine'; o.frequency.value = f;
+        g.gain.setValueAtTime(0.07, t + i * 0.07);
+        g.gain.exponentialRampToValueAtTime(0.001, t + i * 0.07 + 0.15);
+        o.connect(g).connect(c.destination);
+        o.start(t + i * 0.07); o.stop(t + i * 0.07 + 0.15);
+      });
+    });
+  }
+
+  function eventFanfare() {
+    play(function(c) {
+      var t = c.currentTime;
+      [392, 523, 659, 784, 1047].forEach(function(f, i) {
+        var o = c.createOscillator(), g = c.createGain();
+        o.type = 'triangle'; o.frequency.value = f;
+        g.gain.setValueAtTime(0.1, t + i * 0.15);
+        g.gain.exponentialRampToValueAtTime(0.001, t + i * 0.15 + 0.4);
+        o.connect(g).connect(c.destination);
+        o.start(t + i * 0.15); o.stop(t + i * 0.15 + 0.4);
+      });
+    });
+  }
+
   function toggleMute() { muted = !muted; return muted; }
+  function isMuted() { return muted; }
 
   return { hit:hit, score:score, losePoint:losePoint, heartGain:heartGain,
-           click:click, win:win, lose:lose, serve:serve, toggleMute:toggleMute };
+           click:click, win:win, lose:lose, serve:serve, toggleMute:toggleMute,
+           isMuted:isMuted, powerUp:powerUp, giftGive:giftGive,
+           jealousy:jealousy, fever:fever, eventFanfare:eventFanfare };
 })();

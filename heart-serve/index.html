@@ -16,9 +16,21 @@
 <body>
   <a href="/" class="back-link">&larr; Back</a>
 
+  <!-- Mute button -->
+  <button class="mute-btn" id="muteBtn" title="Toggle sound">&#x1F50A;</button>
+
   <div id="gameContainer">
     <!-- Floating particles layer -->
     <canvas id="particleCanvas"></canvas>
+
+    <!-- Gift modal overlay -->
+    <div class="gift-modal-overlay" id="giftModal" style="display:none">
+      <div class="gift-modal">
+        <h3 class="gift-modal-title">Choose a Gift</h3>
+        <div class="gift-grid" id="giftGrid"></div>
+        <button class="btn btn-secondary gift-cancel" id="giftCancel">Cancel</button>
+      </div>
+    </div>
 
     <!-- ═══ TITLE SCREEN ═══ -->
     <div class="screen active" id="titleScreen">
@@ -29,11 +41,16 @@
       </div>
       <div class="title-content">
         <div class="title-icon">&hearts;</div>
-        <h1 class="title-name">HeartServe</h1>
-        <p class="title-sub">Love &amp; Ping Pong</p>
-        <p class="title-desc">Build friendships through dialogue and ping pong matches!</p>
-        <button class="btn btn-primary btn-glow" id="startBtn">New Game</button>
-        <button class="btn btn-secondary" id="continueBtn" style="display:none">Continue</button>
+        <h1 class="title-name" data-i18n="hsTitle">HeartServe</h1>
+        <p class="title-sub" data-i18n="hsSubtitle">Love &amp; Ping Pong</p>
+        <p class="title-desc" data-i18n="hsDesc">Build friendships through dialogue and ping pong matches!</p>
+        <button class="btn btn-primary btn-glow" id="startBtn" data-i18n="hsNewGame">New Game</button>
+        <button class="btn btn-secondary" id="continueBtn" data-i18n="hsContinue" style="display:none">Continue</button>
+        <!-- Ending gallery -->
+        <div class="ending-gallery-wrap" style="display:none">
+          <p class="gallery-label">Endings Unlocked</p>
+          <div class="ending-gallery" id="endingGallery"></div>
+        </div>
       </div>
     </div>
 
@@ -43,7 +60,7 @@
         <div class="day-badge" id="dayBadge">Day 1</div>
         <div class="affection-bar" id="topAffectionBar"></div>
       </div>
-      <h2 class="screen-title">Who do you want to see today?</h2>
+      <h2 class="screen-title" data-i18n="hsWhoToday">Who do you want to see today?</h2>
       <div class="char-grid" id="charGrid"></div>
     </div>
 
@@ -73,10 +90,10 @@
         <div class="vs-layout">
           <div class="vs-side vs-player">
             <div class="vs-paddle vs-paddle-you"></div>
-            <div class="vs-label">You</div>
+            <div class="vs-label" data-i18n="hsYou">You</div>
           </div>
           <div class="vs-center">
-            <div class="vs-text">VS</div>
+            <div class="vs-text" data-i18n="hsVS">VS</div>
             <canvas id="vsPortrait" width="100" height="100"></canvas>
             <div class="vs-name" id="vsName"></div>
           </div>
@@ -85,7 +102,8 @@
             <div class="vs-label" id="vsOppLabel">???</div>
           </div>
         </div>
-        <button class="btn btn-primary btn-glow" id="matchStartBtn">Let's Play!</button>
+        <div class="modifier-banner" id="modifierBanner" style="display:none"></div>
+        <button class="btn btn-primary btn-glow" id="matchStartBtn" data-i18n="hsLetsPlay">Let's Play!</button>
       </div>
       <!-- Pong game -->
       <div class="match-playing" id="matchPlaying" style="display:none">
@@ -95,7 +113,7 @@
           <span class="pong-score pong-opp" id="aScoreDisplay">0</span>
         </div>
         <canvas id="pongCanvas" width="580" height="380"></canvas>
-        <div class="pong-controls">Mouse or &uarr;&darr; to move &middot; First to 3</div>
+        <div class="pong-controls" data-i18n="hsControls">Mouse or &uarr;&darr; to move &middot; First to 5</div>
       </div>
     </div>
 
@@ -103,14 +121,14 @@
     <div class="screen" id="resultsScreen">
       <div class="results-card">
         <canvas id="resultsPortrait" width="120" height="150"></canvas>
-        <h2 class="results-title" id="resultsTitle">Match Over!</h2>
+        <h2 class="results-title" id="resultsTitle" data-i18n="hsMatchOver">Match Over!</h2>
         <div class="results-rating" id="resultsRating"></div>
         <div class="results-scoreline" id="resultsScoreline"></div>
         <div class="results-affection-gain" id="resultsAffGain"></div>
         <div class="results-reaction" id="resultsReaction"></div>
         <hr class="results-divider">
         <div class="results-meters" id="resultsMeters"></div>
-        <button class="btn btn-primary" id="nextDayBtn">Next Day</button>
+        <button class="btn btn-primary" id="nextDayBtn" data-i18n="hsNextDay">Next Day</button>
       </div>
     </div>
 
@@ -124,8 +142,8 @@
           <div class="ending-narration" id="endingNarration"></div>
           <div class="ending-score" id="endingScoreText"></div>
           <div class="ending-buttons">
-            <button class="btn btn-primary" id="replayBtn">Play Again</button>
-            <button class="btn btn-secondary" id="homeBtn">Back to Arcade</button>
+            <button class="btn btn-primary" id="replayBtn" data-i18n="hsPlayAgain">Play Again</button>
+            <button class="btn btn-secondary" id="homeBtn" data-i18n="hsBackArcade">Back to Arcade</button>
           </div>
         </div>
       </div>
@@ -138,6 +156,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <link rel="stylesheet" href="../leaderboard.css">
   <link rel="stylesheet" href="../arcade.css">
+  <script src="../i18n.js"></script>
   <script src="../arcade.js"></script>
   <script src="../leaderboard.js"></script>
   <script src="audio.js"></script>
