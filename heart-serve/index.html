@@ -44,7 +44,12 @@
         <h1 class="title-name" data-i18n="hsTitle">HeartServe</h1>
         <p class="title-sub" data-i18n="hsSubtitle">Love &amp; Ping Pong</p>
         <p class="title-desc" data-i18n="hsDesc">Build friendships through dialogue and ping pong matches!</p>
-        <button class="btn btn-primary btn-glow" id="startBtn" data-i18n="hsNewGame">New Game</button>
+        <div class="route-select" id="routeSelect">
+          <p class="route-label">Choose your route</p>
+          <button class="btn btn-route btn-route-girls" id="routeGirls">&#x1F338; Meet the Girls</button>
+          <button class="btn btn-route btn-route-boys" id="routeBoys">&#x2B50; Meet the Boys</button>
+        </div>
+        <button class="btn btn-primary btn-glow" id="startBtn" data-i18n="hsNewGame" style="display:none">New Game</button>
         <button class="btn btn-secondary" id="continueBtn" data-i18n="hsContinue" style="display:none">Continue</button>
         <!-- Ending gallery -->
         <div class="ending-gallery-wrap" style="display:none">
@@ -162,6 +167,7 @@
   <script src="../arcade.js"></script>
   <script src="../leaderboard.js"></script>
   <script src="audio.js"></script>
+  <script src="boys.js"></script>
   <script src="game.js"></script>
   <script>if(typeof Arcade!=='undefined')Arcade.injectNavHUD();</script>
 </body>

@@ -134,6 +134,52 @@ body {
   50% { box-shadow: 0 4px 28px rgba(255,107,157,0.6), 0 0 40px rgba(179,136,255,0.2); }
 }
 
+/* ── Route selector ── */
+.route-select {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+}
+.route-label {
+  font-size: 13px;
+  color: var(--text-light);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.btn-route {
+  width: 220px;
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 700;
+  padding: 14px 24px;
+  border: 2px solid transparent;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  letter-spacing: 0.02em;
+}
+.btn-route-girls {
+  background: linear-gradient(135deg, #ff6b9d, #b388ff);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(255,107,157,0.35);
+}
+.btn-route-girls:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(255,107,157,0.5);
+}
+.btn-route-boys {
+  background: linear-gradient(135deg, #5c6bc0, #ff8f00);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(92,107,192,0.35);
+}
+.btn-route-boys:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(255,143,0,0.5);
+}
+
 /* ═══ TITLE SCREEN ═══ */
 #titleScreen {
   background: linear-gradient(135deg, #fff5f7, #f5f0ff, #f0f4ff);

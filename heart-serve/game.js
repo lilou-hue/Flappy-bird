@@ -62,6 +62,20 @@
   };
   var CHAR_KEYS = ['hana', 'yuki', 'rin'];
   var TOTAL_DAYS = 14;
+
+  /* ── Route system (girls / boys) ── */
+  var currentRoute = localStorage.getItem('heartServeRoute') || null;
+  function getChars() { return currentRoute === 'boys' ? CHARS_BOYS : CHARS; }
+  function getCharKeys() { return currentRoute === 'boys' ? CHAR_KEYS_BOYS : CHAR_KEYS; }
+  function getDialogue() { return currentRoute === 'boys' ? DIALOGUE_BOYS : DIALOGUE; }
+  function getFollowups() { return currentRoute === 'boys' ? FOLLOWUPS_BOYS : FOLLOWUPS; }
+  function getMatchReactions() { return currentRoute === 'boys' ? MATCH_REACTIONS_BOYS : MATCH_REACTIONS; }
+  function getPostMatch() { return currentRoute === 'boys' ? POST_MATCH_BOYS : POST_MATCH; }
+  function getMorningTexts() { return currentRoute === 'boys' ? MORNING_TEXTS_BOYS : MORNING_TEXTS; }
+  function getEndings() { return currentRoute === 'boys' ? ENDINGS_BOYS : ENDINGS; }
+  function getRivalScenes() { return currentRoute === 'boys' ? RIVAL_SCENES_BOYS : RIVAL_SCENES; }
+  function getGifts() { return currentRoute === 'boys' ? GIFTS_BOYS : GIFTS; }
+  function getGiftKeys() { return currentRoute === 'boys' ? GIFT_KEYS_BOYS : GIFT_KEYS; }
   var WIN_SCORE = 5;
   var MAX_AFFECTION = 100;
 
@@ -802,6 +816,16 @@
       FOLLOWUPS[k][d].push(FOLLOWUPS_3[k][d]);
     }
   });
+  // Merge boys followup_3 data too
+  if (typeof FOLLOWUPS_BOYS !== 'undefined' && typeof FOLLOWUPS_3_BOYS !== 'undefined') {
+    CHAR_KEYS_BOYS.forEach(function(k) {
+      for (var d = 0; d < FOLLOWUPS_BOYS[k].length; d++) {
+        if (FOLLOWUPS_3_BOYS[k] && FOLLOWUPS_3_BOYS[k][d]) {
+          FOLLOWUPS_BOYS[k][d].push(FOLLOWUPS_3_BOYS[k][d]);
+        }
+      }
+    });
+  }
 
   /* ════════════════════════════════════════════════════════════
      POST-MATCH WALKS — after results, before next day
@@ -1009,28 +1033,33 @@
   /* ════════════════════════════════════════════════════════════
      STATE
      ════════════════════════════════════════════════════════════ */
+  function getSaveKey() { return currentRoute === 'boys' ? 'heartServeStateBoys' : 'heartServeState'; }
   var SAVE_KEY = 'heartServeState';
   var GALLERY_KEY = 'heartServeGallery';
   function defaultState() {
+    var keys = getCharKeys();
+    var aff = {}, mood = {};
+    keys.forEach(function(k) { aff[k] = 0; mood[k] = 'neutral'; });
     return {
       day: 1,
-      affection: { hana: 0, yuki: 0, rin: 0 },
-      mood: { hana: 'neutral', yuki: 'neutral', rin: 'neutral' },
+      affection: aff,
+      mood: mood,
       currentChar: null,
       screen: 'title',
       dayHistory: [],
       giftUsed: false,
       giftChar: null,
       festivalActive: false,
-      tournamentQueue: null
+      tournamentQueue: null,
+      route: currentRoute
     };
   }
   var state = loadState();
   function loadState() {
-    try { var s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && s.day) return s; } catch(e) {}
+    try { var s = JSON.parse(localStorage.getItem(getSaveKey())); if (s && s.day) return s; } catch(e) {}
     return defaultState();
   }
-  function saveState() { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }
+  function saveState() { localStorage.setItem(getSaveKey(), JSON.stringify(state)); }
 
   /* ════════════════════════════════════════════════════════════
      DOM REFERENCES
@@ -1111,7 +1140,7 @@
     var ctx = canvas.getContext('2d');
     var w = canvas.width, h = canvas.height;
     ctx.clearRect(0, 0, w, h);
-    var ch = CHARS[charKey];
+    var ch = getChars()[charKey];
     if (!ch) return;
     scale = scale || 1;
     var cx = w / 2, cy = h * 0.48;
@@ -1544,6 +1573,53 @@
         ctx.stroke();
         ctx.globalAlpha = 1;
       });
+    } else if (key === 'kaito') {
+      // Short spiky dark hair — back volume
+      ctx.beginPath();
+      ctx.ellipse(cx, cy - s * 0.06, s * 0.5, s * 0.55, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Spiky tips at back
+      ctx.fillStyle = shadeColor(ch.hairColor, -10);
+      [[-0.38, -0.42], [-0.1, -0.52], [0.15, -0.48], [0.4, -0.38]].forEach(function(t) {
+        ctx.beginPath();
+        ctx.moveTo(cx + s * t[0], cy + s * t[1]);
+        ctx.lineTo(cx + s * (t[0] + 0.04), cy + s * (t[1] - 0.1));
+        ctx.lineTo(cx + s * (t[0] + 0.08), cy + s * t[1]);
+        ctx.fill();
+      });
+    } else if (key === 'sora') {
+      // Neat medium-length hair — soft volume
+      var hairGrd = ctx.createLinearGradient(cx, cy - s * 0.3, cx, cy + s * 0.4);
+      hairGrd.addColorStop(0, ch.hairColor);
+      hairGrd.addColorStop(1, shadeColor(ch.hairColor, -20));
+      ctx.fillStyle = hairGrd;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy - s * 0.05, s * 0.5, s * 0.56, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Side hair that covers ears slightly
+      [-1, 1].forEach(function(side) {
+        ctx.fillStyle = ch.hairColor;
+        ctx.beginPath();
+        ctx.moveTo(cx + side * s * 0.45, cy - s * 0.1);
+        ctx.quadraticCurveTo(cx + side * s * 0.5, cy + s * 0.1, cx + side * s * 0.42, cy + s * 0.25);
+        ctx.lineTo(cx + side * s * 0.38, cy + s * 0.2);
+        ctx.quadraticCurveTo(cx + side * s * 0.43, cy + s * 0.05, cx + side * s * 0.4, cy - s * 0.05);
+        ctx.fill();
+      });
+    } else if (key === 'haruki') {
+      // Messy medium hair — wild volume
+      ctx.beginPath();
+      ctx.ellipse(cx, cy - s * 0.04, s * 0.52, s * 0.56, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Messy tufts sticking out
+      ctx.fillStyle = shadeColor(ch.hairColor, -15);
+      [[-0.45, -0.2, -0.52, -0.35], [0.42, -0.15, 0.5, -0.32], [-0.35, -0.4, -0.42, -0.55], [0.3, -0.38, 0.38, -0.52]].forEach(function(t) {
+        ctx.beginPath();
+        ctx.moveTo(cx + s * t[0], cy + s * t[1]);
+        ctx.lineTo(cx + s * t[2], cy + s * t[3]);
+        ctx.lineTo(cx + s * (t[0] + 0.08), cy + s * (t[1] - 0.05));
+        ctx.fill();
+      });
     }
   }
 
@@ -1668,6 +1744,79 @@
       ctx.globalAlpha = 0.28;
       ctx.beginPath();
       ctx.ellipse(cx - s * 0.12, cy - s * 0.42, s * 0.11, s * 0.04, -0.3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    } else if (key === 'kaito') {
+      // Short spiky bangs — sharp and angular
+      ctx.beginPath();
+      ctx.moveTo(cx - s * 0.44, cy - s * 0.12);
+      ctx.lineTo(cx - s * 0.3, cy - s * 0.42);
+      ctx.lineTo(cx - s * 0.18, cy - s * 0.3);
+      ctx.lineTo(cx - s * 0.05, cy - s * 0.48);
+      ctx.lineTo(cx + s * 0.08, cy - s * 0.35);
+      ctx.lineTo(cx + s * 0.2, cy - s * 0.45);
+      ctx.lineTo(cx + s * 0.33, cy - s * 0.3);
+      ctx.lineTo(cx + s * 0.44, cy - s * 0.12);
+      ctx.quadraticCurveTo(cx + s * 0.5, cy - s * 0.35, cx + s * 0.34, cy - s * 0.55);
+      ctx.quadraticCurveTo(cx, cy - s * 0.66, cx - s * 0.34, cy - s * 0.55);
+      ctx.quadraticCurveTo(cx - s * 0.5, cy - s * 0.35, cx - s * 0.44, cy - s * 0.12);
+      ctx.fill();
+      // Highlight
+      ctx.fillStyle = ch.hairHighlight;
+      ctx.globalAlpha = 0.25;
+      ctx.beginPath();
+      ctx.ellipse(cx - s * 0.08, cy - s * 0.42, s * 0.12, s * 0.05, -0.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    } else if (key === 'sora') {
+      // Soft swept bangs — gentle side part
+      ctx.beginPath();
+      ctx.moveTo(cx - s * 0.46, cy - s * 0.08);
+      ctx.quadraticCurveTo(cx - s * 0.44, cy - s * 0.28, cx - s * 0.3, cy - s * 0.2);
+      ctx.quadraticCurveTo(cx - s * 0.2, cy - s * 0.34, cx - s * 0.08, cy - s * 0.22);
+      ctx.quadraticCurveTo(cx + s * 0.05, cy - s * 0.36, cx + s * 0.15, cy - s * 0.24);
+      ctx.quadraticCurveTo(cx + s * 0.28, cy - s * 0.38, cx + s * 0.4, cy - s * 0.18);
+      ctx.lineTo(cx + s * 0.46, cy - s * 0.08);
+      ctx.quadraticCurveTo(cx + s * 0.5, cy - s * 0.4, cx + s * 0.34, cy - s * 0.56);
+      ctx.quadraticCurveTo(cx, cy - s * 0.68, cx - s * 0.34, cy - s * 0.56);
+      ctx.quadraticCurveTo(cx - s * 0.5, cy - s * 0.4, cx - s * 0.46, cy - s * 0.08);
+      ctx.fill();
+      // Soft highlight streaks
+      ctx.fillStyle = ch.hairHighlight;
+      ctx.globalAlpha = 0.3;
+      ctx.beginPath();
+      ctx.ellipse(cx + s * 0.08, cy - s * 0.42, s * 0.14, s * 0.05, 0.15, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    } else if (key === 'haruki') {
+      // Messy wild bangs — asymmetric, slightly long
+      ctx.beginPath();
+      ctx.moveTo(cx - s * 0.46, cy - s * 0.06);
+      ctx.lineTo(cx - s * 0.35, cy - s * 0.32);
+      ctx.lineTo(cx - s * 0.22, cy - s * 0.18);
+      ctx.lineTo(cx - s * 0.12, cy - s * 0.38);
+      ctx.lineTo(cx, cy - s * 0.22);
+      ctx.lineTo(cx + s * 0.12, cy - s * 0.35);
+      ctx.lineTo(cx + s * 0.25, cy - s * 0.2);
+      ctx.lineTo(cx + s * 0.35, cy - s * 0.28);
+      ctx.lineTo(cx + s * 0.46, cy - s * 0.06);
+      ctx.quadraticCurveTo(cx + s * 0.52, cy - s * 0.34, cx + s * 0.34, cy - s * 0.56);
+      ctx.quadraticCurveTo(cx, cy - s * 0.67, cx - s * 0.34, cy - s * 0.56);
+      ctx.quadraticCurveTo(cx - s * 0.52, cy - s * 0.34, cx - s * 0.46, cy - s * 0.06);
+      ctx.fill();
+      // Stray strand (ahoge) — cocky little antenna
+      ctx.strokeStyle = ch.hairColor;
+      ctx.lineWidth = s * 0.03;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(cx + s * 0.05, cy - s * 0.54);
+      ctx.quadraticCurveTo(cx + s * 0.15, cy - s * 0.75, cx + s * 0.1, cy - s * 0.68);
+      ctx.stroke();
+      // Highlight
+      ctx.fillStyle = ch.hairHighlight;
+      ctx.globalAlpha = 0.3;
+      ctx.beginPath();
+      ctx.ellipse(cx - s * 0.14, cy - s * 0.4, s * 0.1, s * 0.04, -0.25, 0, Math.PI * 2);
       ctx.fill();
       ctx.globalAlpha = 1;
     }
@@ -1807,6 +1956,28 @@
   /* ════════════════════════════════════════════════════════════
      TITLE SCREEN
      ════════════════════════════════════════════════════════════ */
+  /* ── Route selection ── */
+  function selectRoute(route) {
+    currentRoute = route;
+    localStorage.setItem('heartServeRoute', route);
+    if (typeof HSAudio !== 'undefined') HSAudio.click();
+    // Hide route buttons, show start/continue
+    $('routeSelect').style.display = 'none';
+    $('startBtn').style.display = '';
+    // Check for existing save in this route
+    var saved = null;
+    try { saved = JSON.parse(localStorage.getItem(getSaveKey())); } catch(e) {}
+    if (saved && saved.day && saved.day > 1) {
+      $('continueBtn').style.display = '';
+      state = saved;
+    } else {
+      $('continueBtn').style.display = 'none';
+      state = defaultState();
+    }
+  }
+  if ($('routeGirls')) $('routeGirls').addEventListener('click', function() { selectRoute('girls'); });
+  if ($('routeBoys')) $('routeBoys').addEventListener('click', function() { selectRoute('boys'); });
+
   $('startBtn').addEventListener('click', function() {
     if (typeof HSAudio !== 'undefined') HSAudio.click();
     state = defaultState();
@@ -1820,9 +1991,17 @@
   });
 
   function initTitle() {
+    // Reset route selection UI
+    $('routeSelect').style.display = '';
+    $('startBtn').style.display = 'none';
+    $('continueBtn').style.display = 'none';
+    // If a route was already picked (e.g. from localStorage), pre-select it
+    if (currentRoute) {
+      selectRoute(currentRoute);
+    }
     // Show continue if save exists
     var saved = null;
-    try { saved = JSON.parse(localStorage.getItem(SAVE_KEY)); } catch(e) {}
+    try { saved = JSON.parse(localStorage.getItem(getSaveKey())); } catch(e) {}
     if (saved && saved.day && saved.day > 1) {
       $('continueBtn').style.display = '';
     }
@@ -1851,7 +2030,7 @@
         slot.className = 'gallery-slot' + (gallery.indexOf(ek) >= 0 ? ' unlocked' : '');
         if (gallery.indexOf(ek) >= 0) {
           anyUnlocked = true;
-          var ending = ENDINGS[ek];
+          var ending = getEndings()[ek];
           slot.textContent = ending ? ending.label : ek;
           slot.title = ending ? ending.label : ek;
         } else {
@@ -1871,7 +2050,7 @@
   function applyJealousyDrain() {
     if (state.day <= 1) return;
     var visited = state.currentChar;
-    CHAR_KEYS.forEach(function(k) {
+    getCharKeys().forEach(function(k) {
       if (k !== visited && (state.affection[k] || 0) > 0) {
         state.affection[k] = Math.max(0, (state.affection[k] || 0) - 1);
         // Set jealous mood if they had significant affection
@@ -1889,13 +2068,13 @@
     var current = state.currentChar;
     var currentAff = state.affection[current] || 0;
     if (currentAff < 25) return null;
-    for (var i = 0; i < CHAR_KEYS.length; i++) {
-      var other = CHAR_KEYS[i];
+    for (var i = 0; i < getCharKeys().length; i++) {
+      var other = getCharKeys()[i];
       if (other === current) continue;
       var otherAff = state.affection[other] || 0;
       if (otherAff >= 25 && Math.abs(currentAff - otherAff) <= 10) {
         var key = other + '_' + current;
-        if (RIVAL_SCENES[key]) return RIVAL_SCENES[key];
+        if (getRivalScenes()[key]) return getRivalScenes()[key];
       }
     }
     return null;
@@ -1948,8 +2127,8 @@
   function renderTopAffection() {
     var bar = $('topAffectionBar');
     bar.innerHTML = '';
-    CHAR_KEYS.forEach(function(k) {
-      var ch = CHARS[k];
+    getCharKeys().forEach(function(k) {
+      var ch = getChars()[k];
       var d = document.createElement('div');
       d.className = 'aff-mini';
       d.innerHTML = '<span class="aff-mini-dot" style="background:' + ch.color + '"></span>' +
@@ -1962,8 +2141,8 @@
   function renderSelectCards() {
     var grid = $('charGrid');
     grid.innerHTML = '';
-    CHAR_KEYS.forEach(function(k) {
-      var ch = CHARS[k];
+    getCharKeys().forEach(function(k) {
+      var ch = getChars()[k];
       var card = document.createElement('div');
       card.className = 'char-card';
       card.setAttribute('data-char', k);
@@ -1993,7 +2172,7 @@
       renderHeartPips(hearts, k);
       card.appendChild(hearts);
       // Morning text message
-      var morningMsg = MORNING_TEXTS[k] && MORNING_TEXTS[k][state.day - 1];
+      var morningMsg = getMorningTexts()[k] && getMorningTexts()[k][state.day - 1];
       if (morningMsg) {
         var msgDiv = document.createElement('div');
         msgDiv.className = 'char-card-msg';
@@ -2026,8 +2205,8 @@
     var list = $('giftGrid');
     if (!list) return;
     list.innerHTML = '';
-    GIFT_KEYS.forEach(function(gk) {
-      var g = GIFTS[gk];
+    getGiftKeys().forEach(function(gk) {
+      var g = getGifts()[gk];
       var btn = document.createElement('button');
       btn.className = 'gift-option';
       btn.innerHTML = '<span class="gift-emoji">' + g.emoji + '</span><span class="gift-name">' + g.name + '</span>';
@@ -2045,7 +2224,7 @@
     var modal = $('giftModal');
     if (modal) modal.style.display = 'none';
     if (!state.currentChar || state.giftUsed) return;
-    var gift = GIFTS[giftKey];
+    var gift = getGifts()[giftKey];
     var charKey = state.currentChar;
     var isMatch = gift.match === charKey;
     var affGain = isMatch ? 8 : 3;
@@ -2058,7 +2237,7 @@
     // Show gift reaction in dialogue
     var reaction = isMatch ? gift.reaction_match : gift.reaction_other;
     $('dialogueText').textContent = reaction;
-    $('dialogueSpeaker').textContent = CHARS[charKey].name.split(' ')[0];
+    $('dialogueSpeaker').textContent = getChars()[charKey].name.split(' ')[0];
     renderPortrait($('portraitCanvas'), charKey, isMatch ? 'happy' : 'surprised');
     $('reactionBox').textContent = '\u2665 +' + Math.round(affGain * mult) + ' affection!';
     $('reactionBox').classList.add('visible');
@@ -2071,20 +2250,20 @@
      ════════════════════════════════════════════════════════════ */
   function startDialogue(charKey) {
     showScreen('dialogue');
-    var ch = CHARS[charKey];
-    var dayIdx = Math.min(state.day - 1, DIALOGUE[charKey].length - 1);
-    var d = DIALOGUE[charKey][dayIdx];
+    var ch = getChars()[charKey];
+    var dayIdx = Math.min(state.day - 1, getDialogue()[charKey].length - 1);
+    var d = getDialogue()[charKey][dayIdx];
 
     // Check for rival scene first
     var rival = checkRivalScene();
     if (rival && !state._rivalShown) {
       state._rivalShown = true;
       renderPortrait($('portraitCanvas'), rival.charKey, 'annoyed');
-      $('charNameplate').textContent = CHARS[rival.charKey].name;
-      $('charNameplate').style.color = CHARS[rival.charKey].color;
+      $('charNameplate').textContent = getChars()[rival.charKey].name;
+      $('charNameplate').style.color = getChars()[rival.charKey].color;
       $('sceneText').textContent = '';
-      $('dialogueSpeaker').textContent = CHARS[rival.charKey].name.split(' ')[0];
-      $('dialogueSpeaker').style.color = CHARS[rival.charKey].color;
+      $('dialogueSpeaker').textContent = getChars()[rival.charKey].name.split(' ')[0];
+      $('dialogueSpeaker').style.color = getChars()[rival.charKey].color;
       $('dialogueText').textContent = rival.text;
       $('reactionBox').classList.remove('visible');
       if (typeof HSAudio !== 'undefined') HSAudio.jealousy();
@@ -2105,7 +2284,7 @@
   }
 
   function startDialogueInner(charKey, dayIdx, d) {
-    var ch = CHARS[charKey];
+    var ch = getChars()[charKey];
 
     // Render portrait
     renderPortrait($('portraitCanvas'), charKey, 'neutral');
@@ -2224,7 +2403,7 @@
 
   function handleChoice(charKey, dayIdx, choiceIdx) {
     if (typeof HSAudio !== 'undefined') HSAudio.click();
-    var d = DIALOGUE[charKey][dayIdx];
+    var d = getDialogue()[charKey][dayIdx];
     var choice = d.choices[choiceIdx];
     applyChoice(charKey, choice);
     // Show first follow-up after reaction
@@ -2241,13 +2420,13 @@
       spawnHeart(rect.left - containerRect.left + rect.width / 2, rect.top - containerRect.top + 50, choice.aff);
     }
     renderPortrait($('portraitCanvas'), charKey, choice.expr || 'neutral');
-    $('reactionBox').textContent = CHARS[charKey].name.split(' ')[0] + ': ' + choice.react;
+    $('reactionBox').textContent = getChars()[charKey].name.split(' ')[0] + ': ' + choice.react;
     $('reactionBox').classList.add('visible');
     $('choicesPanel').innerHTML = '';
   }
 
   function showFollowupOrMatch(charKey, dayIdx) {
-    var dayFollowups = FOLLOWUPS[charKey] && FOLLOWUPS[charKey][dayIdx];
+    var dayFollowups = getFollowups()[charKey] && getFollowups()[charKey][dayIdx];
     if (dayFollowups && followupStep < dayFollowups.length) {
       var fu = dayFollowups[followupStep];
       setTimeout(function() {
@@ -2295,7 +2474,7 @@
   function goToMatch(charKey) {
     if (typeof HSAudio !== 'undefined') HSAudio.click();
     showScreen('match');
-    var ch = CHARS[charKey];
+    var ch = getChars()[charKey];
 
     // Show ready overlay
     $('matchReady').style.display = '';
@@ -2367,7 +2546,7 @@
   document.addEventListener('keyup', function(e) { keysDown[e.key] = false; });
 
   function startPong(charKey) {
-    var ch = CHARS[charKey];
+    var ch = getChars()[charKey];
     // Determine match modifier (day 5+) — use the one already picked in goToMatch
     var modifier = state.currentModifier || null;
 
@@ -2543,7 +2722,7 @@
     var dayBonus = Math.min((state.day - 1) * 0.03, 0.15);
 
     if (pong.freezeAI <= 0) {
-      if (CHARS[pong.charKey].pongStyle === 'tricky') {
+      if (getChars()[pong.charKey].pongStyle === 'tricky') {
         if (!pong.feintTimer) pong.feintTimer = 0;
         if (!pong.feintTarget) pong.feintTarget = null;
         pong.feintTimer--;
@@ -2563,7 +2742,7 @@
         } else {
           pong.aiTarget = PH / 2 - ai.h / 2;
         }
-      } else if (CHARS[pong.charKey].pongStyle === 'defensive') {
+      } else if (getChars()[pong.charKey].pongStyle === 'defensive') {
         if (ballComingToAI && b.x > PW * 0.4) {
           pong.aiTarget = aiTargetY * 0.6 + (PH / 2 - ai.h / 2) * 0.4;
         } else {
@@ -2713,7 +2892,7 @@
   }
 
   function pongSpawnHit(x, y) {
-    var ch = CHARS[pong.charKey];
+    var ch = getChars()[pong.charKey];
     var isPlayer = x < PW / 2;
     var baseColor = isPlayer ? '#82b1ff' : ch.color;
     for (var i = 0; i < 8; i++) {
@@ -2734,7 +2913,7 @@
   function pongDraw() {
     if (!pongCtx || !pong) return;
     var ctx = pongCtx, b = pong.ball, p = pong.player, ai = pong.ai;
-    var ch = CHARS[pong.charKey];
+    var ch = getChars()[pong.charKey];
     var br = pong.ballRadius || BALL_R;
 
     // Screen shake offset
@@ -2997,7 +3176,7 @@
     showScreen('results');
     var won = pScore >= WIN_SCORE;
     var diff = pScore - aScore;
-    var ch = CHARS[charKey];
+    var ch = getChars()[charKey];
 
     // Rating (adjusted for first-to-3 matches)
     var rating, ratingEmoji, affBonus;
@@ -3014,7 +3193,7 @@
     else if (won) reactKey = 'close';
     else if (diff >= -1) reactKey = 'loss';
     else reactKey = 'bad_loss';
-    var reaction = MATCH_REACTIONS[charKey][reactKey];
+    var reaction = getMatchReactions()[charKey][reactKey];
 
     // Apply affection with festival multiplier and heart shot bonus
     var mult = getAffectionMultiplier();
@@ -3062,9 +3241,9 @@
   }
 
   function showPostMatchInline(charKey, won) {
-    var pool = POST_MATCH[charKey] && POST_MATCH[charKey][won ? 'win' : 'loss'];
+    var pool = getPostMatch()[charKey] && getPostMatch()[charKey][won ? 'win' : 'loss'];
     var pm = pool && pool.length > 0 ? pool[(state.day - 1) % pool.length] : null;
-    var ch = CHARS[charKey];
+    var ch = getChars()[charKey];
     var card = document.querySelector('.results-card');
     if (!card || !pm) {
       advanceDay();
@@ -3146,7 +3325,7 @@
 
       // Tournament day: set up queue to play all 3 characters
       if (DAY_EVENTS[state.day] && DAY_EVENTS[state.day].type === 'tournament') {
-        state.tournamentQueue = CHAR_KEYS.slice(); // will pick from select
+        state.tournamentQueue = getCharKeys().slice(); // will pick from select
       } else {
         state.tournamentQueue = null;
       }
@@ -3159,8 +3338,8 @@
   function renderResultsMeters() {
     var container = $('resultsMeters');
     container.innerHTML = '';
-    CHAR_KEYS.forEach(function(k) {
-      var ch = CHARS[k];
+    getCharKeys().forEach(function(k) {
+      var ch = getChars()[k];
       var aff = state.affection[k] || 0;
       var pct = Math.min(100, Math.round(aff / MAX_AFFECTION * 100));
       var d = document.createElement('div');
@@ -3177,7 +3356,7 @@
      ════════════════════════════════════════════════════════════ */
   function triggerEnding() {
     // Sort characters by affection
-    var sorted = CHAR_KEYS.slice().sort(function(a, b) { return (state.affection[b] || 0) - (state.affection[a] || 0); });
+    var sorted = getCharKeys().slice().sort(function(a, b) { return (state.affection[b] || 0) - (state.affection[a] || 0); });
     var bestKey = sorted[0], bestVal = state.affection[bestKey] || 0;
     var secondKey = sorted[1], secondVal = state.affection[secondKey] || 0;
 
@@ -3201,7 +3380,7 @@
       endingKey = bestKey + '_friend'; portraitChar = bestKey;
     }
 
-    var ending = ENDINGS[endingKey] || ENDINGS['none'];
+    var ending = getEndings()[endingKey] || getEndings()['none'];
     showScreen('ending');
 
     // Save to gallery
@@ -3249,7 +3428,7 @@
   function saveGallery(g) { localStorage.setItem(GALLERY_KEY, JSON.stringify(g)); }
 
   $('replayBtn').addEventListener('click', function() {
-    localStorage.removeItem(SAVE_KEY);
+    localStorage.removeItem(getSaveKey());
     state = defaultState();
     saveState();
     showScreen('title');
@@ -3262,7 +3441,7 @@
 
   // Arcade restart support
   document.addEventListener('arcade-restart', function() {
-    localStorage.removeItem(SAVE_KEY);
+    localStorage.removeItem(getSaveKey());
     state = defaultState();
     location.reload();
   });

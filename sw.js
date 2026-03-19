@@ -1,4 +1,4 @@
-const CACHE_NAME = 'slayplay-v18';
+const CACHE_NAME = 'slayplay-v19';
 
 const PRECACHE_URLS = [
   '/',
@@ -103,6 +103,7 @@ const PRECACHE_URLS = [
   '/heart-serve/',
   '/heart-serve/game.js',
   '/heart-serve/audio.js',
+  '/heart-serve/boys.js',
   '/heart-serve/styles.css',
   '/signal-lost/',
   '/signal-lost/game.js',
