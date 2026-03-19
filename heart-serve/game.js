@@ -2010,6 +2010,10 @@
     if (typeof HSAudio !== 'undefined') HSAudio.click();
     state.currentChar = charKey;
     state.dayHistory.push(charKey);
+    // Clear jealous mood when visiting
+    if (state.mood && state.mood[charKey] === 'jealous') {
+      state.mood[charKey] = 'neutral';
+    }
     saveState();
     startDialogue(charKey);
   }
@@ -2417,7 +2421,10 @@
       feverTimer: 0,
       // Smash
       shakeTimer: 0,
-      lightsOut: modifier && modifier.id === 'lights_out'
+      lightsOut: modifier && modifier.id === 'lights_out',
+      // Tricky AI feint
+      feintTimer: 0,
+      feintTarget: null
     };
     resetBall(1);
     $('pScoreDisplay').textContent = '0';
