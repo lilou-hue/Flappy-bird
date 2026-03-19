@@ -1052,6 +1052,8 @@
     // Clear lingering particles on screen change
     particles.length = 0;
     if (pCtx && particleCanvas) pCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
+    // Hide any modal overlays that could block touches
+    var gm = $("giftModal"); if (gm) gm.style.display = "none";
     Object.keys(screens).forEach(function(k) {
       var s = screens[k];
       s.classList.remove('active');
@@ -1936,6 +1938,7 @@
     var giftBtn = $('giftBtn');
     if (giftBtn) {
       giftBtn.style.display = (state.day > 3 && !state.giftUsed) ? '' : 'none';
+      giftBtn.onclick = function() { showGiftModal(); };
     }
 
     renderSelectCards();
@@ -2016,17 +2019,22 @@
     var modal = $('giftModal');
     if (!modal) return;
     modal.style.display = 'flex';
-    var list = $('giftList');
+    var list = $('giftGrid');
     if (!list) return;
     list.innerHTML = '';
     GIFT_KEYS.forEach(function(gk) {
       var g = GIFTS[gk];
       var btn = document.createElement('button');
-      btn.className = 'choice-btn';
-      btn.textContent = g.emoji + ' ' + g.name;
+      btn.className = 'gift-option';
+      btn.innerHTML = '<span class="gift-emoji">' + g.emoji + '</span><span class="gift-name">' + g.name + '</span>';
       btn.addEventListener('click', function() { giveGift(gk); });
       list.appendChild(btn);
     });
+    // Wire cancel button
+    var cancelBtn = $('giftCancel');
+    if (cancelBtn) {
+      cancelBtn.onclick = function() { modal.style.display = 'none'; };
+    }
   }
 
   function giveGift(giftKey) {
@@ -2048,7 +2056,7 @@
     $('dialogueText').textContent = reaction;
     $('dialogueSpeaker').textContent = CHARS[charKey].name.split(' ')[0];
     renderPortrait($('portraitCanvas'), charKey, isMatch ? 'happy' : 'surprised');
-    $('reactionBox').textContent = (isMatch ? '\u2665 +8' : '+3') + ' affection!';
+    $('reactionBox').textContent = '\u2665 +' + Math.round(affGain * mult) + ' affection!';
     $('reactionBox').classList.add('visible');
     var gcRect = $('gameContainer').getBoundingClientRect();
     spawnHeart(gcRect.width / 2, gcRect.height / 3, isMatch ? 8 : 3);
@@ -2129,7 +2137,7 @@
       var secretChoice = getSecretChoice(charKey, dayIdx);
       if (secretChoice) {
         var secretBtn = document.createElement('button');
-        secretBtn.className = 'choice-btn choice-btn-secret';
+        secretBtn.className = 'choice-btn secret-choice';
         secretBtn.textContent = '\u2665 ' + secretChoice.text;
         secretBtn.addEventListener('click', function() {
           if (typeof HSAudio !== 'undefined') HSAudio.click();
@@ -2356,14 +2364,8 @@
 
   function startPong(charKey) {
     var ch = CHARS[charKey];
-    // Determine match modifier (day 5+)
-    var modifier = null;
-    if (state.day >= 5) {
-      var dayEvent = DAY_EVENTS[state.day];
-      if (!dayEvent || dayEvent.type !== 'rainy') {
-        modifier = MATCH_MODIFIERS[Math.floor(Math.random() * MATCH_MODIFIERS.length)];
-      }
-    }
+    // Determine match modifier (day 5+) — use the one already picked in goToMatch
+    var modifier = state.currentModifier || null;
 
     // Mood-based AI difficulty adjustment
     var moodAiSpeed = ch.aiSpeed;
@@ -2872,12 +2874,9 @@
     }
 
     // Power-up on court
-    if (pong.powerUp && pong.powerUp.active) {
+    if (pong.powerUp) {
       var pu = pong.powerUp;
-      var puType = null;
-      for (var pi = 0; pi < POWERUP_TYPES.length; pi++) {
-        if (POWERUP_TYPES[pi].id === pu.type) { puType = POWERUP_TYPES[pi]; break; }
-      }
+      var puType = pu.type; // already a POWERUP_TYPES object
       if (puType) {
         ctx.globalAlpha = 0.7 + Math.sin(Date.now() * 0.006) * 0.3;
         ctx.fillStyle = puType.color;
@@ -2893,26 +2892,24 @@
     }
 
     // Active effect indicators
-    if (pong.effects) {
-      var ey = 18;
-      ctx.font = '600 11px Nunito, sans-serif';
-      ctx.textAlign = 'left';
-      if (pong.effects.bigPaddlePlayer > 0) {
-        ctx.fillStyle = '#42a5f5';
-        ctx.fillText('\u{1F535} Big Paddle', 8, ey); ey += 14;
-      }
-      if (pong.effects.bigPaddleAI > 0) {
-        ctx.fillStyle = '#ef5350';
-        ctx.fillText('\u{1F534} AI Big Paddle', PW - 100, 18);
-      }
-      if (pong.effects.freezePlayer > 0) {
-        ctx.fillStyle = '#00e5ff';
-        ctx.fillText('\u2744\uFE0F Frozen!', 8, ey);
-      }
-      if (pong.effects.freezeAI > 0) {
-        ctx.fillStyle = '#00e5ff';
-        ctx.fillText('\u2744\uFE0F AI Frozen', PW - 90, 32);
-      }
+    var ey = 18;
+    ctx.font = '600 11px Nunito, sans-serif';
+    ctx.textAlign = 'left';
+    if (pong.playerEffect === 'big_paddle') {
+      ctx.fillStyle = '#42a5f5';
+      ctx.fillText('\u{1F535} Big Paddle', 8, ey); ey += 14;
+    }
+    if (pong.aiEffect === 'big_paddle') {
+      ctx.fillStyle = '#ef5350';
+      ctx.fillText('\u{1F534} AI Big Paddle', PW - 100, 18);
+    }
+    if (pong.freezePlayer > 0) {
+      ctx.fillStyle = '#00e5ff';
+      ctx.fillText('\u2744\uFE0F Frozen!', 8, ey);
+    }
+    if (pong.freezeAI > 0) {
+      ctx.fillStyle = '#00e5ff';
+      ctx.fillText('\u2744\uFE0F AI Frozen', PW - 90, 32);
     }
 
     // Fever text
@@ -2937,7 +2934,7 @@
       ctx.fillRect(-10, -10, PW + 20, PH + 20);
       // Spotlight around ball
       var spotGrd = ctx.createRadialGradient(b.x, b.y, 5, b.x, b.y, 80);
-      spotGrd.addColorStop(0, 'rgba(0,0,0,0)');
+      spotGrd.addColorStop(0, 'rgba(0,0,0,1)');
       spotGrd.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.globalCompositeOperation = 'destination-out';
       ctx.fillStyle = spotGrd;
