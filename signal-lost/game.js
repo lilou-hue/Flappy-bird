@@ -42,12 +42,13 @@ var SignalLost = (function () {
 
   /* ── Room Scene Generators ── */
   var ROOM_COLORS = [
-    { bg: '#0a1a0a', accent: '#1a3a1a', detail: '#2a5a2a' }, // Lab
-    { bg: '#0a0a1a', accent: '#1a1a3a', detail: '#2a2a5a' }, // Corridor
-    { bg: '#1a0a0a', accent: '#3a1a1a', detail: '#5a2a2a' }, // Server Room
-    { bg: '#0a0a0a', accent: '#1a1a1a', detail: '#3a3a3a' }, // Stairwell
-    { bg: '#0a0f0a', accent: '#1a2a1a', detail: '#2a4a2a' }  // Storage
+    { bg: '#0d1f0d', accent: '#1e4a1e', detail: '#3a7a3a', wall: '#142e14', floor: '#0a150a' }, // Lab
+    { bg: '#0d0d20', accent: '#1e1e50', detail: '#3a3a80', wall: '#14142e', floor: '#0a0a15' }, // Corridor
+    { bg: '#200d0d', accent: '#501e1e', detail: '#803a3a', wall: '#2e1414', floor: '#150a0a' }, // Server Room
+    { bg: '#111118', accent: '#28283e', detail: '#454570', wall: '#1a1a28', floor: '#0d0d12' }, // Stairwell
+    { bg: '#0d1a0d', accent: '#1e3a1e', detail: '#3a6a3a', wall: '#142814', floor: '#0a140a' }  // Storage
   ];
+  var noiseCanvas = null;
 
   /* ── State ── */
   var canvas, ctx2d;
@@ -503,161 +504,322 @@ var SignalLost = (function () {
   }
 
   function drawLabRoom(c, t) {
-    // Tables
-    ctx2d.fillStyle = c.accent;
-    ctx2d.fillRect(40, 350, 180, 12);
-    ctx2d.fillRect(260, 320, 160, 12);
-    // Table legs
-    ctx2d.fillRect(50, 362, 6, 40);
-    ctx2d.fillRect(210, 362, 6, 40);
-    ctx2d.fillRect(270, 332, 6, 40);
-    ctx2d.fillRect(410, 332, 6, 40);
-    // Beakers
-    ctx2d.fillStyle = c.detail;
-    for (var i = 0; i < 4; i++) {
-      ctx2d.fillRect(60 + i * 35, 330, 12, 20);
+    // Back wall
+    ctx2d.fillStyle = c.wall;
+    ctx2d.fillRect(0, 60, CANVAS_W, 440);
+    // Wall panels
+    ctx2d.strokeStyle = c.accent;
+    ctx2d.lineWidth = 1;
+    for (var p = 0; p < 5; p++) {
+      ctx2d.strokeRect(10 + p * 95, 70, 85, 200);
     }
+    // Ceiling
+    ctx2d.fillStyle = '#1a1a1a';
+    ctx2d.fillRect(0, 0, CANVAS_W, 60);
+    // Ceiling pipe
+    ctx2d.fillStyle = '#444';
+    ctx2d.fillRect(0, 50, CANVAS_W, 6);
+    ctx2d.fillRect(0, 56, CANVAS_W, 4);
+    // Flickering ceiling light
+    var lightOn = Math.sin(t * 3) > -0.3;
+    if (lightOn) {
+      ctx2d.fillStyle = 'rgba(100, 255, 100, 0.06)';
+      ctx2d.fillRect(160, 60, 160, 440);
+      ctx2d.fillStyle = '#556';
+      ctx2d.fillRect(220, 56, 40, 6);
+    }
+    // Tables
+    ctx2d.fillStyle = c.detail;
+    ctx2d.fillRect(30, 360, 200, 14);
+    ctx2d.fillRect(270, 330, 170, 14);
+    // Table legs
+    ctx2d.fillStyle = c.accent;
+    ctx2d.fillRect(40, 374, 8, 50);
+    ctx2d.fillRect(220, 374, 8, 50);
+    ctx2d.fillRect(280, 344, 8, 50);
+    ctx2d.fillRect(430, 344, 8, 50);
+    // Beakers / lab equipment
+    ctx2d.fillStyle = '#4a8a4a';
+    for (var i = 0; i < 4; i++) {
+      ctx2d.fillRect(50 + i * 40, 338, 14, 22);
+      ctx2d.fillStyle = 'rgba(100, 255, 100, 0.3)';
+      ctx2d.fillRect(52 + i * 40, 345, 10, 12);
+      ctx2d.fillStyle = '#4a8a4a';
+    }
+    // Monitor on right table
+    ctx2d.fillStyle = '#222';
+    ctx2d.fillRect(320, 280, 60, 50);
+    ctx2d.fillStyle = '#1a3a1a';
+    ctx2d.fillRect(324, 284, 52, 42);
     // Floor
-    ctx2d.fillStyle = '#0d0d0d';
+    ctx2d.fillStyle = c.floor;
     ctx2d.fillRect(0, 500, CANVAS_W, 140);
     // Floor tiles
-    ctx2d.strokeStyle = '#1a1a1a';
+    ctx2d.strokeStyle = '#1e2e1e';
     ctx2d.lineWidth = 1;
     for (var x = 0; x < CANVAS_W; x += 60) {
       ctx2d.beginPath(); ctx2d.moveTo(x, 500); ctx2d.lineTo(x, 640); ctx2d.stroke();
     }
-    // Ceiling pipe
-    ctx2d.fillStyle = c.accent;
-    ctx2d.fillRect(0, 80, CANVAS_W, 6);
-    // Flickering light
-    if (Math.sin(t * 3) > 0.3) {
-      ctx2d.fillStyle = 'rgba(51, 255, 51, 0.03)';
-      ctx2d.fillRect(180, 86, 120, 414);
+    for (var fy = 500; fy < 640; fy += 60) {
+      ctx2d.beginPath(); ctx2d.moveTo(0, fy); ctx2d.lineTo(CANVAS_W, fy); ctx2d.stroke();
     }
-    // Wall detail
+    // Side wall edges
     ctx2d.fillStyle = c.accent;
-    ctx2d.fillRect(0, 200, 8, 300);
-    ctx2d.fillRect(CANVAS_W - 8, 200, 8, 300);
+    ctx2d.fillRect(0, 60, 10, 440);
+    ctx2d.fillRect(CANVAS_W - 10, 60, 10, 440);
   }
 
   function drawCorridorRoom(c, t) {
-    // Long perspective corridor
-    ctx2d.fillStyle = '#0d0d0d';
+    // Ceiling
+    ctx2d.fillStyle = '#151520';
+    ctx2d.fillRect(0, 0, CANVAS_W, 100);
+    // Floor
+    ctx2d.fillStyle = c.floor;
     ctx2d.fillRect(0, 480, CANVAS_W, 160);
-    // Walls converging to vanishing point
+    // Back wall (end of corridor)
+    ctx2d.fillStyle = c.wall;
+    ctx2d.fillRect(180, 200, 120, 280);
+    // Left wall (perspective)
     ctx2d.fillStyle = c.accent;
     ctx2d.beginPath();
-    ctx2d.moveTo(0, 100); ctx2d.lineTo(180, 200); ctx2d.lineTo(180, 480); ctx2d.lineTo(0, 640);
+    ctx2d.moveTo(0, 80); ctx2d.lineTo(180, 200); ctx2d.lineTo(180, 480); ctx2d.lineTo(0, 640);
     ctx2d.fill();
+    // Right wall (perspective)
     ctx2d.beginPath();
-    ctx2d.moveTo(CANVAS_W, 100); ctx2d.lineTo(300, 200); ctx2d.lineTo(300, 480); ctx2d.lineTo(CANVAS_W, 640);
+    ctx2d.moveTo(CANVAS_W, 80); ctx2d.lineTo(300, 200); ctx2d.lineTo(300, 480); ctx2d.lineTo(CANVAS_W, 640);
     ctx2d.fill();
-    // Door frames
+    // Wall trim lines
+    ctx2d.strokeStyle = c.detail;
+    ctx2d.lineWidth = 2;
+    ctx2d.beginPath(); ctx2d.moveTo(0, 300); ctx2d.lineTo(180, 340); ctx2d.stroke();
+    ctx2d.beginPath(); ctx2d.moveTo(CANVAS_W, 300); ctx2d.lineTo(300, 340); ctx2d.stroke();
+    // Door frames on left wall
     ctx2d.fillStyle = c.detail;
-    ctx2d.fillRect(185, 250, 4, 230);
-    ctx2d.fillRect(291, 250, 4, 230);
+    ctx2d.fillRect(60, 200, 50, 120);
+    ctx2d.fillStyle = '#0a0a18';
+    ctx2d.fillRect(65, 205, 40, 110);
+    // Door frame on right wall
+    ctx2d.fillStyle = c.detail;
+    ctx2d.fillRect(370, 200, 50, 120);
+    ctx2d.fillStyle = '#0a0a18';
+    ctx2d.fillRect(375, 205, 40, 110);
+    // End wall door
+    ctx2d.fillStyle = c.detail;
+    ctx2d.fillRect(210, 260, 60, 120);
+    ctx2d.fillStyle = '#0a0a18';
+    ctx2d.fillRect(215, 265, 50, 110);
+    ctx2d.fillStyle = '#888';
+    ctx2d.beginPath(); ctx2d.arc(258, 320, 3, 0, Math.PI * 2); ctx2d.fill();
     // Ceiling lights (flickering)
     for (var i = 0; i < 3; i++) {
-      var flicker = Math.sin(t * 4 + i * 2) > 0;
-      ctx2d.fillStyle = flicker ? 'rgba(150, 180, 255, 0.08)' : 'rgba(0,0,0,0)';
-      ctx2d.fillRect(200, 200 + i * 90, 80, 80);
-      ctx2d.fillStyle = '#333';
-      ctx2d.fillRect(220 + i * 10, 198 + i * 2, 30, 4);
+      var lightFlicker = Math.sin(t * 4 + i * 2) > -0.5;
+      ctx2d.fillStyle = '#444';
+      ctx2d.fillRect(215, 195 + i * 5, 50, 4);
+      if (lightFlicker) {
+        ctx2d.fillStyle = 'rgba(140, 160, 255, 0.08)';
+        ctx2d.fillRect(190, 200 + i * 85, 100, 85);
+      }
     }
-    // Floor line
-    ctx2d.strokeStyle = '#1a1a1a';
-    ctx2d.lineWidth = 2;
+    // Floor perspective lines
+    ctx2d.strokeStyle = '#1a1a2a';
+    ctx2d.lineWidth = 1;
     ctx2d.beginPath(); ctx2d.moveTo(240, 200); ctx2d.lineTo(240, 480); ctx2d.stroke();
+    ctx2d.beginPath(); ctx2d.moveTo(0, 560); ctx2d.lineTo(CANVAS_W, 560); ctx2d.stroke();
   }
 
   function drawServerRoom(c, t) {
+    // Back wall
+    ctx2d.fillStyle = c.wall;
+    ctx2d.fillRect(0, 60, CANVAS_W, 470);
+    // Ceiling
+    ctx2d.fillStyle = '#1a1010';
+    ctx2d.fillRect(0, 0, CANVAS_W, 60);
+    // Floor
+    ctx2d.fillStyle = c.floor;
+    ctx2d.fillRect(0, 530, CANVAS_W, 110);
+    // Raised floor panels
+    ctx2d.strokeStyle = '#251515';
+    ctx2d.lineWidth = 1;
+    for (var fx = 0; fx < CANVAS_W; fx += 80) {
+      ctx2d.strokeRect(fx, 530, 80, 55);
+    }
     // Server racks
     for (var i = 0; i < 5; i++) {
-      var x = 30 + i * 90;
-      ctx2d.fillStyle = '#111';
-      ctx2d.fillRect(x, 150, 70, 380);
+      var rx = 20 + i * 92;
+      // Rack body
+      ctx2d.fillStyle = '#1a1a1a';
+      ctx2d.fillRect(rx, 120, 76, 410);
+      // Rack front panel
+      ctx2d.fillStyle = '#222';
+      ctx2d.fillRect(rx + 4, 125, 68, 400);
       ctx2d.strokeStyle = c.accent;
       ctx2d.lineWidth = 1;
-      ctx2d.strokeRect(x, 150, 70, 380);
-      // Blinking LEDs
-      for (var j = 0; j < 12; j++) {
-        var on = Math.random() > 0.3;
-        ctx2d.fillStyle = on ? (Math.random() > 0.7 ? '#ff3333' : '#33ff33') : '#1a1a1a';
-        ctx2d.fillRect(x + 8, 160 + j * 30, 4, 4);
-        ctx2d.fillRect(x + 16, 160 + j * 30, 4, 4);
+      ctx2d.strokeRect(rx, 120, 76, 410);
+      // Drive bays / units
+      for (var j = 0; j < 10; j++) {
+        ctx2d.fillStyle = '#181818';
+        ctx2d.fillRect(rx + 8, 135 + j * 38, 60, 32);
+        ctx2d.strokeStyle = '#333';
+        ctx2d.strokeRect(rx + 8, 135 + j * 38, 60, 32);
+        // Blinking LEDs
+        var on1 = Math.sin(t * 5 + i + j * 0.7) > 0;
+        var on2 = Math.sin(t * 3 + i * 2 + j) > 0.2;
+        ctx2d.fillStyle = on1 ? '#33ff33' : '#1a1a1a';
+        ctx2d.fillRect(rx + 12, 140 + j * 38, 5, 5);
+        ctx2d.fillStyle = on2 ? (Math.sin(t + j) > 0.8 ? '#ff4444' : '#33ff33') : '#1a1a1a';
+        ctx2d.fillRect(rx + 20, 140 + j * 38, 5, 5);
+        // Activity light (random flicker)
+        if (Math.random() > 0.85) {
+          ctx2d.fillStyle = '#ffaa00';
+          ctx2d.fillRect(rx + 28, 140 + j * 38, 5, 5);
+        }
       }
     }
-    // Floor
-    ctx2d.fillStyle = '#0a0a0a';
-    ctx2d.fillRect(0, 530, CANVAS_W, 110);
-    // Cable runs
-    ctx2d.strokeStyle = c.detail;
+    // Cable trays on ceiling
+    ctx2d.fillStyle = '#333';
+    ctx2d.fillRect(0, 55, CANVAS_W, 8);
+    // Hanging cables
+    ctx2d.strokeStyle = '#444';
     ctx2d.lineWidth = 2;
-    ctx2d.beginPath(); ctx2d.moveTo(0, 540); ctx2d.lineTo(CANVAS_W, 540); ctx2d.stroke();
+    for (var ci = 0; ci < 3; ci++) {
+      ctx2d.beginPath();
+      ctx2d.moveTo(100 + ci * 140, 63);
+      ctx2d.quadraticCurveTo(100 + ci * 140 + 20, 90, 100 + ci * 140, 120);
+      ctx2d.stroke();
+    }
   }
 
   function drawStairwellRoom(c, t) {
+    // Walls
+    ctx2d.fillStyle = c.wall;
+    ctx2d.fillRect(0, 0, CANVAS_W, CANVAS_H);
+    // Left wall
+    ctx2d.fillStyle = c.accent;
+    ctx2d.fillRect(0, 0, 70, CANVAS_H);
+    // Right wall
+    ctx2d.fillRect(CANVAS_W - 70, 0, 70, CANVAS_H);
     // Stairs going down
-    ctx2d.fillStyle = '#0d0d0d';
     for (var i = 0; i < 10; i++) {
-      var y = 200 + i * 40;
-      var w = 300 - i * 15;
-      var x = (CANVAS_W - w) / 2;
-      ctx2d.fillStyle = i % 2 === 0 ? '#111' : '#0d0d0d';
-      ctx2d.fillRect(x, y, w, 38);
-      ctx2d.strokeStyle = '#1a1a1a';
+      var sy = 180 + i * 42;
+      var sw = 320 - i * 18;
+      var sx = (CANVAS_W - sw) / 2;
+      // Step top
+      ctx2d.fillStyle = i % 2 === 0 ? '#222230' : '#1a1a28';
+      ctx2d.fillRect(sx, sy, sw, 38);
+      // Step edge highlight
+      ctx2d.fillStyle = '#333345';
+      ctx2d.fillRect(sx, sy, sw, 3);
+      // Step shadow
+      ctx2d.fillStyle = '#0a0a12';
+      ctx2d.fillRect(sx, sy + 35, sw, 3);
+      ctx2d.strokeStyle = '#2a2a40';
       ctx2d.lineWidth = 1;
-      ctx2d.strokeRect(x, y, w, 38);
+      ctx2d.strokeRect(sx, sy, sw, 38);
     }
-    // Railing
-    ctx2d.strokeStyle = c.accent;
-    ctx2d.lineWidth = 3;
+    // Railing - left
+    ctx2d.strokeStyle = '#555570';
+    ctx2d.lineWidth = 4;
     ctx2d.beginPath();
-    ctx2d.moveTo(90, 200); ctx2d.lineTo(165, 600);
+    ctx2d.moveTo(80, 170); ctx2d.lineTo(155, 610);
     ctx2d.stroke();
+    // Railing - right
     ctx2d.beginPath();
-    ctx2d.moveTo(390, 200); ctx2d.lineTo(315, 600);
+    ctx2d.moveTo(400, 170); ctx2d.lineTo(325, 610);
     ctx2d.stroke();
+    // Railing balusters
+    ctx2d.strokeStyle = '#3a3a55';
+    ctx2d.lineWidth = 2;
+    for (var bi = 0; bi < 8; bi++) {
+      var bpct = bi / 7;
+      var blx = 80 + (155 - 80) * bpct;
+      var bly = 170 + (610 - 170) * bpct;
+      ctx2d.beginPath(); ctx2d.moveTo(blx, bly); ctx2d.lineTo(blx + 5, bly + 50); ctx2d.stroke();
+      var brx = 400 + (325 - 400) * bpct;
+      ctx2d.beginPath(); ctx2d.moveTo(brx, bly); ctx2d.lineTo(brx - 5, bly + 50); ctx2d.stroke();
+    }
     // Overhead light swinging
-    var swing = Math.sin(t * 1.5) * 20;
-    ctx2d.fillStyle = 'rgba(255, 200, 100, 0.04)';
+    var swing = Math.sin(t * 1.5) * 25;
+    var lightX = CANVAS_W / 2 + swing;
+    // Light cone
+    ctx2d.fillStyle = 'rgba(255, 220, 140, 0.06)';
     ctx2d.beginPath();
-    ctx2d.arc(CANVAS_W / 2 + swing, 180, 100, 0, Math.PI * 2);
+    ctx2d.moveTo(lightX - 5, 160);
+    ctx2d.lineTo(lightX - 80, 500);
+    ctx2d.lineTo(lightX + 80, 500);
+    ctx2d.lineTo(lightX + 5, 160);
     ctx2d.fill();
-    ctx2d.fillStyle = '#444';
-    ctx2d.fillRect(CANVAS_W / 2 + swing - 4, 60, 8, 120);
+    // Light bulb
+    ctx2d.fillStyle = '#998855';
+    ctx2d.fillRect(lightX - 3, 140, 6, 20);
+    // Wire
+    ctx2d.strokeStyle = '#555';
+    ctx2d.lineWidth = 1;
+    ctx2d.beginPath(); ctx2d.moveTo(CANVAS_W / 2, 0); ctx2d.lineTo(lightX, 140); ctx2d.stroke();
   }
 
   function drawStorageRoom(c, t) {
-    // Shelving units
+    // Back wall
+    ctx2d.fillStyle = c.wall;
+    ctx2d.fillRect(0, 40, CANVAS_W, 500);
+    // Ceiling
+    ctx2d.fillStyle = '#141a14';
+    ctx2d.fillRect(0, 0, CANVAS_W, 40);
+    // Floor
+    ctx2d.fillStyle = c.floor;
+    ctx2d.fillRect(0, 540, CANVAS_W, 100);
+    // Concrete floor texture
+    ctx2d.strokeStyle = '#1a241a';
+    ctx2d.lineWidth = 1;
+    ctx2d.beginPath(); ctx2d.moveTo(0, 570); ctx2d.lineTo(CANVAS_W, 570); ctx2d.stroke();
+    ctx2d.beginPath(); ctx2d.moveTo(0, 600); ctx2d.lineTo(CANVAS_W, 600); ctx2d.stroke();
+    // Metal shelving units (3 rows)
     for (var row = 0; row < 3; row++) {
-      var y = 180 + row * 130;
-      ctx2d.fillStyle = '#111';
-      ctx2d.fillRect(20, y, CANVAS_W - 40, 8);
-      // Boxes on shelves
+      var sy = 140 + row * 130;
+      // Shelf uprights
+      ctx2d.fillStyle = '#3a4a3a';
+      ctx2d.fillRect(20, sy - 50, 6, 140);
+      ctx2d.fillRect(CANVAS_W - 26, sy - 50, 6, 140);
+      ctx2d.fillRect(240, sy - 50, 6, 140);
+      // Shelf surface
+      ctx2d.fillStyle = '#2a3a2a';
+      ctx2d.fillRect(20, sy, CANVAS_W - 40, 10);
+      // Boxes and items on shelves
+      var boxColors = ['#2a4a2a', '#3a5a3a', '#1e3e1e', '#2e4e2e', '#254525'];
       for (var b = 0; b < 6; b++) {
-        var bx = 30 + b * 70 + Math.sin(b + row) * 10;
-        var bw = 40 + Math.sin(b * 3) * 15;
-        var bh = 35 + Math.cos(b * 2) * 10;
-        ctx2d.fillStyle = c.accent;
-        ctx2d.fillRect(bx, y - bh, bw, bh);
+        var bx = 32 + b * 70 + Math.sin(b + row) * 8;
+        var bw = 42 + Math.sin(b * 3) * 12;
+        var bh = 40 + Math.cos(b * 2) * 15;
+        ctx2d.fillStyle = boxColors[b % boxColors.length];
+        ctx2d.fillRect(bx, sy - bh, bw, bh);
         ctx2d.strokeStyle = c.detail;
         ctx2d.lineWidth = 1;
-        ctx2d.strokeRect(bx, y - bh, bw, bh);
+        ctx2d.strokeRect(bx, sy - bh, bw, bh);
+        // Label on some boxes
+        if (b % 3 === 0) {
+          ctx2d.fillStyle = '#4a6a4a';
+          ctx2d.fillRect(bx + 5, sy - bh + 8, bw - 10, 8);
+        }
       }
     }
-    // Floor
-    ctx2d.fillStyle = '#0a0a0a';
-    ctx2d.fillRect(0, 540, CANVAS_W, 100);
     // Overturned chair
-    ctx2d.fillStyle = '#1a1a1a';
+    ctx2d.fillStyle = '#2a3a2a';
     ctx2d.save();
-    ctx2d.translate(350, 510);
-    ctx2d.rotate(Math.PI * 0.3);
-    ctx2d.fillRect(-15, -20, 30, 5);
-    ctx2d.fillRect(-15, -20, 5, 40);
-    ctx2d.fillRect(10, -20, 5, 40);
+    ctx2d.translate(360, 510);
+    ctx2d.rotate(Math.PI * 0.35);
+    ctx2d.fillRect(-18, -22, 36, 6);
+    ctx2d.fillRect(-18, -22, 6, 45);
+    ctx2d.fillRect(12, -22, 6, 45);
+    ctx2d.fillRect(-18, 20, 6, 20);
+    ctx2d.fillRect(12, 20, 6, 20);
     ctx2d.restore();
+    // Light fixture
+    ctx2d.fillStyle = '#444';
+    ctx2d.fillRect(200, 36, 80, 8);
+    var lightOn = Math.sin(t * 2) > -0.6;
+    if (lightOn) {
+      ctx2d.fillStyle = 'rgba(100, 255, 100, 0.04)';
+      ctx2d.fillRect(180, 44, 120, 496);
+    }
   }
 
   /* ── Entity rendering ── */
@@ -753,30 +915,30 @@ var SignalLost = (function () {
 
   /* ── Post-processing ── */
   function generateNoise() {
-    var imgData = ctx2d.createImageData(CANVAS_W, CANVAS_H);
-    noiseData = imgData;
-    var d = imgData.data;
-    for (var i = 0; i < d.length; i += 4) {
-      var v = Math.random() * 255;
-      d[i] = d[i + 1] = d[i + 2] = v;
-      d[i + 3] = 20;
-    }
+    // Use offscreen canvas so we can draw with globalAlpha
+    noiseCanvas = document.createElement('canvas');
+    noiseCanvas.width = CANVAS_W;
+    noiseCanvas.height = CANVAS_H;
+    var nctx = noiseCanvas.getContext('2d');
+    noiseData = nctx.createImageData(CANVAS_W, CANVAS_H);
   }
 
   function drawNoise() {
-    if (!noiseData) return;
-    var intensity = 0.3 + staticIntensity;
+    if (!noiseCanvas || !noiseData) return;
+    var intensity = 0.15 + staticIntensity * 0.4;
     // Regenerate noise pattern occasionally
     if (frameCount % 3 === 0) {
       var d = noiseData.data;
-      for (var i = 0; i < d.length; i += 16) { // skip some for perf
-        d[i] = d[i + 1] = d[i + 2] = Math.random() * 255;
-        d[i + 3] = Math.floor(intensity * 30);
+      for (var i = 0; i < d.length; i += 16) {
+        var v = Math.random() * 255;
+        d[i] = d[i + 1] = d[i + 2] = v;
+        d[i + 3] = 40;
       }
+      noiseCanvas.getContext('2d').putImageData(noiseData, 0, 0);
     }
     ctx2d.save();
     ctx2d.globalAlpha = intensity;
-    ctx2d.putImageData(noiseData, 0, 0);
+    ctx2d.drawImage(noiseCanvas, 0, 0);
     ctx2d.restore();
   }
 
