@@ -1927,7 +1927,7 @@
   function addAffection(charKey, amount) {
     state.affection[charKey] = Math.max(0, Math.min(MAX_AFFECTION, (state.affection[charKey] || 0) + amount));
     saveState();
-    if (amount > 0 && typeof HSAudio !== 'undefined') HSAudio.heartGain();
+    if (amount >= 3 && typeof HSAudio !== 'undefined') HSAudio.heartGain();
   }
 
   function getAffectionLevel(charKey) {
@@ -2456,13 +2456,17 @@
       setTimeout(function() {
         var btn = document.createElement('button');
         btn.className = 'btn btn-primary';
+        btn.style.cssText = 'touch-action:manipulation;-webkit-tap-highlight-color:rgba(0,0,0,0.1);';
+        var handler;
         if (dayEvent && dayEvent.type === 'rainy') {
           btn.textContent = state.day >= TOTAL_DAYS ? 'See Ending' : 'Next Day \u2192';
-          btn.addEventListener('click', function() { advanceDay(); });
+          handler = function() { advanceDay(); };
         } else {
           btn.textContent = _t('hsTimePong');
-          btn.addEventListener('click', function() { goToMatch(charKey); });
+          handler = function() { goToMatch(charKey); };
         }
+        btn.addEventListener('click', handler);
+        btn.addEventListener('touchend', function(e) { e.preventDefault(); handler(); });
         $('choicesPanel').appendChild(btn);
       }, 800);
     }
@@ -3285,23 +3289,14 @@
       choiceBtn.addEventListener('click', function() {
         if (typeof HSAudio !== 'undefined') HSAudio.click();
         addAffection(charKey, choice.aff);
-        if (choice.aff > 0) {
-          var gcRect = $('gameContainer').getBoundingClientRect();
-          spawnHeart(gcRect.width / 2, gcRect.height / 3, choice.aff);
-        }
-        // Show reaction
+        // Show reaction, then auto-advance
         reactionEl.textContent = ch.name.split(' ')[0] + ': ' + choice.react;
         reactionEl.style.display = '';
-        // Replace choices with advance button
         btnContainer.innerHTML = '';
-        setTimeout(function() {
-          var advBtn = document.createElement('button');
-          advBtn.className = 'btn btn-primary';
-          advBtn.textContent = state.day >= TOTAL_DAYS ? _t('hsSeeEnding') : _t('hsNextDay');
-          advBtn.addEventListener('click', function() { advanceDay(); });
-          btnContainer.appendChild(advBtn);
-        }, 600);
+        // Auto-advance after showing reaction (no extra button needed)
+        setTimeout(function() { advanceDay(); }, 2000);
       });
+      choiceBtn.setAttribute('role', 'button');
       btnContainer.appendChild(choiceBtn);
     });
   }
