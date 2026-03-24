@@ -609,7 +609,7 @@ if (typeof Shop !== 'undefined') {
     buttonTarget: '#shopBtn',
     bundles: [
       { id: 'towerpremium', name: 'Tower Premium', desc: 'Aurora & Lava themes', price: '~$1',
-        kofiUrl: 'https://ko-fi.com/s/TOWER_PREMIUM_ID', items: ['aurora', 'lava'] },
+        checkoutUrl: 'https://YOUR_STORE.lemonsqueezy.com/buy/TOWER_PRODUCT_ID', items: ['aurora', 'lava'] },
     ],
     codes: { 'TOWERPRO2026': 'towerpremium' },
     onUnlock: function (itemIds) {

@@ -7626,13 +7626,13 @@ Shop.init({
   buttonTarget: '#shopBtn',
   bundles: [
     { id: 'fantasy', get name() { return t('duBundleFantasy', 'Fantasy Bundle'); }, get desc() { return t('duBundleFantasyDesc', 'Armor, Wizard Robe, Armor Greaves, Armored Boots, Crown, Castle BG'); }, price: '~$2',
-      kofiUrl: 'https://ko-fi.com/s/FANTASY_PRODUCT_ID', items: ['top_armor','top_wizard_robe','bottom_armor_greaves','shoes_armored_boots','acc_crown','bg_castle'] },
+      checkoutUrl: 'https://YOUR_STORE.lemonsqueezy.com/buy/FANTASY_ID', items: ['top_armor','top_wizard_robe','bottom_armor_greaves','shoes_armored_boots','acc_crown','bg_castle'] },
     { id: 'glam', get name() { return t('duBundleGlam', 'Glam Bundle'); }, get desc() { return t('duBundleGlamDesc', 'Corset, Kimono, Flowing Skirt, Heels, Long Flowing Hair, Rainbow BG, Ball Gown'); }, price: '~$2',
-      kofiUrl: 'https://ko-fi.com/s/GLAM_PRODUCT_ID', items: ['top_corset','top_kimono','bottom_flowing_skirt','shoes_heels','hair_long_flowing','bg_rainbow','dress_ball_gown'] },
+      checkoutUrl: 'https://YOUR_STORE.lemonsqueezy.com/buy/GLAM_ID', items: ['top_corset','top_kimono','bottom_flowing_skirt','shoes_heels','hair_long_flowing','bg_rainbow','dress_ball_gown'] },
     { id: 'adventure', get name() { return t('duBundleAdventure', 'Adventure Bundle'); }, get desc() { return t('duBundleAdventureDesc', 'Cape, Extra Wings, Braids, Curly Hair, Platforms, Space BG, Fairy Dress'); }, price: '~$2',
-      kofiUrl: 'https://ko-fi.com/s/ADVENTURE_PRODUCT_ID', items: ['acc_cape','acc_extra_wings','hair_braids','hair_curly','shoes_platforms','bg_space','dress_fairy_dress'] },
+      checkoutUrl: 'https://YOUR_STORE.lemonsqueezy.com/buy/ADVENTURE_ID', items: ['acc_cape','acc_extra_wings','hair_braids','hair_curly','shoes_platforms','bg_space','dress_fairy_dress'] },
     { id: 'premiumpass', get name() { return t('duBundlePremium', 'Premium Pass'); }, get desc() { return t('duBundlePremiumDesc', 'ALL premium items unlocked!'); }, price: '~$4',
-      kofiUrl: 'https://ko-fi.com/s/PREMIUMPASS_PRODUCT_ID', items: Array.from(PREMIUM_IDS) },
+      checkoutUrl: 'https://YOUR_STORE.lemonsqueezy.com/buy/PREMIUMPASS_ID', items: Array.from(PREMIUM_IDS) },
   ],
   codes: {
     'FANTASY2026': 'fantasy',

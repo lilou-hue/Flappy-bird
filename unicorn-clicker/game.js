@@ -3976,11 +3976,11 @@
       buttonTarget: '#shopBtn',
       bundles: [
         { id: 'skins', name: 'Skin Pack', desc: 'Tuna, Volleyball, Spidermonkey & Chewbacca skins', price: '~$2',
-          kofiUrl: 'https://ko-fi.com/s/UC_SKINS_ID', items: allSkinKeys },
+          checkoutUrl: 'https://YOUR_STORE.lemonsqueezy.com/buy/UC_SKINS_ID', items: allSkinKeys },
         { id: 'cosmetics', name: 'Cosmetics Pack', desc: 'All hats, trails & auras', price: '~$2',
-          kofiUrl: 'https://ko-fi.com/s/UC_COSMETICS_ID', items: allCosmeticIds },
+          checkoutUrl: 'https://YOUR_STORE.lemonsqueezy.com/buy/UC_COSMETICS_ID', items: allCosmeticIds },
         { id: 'unicornpass', name: 'Unicorn Pass', desc: 'All skins + all cosmetics', price: '~$3',
-          kofiUrl: 'https://ko-fi.com/s/UC_PASS_ID', items: allSkinKeys.concat(allCosmeticIds) },
+          checkoutUrl: 'https://YOUR_STORE.lemonsqueezy.com/buy/UC_PASS_ID', items: allSkinKeys.concat(allCosmeticIds) },
       ],
       codes: {
         'UCSKINS2026': 'skins',

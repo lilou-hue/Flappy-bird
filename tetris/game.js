@@ -2132,7 +2132,7 @@
       buttonTarget: '#shopBtn',
       bundles: [
         { id: 'tetrispremium', name: 'Tetris Premium', desc: 'Frost & Candy themes + Hologram skin', price: '~$2',
-          kofiUrl: 'https://ko-fi.com/s/TETRIS_PREMIUM_ID', items: ['frost', 'candy', 'hologram'] },
+          checkoutUrl: 'https://YOUR_STORE.lemonsqueezy.com/buy/TETRIS_PRODUCT_ID', items: ['frost', 'candy', 'hologram'] },
       ],
       codes: { 'TETRISPRO2026': 'tetrispremium' },
       onUnlock: function (itemIds) {

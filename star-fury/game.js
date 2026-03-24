@@ -2424,7 +2424,7 @@ if (typeof Shop !== 'undefined') {
     buttonTarget: '#shopBtn',
     bundles: [
       { id: 'furypremium', name: 'Fury Premium', desc: 'Inferno & Void visual themes', price: '~$1',
-        kofiUrl: 'https://ko-fi.com/s/FURY_PREMIUM_ID', items: ['sf_inferno', 'sf_void'] },
+        checkoutUrl: 'https://YOUR_STORE.lemonsqueezy.com/buy/FURY_PRODUCT_ID', items: ['sf_inferno', 'sf_void'] },
     ],
     codes: { 'FURYPRO2026': 'furypremium' },
     onUnlock: function (itemIds) {

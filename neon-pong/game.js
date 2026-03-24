@@ -868,7 +868,7 @@ if (typeof Shop !== 'undefined') {
     buttonTarget: '#shopBtn',
     bundles: [
       { id: 'pongpremium', name: 'Pong Premium', desc: 'Cyberpunk & Sunset themes', price: '~$1',
-        kofiUrl: 'https://ko-fi.com/s/PONG_PREMIUM_ID', items: ['cyberpunk', 'sunset'] },
+        checkoutUrl: 'https://YOUR_STORE.lemonsqueezy.com/buy/PONG_PRODUCT_ID', items: ['cyberpunk', 'sunset'] },
     ],
     codes: { 'PONGPRO2026': 'pongpremium' },
     onUnlock: function (itemIds) {

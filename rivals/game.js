@@ -2164,7 +2164,7 @@ if (typeof Shop !== 'undefined') {
       name: 'Rivals Premium',
       desc: 'Gold & Neon weapon skins + Tactical player skin',
       price: '~$2',
-      kofiUrl: 'https://ko-fi.com/s/RIVALS_PREMIUM_ID',
+      checkoutUrl: 'https://YOUR_STORE.lemonsqueezy.com/buy/RIVALS_PRODUCT_ID',
       items: ['rv_gold_weapons', 'rv_neon_weapons', 'rv_tactical_skin']
     }],
     codes: { 'RIVALSPRO2026': 'rivalspremium' },

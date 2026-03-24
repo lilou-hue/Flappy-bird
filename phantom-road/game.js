@@ -2864,11 +2864,11 @@ if (typeof Shop !== 'undefined') {
     buttonTarget: '#shopBtn',
     bundles: [
       { id: 'speed', name: 'Speed Pack', desc: 'Sports car + Truck skins', price: '~$2',
-        kofiUrl: 'https://ko-fi.com/s/PR_SPEED_ID', items: ['sports', 'truck'] },
+        checkoutUrl: 'https://YOUR_STORE.lemonsqueezy.com/buy/PR_SPEED_ID', items: ['sports', 'truck'] },
       { id: 'neon', name: 'Neon Racer', desc: 'Neon skin', price: '~$1',
-        kofiUrl: 'https://ko-fi.com/s/PR_NEON_ID', items: ['neon'] },
+        checkoutUrl: 'https://YOUR_STORE.lemonsqueezy.com/buy/PR_NEON_ID', items: ['neon'] },
       { id: 'roadpass', name: 'Road Pass', desc: 'All 3 premium skins', price: '~$3',
-        kofiUrl: 'https://ko-fi.com/s/PR_ROADPASS_ID', items: ['sports', 'truck', 'neon'] },
+        checkoutUrl: 'https://YOUR_STORE.lemonsqueezy.com/buy/PR_ROADPASS_ID', items: ['sports', 'truck', 'neon'] },
     ],
     codes: {
       'PRSPEED2026': 'speed',

@@ -2487,7 +2487,7 @@ if (typeof Shop !== 'undefined') {
     buttonTarget: '#shopBtn',
     bundles: [
       { id: 'snakepremium', name: 'Snake Premium', desc: 'Midnight & Sakura themes + Dragon skin', price: '~$2',
-        kofiUrl: 'https://ko-fi.com/s/SNAKE_PREMIUM_ID', items: ['midnight', 'sakura', 'dragon'] },
+        checkoutUrl: 'https://YOUR_STORE.lemonsqueezy.com/buy/SNAKE_PRODUCT_ID', items: ['midnight', 'sakura', 'dragon'] },
     ],
     codes: {
       'SNAKEPRO2026': 'snakepremium',

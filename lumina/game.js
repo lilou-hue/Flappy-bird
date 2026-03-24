@@ -1715,7 +1715,7 @@
       buttonTarget: '#shopBtn',
       bundles: [
         { id: 'luminapremium', name: 'Lumina Premium', desc: 'Crystal & Magma zone sets + Prism X skin', price: '~$2',
-          kofiUrl: 'https://ko-fi.com/s/LUMINA_PREMIUM_ID', items: ['crystal', 'magma', 'prismx'] },
+          checkoutUrl: 'https://YOUR_STORE.lemonsqueezy.com/buy/LUMINA_PRODUCT_ID', items: ['crystal', 'magma', 'prismx'] },
       ],
       codes: { 'LUMINAPRO2026': 'luminapremium' },
       onUnlock: function (itemIds) {

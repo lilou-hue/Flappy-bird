@@ -1800,7 +1800,7 @@ if (typeof Shop !== 'undefined') {
     buttonTarget: '#shopBtn',
     bundles: [
       { id: 'astropremium', name: 'Astro Premium', desc: 'Nebula & Solar visual themes', price: '~$1',
-        kofiUrl: 'https://ko-fi.com/s/ASTRO_PREMIUM_ID', items: ['am_nebula', 'am_solar'] },
+        checkoutUrl: 'https://YOUR_STORE.lemonsqueezy.com/buy/ASTRO_PRODUCT_ID', items: ['am_nebula', 'am_solar'] },
     ],
     codes: { 'ASTROPRO2026': 'astropremium' },
     onUnlock: function (itemIds) {

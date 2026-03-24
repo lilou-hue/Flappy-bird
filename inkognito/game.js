@@ -1818,7 +1818,7 @@
       buttonTarget: '#shopBtn',
       bundles: [
         { id: 'inkpremium', name: 'Ink Premium', desc: 'Midnight & Pastel visual themes', price: '~$1',
-          kofiUrl: 'https://ko-fi.com/s/INK_PREMIUM_ID', items: ['ink_midnight', 'ink_pastel'] },
+          checkoutUrl: 'https://YOUR_STORE.lemonsqueezy.com/buy/INK_PRODUCT_ID', items: ['ink_midnight', 'ink_pastel'] },
       ],
       codes: { 'INKPRO2026': 'inkpremium' },
       onUnlock: function (itemIds) {

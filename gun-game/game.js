@@ -2706,7 +2706,7 @@ if (typeof Shop !== 'undefined') {
     buttonTarget: '#shopBtn',
     bundles: [
       { id: 'gunpremium', name: 'Gun Premium', desc: 'Crimson & Arctic visual themes', price: '~$1',
-        kofiUrl: 'https://ko-fi.com/s/GUN_PREMIUM_ID', items: ['gg_crimson', 'gg_arctic'] },
+        checkoutUrl: 'https://YOUR_STORE.lemonsqueezy.com/buy/GUN_PRODUCT_ID', items: ['gg_crimson', 'gg_arctic'] },
     ],
     codes: { 'GUNPRO2026': 'gunpremium' },
     onUnlock: function (itemIds) {

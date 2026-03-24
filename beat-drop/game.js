@@ -870,7 +870,7 @@ if (typeof Shop !== 'undefined') {
     buttonTarget: '#shopBtn',
     bundles: [
       { id: 'beatpremium', name: 'Beat Premium', desc: 'Midnight & Tropical themes', price: '~$1',
-        kofiUrl: 'https://ko-fi.com/s/BEAT_PREMIUM_ID', items: ['midnight', 'tropical'] },
+        checkoutUrl: 'https://YOUR_STORE.lemonsqueezy.com/buy/BEAT_PRODUCT_ID', items: ['midnight', 'tropical'] },
     ],
     codes: { 'BEATPRO2026': 'beatpremium' },
     onUnlock: function (itemIds) {

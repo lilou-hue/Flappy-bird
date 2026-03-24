@@ -1874,7 +1874,7 @@ if (typeof Shop !== 'undefined') {
     buttonTarget: '#shopBtn',
     bundles: [
       { id: 'flappypremium', name: 'Flappy Premium', desc: 'Sunset & Night visual themes', price: '~$1',
-        kofiUrl: 'https://ko-fi.com/s/FLAPPY_PREMIUM_ID', items: ['fb_sunset', 'fb_night'] },
+        checkoutUrl: 'https://YOUR_STORE.lemonsqueezy.com/buy/FLAPPY_PRODUCT_ID', items: ['fb_sunset', 'fb_night'] },
     ],
     codes: { 'FLAPPYPRO2026': 'flappypremium' },
     onUnlock: function (itemIds) {

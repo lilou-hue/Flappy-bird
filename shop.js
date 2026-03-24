@@ -1,6 +1,11 @@
 /* ================================================================
    Shared Shop Module — Premium Bundles + Redeem Codes
+   Supports Lemonsqueezy checkout overlay + manual code redemption
    Usage: Shop.init({ gameId, bundles, codes, onUnlock, buttonTarget })
+
+   Bundle format:
+     { id, name, desc, price, checkoutUrl, items: [...] }
+     checkoutUrl = Lemonsqueezy product URL (opens overlay checkout)
    ================================================================ */
 (function () {
 'use strict';
@@ -9,6 +14,7 @@ var config = null;
 var overlayEl = null;
 var statusEl = null;
 var inputEl = null;
+var lemonReady = false;
 
 function _t(key, fallback) {
   if (typeof I18N !== 'undefined' && I18N.t) {
@@ -16,6 +22,41 @@ function _t(key, fallback) {
     if (v && v !== key) return v;
   }
   return fallback || key;
+}
+
+/* ── Lemonsqueezy SDK loader ── */
+function ensureLemonSDK(cb) {
+  if (lemonReady && window.LemonSqueezy) { cb(); return; }
+  if (document.getElementById('lemonsqueezy-js')) {
+    /* Already loading, wait for it */
+    var check = setInterval(function () {
+      if (window.LemonSqueezy) { lemonReady = true; clearInterval(check); cb(); }
+    }, 100);
+    return;
+  }
+  var script = document.createElement('script');
+  script.id = 'lemonsqueezy-js';
+  script.src = 'https://app.lemonsqueezy.com/js/lemon.js';
+  script.defer = true;
+  script.onload = function () {
+    if (window.LemonSqueezy) {
+      window.LemonSqueezy.Setup({ eventHandler: handleLemonEvent });
+      lemonReady = true;
+    }
+    cb();
+  };
+  document.head.appendChild(script);
+}
+
+/* ── Lemonsqueezy event handler ── */
+function handleLemonEvent(event) {
+  if (event.event === 'Checkout.Success') {
+    /* The order completed — show success message */
+    if (statusEl) {
+      statusEl.textContent = _t('shopPurchaseSuccess', 'Purchase complete! Enter your license key below to unlock your items.');
+      statusEl.className = 'sp-shop-status success';
+    }
+  }
 }
 
 /* ── localStorage helpers ── */
@@ -67,18 +108,42 @@ function buildModal(cfg) {
     price.textContent = b.price;
     card.appendChild(price);
 
+    /* Buy button — Lemonsqueezy overlay checkout */
+    var buyUrl = b.checkoutUrl || b.kofiUrl || '';
     var link = document.createElement('a');
     link.className = 'sp-shop-bundle__link';
-    link.href = b.kofiUrl;
-    link.target = '_blank';
-    link.rel = 'noopener';
-    link.textContent = _t('shopBuyOnKofi', 'Buy on Ko-fi');
-    card.appendChild(link);
+    link.href = buyUrl;
+    link.textContent = _t('shopBuy', 'Buy Now');
 
+    if (buyUrl.indexOf('lemonsqueezy.com') !== -1) {
+      /* Lemonsqueezy overlay checkout */
+      link.className += ' lemonsqueezy-button';
+      link.addEventListener('click', function (e) {
+        e.preventDefault();
+        ensureLemonSDK(function () {
+          if (window.LemonSqueezy) {
+            window.LemonSqueezy.Url.Open(buyUrl);
+          } else {
+            window.open(buyUrl, '_blank');
+          }
+        });
+      });
+    } else if (buyUrl) {
+      link.target = '_blank';
+      link.rel = 'noopener';
+    }
+
+    card.appendChild(link);
     grid.appendChild(card);
   });
 
   modal.appendChild(grid);
+
+  // How it works hint
+  var hint = document.createElement('div');
+  hint.className = 'sp-shop-hint';
+  hint.textContent = _t('shopHint', 'After buying, you\'ll receive a license key. Paste it below to unlock your items!');
+  modal.appendChild(hint);
 
   // Redeem row
   var redeemRow = document.createElement('div');
@@ -87,7 +152,7 @@ function buildModal(cfg) {
   var input = document.createElement('input');
   input.type = 'text';
   input.className = 'sp-shop-redeem__input';
-  input.placeholder = _t('shopEnterCode', 'Enter redeem code...');
+  input.placeholder = _t('shopEnterCode', 'Enter license key or redeem code...');
   input.id = 'spShopCodeInput';
   redeemRow.appendChild(input);
 
@@ -135,6 +200,11 @@ function redeem(code) {
   if (!upper) return;
 
   var bundleId = config.codes[upper];
+  if (!bundleId) {
+    /* Also try the raw input (Lemonsqueezy license keys are mixed-case UUIDs) */
+    var raw = code.trim();
+    bundleId = config.codes[raw];
+  }
   if (!bundleId) {
     statusEl.textContent = _t('shopInvalidCode', 'Invalid code. Please check and try again.');
     statusEl.className = 'sp-shop-status error';
@@ -204,6 +274,12 @@ var Shop = {
     overlayEl = els.overlay;
     statusEl = els.status;
     inputEl = els.input;
+
+    // Preload Lemonsqueezy SDK if any bundle uses it
+    var hasLemon = cfg.bundles.some(function (b) {
+      return (b.checkoutUrl || '').indexOf('lemonsqueezy.com') !== -1;
+    });
+    if (hasLemon) ensureLemonSDK(function () {});
 
     // Wire button target if provided
     if (cfg.buttonTarget) {

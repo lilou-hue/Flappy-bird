@@ -3983,11 +3983,11 @@ if (typeof Shop !== 'undefined') {
     buttonTarget: '#shopBtn',
     bundles: [
       { id: 'elemental', name: 'Elemental Pack', desc: 'Ember, Solar Wind & Deep Current skins', price: '~$2',
-        kofiUrl: 'https://ko-fi.com/s/MD_ELEMENTAL_ID', items: ['ember', 'solar', 'deep'] },
+        checkoutUrl: 'https://YOUR_STORE.lemonsqueezy.com/buy/MD_ELEMENTAL_ID', items: ['ember', 'solar', 'deep'] },
       { id: 'shadow', name: 'Shadow Pack', desc: 'Void Walker & Spectral skins', price: '~$2',
-        kofiUrl: 'https://ko-fi.com/s/MD_SHADOW_ID', items: ['void', 'spectral'] },
+        checkoutUrl: 'https://YOUR_STORE.lemonsqueezy.com/buy/MD_SHADOW_ID', items: ['void', 'spectral'] },
       { id: 'driftpass', name: 'Drift Pass', desc: 'All 5 premium skins', price: '~$3',
-        kofiUrl: 'https://ko-fi.com/s/MD_DRIFTPASS_ID', items: ['ember', 'solar', 'deep', 'void', 'spectral'] },
+        checkoutUrl: 'https://YOUR_STORE.lemonsqueezy.com/buy/MD_DRIFTPASS_ID', items: ['ember', 'solar', 'deep', 'void', 'spectral'] },
     ],
     codes: {
       'MDELEM2026': 'elemental',
