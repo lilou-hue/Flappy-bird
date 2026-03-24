@@ -1,4 +1,4 @@
-const CACHE_NAME = 'slayplay-v19';
+const CACHE_NAME = 'slayplay-v20';
 
 const PRECACHE_URLS = [
   '/',
@@ -14,6 +14,8 @@ const PRECACHE_URLS = [
   '/leaderboard-page/',
   '/icon.svg',
   '/manifest.json',
+  '/robots.txt',
+  '/sitemap.xml',
   '/profile/',
   '/flappy-bird/',
   '/flappy-bird/script.js',

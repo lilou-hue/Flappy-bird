@@ -1,7 +1,7 @@
 {
   "name": "SlayPlay Arcade",
   "short_name": "SlayPlay",
-  "description": "8 games, one arcade. Play Flappy Bird, Snake, Tetris, and more!",
+  "description": "20+ free browser games — Flappy Bird, Snake, Tetris, rhythm, horror, dress-up & more. No download needed.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f0c29",
