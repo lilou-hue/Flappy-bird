@@ -501,6 +501,10 @@
         .nav-pill { font-size: 0.8rem; padding: 0.4rem 0.8rem; }
       }
     </style>
+    <!-- Preload critical assets for faster perceived load -->
+    <link rel="preload" href="/arcade.js" as="script">
+    <link rel="preload" href="/i18n.js" as="script">
+    <link rel="preload" href="/arcade.css" as="style">
   </head>
   <body>
     <!-- Ambient background -->
@@ -3327,6 +3331,37 @@
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/sw.js');
       }
+    </script>
+    <script>
+      /* Skeleton → real content transition: game cards fade in with stagger */
+      (function () {
+        var cards = document.querySelectorAll('.game-card');
+        var observer = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              entry.target.style.animationPlayState = 'running';
+              observer.unobserve(entry.target);
+            }
+          });
+        }, { rootMargin: '50px' });
+        cards.forEach(function (card) {
+          card.style.animationPlayState = 'paused';
+          observer.observe(card);
+        });
+
+        /* Show OG badge on hub if earned */
+        if (typeof Arcade !== 'undefined' && Arcade.getOGBadge) {
+          var og = Arcade.getOGBadge();
+          if (og) {
+            var badge = document.createElement('div');
+            badge.style.cssText = 'text-align:center;margin-bottom:1rem;position:relative;z-index:1;';
+            var tierClass = og.tier === 'founding' ? ' arc-og-badge--founding' : '';
+            badge.innerHTML = '<span class="arc-og-badge' + tierClass + '">' + og.icon + ' ' + og.title + '</span>';
+            var grid = document.querySelector('.games-grid');
+            if (grid) grid.parentNode.insertBefore(badge, grid);
+          }
+        }
+      })();
     </script>
   </body>
 </html>

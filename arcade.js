@@ -531,6 +531,72 @@
     }, 3500);
   }
 
+  /* ── Viral share hooks — provocative challenge texts ── */
+  var SHARE_HOOKS = [
+    'Only 2% of players beat {score} on {game}. Think you can?',
+    'I just destroyed {game} with {score} points. You won\'t even come close.',
+    'This game is IMPOSSIBLE. I got {score} on {game}. Bet you can\'t beat it.',
+    '{score} on {game}. Don\'t play this unless you want to get addicted.',
+    'I scored {score} on {game} and I can\'t stop playing. You\'ve been warned.',
+  ];
+
+  function getShareHook(score, gameName) {
+    var idx = Math.floor(Math.random() * SHARE_HOOKS.length);
+    return SHARE_HOOKS[idx].replace('{score}', score).replace('{game}', gameName);
+  }
+
+  /* ── Challenge link encoding/decoding ── */
+  function encodeChallengeLink(gameId, score) {
+    var nickname = (typeof Leaderboard !== 'undefined' && Leaderboard.getNickname) ? Leaderboard.getNickname() : '';
+    var params = new URLSearchParams({ g: gameId, s: score });
+    if (nickname) params.set('n', nickname);
+    return 'https://slayplay.io/' + gameId + '/?challenge=' + btoa(params.toString());
+  }
+
+  function decodeChallengeLink() {
+    var params = new URLSearchParams(window.location.search);
+    var encoded = params.get('challenge');
+    if (!encoded) return null;
+    try {
+      var decoded = new URLSearchParams(atob(encoded));
+      return {
+        gameId: decoded.get('g'),
+        score: Number(decoded.get('s')) || 0,
+        nickname: decoded.get('n') || 'Someone',
+      };
+    } catch (e) { return null; }
+  }
+
+  /* ── Competition framing — percentile calculation ── */
+  function getPercentileText(gameId, score) {
+    var game = GAMES[gameId];
+    if (!game || !game.thresholds) return '';
+    var t3 = game.thresholds;
+    if (score >= t3[2]) return 'Top 3%';
+    if (score >= t3[1]) return 'Top 15%';
+    if (score >= t3[0]) return 'Top 40%';
+    return '';
+  }
+
+  /* ── OG Badge system ── */
+  function getOGBadge() {
+    return loadJSON('arcade_og_badge', null);
+  }
+
+  function checkOGBadge() {
+    if (getOGBadge()) return; /* Already claimed */
+    /* Award OG badge to anyone playing before a threshold date or within first 1000 plays */
+    var s = getState();
+    if (s.totalGamesPlayed >= 1) {
+      saveJSON('arcade_og_badge', {
+        title: 'OG Slayer',
+        icon: '\u2694\uFE0F',
+        claimedAt: Date.now(),
+        tier: s.totalGamesPlayed <= 10 ? 'founding' : 'early',
+      });
+    }
+  }
+
   /* ── Score card overlay ── */
   function createScoreCard(gameId, score, best) {
     var game = GAMES[gameId] || { name: gameId };
@@ -540,6 +606,9 @@
     var existing = document.querySelector('.arc-scorecard');
     if (existing) existing.remove();
 
+    /* Check & award OG badge */
+    checkOGBadge();
+
     var overlay = document.createElement('div');
     overlay.className = 'arc-scorecard';
 
@@ -547,11 +616,14 @@
     var thresholdBonus = getThresholdBonus(gameId, score);
     var coinsBase = 5;
     var coinsNewBest = isNewBest ? 10 : 0;
+    var percentile = getPercentileText(gameId, score);
+    var challengeLink = encodeChallengeLink(gameId, score);
 
     var html =
       '<div class="arc-scorecard__card">' +
         '<h2 class="arc-scorecard__title">' + game.name + '</h2>' +
         (isNewBest ? '<div class="arc-scorecard__newbest">' + t('arcNewBest', 'New Best!') + '</div>' : '') +
+        (percentile ? '<div class="arc-scorecard__percentile">' + percentile + '</div>' : '') +
         '<div class="arc-scorecard__scores">' +
           '<div class="arc-scorecard__score">' +
             '<div class="arc-scorecard__score-label">' + t('score', 'Score') + '</div>' +
@@ -569,7 +641,8 @@
           '<div class="arc-scorecard__coins-total"><span>' + t('arcTotal', 'Total') + '</span><span>+' + (coinsBase + coinsNewBest + thresholdBonus) + ' ' + t('arcCoins', 'coins') + '</span></div>' +
         '</div>' +
         '<div class="arc-scorecard__actions">' +
-          '<button class="arc-scorecard__btn arc-scorecard__btn--share" title="Copy challenge">' + t('arcShare', 'Share') + '</button>' +
+          '<button class="arc-scorecard__btn arc-scorecard__btn--challenge" title="Challenge a friend">\u2694\uFE0F ' + t('arcChallenge', 'Challenge Friend') + '</button>' +
+          '<button class="arc-scorecard__btn arc-scorecard__btn--share" title="Copy viral share">' + t('arcShare', 'Share') + '</button>' +
           '<button class="arc-scorecard__btn arc-scorecard__btn--again">' + t('arcPlayAgain', 'Play Again') + '</button>' +
           '<a href="/" class="arc-scorecard__btn arc-scorecard__btn--home">' + t('arcHome', 'Home') + '</a>' +
         '</div>' +
@@ -577,9 +650,21 @@
 
     overlay.innerHTML = html;
 
-    /* Share button */
+    /* Challenge friend button — copies deep link */
+    overlay.querySelector('.arc-scorecard__btn--challenge').addEventListener('click', function () {
+      var nickname = (typeof Leaderboard !== 'undefined' && Leaderboard.getNickname) ? Leaderboard.getNickname() : 'Someone';
+      var text = nickname + ' scored ' + score + ' on ' + game.name + '. Beat them! ' + challengeLink;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(function () {
+          this.textContent = '\u2705 ' + t('arcCopied', 'Copied!');
+          setTimeout(function () { this.textContent = '\u2694\uFE0F ' + t('arcChallenge', 'Challenge Friend'); }.bind(this), 2000);
+        }.bind(this));
+      }
+    });
+
+    /* Share button — viral hook text */
     overlay.querySelector('.arc-scorecard__btn--share').addEventListener('click', function () {
-      var text = t('arcShareText', 'I scored {score} on {game} at SlayPlay! Can you beat me?').replace('{score}', score).replace('{game}', game.name);
+      var text = getShareHook(score, game.name) + '\nhttps://slayplay.io/' + gameId + '/';
       if (navigator.clipboard) {
         navigator.clipboard.writeText(text).then(function () {
           this.textContent = t('arcCopied', 'Copied!');
@@ -598,6 +683,33 @@
     requestAnimationFrame(function () { overlay.classList.add('arc-scorecard--show'); });
 
     return overlay;
+  }
+
+  /* ── Challenge banner (shown when opening a challenge link) ── */
+  function showChallengeBanner() {
+    var challenge = decodeChallengeLink();
+    if (!challenge) return;
+    var game = GAMES[challenge.gameId];
+    if (!game) return;
+
+    var banner = document.createElement('div');
+    banner.className = 'arc-challenge-banner';
+    banner.innerHTML =
+      '<div class="arc-challenge-banner__inner">' +
+        '<span class="arc-challenge-banner__icon">\u2694\uFE0F</span>' +
+        '<div class="arc-challenge-banner__text">' +
+          '<strong>' + challenge.nickname + '</strong> scored <strong>' + challenge.score + '</strong> on ' + game.name + '.' +
+          '<br>Think you can beat them?' +
+        '</div>' +
+        '<button class="arc-challenge-banner__close">\u2715</button>' +
+      '</div>';
+
+    banner.querySelector('.arc-challenge-banner__close').addEventListener('click', function () {
+      banner.remove();
+    });
+
+    document.body.appendChild(banner);
+    requestAnimationFrame(function () { banner.classList.add('arc-challenge-banner--show'); });
   }
 
   /* ── Nav HUD ── */
@@ -642,10 +754,16 @@
   }
 
   /* ── Auto-init ── */
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function () { applyTheme(); });
-  } else {
+  function autoInit() {
     applyTheme();
+    showChallengeBanner();
+    checkOGBadge();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', autoInit);
+  } else {
+    autoInit();
   }
 
   /* ── Expose global ── */
@@ -664,6 +782,10 @@
     getRandomGame: getRandomGame,
     injectNavHUD: injectNavHUD,
     getProfileData: getProfileData,
+    getOGBadge: getOGBadge,
+    decodeChallengeLink: decodeChallengeLink,
+    showChallengeBanner: showChallengeBanner,
+    getPercentileText: getPercentileText,
     GAMES: GAMES,
     GAME_IDS: GAME_IDS,
     applyTheme: applyTheme,

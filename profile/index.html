@@ -317,8 +317,18 @@
       var section = document.getElementById('arcadeProfileSection');
       if (!section) return;
 
+      /* OG Badge */
+      var ogBadge = Arcade.getOGBadge ? Arcade.getOGBadge() : null;
+      var ogHtml = '';
+      if (ogBadge) {
+        var tierClass = ogBadge.tier === 'founding' ? ' arc-og-badge--founding' : '';
+        ogHtml = '<div style="text-align:center;margin-bottom:1rem;">' +
+          '<span class="arc-og-badge' + tierClass + '">' + ogBadge.icon + ' ' + ogBadge.title +
+          (ogBadge.tier === 'founding' ? ' (Founding Member)' : '') + '</span></div>';
+      }
+
       /* Coin balance */
-      var coinHtml = '<div class="arc-coin-header" style="margin-bottom:1rem;">' +
+      var coinHtml = ogHtml + '<div class="arc-coin-header" style="margin-bottom:1rem;">' +
         '<div class="arc-coin-header__balance">&#x1FA99; <span class="arc-coin-value">' + p.coins + '</span> coins' +
         '<span style="margin-left:0.75rem;font-size:0.8rem;color:#a1a1aa;">(' + p.totalCoinsEarned + ' earned / ' + p.totalCoinsSpent + ' spent)</span></div>' +
       '</div>';
