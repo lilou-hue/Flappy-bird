@@ -1,7 +1,7 @@
 {
   "name": "SlayPlay Arcade",
   "short_name": "SlayPlay",
-  "description": "20+ free browser games — Flappy Bird, Snake, Tetris, rhythm, horror, dress-up & more. No download needed.",
+  "description": "Your free browser arcade. 20+ games — Flappy Bird, Snake, Tetris, rhythm, horror & more. No downloads, no sign-ups.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f0c29",
@@ -11,6 +11,18 @@
       "src": "/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ]

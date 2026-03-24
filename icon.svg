@@ -5,9 +5,20 @@
       <stop offset="50%" stop-color="#302b63"/>
       <stop offset="100%" stop-color="#24243e"/>
     </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ff6fd8"/>
+      <stop offset="100%" stop-color="#ffcc4d"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
   </defs>
   <rect width="512" height="512" rx="96" fill="url(#bg)"/>
-  <text x="256" y="200" text-anchor="middle" font-size="120" fill="#ffcc4d">&#x1F3AE;</text>
-  <text x="256" y="340" text-anchor="middle" font-family="Trebuchet MS, sans-serif" font-weight="bold" font-size="72" fill="#ffffff">SLAY</text>
-  <text x="256" y="410" text-anchor="middle" font-family="Trebuchet MS, sans-serif" font-weight="bold" font-size="72" fill="#ffcc4d">PLAY</text>
+  <!-- Lightning bolt icon -->
+  <g filter="url(#glow)">
+    <path d="M290 80 L200 250 L270 250 L222 432 L340 220 L265 220 Z" fill="url(#accent)"/>
+  </g>
+  <text x="256" y="340" text-anchor="middle" font-family="'Trebuchet MS', sans-serif" font-weight="900" font-size="80" letter-spacing="6" fill="#ffffff" filter="url(#glow)">SLAY</text>
+  <text x="256" y="418" text-anchor="middle" font-family="'Trebuchet MS', sans-serif" font-weight="900" font-size="80" letter-spacing="6" fill="url(#accent)">PLAY</text>
 </svg>
