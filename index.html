@@ -366,6 +366,9 @@
       .game-card:nth-child(19)::after { box-shadow: inset 0 0 0 1px rgba(251,191,36,0.4), 0 0 30px rgba(251,191,36,0.08); }
       .game-card:nth-child(20)::after { box-shadow: inset 0 0 0 1px rgba(88,86,214,0.4), 0 0 30px rgba(88,86,214,0.08); }
       .game-card:nth-child(21)::after { box-shadow: inset 0 0 0 1px rgba(255,107,181,0.4), 0 0 30px rgba(255,107,181,0.08); }
+      .game-card:nth-child(22)::after { box-shadow: inset 0 0 0 1px rgba(0,119,190,0.4), 0 0 30px rgba(0,119,190,0.08); }
+      .game-card:nth-child(23)::after { box-shadow: inset 0 0 0 1px rgba(51,255,51,0.4), 0 0 30px rgba(51,255,51,0.08); }
+      .game-card:nth-child(24)::after { box-shadow: inset 0 0 0 1px rgba(74,240,192,0.4), 0 0 30px rgba(74,240,192,0.08); }
 
       .game-card:hover .card-preview canvas { filter: brightness(1.12) saturate(1.1); }
 
@@ -437,6 +440,7 @@
       .art-nothing-preview { background: linear-gradient(180deg, #1a1020, #241530, #1a1020); }
       .heart-serve-preview { background: linear-gradient(180deg, #ffe0ec, #ffc8dd, #ffb3c6); }
       .signal-lost-preview { background: linear-gradient(180deg, #0a0a0a, #0d1a0d, #0a0a0a); }
+      .dragon-lab-preview { background: linear-gradient(180deg, #0a0a1a, #0e1a1a, #0a0a1a); }
 
       .flappy-tag    { background: rgba(123,228,149,0.12); color: #7be495; border: 1px solid rgba(123,228,149,0.2); }
       .methane-tag   { background: rgba(23,205,211,0.12); color: #17cdd3; border: 1px solid rgba(23,205,211,0.2); }
@@ -871,6 +875,17 @@
           <h2 data-i18n="slTitle">Signal Lost</h2>
           <p data-i18n="slDesc">Monitor security cameras. Something is stalking through the facility. Don't let it reach you.</p>
           <span class="card-tag" style="background:rgba(51,255,51,0.15);color:#33ff33" data-i18n="horror">Horror</span>
+        </div>
+      </a>
+
+      <a href="/dragon-lab/" class="game-card">
+        <div class="card-preview dragon-lab-preview">
+          <canvas id="dragonLabCanvas" width="360" height="200"></canvas>
+        </div>
+        <div class="card-body">
+          <h2>Dragon Engineering Lab</h2>
+          <p>Design a biologically plausible dragon. Test flight, fire, and survival under real scientific constraints.</p>
+          <span class="card-tag" style="background:rgba(74,240,192,0.15);color:#4af0c0">Simulation</span>
         </div>
       </a>
     </div>
@@ -3134,6 +3149,85 @@
           g.addColorStop(1, 'rgba(0,0,0,0.7)');
           x.fillStyle = g;
           x.fillRect(0, 0, W, H);
+          requestAnimationFrame(draw);
+        }
+        draw();
+      })();
+
+      /* ─ Dragon Engineering Lab Preview ─ */
+      (function() {
+        var c = document.getElementById('dragonLabCanvas');
+        if (!c) return;
+        var x = c.getContext('2d');
+        var f = 0;
+        function draw() {
+          f++;
+          // Dark lab background
+          x.fillStyle = '#0a0a1a';
+          x.fillRect(0, 0, W, H);
+          // Grid floor
+          x.strokeStyle = 'rgba(0,80,60,0.15)';
+          x.lineWidth = 1;
+          for (var i = 0; i < W; i += 20) { x.beginPath(); x.moveTo(i, H*0.6); x.lineTo(i - 40, H); x.stroke(); }
+          for (var j = 0; j < 5; j++) { var yy = H*0.6 + j*10; x.beginPath(); x.moveTo(0, yy); x.lineTo(W, yy); x.stroke(); }
+          // Dragon body (simple silhouette)
+          var bx = W*0.45, by = H*0.42;
+          var breathe = Math.sin(f*0.04)*2;
+          // Torso
+          x.fillStyle = 'rgba(42,94,78,0.8)';
+          x.beginPath();
+          x.ellipse(bx, by + breathe, 30, 20 + breathe*0.5, 0, 0, Math.PI*2);
+          x.fill();
+          // Neck
+          x.fillStyle = 'rgba(42,90,74,0.7)';
+          x.beginPath();
+          x.moveTo(bx+20, by-10+breathe); x.quadraticCurveTo(bx+45, by-30, bx+55, by-35+breathe*0.5);
+          x.lineTo(bx+50, by-25+breathe*0.5); x.quadraticCurveTo(bx+40, by-20, bx+18, by+breathe);
+          x.fill();
+          // Head
+          x.fillStyle = 'rgba(46,96,80,0.85)';
+          x.beginPath();
+          x.ellipse(bx+58, by-37+breathe*0.5, 12, 9, 0.3, 0, Math.PI*2);
+          x.fill();
+          // Eye
+          x.fillStyle = 'rgba(74,240,192,0.7)';
+          x.beginPath(); x.arc(bx+63, by-40+breathe*0.5, 2, 0, Math.PI*2); x.fill();
+          // Wings
+          var wingFlap = Math.sin(f*0.03)*5;
+          x.fillStyle = 'rgba(136,85,51,0.3)';
+          x.beginPath();
+          x.moveTo(bx-5, by-10+breathe);
+          x.quadraticCurveTo(bx-50, by-50+wingFlap, bx-70, by-60+wingFlap);
+          x.quadraticCurveTo(bx-50, by-20+wingFlap, bx-10, by+5+breathe);
+          x.fill();
+          x.beginPath();
+          x.moveTo(bx+5, by-10+breathe);
+          x.quadraticCurveTo(bx+30, by-45+wingFlap, bx+20, by-55+wingFlap);
+          x.quadraticCurveTo(bx+25, by-25+wingFlap, bx+10, by+5+breathe);
+          x.fill();
+          // Tail
+          x.strokeStyle = 'rgba(42,88,72,0.6)';
+          x.lineWidth = 3;
+          x.beginPath();
+          var tailSway = Math.sin(f*0.025)*8;
+          x.moveTo(bx-25, by+5+breathe);
+          x.quadraticCurveTo(bx-55, by+15+tailSway, bx-80, by+10+tailSway);
+          x.stroke();
+          // Fuel sac glow
+          var glowPulse = 0.3 + Math.sin(f*0.06)*0.2;
+          x.fillStyle = 'rgba(255,102,0,' + glowPulse + ')';
+          x.beginPath(); x.arc(bx-5, by+5+breathe, 6, 0, Math.PI*2); x.fill();
+          // Lab text
+          x.fillStyle = 'rgba(74,240,192,0.4)';
+          x.font = '9px monospace';
+          x.fillText('DRAGON ENGINEERING LAB', 10, 15);
+          x.fillStyle = 'rgba(74,240,192,0.25)';
+          x.font = '8px monospace';
+          x.fillText('SPECIMEN: ACTIVE', 10, H-10);
+          // Scan line
+          var scanY = (f*0.8) % H;
+          x.fillStyle = 'rgba(74,240,192,0.03)';
+          x.fillRect(0, scanY, W, 2);
           requestAnimationFrame(draw);
         }
         draw();
