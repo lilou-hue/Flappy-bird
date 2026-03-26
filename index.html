@@ -1161,23 +1161,28 @@
       }
       collapse();
 
-      /* Intersection Observer for lazy-loading canvas previews */
-      function setupObserver() {
+      /* Intersection Observer for lazy-loading canvas previews — set up after previews init */
+      window._setupCanvasObserver = function() {
         if (!('IntersectionObserver' in window)) return;
-        var canvases = document.querySelectorAll('.card-preview canvas');
         var obs = new IntersectionObserver(function(entries) {
           entries.forEach(function(entry) {
+            var c = entry.target;
             if (entry.isIntersecting) {
-              /* Canvas draw functions are already running — just ensure they start */
-              entry.target.dataset.visible = '1';
-              obs.unobserve(entry.target);
+              c._rafPaused = false;
+              if (c._rafRestart) {
+                var fn = c._rafRestart;
+                c._rafRestart = null;
+                requestAnimationFrame(fn);
+              }
+            } else {
+              c._rafPaused = true;
             }
           });
-        }, { rootMargin: '200px' });
-        canvases.forEach(function(c) { obs.observe(c); });
-      }
-      /* Observe canvases in the visible section immediately */
-      setupObserver();
+        }, { rootMargin: '100px' });
+        document.querySelectorAll('.card-preview canvas').forEach(function(c) {
+          obs.observe(c);
+        });
+      };
     })();
     </script>
 
@@ -1292,6 +1297,7 @@
         const pipes = [{x: 280, gap: 80}, {x: 180, gap: 100}, {x: 80, gap: 70}];
 
         function draw() {
+          if (c._rafPaused) { c._rafRestart = draw; return; }
           t += 0.016;
           const sky = x.createLinearGradient(0,0,0,H);
           sky.addColorStop(0,'#5cb8ff'); sky.addColorStop(0.6,'#a8e0ff');
@@ -1348,6 +1354,7 @@
         const motes = Array.from({length:12}, () => ({x:Math.random()*W, y:Math.random()*H, p:Math.random()*6.28, s:1+Math.random()*2}));
 
         function draw() {
+          if (c._rafPaused) { c._rafRestart = draw; return; }
           t += 0.016;
           const bg = x.createLinearGradient(0,0,0,H);
           bg.addColorStop(0,'#1a2248'); bg.addColorStop(0.5,'#111540'); bg.addColorStop(1,'#030410');
@@ -1402,6 +1409,7 @@
         let t = 0;
 
         function draw() {
+          if (c._rafPaused) { c._rafRestart = draw; return; }
           t += 0.016;
           x.fillStyle = '#0a0f0a'; x.fillRect(0,0,W,H);
 
@@ -1471,6 +1479,7 @@
         let t = 0;
 
         function draw() {
+          if (c._rafPaused) { c._rafRestart = draw; return; }
           t += 0.016;
           x.fillStyle = '#06041a'; x.fillRect(0,0,W,H);
 
@@ -1542,6 +1551,7 @@
         const puffs = [];
 
         function draw() {
+          if (c._rafPaused) { c._rafRestart = draw; return; }
           t += 0.016;
           const bg = x.createLinearGradient(0,0,0,H);
           bg.addColorStop(0,'#2d1b69'); bg.addColorStop(0.6,'#1a0f40'); bg.addColorStop(1,'#0f0a2a');
@@ -1856,6 +1866,7 @@
         let flashTimer = 0;
 
         function draw() {
+          if (c._rafPaused) { c._rafRestart = draw; return; }
           t += 0.016;
           x.fillStyle = '#08091a'; x.fillRect(0,0,W,H);
 
@@ -1933,6 +1944,7 @@
         let projX = -20, projY = 0, projActive = false, projTimer = 0;
 
         function draw() {
+          if (c._rafPaused) { c._rafRestart = draw; return; }
           t += 0.016;
           const sky = x.createLinearGradient(0,0,0,H);
           sky.addColorStop(0,'#3a5070'); sky.addColorStop(0.5,'#5a7090');
@@ -2063,6 +2075,7 @@
         ];
 
         function draw() {
+          if (c._rafPaused) { c._rafRestart = draw; return; }
           t += 0.016;
           const bg = x.createLinearGradient(0,0,0,H);
           bg.addColorStop(0,'#0a0520'); bg.addColorStop(0.5,'#0f0625'); bg.addColorStop(1,'#1a0a3a');
@@ -2144,6 +2157,7 @@
         }));
 
         function draw() {
+          if (c._rafPaused) { c._rafRestart = draw; return; }
           t += 0.016;
 
           const bg = x.createLinearGradient(0,0,0,H);
@@ -2259,6 +2273,7 @@
         let pvFireTimer = 0;
 
         function draw() {
+          if (c._rafPaused) { c._rafRestart = draw; return; }
           t += 0.016;
           x.fillStyle = '#050510'; x.fillRect(0,0,W,H);
 
@@ -2361,6 +2376,7 @@
         let currentShape = shapes[0]();
 
         function draw() {
+          if (c._rafPaused) { c._rafRestart = draw; return; }
           t += 0.016;
           const bg = x.createLinearGradient(0, 0, 0, H);
           bg.addColorStop(0, '#1a0835'); bg.addColorStop(0.5, '#0c0620'); bg.addColorStop(1, '#06041a');
@@ -2456,6 +2472,7 @@
         let t = 0;
 
         function draw() {
+          if (c._rafPaused) { c._rafRestart = draw; return; }
           t += 0.016;
           // Background gradient
           const bg = x.createLinearGradient(0,0,0,H);
@@ -2597,6 +2614,7 @@
         }
 
         function draw() {
+          if (c._rafPaused) { c._rafRestart = draw; return; }
           t += 0.016;
           // Background gradient (dress-up style)
           const bg = x.createLinearGradient(0,0,0,H);
@@ -2675,6 +2693,7 @@
         let ballX = W/2, ballY = H/2, bvx = 1.8, bvy = 1.2;
 
         function draw() {
+          if (c._rafPaused) { c._rafRestart = draw; return; }
           t += 0.016;
           // Background gradient (dress-up style)
           const bg = x.createLinearGradient(0,0,0,H);
@@ -2785,6 +2804,7 @@
         }
 
         function draw() {
+          if (c._rafPaused) { c._rafRestart = draw; return; }
           t += 0.016;
           // Background gradient (dress-up style)
           const bg = x.createLinearGradient(0,0,0,H);
@@ -2887,6 +2907,7 @@
         var x = c.getContext('2d');
         var p1x = 80, p2x = 260, t = 0;
         function draw() {
+          if (c._rafPaused) { c._rafRestart = draw; return; }
           t += 0.016;
           x.fillStyle = '#0d1117';
           x.fillRect(0, 0, 360, 200);
@@ -2948,6 +2969,7 @@
         var stars = [];
         for (var i = 0; i < 40; i++) stars.push({ x: Math.random() * W, y: Math.random() * H, s: 0.3 + Math.random() * 1, tw: Math.random() * 6.28 });
         function draw() {
+          if (c._rafPaused) { c._rafRestart = draw; return; }
           t += 0.016;
           var bg = x.createLinearGradient(0, 0, 0, H);
           bg.addColorStop(0, '#060818'); bg.addColorStop(1, '#040610');
@@ -2992,6 +3014,7 @@
         var x = c.getContext('2d');
         var t = 0;
         function draw() {
+          if (c._rafPaused) { c._rafRestart = draw; return; }
           t += 0.02;
           // Ocean gradient
           var g = x.createLinearGradient(0, 0, 0, H);
@@ -3047,6 +3070,7 @@
         var t = 0;
         var displayMoney = 1000000000;
         function draw() {
+          if (c._rafPaused) { c._rafRestart = draw; return; }
           t += 0.015;
           x.fillStyle = '#fafafa'; x.fillRect(0, 0, W, H);
           x.fillStyle = '#888'; x.font = '11px "Space Grotesk", sans-serif'; x.textAlign = 'center';
@@ -3090,6 +3114,7 @@
         var t = 0;
         var colors = ['#f8b4b4','#93c5fd','#86efac','#fde047','#fdba74','#f97316','#c084fc','#9ca3af'];
         function draw() {
+          if (c._rafPaused) { c._rafRestart = draw; return; }
           t += 0.01;
           x.fillStyle = '#fafafa'; x.fillRect(0, 0, W, H);
           // Title
@@ -3148,6 +3173,7 @@
         init();
         var t = 0;
         function draw() {
+          if (c._rafPaused) { c._rafRestart = draw; return; }
           t++;
           x.clearRect(0,0,W,H);
           // phone outline
@@ -3204,6 +3230,7 @@
         var t = 0;
         var zParticles = [];
         function draw() {
+          if (c._rafPaused) { c._rafRestart = draw; return; }
           t += 0.016;
           // Purple gradient bg
           var bg = x.createLinearGradient(0,0,0,H);
@@ -3360,6 +3387,7 @@
         var trail = [];
 
         function draw() {
+          if (c._rafPaused) { c._rafRestart = draw; return; }
           t += 0.016;
 
           // Soft gradient bg with subtle radial glow
@@ -3488,6 +3516,7 @@
         var x = c.getContext('2d');
         var f = 0;
         function draw() {
+          if (c._rafPaused) { c._rafRestart = draw; return; }
           f++;
           // Dark background
           x.fillStyle = '#0a0a0a';
@@ -3545,6 +3574,7 @@
         var x = c.getContext('2d');
         var f = 0;
         function draw() {
+          if (c._rafPaused) { c._rafRestart = draw; return; }
           f++;
           // Dark lab background
           x.fillStyle = '#0a0a1a';
@@ -3616,6 +3646,9 @@
         }
         draw();
       })();
+
+      /* Start IntersectionObserver to pause off-screen canvas loops */
+      if (window._setupCanvasObserver) window._setupCanvasObserver();
 
     })();
     </script>

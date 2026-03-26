@@ -126,6 +126,15 @@ body {
   background: rgba(0,0,0,0.08);
 }
 
+.btn-accent {
+  background: linear-gradient(135deg, #a78bfa, #ec4899);
+  color: #fff;
+  border: none;
+}
+.btn-accent:hover {
+  opacity: 0.9;
+}
+
 .btn-glow {
   animation: btnGlow 2s ease-in-out infinite;
 }
