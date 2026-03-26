@@ -165,24 +165,47 @@ const Leaderboard = (() => {
       }
 
       const nick = getNickname();
+      /* Get equipped badge for current player to show next to their name */
+      const equippedBadge = (typeof Arcade !== 'undefined' && Arcade.getEquippedBadge) ? Arcade.getEquippedBadge() : null;
+      const badgeIcon = equippedBadge ? equippedBadge.icon + ' ' : '';
+
       let html = '<table class="lb-table"><thead><tr>'
         + '<th class="lb-rank">#</th>'
         + '<th>' + t('lbPlayer', 'Player') + '</th>'
         + '<th>' + t('score', 'Score') + '</th>'
         + '</tr></thead><tbody>';
 
+      /* Find near-miss: where would currentScore rank? */
+      let nearMissHtml = '';
+      if (currentScore && currentScore > 0) {
+        let wouldRank = scores.length + 1;
+        for (let i = 0; i < scores.length; i++) {
+          if (currentScore >= scores[i].score) { wouldRank = i + 1; break; }
+        }
+        if (wouldRank > 1 && wouldRank <= scores.length + 1) {
+          const nextScore = scores[Math.max(0, wouldRank - 2)];
+          if (nextScore) {
+            const gap = nextScore.score - currentScore;
+            if (gap > 0 && gap <= nextScore.score * 0.3) {
+              nearMissHtml = '<div class="lb-nearmiss">Just ' + gap.toLocaleString() + ' points from #' + (wouldRank - 1) + '!</div>';
+            }
+          }
+        }
+      }
+
       scores.forEach((entry, i) => {
         const isMe = entry.nickname === nick;
-        const rankClass = i === 0 ? ' lb-rank-1' : '';
-        html += '<tr class="' + (isMe ? 'lb-row-me' : '') + '">'
-          + '<td class="lb-rank' + rankClass + '">' + (i + 1) + '</td>'
-          + '<td>' + escapeHtml(entry.nickname) + '</td>'
+        const rankLabel = i === 0 ? '👑' : (i + 1);
+        const rarityClass = isMe && equippedBadge && equippedBadge.rarity ? ' lb-rarity-' + equippedBadge.rarity : '';
+        html += '<tr class="' + (isMe ? 'lb-row-me' : '') + rarityClass + '">'
+          + '<td class="lb-rank">' + rankLabel + '</td>'
+          + '<td>' + (isMe ? badgeIcon : '') + escapeHtml(entry.nickname) + (isMe ? ' <span class="lb-you">(you)</span>' : '') + '</td>'
           + '<td>' + entry.score.toLocaleString() + '</td>'
           + '</tr>';
       });
 
       html += '</tbody></table>';
-      container.innerHTML = html;
+      container.innerHTML = nearMissHtml + html;
     }).catch(() => {
       container.innerHTML = '<p class="lb-empty">' + t('lbError', 'Could not load leaderboard.') + '</p>';
     });

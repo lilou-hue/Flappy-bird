@@ -80,6 +80,55 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* ── Streak urgency states ── */
+.arc-nav__streak--atrisk {
+  color: #ef4444;
+  animation: streakPulse 1.2s ease infinite;
+  background: rgba(239,68,68,0.1);
+  border-radius: 999px;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid rgba(239,68,68,0.3);
+}
+.arc-nav__streak--hot {
+  color: #f59e0b;
+  text-shadow: 0 0 8px rgba(245,158,11,0.4);
+}
+@keyframes streakPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ── Active event badge in nav ── */
+.arc-nav__event {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  background: linear-gradient(135deg, rgba(250,204,21,0.15), rgba(245,158,11,0.15));
+  border: 1px solid rgba(250,204,21,0.3);
+  color: #facc15;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.72rem;
+  animation: eventGlow 2s ease infinite alternate;
+  white-space: nowrap;
+}
+@keyframes eventGlow {
+  0% { box-shadow: 0 0 4px rgba(250,204,21,0.1); }
+  100% { box-shadow: 0 0 12px rgba(250,204,21,0.3); }
+}
+
+/* ── Daily challenges count in nav ── */
+.arc-nav__challenges {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  color: #a78bfa;
+  font-weight: 600;
+  padding: 0.3rem 0.5rem;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Compact nav on game pages */
 .arc-nav--compact {
   padding: 0.4rem 0.8rem;
@@ -193,6 +242,93 @@ body:has(.arc-nav) {
 
 .arc-scorecard__coins-row--bonus {
   color: #facc15;
+}
+
+.arc-scorecard__coins-row--event {
+  color: #f59e0b;
+  font-weight: 600;
+  background: rgba(245,158,11,0.08);
+  border-radius: 4px;
+  padding: 0.2rem 0.4rem;
+}
+
+/* ── Near-miss text on score card ── */
+.arc-scorecard__nearmiss {
+  color: #fb923c;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 0.5rem;
+  animation: nearMissPulse 2s ease infinite;
+}
+@keyframes nearMissPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* ── Event banner on score card ── */
+.arc-scorecard__event {
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #facc15;
+  background: linear-gradient(135deg, rgba(250,204,21,0.12), rgba(245,158,11,0.08));
+  border: 1px solid rgba(250,204,21,0.2);
+  border-radius: 999px;
+  padding: 0.3rem 0.8rem;
+  margin-bottom: 0.6rem;
+  display: inline-block;
+}
+
+/* ── Daily challenges on score card ── */
+.arc-scorecard__challenges {
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding-top: 0.6rem;
+  margin-top: 0.4rem;
+}
+.arc-scorecard__challenges-title {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #a78bfa;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.3rem;
+}
+.arc-scorecard__challenge {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.78rem;
+  color: #71717a;
+  padding: 0.2rem 0;
+}
+.arc-scorecard__challenge--done {
+  color: #4ade80;
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+.arc-scorecard__challenge-reward {
+  color: #facc15;
+  font-weight: 600;
+  font-size: 0.72rem;
+}
+
+/* ── Streak on score card ── */
+.arc-scorecard__streak {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding-top: 0.5rem;
+  margin-top: 0.4rem;
+  font-size: 0.82rem;
+  color: #fb923c;
+  font-weight: 600;
+}
+.arc-scorecard__streak-warning {
+  color: #ef4444;
+  font-size: 0.72rem;
+  animation: streakPulse 1.2s ease infinite;
 }
 
 .arc-scorecard__coins-total {
@@ -1106,4 +1242,97 @@ body:has(.arc-nav) {
   .arc-nav__link[href="/shop/"]::before { content: "\\1F6D2"; font-size: 1rem; }
   .arc-nav__link[href="/leaderboard-page/"]::before { content: "\\1F4CA"; font-size: 1rem; }
   .arc-nav__link[href="/profile/"]::before { content: "\\1F464"; font-size: 1rem; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RETENTION FEATURES — Streak Toasts, Near-Miss, Status Flex
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Streak drama toasts ── */
+.arc-streak-toast {
+  position: fixed;
+  top: 4rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-radius: 16px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  opacity: 0;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  max-width: 420px;
+  width: 90vw;
+  pointer-events: none;
+}
+.arc-streak-toast--show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.arc-streak-toast--lost {
+  background: rgba(239,68,68,0.15);
+  border: 1px solid rgba(239,68,68,0.4);
+  box-shadow: 0 8px 32px rgba(239,68,68,0.2);
+}
+.arc-streak-toast--shield {
+  background: rgba(59,130,246,0.15);
+  border: 1px solid rgba(59,130,246,0.4);
+  box-shadow: 0 8px 32px rgba(59,130,246,0.2);
+}
+.arc-streak-toast--milestone {
+  background: rgba(245,158,11,0.15);
+  border: 1px solid rgba(245,158,11,0.4);
+  box-shadow: 0 8px 32px rgba(245,158,11,0.2);
+}
+.arc-streak-toast__icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+.arc-streak-toast__body {
+  flex: 1;
+}
+.arc-streak-toast__title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fafafa;
+  margin-bottom: 0.15rem;
+}
+.arc-streak-toast--lost .arc-streak-toast__title { color: #fca5a5; }
+.arc-streak-toast--shield .arc-streak-toast__title { color: #93c5fd; }
+.arc-streak-toast--milestone .arc-streak-toast__title { color: #fcd34d; }
+.arc-streak-toast__text {
+  font-size: 0.82rem;
+  color: #a1a1aa;
+  line-height: 1.4;
+}
+
+/* ── Leaderboard near-miss ── */
+.lb-nearmiss {
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #fb923c;
+  background: rgba(251,146,60,0.08);
+  border: 1px solid rgba(251,146,60,0.2);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.5rem;
+  animation: nearMissPulse 2s ease infinite;
+}
+
+/* ── Leaderboard badge/status flex ── */
+.lb-you {
+  font-size: 0.7rem;
+  color: #a78bfa;
+  font-weight: 400;
+}
+.lb-rarity-legendary {
+  background: linear-gradient(135deg, rgba(250,204,21,0.08), rgba(245,158,11,0.04)) !important;
+}
+.lb-rarity-epic {
+  background: linear-gradient(135deg, rgba(168,85,247,0.08), rgba(139,92,246,0.04)) !important;
 }

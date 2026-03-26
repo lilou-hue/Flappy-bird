@@ -58,12 +58,18 @@
     { id: 'badge_star',    cat: 'badge', nameKey: 'arcShopStarBadge',    icon: '⭐', cost: 200 },
     { id: 'badge_skull',   cat: 'badge', nameKey: 'arcShopSkullBadge',   icon: '💀', cost: 300 },
     { id: 'badge_crown',   cat: 'badge', nameKey: 'arcShopCrownBadge',   icon: '👑', cost: 500 },
+    /* Achievement-locked prestige badges — cannot be bought, only earned */
+    { id: 'badge_diamond', cat: 'badge', nameKey: 'arcShopDiamondBadge', icon: '💎', cost: 0, requireAch: 'monthly_master', rarity: 'legendary' },
+    { id: 'badge_lightning',cat: 'badge', nameKey: 'arcShopLightningBadge',icon: '⚡', cost: 0, requireAch: 'arcade_rat', rarity: 'epic' },
+    { id: 'badge_ghost',   cat: 'badge', nameKey: 'arcShopGhostBadge',  icon: '👻', cost: 0, requireAch: 'explorer', rarity: 'epic' },
     { id: 'theme_ocean',   cat: 'theme', nameKey: 'arcShopOceanTheme',   icon: '🌊', cost: 300, vars: { '--accent': '#38bdf8', '--accent2': '#06b6d4', '--accent3': '#0ea5e9' } },
     { id: 'theme_flame',   cat: 'theme', nameKey: 'arcShopFlameTheme',   icon: '🔥', cost: 300, vars: { '--accent': '#f97316', '--accent2': '#ef4444', '--accent3': '#eab308' } },
     { id: 'theme_forest',  cat: 'theme', nameKey: 'arcShopForestTheme',  icon: '🌲', cost: 300, vars: { '--accent': '#22c55e', '--accent2': '#10b981', '--accent3': '#84cc16' } },
     { id: 'frame_gold',    cat: 'frame', nameKey: 'arcShopGoldFrame',    icon: '🥇', cost: 250 },
     { id: 'frame_rainbow', cat: 'frame', nameKey: 'arcShopRainbowFrame', icon: '🌈', cost: 350 },
     { id: 'frame_neon',    cat: 'frame', nameKey: 'arcShopNeonFrame',    icon: '💜', cost: 400 },
+    /* Streak shield — protects one streak break */
+    { id: 'streak_shield', cat: 'consumable', nameKey: 'arcShopStreakShield', icon: '🛡️', cost: 150 },
   ];
   SHOP_ITEMS.forEach(function(item) {
     Object.defineProperty(item, 'name', { get: function() { return t(item.nameKey, item.nameKey); }, enumerable: true });
@@ -331,6 +337,12 @@
     if (isNewBest && score > 0) coinsEarned += 10;
     coinsEarned += getThresholdBonus(gameId, score);
 
+    /* Apply chaos event multiplier */
+    var activeEvent = getActiveEvent();
+    if (activeEvent) {
+      coinsEarned = Math.floor(coinsEarned * activeEvent.multiplier);
+    }
+
     setState(s);
     addCoins(coinsEarned);
 
@@ -372,7 +384,7 @@
   function checkStreak() {
     var streak = getStreak();
     var d = today();
-    var result = { streak: streak.streak, coinsAwarded: 0, isNewDay: false };
+    var result = { streak: streak.streak, coinsAwarded: 0, isNewDay: false, streakBroken: false, shieldUsed: false, lostStreak: 0 };
 
     if (streak.lastDate === d) {
       result.streak = streak.streak;
@@ -389,15 +401,34 @@
     if (streak.lastDate === yStr) {
       streak.streak++;
     } else if (streak.lastDate) {
-      streak.streak = 1;
+      /* STREAK BROKEN — check for shield */
+      var shop = getShop();
+      var shieldIdx = shop.purchased.indexOf('streak_shield');
+      if (shieldIdx !== -1) {
+        /* Shield consumed — streak saved! */
+        shop.purchased.splice(shieldIdx, 1);
+        setShop(shop);
+        result.shieldUsed = true;
+        /* Don't increment, but don't reset either */
+      } else {
+        /* No shield — streak dies */
+        result.streakBroken = true;
+        result.lostStreak = streak.streak;
+        streak.streak = 1;
+      }
     } else {
       streak.streak = 1;
     }
 
     if (streak.streak > streak.longestStreak) streak.longestStreak = streak.streak;
 
-    /* Award daily streak coins */
-    var award = Math.min(streak.streak * 10, 50);
+    /* Award daily streak coins — scales harder */
+    var award = Math.min(streak.streak * 10, 100);
+    /* Milestone bonuses */
+    if (streak.streak === 7) award += 50;
+    if (streak.streak === 14) award += 100;
+    if (streak.streak === 30) award += 250;
+
     streak.lastDate = d;
     streak.coinsClaimedToday = true;
     setStreak(streak);
@@ -405,7 +436,80 @@
 
     result.streak = streak.streak;
     result.coinsAwarded = award;
+
+    /* Show streak-related popups */
+    if (result.streakBroken && result.lostStreak >= 3) {
+      setTimeout(function() { showStreakLostPopup(result.lostStreak); }, 500);
+    } else if (result.shieldUsed) {
+      setTimeout(function() { showStreakShieldPopup(streak.streak); }, 500);
+    } else if (streak.streak >= 7 && streak.streak % 7 === 0) {
+      setTimeout(function() { showStreakMilestonePopup(streak.streak); }, 500);
+    }
+
     return result;
+  }
+
+  /* ── Streak drama popups ── */
+  function showStreakLostPopup(lostStreak) {
+    var toast = document.createElement('div');
+    toast.className = 'arc-streak-toast arc-streak-toast--lost';
+    toast.innerHTML =
+      '<div class="arc-streak-toast__icon">💔</div>' +
+      '<div class="arc-streak-toast__body">' +
+        '<div class="arc-streak-toast__title">' + t('arcStreakLost', 'Streak Lost!') + '</div>' +
+        '<div class="arc-streak-toast__text">' + t('arcStreakLostMsg', 'Your {n}-day streak is gone. A Streak Shield could have saved it.').replace('{n}', lostStreak) + '</div>' +
+      '</div>';
+    document.body.appendChild(toast);
+    requestAnimationFrame(function () { toast.classList.add('arc-streak-toast--show'); });
+    setTimeout(function () {
+      toast.classList.remove('arc-streak-toast--show');
+      setTimeout(function () { toast.remove(); }, 400);
+    }, 5000);
+  }
+
+  function showStreakShieldPopup(currentStreak) {
+    var toast = document.createElement('div');
+    toast.className = 'arc-streak-toast arc-streak-toast--shield';
+    toast.innerHTML =
+      '<div class="arc-streak-toast__icon">🛡️</div>' +
+      '<div class="arc-streak-toast__body">' +
+        '<div class="arc-streak-toast__title">' + t('arcStreakSaved', 'Streak Saved!') + '</div>' +
+        '<div class="arc-streak-toast__text">' + t('arcStreakSavedMsg', 'Your Shield protected your {n}-day streak! Buy another before it happens again.').replace('{n}', currentStreak) + '</div>' +
+      '</div>';
+    document.body.appendChild(toast);
+    requestAnimationFrame(function () { toast.classList.add('arc-streak-toast--show'); });
+    setTimeout(function () {
+      toast.classList.remove('arc-streak-toast--show');
+      setTimeout(function () { toast.remove(); }, 400);
+    }, 4000);
+  }
+
+  function showStreakMilestonePopup(streak) {
+    var toast = document.createElement('div');
+    toast.className = 'arc-streak-toast arc-streak-toast--milestone';
+    toast.innerHTML =
+      '<div class="arc-streak-toast__icon">🔥</div>' +
+      '<div class="arc-streak-toast__body">' +
+        '<div class="arc-streak-toast__title">' + streak + '-Day Streak!</div>' +
+        '<div class="arc-streak-toast__text">' + t('arcStreakMilestone', 'You\'re on fire. Don\'t let it die.') + '</div>' +
+      '</div>';
+    document.body.appendChild(toast);
+    requestAnimationFrame(function () { toast.classList.add('arc-streak-toast--show'); });
+    setTimeout(function () {
+      toast.classList.remove('arc-streak-toast--show');
+      setTimeout(function () { toast.remove(); }, 400);
+    }, 3500);
+  }
+
+  /* ── Chaos Events (time-based multipliers) ── */
+  function getActiveEvent() {
+    var hour = new Date().getUTCHours();
+    /* Double coins: 12-13 UTC and 20-21 UTC daily */
+    if (hour === 12 || hour === 20) return { type: 'double_coins', label: '🎰 DOUBLE COINS HOUR', multiplier: 2 };
+    /* Weekend bonus: Sat/Sun */
+    var day = new Date().getUTCDay();
+    if (day === 0 || day === 6) return { type: 'weekend_bonus', label: '🎉 WEEKEND BONUS', multiplier: 1.5 };
+    return null;
   }
 
   function getDailyChallenges() {
@@ -618,12 +722,39 @@
     var coinsNewBest = isNewBest ? 10 : 0;
     var percentile = getPercentileText(gameId, score);
     var challengeLink = encodeChallengeLink(gameId, score);
+    var activeEvent = getActiveEvent();
+    var eventMult = activeEvent ? activeEvent.multiplier : 1;
+    var totalCoins = Math.floor((coinsBase + coinsNewBest + thresholdBonus) * eventMult);
+
+    /* Near-miss: how close to next threshold */
+    var nearMissText = '';
+    if (game.thresholds) {
+      for (var ti = 0; ti < game.thresholds.length; ti++) {
+        if (score < game.thresholds[ti]) {
+          var diff = game.thresholds[ti] - score;
+          var pctLabels = ['Top 40%', 'Top 15%', 'Top 3%'];
+          nearMissText = 'Just ' + diff + ' more for ' + pctLabels[ti] + '!';
+          break;
+        }
+      }
+    }
+
+    /* Daily challenges status */
+    var challenges = getDailyChallenges();
+    var pendingChallenges = challenges.filter(function(c) { return !c.completed; });
+    var completedNow = challenges.filter(function(c) { return c.completed; });
+
+    /* Streak info */
+    var streak = getStreak();
+    var streakAtRisk = streak.streak >= 3 && streak.lastDate !== today();
 
     var html =
       '<div class="arc-scorecard__card">' +
+        (activeEvent ? '<div class="arc-scorecard__event">' + activeEvent.label + '</div>' : '') +
         '<h2 class="arc-scorecard__title">' + game.name + '</h2>' +
         (isNewBest ? '<div class="arc-scorecard__newbest">' + t('arcNewBest', 'New Best!') + '</div>' : '') +
         (percentile ? '<div class="arc-scorecard__percentile">' + percentile + '</div>' : '') +
+        (nearMissText && !percentile ? '<div class="arc-scorecard__nearmiss">' + nearMissText + '</div>' : '') +
         '<div class="arc-scorecard__scores">' +
           '<div class="arc-scorecard__score">' +
             '<div class="arc-scorecard__score-label">' + t('score', 'Score') + '</div>' +
@@ -638,8 +769,28 @@
           '<div class="arc-scorecard__coins-row"><span>' + t('arcCompletion', 'Completion') + '</span><span>+' + coinsBase + '</span></div>' +
           (coinsNewBest ? '<div class="arc-scorecard__coins-row arc-scorecard__coins-row--bonus"><span>' + t('arcNewBest', 'New Best!') + '</span><span>+' + coinsNewBest + '</span></div>' : '') +
           (thresholdBonus ? '<div class="arc-scorecard__coins-row arc-scorecard__coins-row--bonus"><span>' + t('arcScoreBonus', 'Score Bonus') + '</span><span>+' + thresholdBonus + '</span></div>' : '') +
-          '<div class="arc-scorecard__coins-total"><span>' + t('arcTotal', 'Total') + '</span><span>+' + (coinsBase + coinsNewBest + thresholdBonus) + ' ' + t('arcCoins', 'coins') + '</span></div>' +
+          (activeEvent ? '<div class="arc-scorecard__coins-row arc-scorecard__coins-row--event"><span>' + activeEvent.label + '</span><span>×' + activeEvent.multiplier + '</span></div>' : '') +
+          '<div class="arc-scorecard__coins-total"><span>' + t('arcTotal', 'Total') + '</span><span>+' + totalCoins + ' ' + t('arcCoins', 'coins') + '</span></div>' +
         '</div>' +
+        /* Daily challenges section */
+        (pendingChallenges.length > 0 ? (
+          '<div class="arc-scorecard__challenges">' +
+            '<div class="arc-scorecard__challenges-title">' + t('arcDailyChallenges', 'Daily Challenges') + '</div>' +
+            challenges.map(function(c) {
+              return '<div class="arc-scorecard__challenge ' + (c.completed ? 'arc-scorecard__challenge--done' : '') + '">' +
+                '<span>' + (c.completed ? '✅' : '⬜') + ' ' + c.desc + '</span>' +
+                '<span class="arc-scorecard__challenge-reward">+' + c.reward + '</span>' +
+              '</div>';
+            }).join('') +
+          '</div>'
+        ) : '') +
+        /* Streak display */
+        (streak.streak > 0 ? (
+          '<div class="arc-scorecard__streak">' +
+            '<span>🔥 ' + streak.streak + '-day streak</span>' +
+            (streakAtRisk ? '<span class="arc-scorecard__streak-warning">⚠️ Play tomorrow or lose it!</span>' : '') +
+          '</div>'
+        ) : '') +
         '<div class="arc-scorecard__actions">' +
           '<button class="arc-scorecard__btn arc-scorecard__btn--challenge" title="Challenge a friend">\u2694\uFE0F ' + t('arcChallenge', 'Challenge Friend') + '</button>' +
           '<button class="arc-scorecard__btn arc-scorecard__btn--share" title="Copy viral share">' + t('arcShare', 'Share') + '</button>' +
@@ -730,10 +881,23 @@
     var nav = document.createElement('nav');
     nav.className = 'arc-nav' + (isGamePage ? ' arc-nav--compact' : '');
 
+    /* Check streak status for urgency indicator */
+    var streakAtRisk = streak.streak >= 3 && streak.lastDate !== today();
+    var streakClass = streakAtRisk ? ' arc-nav__streak--atrisk' : (streak.streak >= 7 ? ' arc-nav__streak--hot' : '');
+    var activeEvent = getActiveEvent();
+
+    /* Pending daily challenges count */
+    var challenges = getDailyChallenges();
+    var pendingCount = challenges.filter(function(c) { return !c.completed; }).length;
+
     if (isGamePage) {
       nav.innerHTML =
         '<a href="/" class="arc-nav__link arc-nav__link--home" title="Home">&#x1F3E0;</a>' +
-        '<div class="arc-nav__coins"><span class="arc-coin-icon">&#x1FA99;</span> <span class="arc-coin-value">' + coins + '</span></div>';
+        '<div class="arc-nav__right">' +
+          (activeEvent ? '<div class="arc-nav__event">' + activeEvent.label + '</div>' : '') +
+          (streak.streak > 0 ? '<div class="arc-nav__streak' + streakClass + '" title="' + streak.streak + '-day streak' + (streakAtRisk ? ' — AT RISK!' : '') + '">&#x1F525; ' + streak.streak + '</div>' : '') +
+          '<div class="arc-nav__coins"><span class="arc-coin-icon">&#x1FA99;</span> <span class="arc-coin-value">' + coins + '</span></div>' +
+        '</div>';
     } else {
       nav.innerHTML =
         '<div class="arc-nav__left">' +
@@ -744,7 +908,9 @@
           '<a href="/profile/" class="arc-nav__link' + (window.location.pathname.indexOf('/profile') === 0 ? ' arc-nav__link--active' : '') + '">' + t('arcNavProfile', 'Profile') + '</a>' +
         '</div>' +
         '<div class="arc-nav__right">' +
-          (streak.streak > 0 ? '<div class="arc-nav__streak" title="' + streak.streak + '-day streak">&#x1F525; ' + streak.streak + '</div>' : '') +
+          (activeEvent ? '<div class="arc-nav__event">' + activeEvent.label + '</div>' : '') +
+          (pendingCount > 0 ? '<div class="arc-nav__challenges" title="' + pendingCount + ' challenges remaining">📋 ' + pendingCount + '</div>' : '') +
+          (streak.streak > 0 ? '<div class="arc-nav__streak' + streakClass + '" title="' + streak.streak + '-day streak' + (streakAtRisk ? ' — AT RISK!' : '') + '">&#x1F525; ' + streak.streak + '</div>' : '') +
           '<div class="arc-nav__coins"><span class="arc-coin-icon">&#x1FA99;</span> <span class="arc-coin-value">' + coins + '</span></div>' +
         '</div>';
     }
@@ -786,6 +952,13 @@
     decodeChallengeLink: decodeChallengeLink,
     showChallengeBanner: showChallengeBanner,
     getPercentileText: getPercentileText,
+    getActiveEvent: getActiveEvent,
+    getEquippedBadge: function() {
+      var shop = getShop();
+      if (!shop.equipped.badge) return null;
+      var item = SHOP_ITEMS.find(function(i) { return i.id === shop.equipped.badge; });
+      return item || null;
+    },
     GAMES: GAMES,
     GAME_IDS: GAME_IDS,
     applyTheme: applyTheme,
