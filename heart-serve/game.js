@@ -1925,10 +1925,10 @@
   /* ════════════════════════════════════════════════════════════
      AFFECTION SYSTEM
      ════════════════════════════════════════════════════════════ */
-  function addAffection(charKey, amount) {
+  function addAffection(charKey, amount, silent) {
     state.affection[charKey] = Math.max(0, Math.min(MAX_AFFECTION, (state.affection[charKey] || 0) + amount));
     saveState();
-    if (amount >= 3 && typeof HSAudio !== 'undefined') HSAudio.heartGain();
+    if (!silent && amount >= 3 && typeof HSAudio !== 'undefined') HSAudio.heartGain();
   }
 
   function getAffectionLevel(charKey) {
@@ -2122,7 +2122,10 @@
       if (dayEvent) {
         eventBanner.textContent = dayEvent.emoji + ' ' + dayEvent.name + ' — ' + dayEvent.desc;
         eventBanner.style.display = '';
-        if (typeof HSAudio !== 'undefined') HSAudio.eventFanfare();
+        if (typeof HSAudio !== 'undefined' && !state._fanfareDay || state._fanfareDay !== state.day) {
+          state._fanfareDay = state.day;
+          HSAudio.eventFanfare();
+        }
       } else {
         eventBanner.style.display = 'none';
       }
@@ -2480,8 +2483,10 @@
           btn.textContent = _t('hsTimePong');
           handler = function() { goToMatch(charKey); };
         }
-        btn.addEventListener('click', handler);
-        btn.addEventListener('touchend', function(e) { e.preventDefault(); handler(); });
+        var fired = false;
+        var safeHandler = function() { if (fired) return; fired = true; handler(); };
+        btn.addEventListener('click', safeHandler);
+        btn.addEventListener('touchend', function(e) { e.preventDefault(); safeHandler(); });
         $('choicesPanel').appendChild(btn);
       }, 800);
     }
@@ -3222,7 +3227,7 @@
     affBonus = Math.round(affBonus * mult);
     // Rally fever bonus
     if (pong && pong.maxRally >= 10) { affBonus += 2; }
-    addAffection(charKey, affBonus);
+    addAffection(charKey, affBonus, true); // silent: win/lose sounds already played
 
     // Update mood based on result
     if (!state.mood) state.mood = {};
