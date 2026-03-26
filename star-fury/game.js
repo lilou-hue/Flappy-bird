@@ -139,6 +139,7 @@ let nebulae = []; // background nebula patches
 let titleDebris = []; // floating debris for title screen
 let debrisBelt = []; // asteroid/debris belt between waves
 let _frameTime = 0; // accumulated time for visual effects
+let _dt = 0; // last frame delta time, accessible to draw()
 
 /* Input state */
 const keys = {};
@@ -1697,7 +1698,7 @@ function gameOver() {
   if (typeof Leaderboard !== 'undefined') Leaderboard.submitScore('star-fury', game.score);
   if (typeof Arcade !== 'undefined') {
     Arcade.onGameOver('star-fury', game.score);
-    document.body.appendChild(Arcade.createScoreCard('star-fury', game.score, achStats.bestScore||0));
+    document.body.appendChild(Arcade.createScoreCard('star-fury', game.score, game.best));
   }
 }
 
@@ -2112,7 +2113,7 @@ function draw() {
   if (debrisBelt.length > 0) drawDebrisBelt();
 
   if (game.state === 'title') {
-    drawTitleScreen(dt);
+    drawTitleScreen(_dt);
   } else if (game.state === 'playing') {
     drawPowerups();
     drawEnemyBullets();
@@ -2160,6 +2161,7 @@ function gameLoop(timestamp) {
   if (!game.lastTime) { game.lastTime = timestamp; return; }
   const dt = Math.min((timestamp - game.lastTime) / 1000, 0.05);
   game.lastTime = timestamp;
+  _dt = dt;
   _frameTime += dt;
 
   if (game.state === 'title') {
@@ -2177,8 +2179,6 @@ function gameLoop(timestamp) {
     updateWaveSystem(dt);
     updateEffects(dt);
     checkCollisions();
-    checkAch();
-    showAchPopup();
   } else if (game.state === 'gameover') {
     updateStars(dt);
     updateParticles(dt);

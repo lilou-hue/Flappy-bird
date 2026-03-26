@@ -1673,8 +1673,9 @@ document.addEventListener("touchstart", (event) => {
 
 restartButton.addEventListener("click", () => {
   resetGame();
+  startGame();
 });
-document.addEventListener('arcade-restart', () => { resetGame(); });
+document.addEventListener('arcade-restart', () => { resetGame(); startGame(); });
 
 /* --- Mute toggle --- */
 const muteButton = document.getElementById("muteButton");

@@ -352,6 +352,7 @@ let notes = [];
 let score = 0;
 let bestScore = parseInt(localStorage.getItem('beatDropBest') || '0');
 let combo = 0;
+let sessionBestCombo = 0;
 let multiplier = 1;
 let perfectStreak = 0;
 let lives = MAX_LIVES;
@@ -379,6 +380,7 @@ function resetGame() {
   notes = [];
   score = 0;
   combo = 0;
+  sessionBestCombo = 0;
   multiplier = 1;
   perfectStreak = 0;
   lives = practiceMode ? 999 : MAX_LIVES;
@@ -466,6 +468,7 @@ function hitNote(lane) {
   if (pts > 0) {
     closest.hit = true;
     combo++;
+    if (combo > sessionBestCombo) sessionBestCombo = combo;
     totalHits++;
     multiplier = Math.min(8, 1 + Math.floor(combo / 10));
     score += pts * multiplier;
@@ -829,7 +832,7 @@ function render() {
     ctx.fillText(`${I18N.t('score') || 'Score'}: ${score}`, CW / 2, CH / 2 + 5);
     ctx.font = '18px "Segoe UI", system-ui, sans-serif';
     ctx.fillStyle = 'rgba(253,121,168,0.5)';
-    ctx.fillText(`${I18N.t('bdBestCombo') || 'Best Combo'}: ${combo}`, CW / 2, CH / 2 + 35);
+    ctx.fillText(`${I18N.t('bdBestCombo') || 'Best Combo'}: ${sessionBestCombo}`, CW / 2, CH / 2 + 35);
     ctx.font = '16px "Segoe UI", system-ui, sans-serif';
     ctx.fillStyle = 'rgba(255,200,220,0.4)';
     ctx.fillText(I18N.t('tapToRestart') || 'Tap to restart', CW / 2, CH / 2 + 70);
