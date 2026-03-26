@@ -1113,7 +1113,8 @@ function defeatBoss() {
     spawnParticle(world.boss.x, world.boss.y, Math.cos(angle) * speed, Math.sin(angle) * speed, 1.0, world.boss.hue + Math.random() * 60, 3);
   }
   if (Audio.bossDefeat) Audio.bossDefeat();
-  setTimeout(() => { world.boss = null; }, 2000);
+  const defeatedBoss = world.boss;
+  setTimeout(() => { if (world.boss === defeatedBoss) world.boss = null; }, 2000);
 }
 
 /* --- Crash --- */

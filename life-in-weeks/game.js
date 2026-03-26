@@ -392,6 +392,13 @@
         }
     });
 
+    document.addEventListener('arcade-restart', function () {
+        birthday = null;
+        lastWeeksLived = null;
+        resetGrid();
+        inputSection.classList.remove('faded');
+    });
+
     // Init
     populateSelects();
     buildGrid();

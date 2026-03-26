@@ -237,7 +237,7 @@
     activateShopPower('coinx2_1h');
     activateShopPower('magnet_24h');
     activateShopPower('lucky_next');
-    shop.purchased.push('streak_shield');
+    if (shop.purchased.indexOf('streak_shield') === -1) shop.purchased.push('streak_shield');
     setShop(shop);
   }
 
@@ -408,6 +408,7 @@
   var _lastGameResult = null; /* cached for createScoreCard fallback */
 
   function onGameOver(gameId, score) {
+    _lastGameResult = null; /* clear stale data before computing new result */
     var now = Date.now();
     if (now - _lastGameOverTime < 1000) return { coinsEarned: 0, isNewBest: false, newAchievements: [], challengesCompleted: [], luckyDrop: null, holyMoment: null, powerUpUsed: null };
     _lastGameOverTime = now;
@@ -423,7 +424,8 @@
 
     /* Save last score for improvement tracking */
     if (!s.lastScores) s.lastScores = {};
-    var previousScore = s.lastScores[gameId] || 0;
+    if (!s.previousScores) s.previousScores = {};
+    s.previousScores[gameId] = s.lastScores[gameId] || 0;
     s.lastScores[gameId] = score;
 
     /* Track plays */
@@ -2038,8 +2040,8 @@
     var lines = [];
 
     /* Improvement vs last run */
-    if (s.lastScores && s.lastScores[gameId]) {
-      var prev = s.lastScores[gameId];
+    if (s.previousScores && s.previousScores[gameId]) {
+      var prev = s.previousScores[gameId];
       if (score > prev) {
         lines.push({ icon: '📈', text: '+' + (score - prev) + ' vs your last run' });
       } else if (score === prev) {

@@ -326,6 +326,16 @@
     I18N.applyDOM();
   });
 
+  function resetGame() {
+    remaining = STARTING_AMOUNT;
+    items.forEach(function (item) { item.qty = 0; });
+    congratsEl.classList.add('hidden');
+    buildGrid();
+    updateAll();
+  }
+
+  document.addEventListener('arcade-restart', resetGame);
+
   // Init
   buildGrid();
   updateAll();

@@ -3367,6 +3367,7 @@
      ENDING
      ════════════════════════════════════════════════════════════ */
   function triggerEnding() {
+    if (state.ended) return;
     // Sort characters by affection
     var sorted = getCharKeys().slice().sort(function(a, b) { return (state.affection[b] || 0) - (state.affection[a] || 0); });
     var bestKey = sorted[0], bestVal = state.affection[bestKey] || 0;
@@ -3422,9 +3423,10 @@
 
     // Arcade integration
     if (typeof Arcade !== 'undefined') {
-      Arcade.onGameOver('heart-serve', total);
       var best = parseInt(localStorage.getItem('heartServeBest') || '0');
+      Arcade.onGameOver('heart-serve', total);
       if (total > best) localStorage.setItem('heartServeBest', String(total));
+      document.body.appendChild(Arcade.createScoreCard('heart-serve', total, best));
     }
 
     // Spawn hearts for good endings
@@ -3499,10 +3501,13 @@
 
   // Arcade restart support
   document.addEventListener('arcade-restart', function() {
-    if (typeof _particleInterval !== 'undefined') clearInterval(_particleInterval);
+    clearInterval(_particleInterval);
+    _particleInterval = setInterval(updateParticles, 1000 / 30);
     localStorage.removeItem(getSaveKey());
     state = defaultState();
-    location.reload();
+    saveState();
+    showScreen('title');
+    initTitle();
   });
 
   /* ════════════════════════════════════════════════════════════
