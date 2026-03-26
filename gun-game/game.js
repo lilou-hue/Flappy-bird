@@ -2474,9 +2474,7 @@ const flap = () => {
   Audio.resume();
 
   if (gameState.isGameOver) {
-    if (gunState.victoryTriggered) {
-      fullGunReset();
-    }
+    fullGunReset();
     resetGame();
     startGame();
   } else if (!gameState.isRunning) {

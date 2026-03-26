@@ -448,7 +448,10 @@ function endMatch() {
   bestEl.textContent = bestKills;
   scoreEl.textContent = matchKills;
   if (typeof Leaderboard !== 'undefined') Leaderboard.submitScore('rivals', matchKills);
-  if (typeof Arcade !== 'undefined') Arcade.onGameOver('rivals', matchKills);
+  if (typeof Arcade !== 'undefined') {
+    Arcade.onGameOver('rivals', matchKills);
+    document.body.appendChild(Arcade.createScoreCard('rivals', matchKills, bestKills));
+  }
   // Check comeback: p1 won match while p2 had 4 rounds
   if (p1Score >= ROUNDS_TO_WIN && p2Score === 4) achStats.comebacks++;
   Audio.gameOver();

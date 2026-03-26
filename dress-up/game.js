@@ -7280,6 +7280,7 @@ function takeScreenshot() {
    CHALLENGE MODE
    ================================================================ */
 function startChallenge() {
+  if (challengeInterval) { clearInterval(challengeInterval); challengeInterval = null; }
   Audio.init(); Audio.resume(); Audio.challengeStart();
   challengeActive = true;
   equipped = {};
@@ -7315,6 +7316,7 @@ function startChallenge() {
 }
 
 function endChallenge() {
+  if (!challengeActive) return;
   clearInterval(challengeInterval);
   challengeActive = false;
   Audio.challengeEnd();

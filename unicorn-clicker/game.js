@@ -449,7 +449,11 @@
 
   function resetGame() {
     state = defaultState();
+    frenzyTimer = 60;
+    frenzyActive = false;
+    frenzyTimeLeft = 0;
     try { localStorage.removeItem(SAVE_KEY); } catch(e) {}
+    try { localStorage.removeItem(UC_LAST_REPORTED_KEY); } catch(e) {}
     particles = [];
     floatingTexts = [];
     shootingStars = [];
