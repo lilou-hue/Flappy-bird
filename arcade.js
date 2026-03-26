@@ -470,16 +470,15 @@
     }
 
     /* Apply coin multiplier power-up */
-    if (puDef && puDef.multiplier) {
-      coinsEarned = Math.floor(coinsEarned * puDef.multiplier);
-    }
-
-    /* Apply shop powers */
     var shopPowers = getShopPowers();
     var now2 = Date.now();
-    if (shopPowers.coinx2 && shopPowers.coinx2.expires > now2) {
+    if (puDef && puDef.multiplier) {
+      coinsEarned = Math.floor(coinsEarned * puDef.multiplier);
+    } else if (shopPowers.coinx2 && shopPowers.coinx2.expires > now2) {
+      /* Only apply shop coinx2 if micro-choice didn't already double */
       coinsEarned = Math.floor(coinsEarned * 2);
     }
+
     if (shopPowers.magnet && shopPowers.magnet.expires > now2) {
       coinsEarned += 10;
     }
@@ -1631,7 +1630,7 @@
         function updateStreakCountdown() {
           var now = new Date();
           var midnight = new Date(now);
-          midnight.setHours(24, 0, 0, 0);
+          midnight.setUTCHours(24, 0, 0, 0);
           var msLeft = midnight - now;
           var hoursLeft = Math.floor(msLeft / 3600000);
           var minsLeft = Math.floor((msLeft % 3600000) / 60000);
