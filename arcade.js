@@ -175,8 +175,20 @@
   }
 
   function updateCoinDisplays() {
+    var coins = getState().coins;
     document.querySelectorAll('.arc-coin-value').forEach(function (el) {
-      el.textContent = getState().coins;
+      var prev = parseInt(el.textContent) || 0;
+      el.textContent = coins;
+      /* Coin pop micro-reward animation */
+      if (coins > prev) {
+        el.classList.add('arc-coin-pop');
+        var parent = el.closest('.arc-nav__coins');
+        if (parent) {
+          parent.classList.add('arc-coin-animating');
+          setTimeout(function() { parent.classList.remove('arc-coin-animating'); }, 300);
+        }
+        setTimeout(function() { el.classList.remove('arc-coin-pop'); }, 500);
+      }
     });
   }
 
@@ -382,6 +394,10 @@
 
     /* Check quest milestones */
     var questMilestones = checkQuestMilestones();
+
+    /* Update player memory + check secret achievements */
+    updatePlayerMemory(gameId, score);
+    var newSecrets = checkSecretAchievements(gameId, score, isNewBest);
 
     /* Analytics */
     track('game_over', { game_id: gameId, score: score, is_new_best: isNewBest, coins_earned: coinsEarned });
@@ -1214,6 +1230,12 @@
     /* Dramatic game over message */
     var dramatic = getGameOverMessage(gameId, score, best || 0, isNewBest);
 
+    /* Loss = progress */
+    var lossProgress = (!isNewBest && score > 0) ? getLossProgressText(gameId, score, best || 0) : null;
+
+    /* Return trigger */
+    var returnTrigger = getReturnTrigger();
+
     /* Daily challenges status */
     var challenges = getDailyChallenges();
     var pendingChallenges = challenges.filter(function(c) { return !c.completed; });
@@ -1232,6 +1254,7 @@
         (isNewBest ? '<div class="arc-scorecard__newbest">' + t('arcNewBest', 'New Best!') + '</div>' : '') +
         (percentile ? '<div class="arc-scorecard__percentile">' + percentile + '</div>' : '') +
         (nearMissText && !percentile ? '<div class="arc-scorecard__nearmiss">' + nearMissText + '</div>' : '') +
+        (lossProgress ? '<div class="arc-scorecard__progress">' + lossProgress.icon + ' ' + lossProgress.text + '</div>' : '') +
         '<div class="arc-scorecard__scores">' +
           '<div class="arc-scorecard__score">' +
             '<div class="arc-scorecard__score-label">' + t('score', 'Score') + '</div>' +
@@ -1268,6 +1291,7 @@
             (streakAtRisk ? '<span class="arc-scorecard__streak-warning">⚠️ Play tomorrow or lose it!</span>' : '') +
           '</div>'
         ) : '') +
+        (returnTrigger ? '<div class="arc-scorecard__return-trigger">💡 ' + returnTrigger + '</div>' : '') +
         '<div class="arc-scorecard__actions">' +
           '<button class="arc-scorecard__btn arc-scorecard__btn--again" autofocus>' + t('arcPlayAgain', 'Play Again') + ' &#x25B6;</button>' +
           '<div class="arc-scorecard__actions-secondary">' +
@@ -1418,11 +1442,421 @@
     applyTheme();
   }
 
+  /* ═══════════════════════════════════════════════════════════════
+     PLAYER MEMORY — The game remembers YOU
+     ═══════════════════════════════════════════════════════════════ */
+
+  function getPlayerMemory() {
+    return loadJSON('arcade_memory', {
+      firstVisit: null,
+      totalVisits: 0,
+      lastVisitDate: null,
+      sessionScores: {},      /* gameId -> [last 5 scores] */
+      deathZones: {},          /* gameId -> { lowScoreCount, highScoreCount } */
+      longestAbsence: 0,
+      comebacks: 0,
+      midnightPlays: 0,
+      zeroScoreCount: 0,
+      perfectStreakGames: 0,   /* games where every score improved */
+      secretsFound: [],
+    });
+  }
+  function setPlayerMemory(m) { saveJSON('arcade_memory', m); }
+
+  function updatePlayerMemory(gameId, score) {
+    var m = getPlayerMemory();
+    var d = today();
+
+    /* Track session scores (keep last 5 per game) */
+    if (!m.sessionScores[gameId]) m.sessionScores[gameId] = [];
+    m.sessionScores[gameId].push(score);
+    if (m.sessionScores[gameId].length > 5) m.sessionScores[gameId].shift();
+
+    /* Detect struggle zones */
+    if (!m.deathZones[gameId]) m.deathZones[gameId] = { low: 0, high: 0, total: 0 };
+    m.deathZones[gameId].total++;
+    var game = GAMES[gameId];
+    if (game && game.thresholds) {
+      if (score < game.thresholds[0] * 0.5) m.deathZones[gameId].low++;
+      if (score >= game.thresholds[1]) m.deathZones[gameId].high++;
+    }
+
+    /* Track zero scores */
+    if (score === 0) m.zeroScoreCount = (m.zeroScoreCount || 0) + 1;
+
+    /* Midnight plays */
+    var hour = new Date().getHours();
+    if (hour >= 0 && hour < 4) m.midnightPlays = (m.midnightPlays || 0) + 1;
+
+    setPlayerMemory(m);
+  }
+
+  function recordVisit() {
+    var m = getPlayerMemory();
+    var d = today();
+    if (!m.firstVisit) m.firstVisit = d;
+
+    /* Calculate absence */
+    if (m.lastVisitDate && m.lastVisitDate !== d) {
+      var last = new Date(m.lastVisitDate);
+      var now = new Date(d);
+      var diffDays = Math.floor((now - last) / 86400000);
+      if (diffDays > (m.longestAbsence || 0)) m.longestAbsence = diffDays;
+      if (diffDays > 2) m.comebacks = (m.comebacks || 0) + 1;
+    }
+
+    m.totalVisits = (m.totalVisits || 0) + 1;
+    m.lastVisitDate = d;
+    setPlayerMemory(m);
+  }
+
+  /* ── Welcome Back Messages — creepy in a good way ── */
+  function getWelcomeBackMessage() {
+    var m = getPlayerMemory();
+    var s = getState();
+    var streak = getStreak();
+    var d = today();
+    var messages = [];
+
+    /* First ever visit */
+    if (s.totalGamesPlayed === 0) {
+      return { icon: '👋', text: 'Fresh meat. Pick a game. We dare you.', type: 'welcome' };
+    }
+
+    /* Streak broken */
+    if (streak.streak === 0 && s.totalGamesPlayed > 5) {
+      messages.push({ icon: '😈', text: 'Welcome back. Your streak? Dead. Start a new one.', type: 'streak' });
+    }
+    if (streak.streak === 1 && m.lastVisitDate && m.lastVisitDate !== d) {
+      var last = new Date(m.lastVisitDate);
+      var diffDays = Math.floor((new Date(d) - last) / 86400000);
+      if (diffDays >= 3) {
+        messages.push({ icon: '👀', text: 'Gone for ' + diffDays + ' days... we noticed.', type: 'absence' });
+      }
+      if (diffDays >= 7) {
+        messages.push({ icon: '💀', text: diffDays + ' days?! We almost deleted your profile. (jk... maybe)', type: 'absence' });
+      }
+    }
+
+    /* Streak at risk */
+    if (streak.streak >= 3 && streak.lastDate !== d) {
+      var yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+      if (streak.lastDate === yesterday.toISOString().slice(0, 10)) {
+        messages.push({ icon: '⚠️', text: 'Your ' + streak.streak + '-day streak dies at midnight. Just saying.', type: 'urgency' });
+      }
+    }
+
+    /* Hot streak */
+    if (streak.streak >= 7) {
+      messages.push({ icon: '🔥', text: streak.streak + '-day streak. You\'re scaring the other players.', type: 'flex' });
+    }
+
+    /* Improvement trend */
+    var favGame = null;
+    var maxPlays = 0;
+    Object.keys(s.gamesPlayed || {}).forEach(function(gid) {
+      if (s.gamesPlayed[gid] > maxPlays) { maxPlays = s.gamesPlayed[gid]; favGame = gid; }
+    });
+    if (favGame && m.sessionScores[favGame] && m.sessionScores[favGame].length >= 3) {
+      var scores = m.sessionScores[favGame];
+      var recent = scores.slice(-3);
+      var improving = recent[2] > recent[1] && recent[1] > recent[0];
+      var declining = recent[2] < recent[1] && recent[1] < recent[0];
+      if (improving) {
+        messages.push({ icon: '📈', text: 'Your ' + GAMES[favGame].name + ' scores are climbing. Keep going.', type: 'growth' });
+      }
+      if (declining) {
+        messages.push({ icon: '📉', text: 'Your ' + GAMES[favGame].name + ' scores dropped 3 in a row. Slump?', type: 'challenge' });
+      }
+    }
+
+    /* Struggle detection */
+    if (favGame && m.deathZones[favGame] && m.deathZones[favGame].total >= 5) {
+      var dz = m.deathZones[favGame];
+      var lowRate = dz.low / dz.total;
+      if (lowRate > 0.6) {
+        messages.push({ icon: '🧠', text: 'You keep dying early in ' + GAMES[favGame].name + '. Slow down and survive the first 10 seconds.', type: 'tip' });
+      }
+    }
+
+    /* Comeback */
+    if ((m.comebacks || 0) >= 2) {
+      messages.push({ icon: '🔄', text: 'You keep leaving and coming back. We knew you couldn\'t resist.', type: 'attachment' });
+    }
+
+    /* Night owl */
+    if ((m.midnightPlays || 0) >= 3) {
+      messages.push({ icon: '🦉', text: 'Playing at midnight again? Your sleep schedule disapproves.', type: 'personality' });
+    }
+
+    /* Coin hoarder */
+    if (s.coins >= 500 && (s.totalCoinsSpent || 0) < 50) {
+      messages.push({ icon: '🐉', text: s.coins + ' coins and nothing spent. The shop is right there.', type: 'nudge' });
+    }
+
+    /* Quest progress tease */
+    var quest = getQuestProgress();
+    if (quest.nextTier && quest.progress >= 80) {
+      messages.push({ icon: quest.icon, text: 'Almost ' + quest.nextTier.title + ' rank. ' + Math.round(100 - quest.progress) + '% to go.', type: 'quest' });
+    }
+
+    if (!messages.length) {
+      var generic = [
+        { icon: '⚡', text: 'Back for more punishment? Good.', type: 'personality' },
+        { icon: '🎮', text: 'The arcade missed you. (The games didn\'t. They\'re ruthless.)', type: 'personality' },
+        { icon: '😏', text: 'Let\'s see if you\'ve gotten any better.', type: 'personality' },
+        { icon: '🎯', text: s.totalGamesPlayed + ' games played. How many before you\'re actually good?', type: 'personality' },
+      ];
+      messages = generic;
+    }
+
+    return messages[Math.floor(Math.random() * messages.length)];
+  }
+
+  function showWelcomeBack() {
+    var msg = getWelcomeBackMessage();
+    if (!msg) return;
+
+    var toast = document.createElement('div');
+    toast.className = 'arc-welcome-toast';
+    toast.innerHTML =
+      '<div class="arc-welcome-toast__icon">' + msg.icon + '</div>' +
+      '<div class="arc-welcome-toast__text">' + msg.text + '</div>' +
+      '<button class="arc-welcome-toast__close">&times;</button>';
+    toast.querySelector('.arc-welcome-toast__close').addEventListener('click', function() {
+      toast.classList.remove('arc-welcome-toast--show');
+      setTimeout(function() { toast.remove(); }, 400);
+    });
+    document.body.appendChild(toast);
+    setTimeout(function() { toast.classList.add('arc-welcome-toast--show'); }, 800);
+    setTimeout(function() {
+      toast.classList.remove('arc-welcome-toast--show');
+      setTimeout(function() { toast.remove(); }, 400);
+    }, 8000);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     RETURN TRIGGERS — Make them think about it later
+     ═══════════════════════════════════════════════════════════════ */
+
+  function getReturnTrigger() {
+    var s = getState();
+    var streak = getStreak();
+    var quest = getQuestProgress();
+    var triggers = [];
+
+    /* Tomorrow's challenge teaser */
+    var tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    var tomorrowSeed = dateSeed(tomorrow.toISOString().slice(0, 10));
+    var rng = mulberry32(tomorrowSeed);
+    var scoreGames = GAME_IDS.filter(function(id) { return id !== 'unicorn-clicker'; });
+    var tomorrowGame = scoreGames[Math.floor(rng() * scoreGames.length)];
+    triggers.push('Tomorrow\'s challenge: ' + GAMES[tomorrowGame].name + '. Prepare yourself 👀');
+
+    /* Streak milestone approaching */
+    if (streak.streak > 0) {
+      var nextMilestone = [3, 7, 14, 30].find(function(m) { return streak.streak < m; });
+      if (nextMilestone) {
+        var daysLeft = nextMilestone - streak.streak;
+        if (daysLeft <= 3) {
+          triggers.push(daysLeft + ' more day' + (daysLeft > 1 ? 's' : '') + ' until ' + nextMilestone + '-day streak reward 🔥');
+        }
+      }
+    }
+
+    /* Time-locked tease */
+    var hour = new Date().getHours();
+    if (hour < 12) {
+      triggers.push('Double Coins hour hits at noon UTC. Set a reminder 🧲');
+    } else if (hour < 20) {
+      triggers.push('Double Coins at 8pm UTC. Come back then for 2x rewards 💰');
+    }
+
+    /* Quest rank proximity */
+    if (quest.nextTier && quest.progress >= 50) {
+      triggers.push('You\'re ' + Math.round(100 - quest.progress) + '% from ' + quest.nextTier.icon + ' ' + quest.nextTier.title + ' rank');
+    }
+
+    /* Hidden achievement tease */
+    var mem = getPlayerMemory();
+    if (mem.midnightPlays === 0) {
+      triggers.push('Some secrets only appear after midnight... 🌙');
+    }
+    if ((mem.zeroScoreCount || 0) < 3) {
+      triggers.push('Have you tried... not trying? Some things reward failure.');
+    }
+
+    return triggers[Math.floor(Math.random() * triggers.length)];
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     HIDDEN ACHIEVEMENTS — "wait... what just happened???"
+     ═══════════════════════════════════════════════════════════════ */
+
+  var SECRET_ACHIEVEMENTS = [
+    { id: 'night_crawler',   icon: '🌙', name: 'Night Crawler',     desc: 'Play 3 games between midnight and 4 AM',     reward: 75 },
+    { id: 'the_fumbler',     icon: '🤡', name: 'The Fumbler',       desc: 'Score exactly 0 three times. Impressive.',    reward: 30 },
+    { id: 'marathon_runner', icon: '🏃', name: 'Marathon Runner',   desc: 'Play 5 different games in one session',       reward: 50 },
+    { id: 'coin_dragon',     icon: '🐉', name: 'Coin Dragon',       desc: 'Hoard 1000+ coins without spending any',     reward: 100 },
+    { id: 'the_comeback',    icon: '🔄', name: 'The Comeback Kid',  desc: 'Return after 7+ days away',                  reward: 75 },
+    { id: 'speed_demon',     icon: '⚡', name: 'Speed Demon',       desc: 'Play 3 games in under 5 minutes',            reward: 50 },
+    { id: 'loyal_fan',       icon: '💝', name: 'Loyal Fan',         desc: 'Play the same game 20 times',                reward: 60 },
+    { id: 'jack_of_all',     icon: '🃏', name: 'Jack of All Trades',desc: 'Score above average in 10 different games',  reward: 150 },
+    { id: 'perfectionist',   icon: '✨', name: 'Perfectionist',     desc: 'Beat your personal best 5 times in a row',   reward: 100 },
+    { id: 'the_grinder',     icon: '⚙️', name: 'The Grinder',       desc: 'Play 100 total games',                       reward: 200 },
+  ];
+
+  function checkSecretAchievements(gameId, score, isNewBest) {
+    var mem = getPlayerMemory();
+    var s = getState();
+    var newSecrets = [];
+
+    /* Lazy init */
+    if (!mem.secretsFound) mem.secretsFound = [];
+    if (!mem.consecutiveBests) mem.consecutiveBests = 0;
+    if (!mem.sessionGameTimes) mem.sessionGameTimes = [];
+
+    /* Track consecutive bests for perfectionist */
+    if (isNewBest) {
+      mem.consecutiveBests++;
+    } else {
+      mem.consecutiveBests = 0;
+    }
+
+    /* Track game times for speed demon */
+    mem.sessionGameTimes.push(Date.now());
+    /* Keep only last 10 */
+    if (mem.sessionGameTimes.length > 10) mem.sessionGameTimes = mem.sessionGameTimes.slice(-10);
+
+    var checks = {
+      'night_crawler':   (mem.midnightPlays || 0) >= 3,
+      'the_fumbler':     (mem.zeroScoreCount || 0) >= 3,
+      'marathon_runner': (s.todayGamesPlayed || []).length >= 5,
+      'coin_dragon':     s.coins >= 1000 && (s.totalCoinsSpent || 0) === 0,
+      'the_comeback':    (mem.longestAbsence || 0) >= 7,
+      'speed_demon':     (function() {
+        var times = mem.sessionGameTimes;
+        if (times.length < 3) return false;
+        var last3 = times.slice(-3);
+        return (last3[2] - last3[0]) < 300000; /* 5 minutes */
+      })(),
+      'loyal_fan':       (function() {
+        var gp = s.gamesPlayed || {};
+        return Object.keys(gp).some(function(k) { return gp[k] >= 20; });
+      })(),
+      'jack_of_all':     (function() {
+        var aboveAvg = 0;
+        Object.keys(GAMES).forEach(function(id) {
+          var g = GAMES[id];
+          if (g.bestKey && g.thresholds) {
+            var best = Number(localStorage.getItem(g.bestKey)) || 0;
+            if (best >= g.thresholds[0]) aboveAvg++;
+          }
+        });
+        return aboveAvg >= 10;
+      })(),
+      'perfectionist':   mem.consecutiveBests >= 5,
+      'the_grinder':     s.totalGamesPlayed >= 100,
+    };
+
+    SECRET_ACHIEVEMENTS.forEach(function(sa) {
+      if (mem.secretsFound.indexOf(sa.id) === -1 && checks[sa.id]) {
+        mem.secretsFound.push(sa.id);
+        newSecrets.push(sa);
+        addCoins(sa.reward);
+        track('secret_achievement', { id: sa.id, name: sa.name });
+      }
+    });
+
+    setPlayerMemory(mem);
+
+    /* Show secret achievement popup (extra dramatic) */
+    newSecrets.forEach(function(sa, i) {
+      setTimeout(function() { showSecretAchievementPopup(sa); }, 1000 + i * 1500);
+    });
+
+    return newSecrets;
+  }
+
+  function showSecretAchievementPopup(sa) {
+    var toast = document.createElement('div');
+    toast.className = 'arc-secret-toast';
+    toast.innerHTML =
+      '<div class="arc-secret-toast__glitch">???</div>' +
+      '<div class="arc-secret-toast__icon">' + sa.icon + '</div>' +
+      '<div class="arc-secret-toast__body">' +
+        '<div class="arc-secret-toast__label">SECRET UNLOCKED</div>' +
+        '<div class="arc-secret-toast__name">' + sa.name + '</div>' +
+        '<div class="arc-secret-toast__desc">' + sa.desc + '</div>' +
+        '<div class="arc-secret-toast__reward">+' + sa.reward + ' coins</div>' +
+      '</div>';
+    document.body.appendChild(toast);
+
+    /* Glitch effect then reveal */
+    setTimeout(function() {
+      toast.querySelector('.arc-secret-toast__glitch').style.display = 'none';
+      toast.classList.add('arc-secret-toast--show');
+    }, 300);
+
+    requestAnimationFrame(function() { toast.classList.add('arc-secret-toast--enter'); });
+
+    setTimeout(function() {
+      toast.classList.remove('arc-secret-toast--show');
+      toast.classList.add('arc-secret-toast--exit');
+      setTimeout(function() { toast.remove(); }, 600);
+    }, 5000);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     MAKING LOSING ADDICTIVE — Every loss = progress
+     ═══════════════════════════════════════════════════════════════ */
+
+  function getLossProgressText(gameId, score, best) {
+    var s = getState();
+    var mem = getPlayerMemory();
+    var game = GAMES[gameId];
+    var lines = [];
+
+    /* Improvement vs last run */
+    if (s.lastScores && s.lastScores[gameId]) {
+      var prev = s.lastScores[gameId];
+      if (score > prev) {
+        lines.push({ icon: '📈', text: '+' + (score - prev) + ' vs your last run' });
+      } else if (score === prev) {
+        lines.push({ icon: '🎯', text: 'Same as last time. Consistency.' });
+      }
+    }
+
+    /* Total attempts on this game */
+    var attempts = (s.gamesPlayed[gameId] || 0);
+    if (attempts >= 3 && !lines.length) {
+      lines.push({ icon: '💪', text: 'Attempt #' + attempts + '. Each one teaches you something.' });
+    }
+
+    /* Average score trend */
+    if (mem.sessionScores[gameId] && mem.sessionScores[gameId].length >= 3) {
+      var scores = mem.sessionScores[gameId];
+      var avg = scores.reduce(function(a, b) { return a + b; }, 0) / scores.length;
+      if (score > avg * 1.1) {
+        lines.push({ icon: '⬆️', text: 'Above your average (' + Math.round(avg) + '). You\'re getting better.' });
+      }
+    }
+
+    /* Energy — coins earned even on loss */
+    if (score > 0) {
+      lines.push({ icon: '🪙', text: 'Still earned coins. Every run counts.' });
+    }
+
+    return lines.length > 0 ? lines[0] : null;
+  }
+
   /* ── Auto-init ── */
   function autoInit() {
     applyTheme();
     showChallengeBanner();
     checkOGBadge();
+    recordVisit();
   }
 
   if (document.readyState === 'loading') {
@@ -1468,6 +1902,11 @@
     getActivePowerUp: getActivePowerUp,
     POWER_UPS: POWER_UPS,
     QUEST_MILESTONES: QUEST_MILESTONES,
+    /* Psychology layer */
+    showWelcomeBack: showWelcomeBack,
+    getPlayerMemory: getPlayerMemory,
+    getReturnTrigger: getReturnTrigger,
+    SECRET_ACHIEVEMENTS: SECRET_ACHIEVEMENTS,
   };
 
 })();

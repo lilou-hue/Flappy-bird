@@ -1217,6 +1217,467 @@ body:has(.arc-nav) {
   border-radius: 16px;
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   PSYCHOLOGY LAYER — Welcome Back, Secret Achievements,
+   Micro-rewards, Return Triggers
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Welcome Back Toast ── */
+.arc-welcome-toast {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  z-index: 9997;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  border: 1px solid rgba(192,132,252,0.25);
+  border-radius: 16px;
+  padding: 1rem 1.4rem;
+  min-width: 300px;
+  max-width: 500px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.6), 0 0 40px rgba(192,132,252,0.1);
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  opacity: 0;
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease;
+}
+.arc-welcome-toast--show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+.arc-welcome-toast__icon {
+  font-size: 1.6rem;
+  flex-shrink: 0;
+}
+.arc-welcome-toast__text {
+  font-size: 0.9rem;
+  color: #e4e4e7;
+  line-height: 1.4;
+  flex: 1;
+}
+.arc-welcome-toast__close {
+  background: none;
+  border: none;
+  color: #71717a;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  line-height: 1;
+  transition: color 0.2s;
+}
+.arc-welcome-toast__close:hover {
+  color: #fafafa;
+}
+
+/* ── Secret Achievement Toast ── */
+.arc-secret-toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.8);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: linear-gradient(135deg, #0a0a1a, #1a0a2e);
+  border: 2px solid rgba(168,85,247,0.5);
+  border-radius: 20px;
+  padding: 1.5rem 2rem;
+  min-width: 320px;
+  max-width: 480px;
+  box-shadow:
+    0 0 60px rgba(168,85,247,0.3),
+    0 0 120px rgba(168,85,247,0.1),
+    inset 0 0 40px rgba(168,85,247,0.05);
+  opacity: 0;
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease;
+  font-family: "Space Grotesk", system-ui, sans-serif;
+}
+.arc-secret-toast--enter {
+  opacity: 0.3;
+  animation: secretGlitch 0.3s steps(3);
+}
+.arc-secret-toast--show {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+}
+.arc-secret-toast--exit {
+  transform: translate(-50%, -50%) scale(0.5);
+  opacity: 0;
+}
+@keyframes secretGlitch {
+  0% { transform: translate(-50%, -50%) scale(0.8) skewX(5deg); }
+  33% { transform: translate(-48%, -52%) scale(0.85) skewX(-3deg); }
+  66% { transform: translate(-52%, -48%) scale(0.9) skewX(2deg); }
+  100% { transform: translate(-50%, -50%) scale(0.95) skewX(0); }
+}
+.arc-secret-toast__glitch {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: #a855f7;
+  font-weight: 800;
+  letter-spacing: 0.3em;
+  animation: glitchText 0.3s steps(2) infinite;
+}
+@keyframes glitchText {
+  0% { opacity: 1; transform: translateX(2px); }
+  50% { opacity: 0.5; transform: translateX(-2px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+.arc-secret-toast__icon {
+  font-size: 2.5rem;
+  flex-shrink: 0;
+  animation: secretIconPulse 1s ease-in-out infinite;
+}
+@keyframes secretIconPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+.arc-secret-toast__label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #a855f7;
+  margin-bottom: 0.2rem;
+}
+.arc-secret-toast__name {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fafafa;
+  margin-bottom: 0.2rem;
+}
+.arc-secret-toast__desc {
+  font-size: 0.78rem;
+  color: #a1a1aa;
+  margin-bottom: 0.3rem;
+}
+.arc-secret-toast__reward {
+  font-size: 0.8rem;
+  color: #facc15;
+  font-weight: 600;
+}
+
+/* ── Scorecard: Loss Progress ── */
+.arc-scorecard__progress {
+  font-size: 0.82rem;
+  color: #22c55e;
+  padding: 0.3rem 0.6rem;
+  background: rgba(34,197,94,0.08);
+  border: 1px solid rgba(34,197,94,0.15);
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+/* ── Scorecard: Return Trigger ── */
+.arc-scorecard__return-trigger {
+  font-size: 0.75rem;
+  color: #a1a1aa;
+  text-align: center;
+  padding: 0.4rem 0.6rem;
+  margin-bottom: 0.5rem;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  padding-top: 0.6rem;
+  font-style: italic;
+}
+
+/* ── Micro-Rewards: Coin Pop Animation ── */
+@keyframes coinPop {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.4); color: #facc15; }
+  60% { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+.arc-coin-pop {
+  animation: coinPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ── Micro-Rewards: Score Value Glow on New Best ── */
+@keyframes scoreGlow {
+  0% { text-shadow: 0 0 0 transparent; transform: scale(1); }
+  50% { text-shadow: 0 0 20px rgba(250,204,21,0.6), 0 0 40px rgba(250,204,21,0.3); transform: scale(1.15); }
+  100% { text-shadow: 0 0 8px rgba(250,204,21,0.2); transform: scale(1); }
+}
+.arc-scorecard__newbest {
+  animation: scoreGlow 0.8s ease-out;
+}
+
+/* ── Micro-Rewards: Lucky Drop Rarity Glow ── */
+.arc-lucky-toast--legendary {
+  border-color: rgba(250,204,21,0.6) !important;
+  box-shadow: 0 0 40px rgba(250,204,21,0.3), 0 0 80px rgba(250,204,21,0.1) !important;
+  animation: legendaryShine 1.5s ease-in-out infinite;
+}
+@keyframes legendaryShine {
+  0%, 100% { border-color: rgba(250,204,21,0.4); }
+  50% { border-color: rgba(250,204,21,0.8); }
+}
+.arc-lucky-toast--rare {
+  border-color: rgba(168,85,247,0.5) !important;
+  box-shadow: 0 0 30px rgba(168,85,247,0.2) !important;
+}
+.arc-lucky-toast--uncommon {
+  border-color: rgba(56,189,248,0.4) !important;
+}
+
+/* ── Quest Rank-Up Toast ── */
+.arc-quest-toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.5);
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: linear-gradient(135deg, #1a1020, #0a0818);
+  border: 2px solid rgba(250,204,21,0.4);
+  border-radius: 20px;
+  padding: 1.5rem 2rem;
+  min-width: 280px;
+  box-shadow: 0 0 60px rgba(250,204,21,0.15);
+  opacity: 0;
+  transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-family: "Space Grotesk", system-ui, sans-serif;
+}
+.arc-quest-toast--show {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+}
+.arc-quest-toast__icon {
+  font-size: 2.5rem;
+  animation: secretIconPulse 1s ease-in-out infinite;
+}
+.arc-quest-toast__title {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #facc15;
+}
+.arc-quest-toast__rank {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #fafafa;
+}
+.arc-quest-toast__reward {
+  font-size: 0.85rem;
+  color: #facc15;
+  font-weight: 600;
+}
+
+/* ── Power-Up Selector Overlay ── */
+.arc-powerup-selector {
+  position: fixed;
+  inset: 0;
+  z-index: 9996;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(8px);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  font-family: "Space Grotesk", system-ui, sans-serif;
+}
+.arc-powerup-selector--show {
+  opacity: 1;
+}
+.arc-powerup-selector__card {
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px;
+  padding: 1.5rem;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+}
+.arc-powerup-selector__title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fafafa;
+  margin-bottom: 0.25rem;
+}
+.arc-powerup-selector__sub {
+  font-size: 0.8rem;
+  color: #71717a;
+  margin-bottom: 1rem;
+}
+.arc-powerup-selector__grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+.arc-powerup-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 0.75rem;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s;
+  font-family: inherit;
+  color: #fafafa;
+}
+.arc-powerup-card:hover:not([disabled]) {
+  border-color: rgba(192,132,252,0.4);
+  background: rgba(192,132,252,0.06);
+}
+.arc-powerup-card--locked {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.arc-powerup-card__icon {
+  font-size: 1.5rem;
+}
+.arc-powerup-card__name {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.arc-powerup-card__desc {
+  font-size: 0.75rem;
+  color: #a1a1aa;
+}
+.arc-powerup-card__cost {
+  margin-left: auto;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #facc15;
+}
+.arc-powerup-selector__skip {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #a1a1aa;
+  font-size: 0.82rem;
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.arc-powerup-selector__skip:hover {
+  color: #fafafa;
+  border-color: rgba(255,255,255,0.2);
+}
+
+/* ── Holy Moment Overlay ── */
+.arc-holy-moment {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0);
+  pointer-events: none;
+  transition: background 0.3s ease;
+}
+.arc-holy-moment--show {
+  background: rgba(0,0,0,0.6);
+}
+.arc-holy-moment__content {
+  text-align: center;
+  transform: scale(0.5);
+  opacity: 0;
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.arc-holy-moment--show .arc-holy-moment__content {
+  transform: scale(1);
+  opacity: 1;
+}
+.arc-holy-moment__text {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: #facc15;
+  text-shadow: 0 0 40px rgba(250,204,21,0.5);
+  letter-spacing: 0.05em;
+  font-family: "Space Grotesk", system-ui, sans-serif;
+}
+.arc-holy-moment__sub {
+  font-size: 1rem;
+  color: #e4e4e7;
+  margin-top: 0.5rem;
+  font-family: "Space Grotesk", system-ui, sans-serif;
+}
+
+/* ── Lucky Drop Toast ── */
+.arc-lucky-toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.5);
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: linear-gradient(135deg, #1a1a2e, #1e1b4b);
+  border: 1px solid rgba(192,132,252,0.3);
+  border-radius: 16px;
+  padding: 1rem 1.5rem;
+  min-width: 240px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  opacity: 0;
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-family: "Space Grotesk", system-ui, sans-serif;
+}
+.arc-lucky-toast--show {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+}
+.arc-lucky-toast__icon {
+  font-size: 2rem;
+}
+.arc-lucky-toast__title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fafafa;
+}
+.arc-lucky-toast__reward {
+  font-size: 0.85rem;
+  color: #facc15;
+  font-weight: 600;
+}
+
+/* ── Coin Counter Animate ── */
+@keyframes coinBounce {
+  0% { transform: translateY(0); }
+  40% { transform: translateY(-4px); }
+  100% { transform: translateY(0); }
+}
+.arc-nav__coins.arc-coin-animating {
+  animation: coinBounce 0.3s ease;
+}
+
+@media (max-width: 680px) {
+  .arc-welcome-toast {
+    left: 1rem;
+    right: 1rem;
+    transform: translateX(0) translateY(100px);
+    min-width: auto;
+  }
+  .arc-welcome-toast--show {
+    transform: translateX(0) translateY(0);
+  }
+  .arc-secret-toast {
+    min-width: 280px;
+    padding: 1rem 1.2rem;
+  }
+  .arc-holy-moment__text {
+    font-size: 1.8rem;
+  }
+}
+
 .arc-skeleton--text {
   height: 1rem;
   width: 60%;

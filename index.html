@@ -3644,6 +3644,9 @@
         /* Check streak on homepage load */
         var streakResult = Arcade.checkStreak();
 
+        /* Player Memory — "Welcome back" toast */
+        Arcade.showWelcomeBack();
+
         /* Render daily challenges */
         var challenges = Arcade.getDailyChallenges();
         var cGrid = document.getElementById('challengeGrid');
