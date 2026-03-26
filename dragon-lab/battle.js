@@ -164,10 +164,9 @@ window.Battle = (function() {
     return chosen;
   }
 
-  // Player dragon AI — slightly more aggressive than balanced to ensure fights happen
+  // Player dragon AI — uses actual dragon behavior traits (no unfair boost)
   function choosePlayerAction(combatant, opponent, state) {
-    const temp = { ...combatant, behavior: { aggression: 0.65, patience: 0.35, firePreference: 0.5 } };
-    return chooseAction(temp, opponent, state);
+    return chooseAction(combatant, opponent, state);
   }
 
   // --------------------------------------------------------

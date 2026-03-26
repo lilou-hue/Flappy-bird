@@ -15,6 +15,7 @@ window.App = (function() {
   // Debounce timer for slider updates
   let updateTimer = null;
   const DEBOUNCE_MS = 50;
+  const RECORD_KEY = 'dragonlab_record';
 
   // --------------------------------------------------------
   // INITIALIZATION
@@ -57,8 +58,17 @@ window.App = (function() {
     // Wire buttons
     wireButtons();
 
+    // Wire dragon name input
+    wireDragonName();
+
     // Run initial simulation
     runSimulation();
+
+    // Render initial challenges state
+    window.UI.renderChallenges();
+
+    // Show battle record
+    window.UI.renderBattleRecord(loadRecord());
 
     // Init tutorial
     window.Tutorial.init();
@@ -116,6 +126,54 @@ window.App = (function() {
     previousResults = currentResults;
     currentResults = window.Simulation.evaluate(currentDragon);
     window.UI.renderResults(currentResults, previousResults);
+
+    // Personal bests
+    const newBests = window.UI.checkPersonalBests(currentResults);
+    if (newBests.length > 0) {
+      window.UI.showNotification('New personal best! ' + newBests.join(', '), 'success');
+    }
+
+    // Check challenges
+    checkChallengesNow();
+  }
+
+  function checkChallengesNow() {
+    const record = loadRecord();
+    const { newlyUnlocked } = window.Challenges.evaluate(currentResults, record);
+    if (newlyUnlocked.length > 0) {
+      newlyUnlocked.forEach(function(c) {
+        window.UI.showNotification('Challenge unlocked: ' + c.icon + ' ' + c.title, 'success');
+      });
+    }
+    window.UI.renderChallenges();
+  }
+
+  // --------------------------------------------------------
+  // BATTLE RECORD
+  // --------------------------------------------------------
+  function loadRecord() {
+    try { return JSON.parse(localStorage.getItem(RECORD_KEY) || '{"wins":0,"losses":0,"total":0,"arenaWins":{}}'); }
+    catch(e) { return { wins: 0, losses: 0, total: 0, arenaWins: {} }; }
+  }
+
+  function saveRecord(rec) {
+    try { localStorage.setItem(RECORD_KEY, JSON.stringify(rec)); } catch(e) {}
+  }
+
+  function recordBattleResult(winner, arenaKey) {
+    const rec = loadRecord();
+    rec.total = (rec.total || 0) + 1;
+    if (winner === 'player') {
+      rec.wins = (rec.wins || 0) + 1;
+      if (arenaKey) {
+        rec.arenaWins = rec.arenaWins || {};
+        rec.arenaWins[arenaKey] = true;
+      }
+    } else if (winner === 'enemy') {
+      rec.losses = (rec.losses || 0) + 1;
+    }
+    saveRecord(rec);
+    return rec;
   }
 
   // --------------------------------------------------------
@@ -123,6 +181,8 @@ window.App = (function() {
   // --------------------------------------------------------
   function onPresetSelect(presetKey) {
     currentDragon = window.Dragon.fromPreset(presetKey);
+    const nameInput = document.getElementById('dragon-name-input');
+    if (nameInput) nameInput.value = currentDragon.name || '';
     window.UI.updateSliders(currentDragon.traits);
 
     // Rebuild fire design panel by re-rendering sliders
@@ -155,7 +215,10 @@ window.App = (function() {
     const archetype = window.DragonData.ENEMY_ARCHETYPES[enemyKey];
     battleState = window.Battle.create(currentDragon, enemyKey, arenaKey);
 
-    // Run full battle
+    // Store arenaKey for skip access
+    battleState._arenaKey = arenaKey;
+
+    // Run full battle computation
     window.Battle.runFull(battleState);
 
     // Switch to battle view
@@ -175,40 +238,91 @@ window.App = (function() {
     if (setup) setup.style.display = 'none';
     if (display) display.style.display = 'block';
 
+    // Inject skip button
+    window.UI.renderSkipButton(skipBattle);
+
     // Start tick-by-tick playback
-    battlePlaybackTimer = setInterval(() => {
+    if (battlePlaybackTimer) clearInterval(battlePlaybackTimer);
+    battlePlaybackTimer = setInterval(function() {
       if (battleTickIndex >= battleState.log.length) {
         clearInterval(battlePlaybackTimer);
-        window.UI.renderBattleSummary(battleState);
-        wireBattleSummaryButtons();
+        battlePlaybackTimer = null;
+        finishBattle(arenaKey);
         return;
       }
 
       const tick = battleState.log[battleTickIndex];
-      // Update display
       window.UI.renderBattleInProgress(battleState, battleTickIndex);
-      // Animate
       window.Scene.animateBattleTick(tick);
-
       battleTickIndex++;
     }, delay);
+  }
+
+  function skipBattle() {
+    if (battlePlaybackTimer) {
+      clearInterval(battlePlaybackTimer);
+      battlePlaybackTimer = null;
+    }
+    if (!battleState) return;
+    battleTickIndex = battleState.log.length - 1;
+    window.UI.renderBattleInProgress(battleState, battleTickIndex);
+    finishBattle(battleState._arenaKey);
+  }
+
+  function finishBattle(arenaKey) {
+    // Remove skip button
+    const skipBtn = document.getElementById('btn-skip-battle');
+    if (skipBtn) skipBtn.remove();
+
+    // Record result
+    const rec = recordBattleResult(battleState.winner, arenaKey);
+    window.UI.renderBattleRecord(rec);
+
+    // Render summary
+    window.UI.renderBattleSummary(battleState);
+    wireBattleSummaryButtons();
+
+    // Check challenges
+    const { newlyUnlocked } = window.Challenges.evaluate(currentResults, rec);
+    if (newlyUnlocked.length > 0) {
+      newlyUnlocked.forEach(function(c) {
+        window.UI.showNotification('Challenge unlocked: ' + c.icon + ' ' + c.title, 'success');
+      });
+      window.UI.renderChallenges();
+    }
+  }
+
+  // --------------------------------------------------------
+  // DRAGON NAMING
+  // --------------------------------------------------------
+  function wireDragonName() {
+    const input = document.getElementById('dragon-name-input');
+    if (!input) return;
+    input.value = currentDragon.name || '';
+    input.addEventListener('input', function() {
+      currentDragon.name = input.value;
+      autoSave();
+    });
   }
 
   function wireBattleSummaryButtons() {
     const againBtn = document.getElementById('btn-battle-again');
     if (againBtn) {
-      againBtn.addEventListener('click', () => {
+      againBtn.addEventListener('click', function() {
+        if (battlePlaybackTimer) { clearInterval(battlePlaybackTimer); battlePlaybackTimer = null; }
         window.Scene.returnToLab();
         const setup = document.getElementById('battle-setup');
         const display = document.getElementById('battle-display');
         if (setup) setup.style.display = 'block';
         if (display) display.style.display = 'none';
         window.UI.renderBattleSetup(onBattleStart);
+        window.UI.renderBattleRecord(loadRecord());
       });
     }
     const returnBtn = document.getElementById('btn-return-lab');
     if (returnBtn) {
-      returnBtn.addEventListener('click', () => {
+      returnBtn.addEventListener('click', function() {
+        if (battlePlaybackTimer) { clearInterval(battlePlaybackTimer); battlePlaybackTimer = null; }
         window.Scene.returnToLab();
         window.Scene.updateDragon(currentDragon.traits, getTintColor());
         window.UI.switchTab('build');
@@ -237,8 +351,10 @@ window.App = (function() {
     // Randomize
     const randBtn = document.getElementById('btn-randomize');
     if (randBtn) {
-      randBtn.addEventListener('click', () => {
+      randBtn.addEventListener('click', function() {
         currentDragon = window.Dragon.createRandom();
+        const nameInput = document.getElementById('dragon-name-input');
+        if (nameInput) nameInput.value = currentDragon.name || '';
         window.UI.renderSliders(currentDragon.traits, currentDragon.fireDesign, onTraitChange, onFireDesignChange);
         window.Scene.updateDragon(currentDragon.traits, getTintColor());
         runSimulation();
@@ -250,8 +366,10 @@ window.App = (function() {
     // Reset
     const resetBtn = document.getElementById('btn-reset');
     if (resetBtn) {
-      resetBtn.addEventListener('click', () => {
+      resetBtn.addEventListener('click', function() {
         currentDragon = window.Dragon.create();
+        const nameInput = document.getElementById('dragon-name-input');
+        if (nameInput) nameInput.value = '';
         window.UI.renderSliders(currentDragon.traits, currentDragon.fireDesign, onTraitChange, onFireDesignChange);
         window.Scene.updateDragon(currentDragon.traits, getTintColor());
         runSimulation();

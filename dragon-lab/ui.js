@@ -45,6 +45,7 @@ window.UI = (function() {
     document.querySelectorAll('.tab-content').forEach(tc => {
       tc.classList.toggle('active', tc.id === 'tab-' + tabName);
     });
+    if (tabName === 'challenges') renderChallenges();
   }
 
   // --------------------------------------------------------
@@ -653,6 +654,123 @@ window.UI = (function() {
   }
 
   // --------------------------------------------------------
+  // CHALLENGES PANEL
+  // --------------------------------------------------------
+  function renderChallenges() {
+    const container = document.getElementById('challenges-content');
+    const label = document.getElementById('challenge-progress-label');
+    if (!container) return;
+
+    const all = window.Challenges.getAll();
+    const progress = window.Challenges.getProgress();
+    const doneCount = Object.keys(progress).length;
+    const totalCount = all.length;
+
+    if (label) label.textContent = doneCount + ' / ' + totalCount;
+
+    // Group by tier
+    const tiers = {};
+    all.forEach(function(c) {
+      if (!tiers[c.tier]) tiers[c.tier] = [];
+      tiers[c.tier].push(c);
+    });
+
+    let html = '';
+    Object.keys(tiers).sort().forEach(function(tier) {
+      const tierNum = parseInt(tier);
+      const tierLabel = window.Challenges.getTierLabel(tierNum);
+      const tierChallenges = tiers[tier];
+      const tierDone = tierChallenges.filter(function(c) { return progress[c.id]; }).length;
+
+      html += '<div class="challenge-tier">';
+      html += '<div class="challenge-tier-header">';
+      html += '<span class="challenge-tier-name">Tier ' + tierNum + ': ' + tierLabel + '</span>';
+      html += '<span class="challenge-tier-count">' + tierDone + '/' + tierChallenges.length + '</span>';
+      html += '</div>';
+
+      tierChallenges.forEach(function(c) {
+        const done = !!progress[c.id];
+        html += '<div class="challenge-card ' + (done ? 'challenge-done' : 'challenge-locked') + '">';
+        html += '<span class="challenge-icon">' + c.icon + '</span>';
+        html += '<div class="challenge-info">';
+        html += '<div class="challenge-title">' + c.title + '</div>';
+        html += '<div class="challenge-desc">' + c.desc + '</div>';
+        html += '</div>';
+        html += '<span class="challenge-check">' + (done ? '✓' : '') + '</span>';
+        html += '</div>';
+      });
+
+      html += '</div>';
+    });
+
+    container.innerHTML = html;
+  }
+
+  // --------------------------------------------------------
+  // BATTLE: RECORD DISPLAY + SKIP BUTTON
+  // --------------------------------------------------------
+  function renderBattleRecord(record) {
+    const existing = document.getElementById('battle-record-bar');
+    if (existing) existing.remove();
+    if (!record || record.total === 0) return;
+
+    const bar = document.createElement('div');
+    bar.id = 'battle-record-bar';
+    bar.className = 'battle-record-bar';
+    bar.innerHTML = 'Record: <span class="rec-wins">' + record.wins + 'W</span> / <span class="rec-losses">' + record.losses + 'L</span>';
+
+    const panel = document.getElementById('battle-setup');
+    if (panel) panel.insertAdjacentElement('beforebegin', bar);
+  }
+
+  function renderSkipButton(onSkip) {
+    const existing = document.getElementById('btn-skip-battle');
+    if (existing) return;
+    const display = document.getElementById('battle-display');
+    if (!display) return;
+
+    const btn = document.createElement('button');
+    btn.id = 'btn-skip-battle';
+    btn.className = 'btn-secondary btn-skip';
+    btn.textContent = 'Skip to Result';
+    btn.addEventListener('click', function() { if (onSkip) onSkip(); });
+    display.prepend(btn);
+  }
+
+  // --------------------------------------------------------
+  // PERSONAL BESTS
+  // --------------------------------------------------------
+  const PB_KEY = 'dragonlab_bests';
+
+  function checkPersonalBests(results) {
+    let bests;
+    try { bests = JSON.parse(localStorage.getItem(PB_KEY) || '{}'); } catch(e) { bests = {}; }
+
+    const metrics = [
+      { key: 'flight', value: results.flight && results.flight.overall, label: 'Flight' },
+      { key: 'fire', value: results.fire && results.fire.fireOutput, label: 'Fire' },
+      { key: 'energy', value: results.energy && results.energy.sustainability, label: 'Energy' },
+      { key: 'durability', value: results.durability && results.durability.total, label: 'Durability' },
+      { key: 'survival', value: results.survival && results.survival.rating, label: 'Survival' }
+    ];
+
+    const newBests = [];
+    metrics.forEach(function(m) {
+      if (typeof m.value !== 'number' || isNaN(m.value)) return;
+      const val = Math.round(m.value);
+      if (!bests[m.key] || val > bests[m.key]) {
+        bests[m.key] = val;
+        newBests.push(m.label + ': ' + val);
+      }
+    });
+
+    if (newBests.length > 0) {
+      try { localStorage.setItem(PB_KEY, JSON.stringify(bests)); } catch(e) {}
+    }
+    return newBests;
+  }
+
+  // --------------------------------------------------------
   // NOTIFICATIONS
   // --------------------------------------------------------
   function showNotification(msg, type) {
@@ -693,6 +811,7 @@ window.UI = (function() {
     renderResults, renderHabitatSelector, renderHabitatResults,
     renderBattleSetup, renderBattleInProgress, renderBattleSummary,
     renderScienceNotes, renderPresets, showNotification, highlightElement,
-    setAdvancedMode, isAdvancedMode
+    setAdvancedMode, isAdvancedMode,
+    renderChallenges, renderBattleRecord, renderSkipButton, checkPersonalBests
   };
 })();

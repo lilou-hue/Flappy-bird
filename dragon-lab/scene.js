@@ -1,25 +1,21 @@
 // ============================================================
-// Dragon Engineering Lab — Three.js Scene (Redesigned)
-// Anchored anatomical rig, improved silhouette, better lighting,
-// premium materials, hero camera framing.
+// Dragon Engineering Lab — Three.js Scene (v3 — Clean Rebuild)
+// Spline-based body, silhouette-first design, elegant wings.
 // ============================================================
 
 window.Scene = (function() {
-  let renderer, scene, camera, controls;
+  let renderer, scene, camera, controls, clock;
   let dragonGroup, enemyGroup;
-  let clock;
   let animationId;
   let currentMode = 'lab';
   let labObjects = [];
 
-  const DRAGON_PARTS = {};
-  const ENEMY_PARTS = {};
-
-  // Store base positions for idle animation (set during build)
-  let basePositions = {};
+  const P = {};       // player dragon parts
+  const EP = {};      // enemy dragon parts
+  let baseState = {}; // stored base values for idle anim
 
   // --------------------------------------------------------
-  // INITIALIZATION
+  // INIT
   // --------------------------------------------------------
   function init(container) {
     clock = new THREE.Clock();
@@ -30,30 +26,28 @@ window.Scene = (function() {
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.2;
-    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.toneMappingExposure = 1.3;
     container.appendChild(renderer.domElement);
 
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0c0c1e);
-    scene.fog = new THREE.FogExp2(0x0c0c1e, 0.035);
+    scene.background = new THREE.Color(0x0e0e1e);
+    scene.fog = new THREE.FogExp2(0x0e0e1e, 0.028);
 
-    // Hero camera — 3/4 view, slightly above, looking at chest height
-    camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.1, 100);
-    camera.position.set(4.5, 3.0, 5.5);
+    camera = new THREE.PerspectiveCamera(38, container.clientWidth / container.clientHeight, 0.1, 80);
+    camera.position.set(3.5, 2.8, 5.0);
 
     controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.target.set(0, 1.4, 0);
+    controls.target.set(0, 1.2, 0);
     controls.enableDamping = true;
-    controls.dampingFactor = 0.08;
-    controls.maxPolarAngle = Math.PI * 0.75;
-    controls.minPolarAngle = Math.PI * 0.15;
-    controls.minDistance = 3;
-    controls.maxDistance = 15;
+    controls.dampingFactor = 0.07;
+    controls.maxPolarAngle = Math.PI * 0.72;
+    controls.minPolarAngle = Math.PI * 0.12;
+    controls.minDistance = 2.5;
+    controls.maxDistance = 12;
     controls.update();
 
-    setupLabLighting();
-    setupLabFloor();
+    setupLighting();
+    setupFloor();
 
     dragonGroup = new THREE.Group();
     scene.add(dragonGroup);
@@ -63,523 +57,399 @@ window.Scene = (function() {
   }
 
   // --------------------------------------------------------
-  // LIGHTING — 3-point + environment
+  // LIGHTING — bright enough to read, dark enough to feel premium
   // --------------------------------------------------------
-  function setupLabLighting() {
+  function setupLighting() {
     scene.children.filter(c => c.isLight).forEach(l => scene.remove(l));
 
-    // Hemisphere: cool sky, warm ground
-    const hemi = new THREE.HemisphereLight(0x5566aa, 0x222211, 0.6);
-    scene.add(hemi);
-    labObjects.push(hemi);
+    const hemi = new THREE.HemisphereLight(0x6677aa, 0x222218, 0.7);
+    scene.add(hemi); labObjects.push(hemi);
 
-    // Key light — warm directional from upper-right-front
-    const key = new THREE.DirectionalLight(0xffeedd, 1.0);
-    key.position.set(4, 6, 5);
+    // Key: warm, upper-right
+    const key = new THREE.DirectionalLight(0xfff0dd, 1.1);
+    key.position.set(3, 7, 4);
     key.castShadow = true;
     key.shadow.mapSize.set(1024, 1024);
-    key.shadow.camera.near = 0.5;
-    key.shadow.camera.far = 20;
-    key.shadow.camera.left = -6;
-    key.shadow.camera.right = 6;
-    key.shadow.camera.top = 6;
-    key.shadow.camera.bottom = -6;
+    key.shadow.camera.near = 0.5; key.shadow.camera.far = 18;
+    key.shadow.camera.left = -5; key.shadow.camera.right = 5;
+    key.shadow.camera.top = 5; key.shadow.camera.bottom = -5;
     key.shadow.bias = -0.001;
-    scene.add(key);
-    labObjects.push(key);
+    scene.add(key); labObjects.push(key);
 
-    // Fill light — cool from left
-    const fill = new THREE.DirectionalLight(0x88aacc, 0.4);
+    // Fill: cool, left
+    const fill = new THREE.DirectionalLight(0x99bbdd, 0.5);
     fill.position.set(-4, 3, 2);
-    scene.add(fill);
-    labObjects.push(fill);
+    scene.add(fill); labObjects.push(fill);
 
-    // Rim light — behind and above for silhouette separation
-    const rim = new THREE.PointLight(0x6688cc, 0.6, 15);
-    rim.position.set(-2, 4, -4);
-    scene.add(rim);
-    labObjects.push(rim);
+    // Rim: behind for silhouette pop
+    const rim = new THREE.PointLight(0x7799cc, 0.7, 12);
+    rim.position.set(-1, 3.5, -4);
+    scene.add(rim); labObjects.push(rim);
 
-    // Floor glow — subtle teal from below
-    const glow = new THREE.PointLight(0x00aa88, 0.25, 8);
-    glow.position.set(0, 0.1, 0);
-    scene.add(glow);
-    labObjects.push(glow);
+    // Floor accent
+    const accent = new THREE.PointLight(0x00cc99, 0.2, 6);
+    accent.position.set(0, 0.2, 0);
+    scene.add(accent); labObjects.push(accent);
   }
 
-  // --------------------------------------------------------
-  // FLOOR
-  // --------------------------------------------------------
-  function setupLabFloor() {
-    const grid = new THREE.GridHelper(16, 24, 0x1a3a3a, 0x0a1a1a);
-    grid.position.y = 0;
-    scene.add(grid);
-    labObjects.push(grid);
+  function setupFloor() {
+    const grid = new THREE.GridHelper(14, 20, 0x1a3535, 0x0c1a1a);
+    scene.add(grid); labObjects.push(grid);
 
-    const groundGeo = new THREE.PlaneGeometry(16, 16);
-    const groundMat = new THREE.MeshStandardMaterial({
-      color: 0x0e0e18, roughness: 0.85, metalness: 0.15
-    });
-    const ground = new THREE.Mesh(groundGeo, groundMat);
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(14, 14),
+      new THREE.MeshStandardMaterial({ color: 0x0c0c18, roughness: 0.85, metalness: 0.1 })
+    );
     ground.rotation.x = -Math.PI / 2;
     ground.position.y = -0.01;
     ground.receiveShadow = true;
-    scene.add(ground);
-    labObjects.push(ground);
+    scene.add(ground); labObjects.push(ground);
   }
 
   // --------------------------------------------------------
-  // MATERIAL HELPERS
+  // MATERIAL PALETTE
   // --------------------------------------------------------
-  function bodyMat(tint, n) {
+  function mkBodyMat(tint, n) {
+    const c = new THREE.Color(0x2a6050).lerp(new THREE.Color(tint), 0.2);
     return new THREE.MeshStandardMaterial({
-      color: new THREE.Color(0x2a5e4e).lerp(new THREE.Color(tint), 0.25),
-      metalness: 0.08 + (n.scaleThickness || 0) * 0.18,
-      roughness: 0.65 - (n.scaleThickness || 0) * 0.15,
+      color: c,
+      metalness: 0.06 + n.scaleThickness * 0.16,
+      roughness: 0.7 - n.scaleThickness * 0.15,
     });
   }
-
-  function armorMat(tint, n) {
+  function mkAccentMat(tint, n) {
+    const c = new THREE.Color(0x1e4a3e).lerp(new THREE.Color(tint), 0.15);
     return new THREE.MeshStandardMaterial({
-      color: new THREE.Color(0x3a4a4a).lerp(new THREE.Color(tint), 0.15),
-      metalness: 0.3 + (n.scaleThickness || 0) * 0.25,
-      roughness: 0.4 - (n.scaleThickness || 0) * 0.1,
+      color: c,
+      metalness: 0.2 + n.scaleThickness * 0.2,
+      roughness: 0.5,
     });
   }
-
-  function membraneMat(tint, n) {
+  function mkMembraneMat(tint, n) {
     return new THREE.MeshStandardMaterial({
-      color: new THREE.Color(0x885544).lerp(new THREE.Color(tint), 0.15),
-      transparent: true,
-      opacity: 0.3 + (n.wingArea || 0) * 0.4,
-      side: THREE.DoubleSide,
-      metalness: 0.02,
-      roughness: 0.85,
+      color: new THREE.Color(0x7a5540).lerp(new THREE.Color(tint), 0.1),
+      transparent: true, opacity: 0.25 + n.wingArea * 0.45,
+      side: THREE.DoubleSide, metalness: 0.0, roughness: 0.9,
     });
   }
-
-  function boneMat() {
-    return new THREE.MeshStandardMaterial({
-      color: 0x665544, metalness: 0.15, roughness: 0.5,
-    });
+  function mkBoneMat() {
+    return new THREE.MeshStandardMaterial({ color: 0x6a5a44, metalness: 0.12, roughness: 0.55 });
   }
-
-  function sacMat(n) {
-    const intensity = 0.2 + (n.fuelGlandSize || 0) * 1.0;
+  function mkSacMat(n) {
     return new THREE.MeshStandardMaterial({
-      color: 0xff6600,
-      emissive: 0xff4400,
-      emissiveIntensity: intensity,
-      transparent: true,
-      opacity: 0.3 + (n.fuelGlandSize || 0) * 0.5,
-      metalness: 0,
-      roughness: 0.3,
+      color: 0xff6600, emissive: 0xff4400,
+      emissiveIntensity: 0.15 + n.fuelGlandSize * 1.2,
+      transparent: true, opacity: 0.25 + n.fuelGlandSize * 0.55,
+      metalness: 0, roughness: 0.35,
     });
   }
 
   // --------------------------------------------------------
-  // PROCEDURAL DRAGON — ANCHORED RIG
-  // All parts position relative to their parent anchor.
+  // HELPER: smooth tube along points
   // --------------------------------------------------------
-  function buildDragon(traits, tintColor, partsRef) {
+  function makeTube(points, radiusFn, segments, radialSegs, mat) {
+    const curve = new THREE.CatmullRomCurve3(points);
+    // TubeGeometry doesn't support varying radius, so we use LatheGeometry trick:
+    // Build a custom TubeBufferGeometry with per-segment radius
+    const tubSegs = segments || 24;
+    const radSegs = radialSegs || 10;
+    const frames = curve.computeFrenetFrames(tubSegs, false);
+    const positions = [];
+    const normals = [];
+    const indices = [];
+
+    for (let i = 0; i <= tubSegs; i++) {
+      const t = i / tubSegs;
+      const pos = curve.getPointAt(t);
+      const N = frames.normals[i];
+      const B = frames.binormals[i];
+      const r = radiusFn(t);
+
+      for (let j = 0; j <= radSegs; j++) {
+        const angle = (j / radSegs) * Math.PI * 2;
+        const sin = Math.sin(angle);
+        const cos = Math.cos(angle);
+
+        const nx = cos * N.x + sin * B.x;
+        const ny = cos * N.y + sin * B.y;
+        const nz = cos * N.z + sin * B.z;
+
+        positions.push(pos.x + r * nx, pos.y + r * ny, pos.z + r * nz);
+        normals.push(nx, ny, nz);
+      }
+    }
+
+    for (let i = 0; i < tubSegs; i++) {
+      for (let j = 0; j < radSegs; j++) {
+        const a = i * (radSegs + 1) + j;
+        const b = a + radSegs + 1;
+        indices.push(a, b, a + 1);
+        indices.push(b, b + 1, a + 1);
+      }
+    }
+
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geo.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+    geo.setIndex(indices);
+    geo.computeVertexNormals();
+
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.castShadow = true;
+    return mesh;
+  }
+
+  // --------------------------------------------------------
+  // BUILD DRAGON
+  // The body is ONE continuous spline tube: tail → torso → neck → head
+  // Wings, limbs, horns, eyes attach to computed points on the spline.
+  // --------------------------------------------------------
+  function buildDragon(traits, tintColor, ref) {
     const group = new THREE.Group();
     const tint = tintColor || '#3a6e5a';
     const t = traits;
 
-    // Normalize all traits to 0-1
+    // Normalize
     const n = {};
     window.DragonData.TRAITS.forEach(tr => {
-      n[tr.id] = (t[tr.id] - tr.min) / (tr.max - tr.min);
+      n[tr.id] = Math.max(0, Math.min(1, (t[tr.id] - tr.min) / (tr.max - tr.min)));
     });
 
-    // ============ TORSO (root anchor) ============
-    const torsoW = 0.55 + n.bodyMass * 0.45;
-    const torsoH = 0.45 + n.bodyMass * 0.3 + n.musclePower * 0.1;
-    const torsoD = 0.7 + n.bodyMass * 0.5;
-    const torsoY = 0.9 + n.bodyMass * 0.25 + n.musclePower * 0.05;
+    // ---- BODY SPLINE ----
+    // Key dimensions derived from stats
+    const bulk = 0.5 + n.bodyMass * 0.5;         // overall thickness
+    const neckLen = 0.8 + n.neckLength * 0.7;     // neck extension
+    const tailLen = 0.8 + n.tailSize * 1.0;        // tail extension
+    const torsoLen = 0.7 + n.bodyMass * 0.4;       // torso length
+    const muscle = 0.85 + n.musclePower * 0.15;    // width multiplier
 
-    const torso = new THREE.Mesh(
-      new THREE.SphereGeometry(1, 20, 14),
-      bodyMat(tint, n)
+    // Spline control points (Z = forward, Y = up)
+    // Tail tip → tail mid → hip → torso peak → shoulder → neck mid → head base → snout
+    const bodyPoints = [
+      new THREE.Vector3(0, 0.6 - tailLen * 0.15, -(torsoLen * 0.5 + tailLen)),         // 0: tail tip
+      new THREE.Vector3(0, 0.7,                  -(torsoLen * 0.5 + tailLen * 0.5)),    // 1: tail mid
+      new THREE.Vector3(0, 0.85 + bulk * 0.15,   -(torsoLen * 0.4)),                   // 2: hip
+      new THREE.Vector3(0, 0.95 + bulk * 0.25,   0),                                    // 3: torso center (highest)
+      new THREE.Vector3(0, 0.9 + bulk * 0.2,     torsoLen * 0.35),                     // 4: shoulder
+      new THREE.Vector3(0, 1.0 + bulk * 0.15,    torsoLen * 0.35 + neckLen * 0.45),    // 5: neck mid
+      new THREE.Vector3(0, 1.15 + bulk * 0.1 + neckLen * 0.15, torsoLen * 0.35 + neckLen * 0.85), // 6: head base
+      new THREE.Vector3(0, 1.15 + bulk * 0.08 + neckLen * 0.12, torsoLen * 0.35 + neckLen + 0.25), // 7: snout
+    ];
+
+    // Radius along the spline (t=0 is tail tip, t=1 is snout)
+    const maxR = 0.2 + bulk * 0.2;
+    function bodyRadius(t) {
+      // Tail: thin → thick. Torso: thick. Neck: tapers. Head: bulge then taper.
+      if (t < 0.12) return 0.02 + t * 1.2 * maxR * 0.5;                    // tail tip
+      if (t < 0.25) return maxR * 0.3 + (t - 0.12) * maxR * 3.0;           // tail thickening
+      if (t < 0.55) return maxR * muscle;                                     // torso (widest)
+      if (t < 0.7)  return maxR * muscle * (1.0 - (t - 0.55) * 2.5);        // shoulder taper
+      if (t < 0.85) return maxR * 0.35 + n.musclePower * 0.05;              // neck
+      if (t < 0.92) return maxR * 0.4 + n.intelligence * 0.03;              // head bulge
+      return maxR * 0.25 * (1.0 - (t - 0.92) * 8);                          // snout taper
+    }
+
+    const body = makeTube(bodyPoints, bodyRadius, 32, 12, mkBodyMat(tint, n));
+    body.name = 'body';
+    group.add(body);
+    ref.body = body;
+
+    // We need anchor positions from the spline for attaching parts
+    const spline = new THREE.CatmullRomCurve3(bodyPoints);
+    const shoulderPt = spline.getPointAt(0.52);  // shoulder area
+    const hipPt = spline.getPointAt(0.28);        // hip area
+    const neckPt = spline.getPointAt(0.75);       // mid-neck
+    const headPt = spline.getPointAt(0.88);       // head center
+    const snoutPt = spline.getPointAt(0.97);      // snout tip
+    const bellyPt = spline.getPointAt(0.4);       // belly for fuel sac
+    const spinePts = [0.2, 0.3, 0.4, 0.5, 0.55]; // spine ridge positions
+
+    // ---- BELLY ARMOR (subtle underside overlay) ----
+    const belly = new THREE.Mesh(
+      new THREE.SphereGeometry(1, 12, 8, 0, Math.PI * 2, Math.PI * 0.4, Math.PI * 0.4),
+      mkAccentMat(tint, n)
     );
-    torso.scale.set(torsoW, torsoH, torsoD);
-    torso.position.set(0, torsoY, 0);
-    torso.castShadow = true;
-    torso.name = 'torso';
-    group.add(torso);
-    partsRef.torso = torso;
+    const bellyR = maxR * muscle * 0.7;
+    belly.scale.set(bellyR, bellyR * 0.4, torsoLen * 0.5 + 0.1);
+    belly.position.set(0, bellyPt.y - maxR * muscle * 0.3, bellyPt.z);
+    belly.rotation.x = Math.PI;
+    belly.name = 'belly';
+    group.add(belly);
+    ref.belly = belly;
 
-    // Chest plate (overlapping armor layer)
-    const chestMt = armorMat(tint, n);
-    chestMt.transparent = true;
-    chestMt.opacity = 0.2 + n.scaleThickness * 0.6;
-    const chest = new THREE.Mesh(new THREE.SphereGeometry(1, 14, 10), chestMt);
-    chest.scale.set(torsoW * 1.04, torsoH * 0.8, torsoD * 0.6);
-    // ANCHORED to torso
-    chest.position.set(0, torsoY - torsoH * 0.05, torsoD * 0.15);
-    chest.name = 'chest';
-    group.add(chest);
-    partsRef.chest = chest;
-
-    // ============ ABDOMEN (anchored to torso rear) ============
-    const abdW = torsoW * 0.8;
-    const abdH = torsoH * 0.65;
-    const abdD = 0.4 + n.stomachCapacity * 0.25;
-    const abdomen = new THREE.Mesh(
-      new THREE.SphereGeometry(1, 14, 10),
-      bodyMat(tint, n)
-    );
-    abdomen.scale.set(abdW, abdH, abdD);
-    // ANCHORED: rear of torso
-    abdomen.position.set(0, torsoY - torsoH * 0.12, -(torsoD * 0.65 + abdD * 0.3));
-    abdomen.castShadow = true;
-    abdomen.name = 'abdomen';
-    group.add(abdomen);
-    partsRef.abdomen = abdomen;
-
-    // Fuel sac (anchored inside abdomen)
-    const sacSz = 0.08 + n.fuelGlandSize * 0.2;
+    // ---- FUEL SAC ----
+    const sacSz = 0.06 + n.fuelGlandSize * 0.16;
     const fuelSac = new THREE.Mesh(
-      new THREE.SphereGeometry(1, 10, 8), sacMat(n)
+      new THREE.SphereGeometry(sacSz, 10, 8),
+      mkSacMat(n)
     );
-    fuelSac.scale.set(sacSz, sacSz * 0.8, sacSz * 1.1);
-    fuelSac.position.copy(abdomen.position);
-    fuelSac.position.y += abdH * 0.1;
+    fuelSac.position.set(0, bellyPt.y - maxR * 0.1, bellyPt.z - 0.15);
     fuelSac.name = 'fuelSac';
     group.add(fuelSac);
-    partsRef.fuelSac = fuelSac;
+    ref.fuelSac = fuelSac;
 
-    // Fuel sac light (subtle point light inside)
-    if (n.fuelGlandSize > 0.2) {
-      const sacLight = new THREE.PointLight(0xff5500, n.fuelGlandSize * 0.4, 2);
+    if (n.fuelGlandSize > 0.15) {
+      const sacLight = new THREE.PointLight(0xff5500, n.fuelGlandSize * 0.5, 1.5);
       sacLight.position.copy(fuelSac.position);
       sacLight.name = 'sacLight';
       group.add(sacLight);
-      partsRef.sacLight = sacLight;
+      ref.sacLight = sacLight;
     }
 
-    // ============ NECK (anchored to torso front-top) ============
-    const neckLen = 0.5 + n.neckLength * 0.6;
-    const neckRad = 0.1 + n.bodyMass * 0.06 + n.musclePower * 0.03;
-    const neckAngle = -0.5 - n.neckLength * 0.12; // tilts forward-up
-
-    // Neck anchor point: front-top of torso
-    const neckAnchorY = torsoY + torsoH * 0.35;
-    const neckAnchorZ = torsoD * 0.55;
-
-    const neck = new THREE.Mesh(
-      new THREE.CylinderGeometry(neckRad * 0.65, neckRad, neckLen, 10),
-      bodyMat(tint, n)
-    );
-    // Position at midpoint along the neck direction from anchor
-    const neckMidY = neckAnchorY + Math.cos(neckAngle) * neckLen * 0.45;
-    const neckMidZ = neckAnchorZ - Math.sin(neckAngle) * neckLen * 0.45;
-    neck.position.set(0, neckMidY, neckMidZ);
-    neck.rotation.x = neckAngle;
-    neck.castShadow = true;
-    neck.name = 'neck';
-    group.add(neck);
-    partsRef.neck = neck;
-
-    // ============ HEAD (anchored to neck tip) ============
-    const headSz = 0.2 + n.bodyMass * 0.07 + n.intelligence * 0.04;
-    // Neck end point
-    const headY = neckAnchorY + Math.cos(neckAngle) * neckLen * 0.9;
-    const headZ = neckAnchorZ - Math.sin(neckAngle) * neckLen * 0.9;
-
-    const head = new THREE.Mesh(
-      new THREE.SphereGeometry(1, 14, 10),
-      bodyMat(tint, n)
-    );
-    head.scale.set(headSz * 0.75, headSz * 0.6, headSz * 1.1);
-    head.position.set(0, headY, headZ);
-    head.castShadow = true;
-    head.name = 'head';
-    group.add(head);
-    partsRef.head = head;
-
-    // Snout (elongated front of head)
-    const snout = new THREE.Mesh(
-      new THREE.ConeGeometry(headSz * 0.35, headSz * 0.8, 8),
-      bodyMat(tint, n)
-    );
-    snout.rotation.x = Math.PI * 0.5;
-    snout.position.set(0, headY - headSz * 0.08, headZ + headSz * 0.7);
-    snout.name = 'snout';
-    group.add(snout);
-    partsRef.snout = snout;
-
-    // Jaw
-    const jaw = new THREE.Mesh(
-      new THREE.BoxGeometry(headSz * 0.5, headSz * 0.15, headSz * 0.6),
-      armorMat(tint, n)
-    );
-    jaw.position.set(0, headY - headSz * 0.3, headZ + headSz * 0.3);
-    jaw.name = 'jaw';
-    group.add(jaw);
-    partsRef.jaw = jaw;
-
+    // ---- HEAD DETAILS ----
     // Horns
-    const hornH = 0.12 + n.boneDensity * 0.12;
-    const hornGeo = new THREE.ConeGeometry(0.03 + n.boneDensity * 0.015, hornH, 6);
-    const hornMt = boneMat();
+    const hornH = 0.08 + n.boneDensity * 0.1;
+    const hornGeo = new THREE.ConeGeometry(0.025 + n.boneDensity * 0.01, hornH, 5);
+    const bm = mkBoneMat();
 
-    const hornL = new THREE.Mesh(hornGeo, hornMt);
-    hornL.position.set(-headSz * 0.28, headY + headSz * 0.35, headZ - headSz * 0.15);
-    hornL.rotation.set(-0.3, 0, 0.35);
+    const hornL = new THREE.Mesh(hornGeo, bm);
+    hornL.position.set(-0.06, headPt.y + 0.08, headPt.z - 0.05);
+    hornL.rotation.set(-0.4, 0, 0.3);
     hornL.name = 'hornL';
-    group.add(hornL);
-    partsRef.hornL = hornL;
+    group.add(hornL); ref.hornL = hornL;
 
-    const hornR = new THREE.Mesh(hornGeo.clone(), hornMt.clone());
-    hornR.position.set(headSz * 0.28, headY + headSz * 0.35, headZ - headSz * 0.15);
-    hornR.rotation.set(-0.3, 0, -0.35);
+    const hornR = new THREE.Mesh(hornGeo.clone(), bm.clone());
+    hornR.position.set(0.06, headPt.y + 0.08, headPt.z - 0.05);
+    hornR.rotation.set(-0.4, 0, -0.3);
     hornR.name = 'hornR';
-    group.add(hornR);
-    partsRef.hornR = hornR;
+    group.add(hornR); ref.hornR = hornR;
 
     // Eyes
-    const eyeRad = 0.025 + n.intelligence * 0.008;
-    const eyeMt = new THREE.MeshStandardMaterial({
-      color: 0xaaffcc, emissive: 0x44ff88, emissiveIntensity: 0.6
+    const eyeR_sz = 0.02 + n.intelligence * 0.006;
+    const eyeMat = new THREE.MeshStandardMaterial({
+      color: 0xbbffcc, emissive: 0x44ff88, emissiveIntensity: 0.7
     });
-    const eyeL = new THREE.Mesh(new THREE.SphereGeometry(eyeRad, 8, 6), eyeMt);
-    eyeL.position.set(-headSz * 0.32, headY + headSz * 0.12, headZ + headSz * 0.45);
+    const eyeL = new THREE.Mesh(new THREE.SphereGeometry(eyeR_sz, 8, 6), eyeMat);
+    eyeL.position.set(-0.07, headPt.y + 0.02, headPt.z + 0.08);
     eyeL.name = 'eyeL';
-    group.add(eyeL);
-    partsRef.eyeL = eyeL;
+    group.add(eyeL); ref.eyeL = eyeL;
 
-    const eyeR = new THREE.Mesh(new THREE.SphereGeometry(eyeRad, 8, 6), eyeMt.clone());
-    eyeR.position.set(headSz * 0.32, headY + headSz * 0.12, headZ + headSz * 0.45);
-    eyeR.name = 'eyeR';
-    group.add(eyeR);
-    partsRef.eyeR = eyeR;
+    const eyeRm = new THREE.Mesh(new THREE.SphereGeometry(eyeR_sz, 8, 6), eyeMat.clone());
+    eyeRm.position.set(0.07, headPt.y + 0.02, headPt.z + 0.08);
+    eyeRm.name = 'eyeR';
+    group.add(eyeRm); ref.eyeR = eyeRm;
 
-    // ============ FORELIMBS (anchored to torso front-bottom) ============
-    const limbRad = 0.05 + n.musclePower * 0.035 + n.bodyMass * 0.015;
-    const limbLen = 0.4 + n.bodyMass * 0.18;
-    const limbMt = bodyMat(tint, n);
-
-    // Anchor: front-bottom of torso
-    const foreLegAnchorY = torsoY - torsoH * 0.45;
-    const foreLegAnchorZ = torsoD * 0.3;
-
-    const foreL = new THREE.Mesh(
-      new THREE.CylinderGeometry(limbRad * 0.6, limbRad, limbLen, 8),
-      limbMt
-    );
-    foreL.position.set(-torsoW * 0.55, foreLegAnchorY - limbLen * 0.35, foreLegAnchorZ);
-    foreL.rotation.z = 0.08; // slight splay
-    foreL.castShadow = true;
-    foreL.name = 'foreL';
-    group.add(foreL);
-    partsRef.foreL = foreL;
-
-    const foreR = new THREE.Mesh(
-      new THREE.CylinderGeometry(limbRad * 0.6, limbRad, limbLen, 8),
-      limbMt.clone()
-    );
-    foreR.position.set(torsoW * 0.55, foreLegAnchorY - limbLen * 0.35, foreLegAnchorZ);
-    foreR.rotation.z = -0.08;
-    foreR.castShadow = true;
-    foreR.name = 'foreR';
-    group.add(foreR);
-    partsRef.foreR = foreR;
-
-    // ============ HINDLIMBS (anchored to abdomen bottom) ============
-    const hindRad = limbRad * 1.25;
-    const hindLen = limbLen * 1.15;
-
-    const hindAnchorY = abdomen.position.y - abdH * 0.4;
-    const hindAnchorZ = abdomen.position.z;
-
-    const hindL = new THREE.Mesh(
-      new THREE.CylinderGeometry(hindRad * 0.6, hindRad, hindLen, 8),
-      limbMt.clone()
-    );
-    hindL.position.set(-torsoW * 0.45, hindAnchorY - hindLen * 0.35, hindAnchorZ);
-    hindL.rotation.z = 0.06;
-    hindL.castShadow = true;
-    hindL.name = 'hindL';
-    group.add(hindL);
-    partsRef.hindL = hindL;
-
-    const hindR = new THREE.Mesh(
-      new THREE.CylinderGeometry(hindRad * 0.6, hindRad, hindLen, 8),
-      limbMt.clone()
-    );
-    hindR.position.set(torsoW * 0.45, hindAnchorY - hindLen * 0.35, hindAnchorZ);
-    hindR.rotation.z = -0.06;
-    hindR.castShadow = true;
-    hindR.name = 'hindR';
-    group.add(hindR);
-    partsRef.hindR = hindR;
-
-    // ============ WINGS (anchored to torso shoulder region) ============
-    const wingSpan = 0.8 + n.wingspan * 2.0;
-    const wingBoneRad = 0.03 + n.boneDensity * 0.015;
-
-    // Shoulder anchor: top-side of torso
-    const shoulderY = torsoY + torsoH * 0.25;
-    const shoulderZ = torsoD * 0.05;
-
-    // Wing bone (upper arm)
-    const wingBoneGeo = new THREE.CylinderGeometry(wingBoneRad * 0.5, wingBoneRad, wingSpan * 0.55, 6);
-
-    const wingArmL = new THREE.Mesh(wingBoneGeo, boneMat());
-    wingArmL.position.set(
-      -(torsoW * 0.5 + wingSpan * 0.2),
-      shoulderY + wingSpan * 0.08,
-      shoulderZ
-    );
-    wingArmL.rotation.z = Math.PI * 0.3 + n.wingspan * 0.08;
-    wingArmL.rotation.x = 0.12;
-    wingArmL.castShadow = true;
-    wingArmL.name = 'wingArmL';
-    group.add(wingArmL);
-    partsRef.wingArmL = wingArmL;
-
-    const wingArmR = new THREE.Mesh(wingBoneGeo.clone(), boneMat());
-    wingArmR.position.set(
-      torsoW * 0.5 + wingSpan * 0.2,
-      shoulderY + wingSpan * 0.08,
-      shoulderZ
-    );
-    wingArmR.rotation.z = -(Math.PI * 0.3 + n.wingspan * 0.08);
-    wingArmR.rotation.x = 0.12;
-    wingArmR.castShadow = true;
-    wingArmR.name = 'wingArmR';
-    group.add(wingArmR);
-    partsRef.wingArmR = wingArmR;
-
-    // Wing finger (forearm extension)
-    const fingerLen = wingSpan * 0.45;
-    const fingerGeo = new THREE.CylinderGeometry(wingBoneRad * 0.3, wingBoneRad * 0.5, fingerLen, 5);
-
-    const wingFingerL = new THREE.Mesh(fingerGeo, boneMat());
-    wingFingerL.position.set(
-      -(torsoW * 0.5 + wingSpan * 0.55),
-      shoulderY + wingSpan * 0.02,
-      shoulderZ - 0.05
-    );
-    wingFingerL.rotation.z = Math.PI * 0.38;
-    wingFingerL.rotation.x = 0.25;
-    wingFingerL.name = 'wingFingerL';
-    group.add(wingFingerL);
-    partsRef.wingFingerL = wingFingerL;
-
-    const wingFingerR = new THREE.Mesh(fingerGeo.clone(), boneMat());
-    wingFingerR.position.set(
-      torsoW * 0.5 + wingSpan * 0.55,
-      shoulderY + wingSpan * 0.02,
-      shoulderZ - 0.05
-    );
-    wingFingerR.rotation.z = -(Math.PI * 0.38);
-    wingFingerR.rotation.x = 0.25;
-    wingFingerR.name = 'wingFingerR';
-    group.add(wingFingerR);
-    partsRef.wingFingerR = wingFingerR;
-
-    // Wing membranes — triangular with droop
-    const memW = wingSpan * 0.75;
-    const memH = 0.4 + n.wingArea * 0.8;
-    const memGeo = new THREE.BufferGeometry();
-    // Create a fan shape: body edge → wing tip → trailing edge
-    const memVerts = new Float32Array([
-      // Triangle fan from shoulder to wing tip to body rear
-      0, 0, 0,                           // 0: shoulder anchor
-      -memW * 0.4, memW * 0.05, 0,       // 1: mid-wing
-      -memW * 0.7, -memW * 0.08, -0.1,   // 2: wing tip
-      -memW * 0.5, -memH * 0.3, -memH * 0.5, // 3: trailing edge mid
-      -memW * 0.15, -memH * 0.15, -memH * 0.7, // 4: trailing near body
-      0, 0, -memH * 0.3,                 // 5: body rear attach
-    ]);
-    const memIdx = [0,1,3, 0,3,5, 1,2,3, 3,4,5, 0,1,2]; // extra tri for coverage
-    memGeo.setAttribute('position', new THREE.BufferAttribute(memVerts, 3));
-    memGeo.setIndex(memIdx);
-    memGeo.computeVertexNormals();
-
-    const wingMemL = new THREE.Mesh(memGeo, membraneMat(tint, n));
-    wingMemL.position.set(-(torsoW * 0.45), shoulderY, shoulderZ);
-    wingMemL.name = 'wingMemL';
-    group.add(wingMemL);
-    partsRef.wingMemL = wingMemL;
-
-    // Mirror for right wing
-    const memVertsR = new Float32Array(memVerts);
-    for (let i = 0; i < memVertsR.length; i += 3) memVertsR[i] = -memVertsR[i]; // mirror X
-    const memGeoR = new THREE.BufferGeometry();
-    memGeoR.setAttribute('position', new THREE.BufferAttribute(memVertsR, 3));
-    memGeoR.setIndex(memIdx);
-    memGeoR.computeVertexNormals();
-
-    const wingMemR = new THREE.Mesh(memGeoR, membraneMat(tint, n));
-    wingMemR.position.set(torsoW * 0.45, shoulderY, shoulderZ);
-    wingMemR.name = 'wingMemR';
-    group.add(wingMemR);
-    partsRef.wingMemR = wingMemR;
-
-    // ============ TAIL (anchored to abdomen rear) ============
-    const tailLen = 0.6 + n.tailSize * 0.9;
-    const tailBaseRad = 0.08 + n.tailSize * 0.04 + n.bodyMass * 0.02;
-    const tailAnchorY = abdomen.position.y;
-    const tailAnchorZ = abdomen.position.z - abdD * 0.6;
-
-    // Tail built as 3 segments for natural curve
-    const seg1Len = tailLen * 0.4;
-    const seg1 = new THREE.Mesh(
-      new THREE.CylinderGeometry(tailBaseRad * 0.7, tailBaseRad, seg1Len, 8),
-      bodyMat(tint, n)
-    );
-    seg1.position.set(0, tailAnchorY - 0.05, tailAnchorZ - seg1Len * 0.4);
-    seg1.rotation.x = Math.PI * 0.42;
-    seg1.castShadow = true;
-    seg1.name = 'tailSeg1';
-    group.add(seg1);
-    partsRef.tailSeg1 = seg1;
-
-    const seg2Len = tailLen * 0.35;
-    const seg2 = new THREE.Mesh(
-      new THREE.CylinderGeometry(tailBaseRad * 0.4, tailBaseRad * 0.7, seg2Len, 8),
-      bodyMat(tint, n)
-    );
-    seg2.position.set(0, tailAnchorY - 0.15, tailAnchorZ - seg1Len * 0.7 - seg2Len * 0.3);
-    seg2.rotation.x = Math.PI * 0.35;
-    seg2.castShadow = true;
-    seg2.name = 'tailSeg2';
-    group.add(seg2);
-    partsRef.tailSeg2 = seg2;
-
-    const seg3Len = tailLen * 0.25;
-    const tailTip = new THREE.Mesh(
-      new THREE.ConeGeometry(tailBaseRad * 0.4, seg3Len, 6),
-      armorMat(tint, n)
-    );
-    tailTip.position.set(0, tailAnchorY - 0.2, tailAnchorZ - seg1Len * 0.7 - seg2Len * 0.6 - seg3Len * 0.2);
-    tailTip.rotation.x = Math.PI * 0.5;
-    tailTip.name = 'tailTip';
-    group.add(tailTip);
-    partsRef.tailTip = tailTip;
-
-    // ============ SPINE RIDGES (along torso-to-tail) ============
-    const ridgeCount = 3 + Math.floor(n.scaleThickness * 4);
-    const ridgeMt = armorMat(tint, n);
+    // ---- SPINE RIDGES ----
+    const ridgeCount = 3 + Math.floor(n.scaleThickness * 3);
+    const ridgeMt = mkAccentMat(tint, n);
     for (let i = 0; i < ridgeCount; i++) {
-      const t_pos = i / Math.max(ridgeCount - 1, 1);
-      const ridgeH = 0.04 + n.scaleThickness * 0.06 * (1 - Math.abs(t_pos - 0.3) * 1.2);
-      if (ridgeH < 0.02) continue;
-      const ridge = new THREE.Mesh(
-        new THREE.OctahedronGeometry(ridgeH, 0),
-        ridgeMt
-      );
-      // Interpolate along spine from torso top to tail start
-      const spineY = torsoY + torsoH * 0.5 - t_pos * (torsoY + torsoH * 0.5 - tailAnchorY) * 0.6;
-      const spineZ = torsoD * 0.3 - t_pos * (torsoD * 0.3 - tailAnchorZ) * 0.8;
-      ridge.position.set(0, spineY, spineZ);
-      ridge.scale.set(0.4, 1.3, 0.6);
+      const st = 0.18 + (i / Math.max(ridgeCount - 1, 1)) * 0.45;
+      const pt = spline.getPointAt(st);
+      const rh = 0.03 + n.scaleThickness * 0.05 * (1 - Math.abs(st - 0.35) * 2);
+      if (rh < 0.015) continue;
+      const ridge = new THREE.Mesh(new THREE.OctahedronGeometry(rh, 0), ridgeMt);
+      ridge.position.set(0, pt.y + bodyRadius(st) * 0.85, pt.z);
+      ridge.scale.set(0.35, 1.2, 0.55);
       ridge.name = 'ridge_' + i;
       group.add(ridge);
     }
+
+    // ---- FORELIMBS ----
+    const limbRad = 0.04 + n.musclePower * 0.025 + n.bodyMass * 0.01;
+    const limbLen = 0.3 + n.bodyMass * 0.15;
+    const limbMt = mkBodyMat(tint, n);
+
+    // Attach to shoulder area
+    const fLegY = shoulderPt.y - bodyRadius(0.52) * 0.6;
+    const fLegZ = shoulderPt.z;
+
+    const foreL = new THREE.Mesh(
+      new THREE.CylinderGeometry(limbRad * 0.55, limbRad, limbLen, 8),
+      limbMt
+    );
+    foreL.position.set(-maxR * muscle * 0.65, fLegY - limbLen * 0.35, fLegZ);
+    foreL.castShadow = true;
+    foreL.name = 'foreL';
+    group.add(foreL); ref.foreL = foreL;
+
+    const foreR = new THREE.Mesh(
+      new THREE.CylinderGeometry(limbRad * 0.55, limbRad, limbLen, 8),
+      limbMt.clone()
+    );
+    foreR.position.set(maxR * muscle * 0.65, fLegY - limbLen * 0.35, fLegZ);
+    foreR.castShadow = true;
+    foreR.name = 'foreR';
+    group.add(foreR); ref.foreR = foreR;
+
+    // ---- HINDLIMBS ----
+    const hRad = limbRad * 1.2;
+    const hLen = limbLen * 1.1;
+    const hLegY = hipPt.y - bodyRadius(0.28) * 0.5;
+    const hLegZ = hipPt.z;
+
+    const hindL = new THREE.Mesh(
+      new THREE.CylinderGeometry(hRad * 0.55, hRad, hLen, 8),
+      limbMt.clone()
+    );
+    hindL.position.set(-maxR * muscle * 0.55, hLegY - hLen * 0.35, hLegZ);
+    hindL.castShadow = true;
+    hindL.name = 'hindL';
+    group.add(hindL); ref.hindL = hindL;
+
+    const hindR = new THREE.Mesh(
+      new THREE.CylinderGeometry(hRad * 0.55, hRad, hLen, 8),
+      limbMt.clone()
+    );
+    hindR.position.set(maxR * muscle * 0.55, hLegY - hLen * 0.35, hLegZ);
+    hindR.castShadow = true;
+    hindR.name = 'hindR';
+    group.add(hindR); ref.hindR = hindR;
+
+    // ---- WINGS ----
+    const wingSpan = 0.7 + n.wingspan * 1.8;
+    const wingArea = 0.3 + n.wingArea * 0.7;
+    const boneRad = 0.02 + n.boneDensity * 0.008;
+
+    // Wing anchor: shoulder top
+    const wAnchorY = shoulderPt.y + bodyRadius(0.52) * 0.5;
+    const wAnchorZ = shoulderPt.z;
+
+    // Wing shape: defined as a 2D silhouette, extruded to flat mesh
+    // Points: shoulder → elbow → tip → trailing edge → body
+    function makeWingShape(side) {
+      const s = side; // -1 = left, 1 = right
+      const shape = new THREE.Shape();
+      shape.moveTo(0, 0);                                             // shoulder
+      shape.quadraticCurveTo(s * wingSpan * 0.3, wingSpan * 0.12,    // elbow curve
+                             s * wingSpan * 0.55, wingSpan * 0.05);  // mid-wing
+      shape.lineTo(s * wingSpan * 0.75, -wingSpan * 0.03);            // wing tip
+      shape.quadraticCurveTo(s * wingSpan * 0.5, -wingArea * 0.4,    // trailing droop
+                             s * wingSpan * 0.15, -wingArea * 0.5);  // near body
+      shape.lineTo(0, -wingArea * 0.2);                               // body attach
+      shape.lineTo(0, 0);                                             // close
+
+      const geo = new THREE.ShapeGeometry(shape, 6);
+      return geo;
+    }
+
+    const memMatL = mkMembraneMat(tint, n);
+    const wingL = new THREE.Mesh(makeWingShape(-1), memMatL);
+    wingL.position.set(0, wAnchorY, wAnchorZ);
+    wingL.rotation.x = -0.15; // slight backward tilt
+    wingL.name = 'wingL';
+    group.add(wingL); ref.wingL = wingL;
+
+    const wingR = new THREE.Mesh(makeWingShape(1), mkMembraneMat(tint, n));
+    wingR.position.set(0, wAnchorY, wAnchorZ);
+    wingR.rotation.x = -0.15;
+    wingR.name = 'wingR';
+    group.add(wingR); ref.wingR = wingR;
+
+    // Wing leading edge bone (one per wing)
+    const wingBoneLen = wingSpan * 0.6;
+    const wbGeo = new THREE.CylinderGeometry(boneRad * 0.4, boneRad, wingBoneLen, 5);
+
+    const wbL = new THREE.Mesh(wbGeo, mkBoneMat());
+    wbL.position.set(-wingBoneLen * 0.25, wAnchorY + wingSpan * 0.04, wAnchorZ);
+    wbL.rotation.z = Math.PI * 0.35 + n.wingspan * 0.05;
+    wbL.name = 'wingBoneL';
+    group.add(wbL); ref.wingBoneL = wbL;
+
+    const wbR = new THREE.Mesh(wbGeo.clone(), mkBoneMat());
+    wbR.position.set(wingBoneLen * 0.25, wAnchorY + wingSpan * 0.04, wAnchorZ);
+    wbR.rotation.z = -(Math.PI * 0.35 + n.wingspan * 0.05);
+    wbR.name = 'wingBoneR';
+    group.add(wbR); ref.wingBoneR = wbR;
 
     return group;
   }
@@ -587,34 +457,32 @@ window.Scene = (function() {
   // --------------------------------------------------------
   // BUILD / REBUILD
   // --------------------------------------------------------
-  function buildPlayerDragon(traits, tintColor) {
-    if (dragonGroup) {
-      while (dragonGroup.children.length > 0) {
-        const child = dragonGroup.children[0];
-        dragonGroup.remove(child);
-        if (child.geometry) child.geometry.dispose();
-        if (child.material) {
-          if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
-          else child.material.dispose();
-        }
+  function clearGroup(grp, partsObj) {
+    while (grp.children.length > 0) {
+      const child = grp.children[0];
+      grp.remove(child);
+      if (child.geometry) child.geometry.dispose();
+      if (child.material) {
+        if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+        else child.material.dispose();
       }
     }
-    Object.keys(DRAGON_PARTS).forEach(k => delete DRAGON_PARTS[k]);
+    Object.keys(partsObj).forEach(k => delete partsObj[k]);
+  }
 
-    const built = buildDragon(traits, tintColor, DRAGON_PARTS);
-    built.children.forEach(child => dragonGroup.add(child));
+  function buildPlayerDragon(traits, tintColor) {
+    clearGroup(dragonGroup, P);
+    const built = buildDragon(traits, tintColor, P);
+    built.children.forEach(c => dragonGroup.add(c));
 
-    // Store base positions for animation
-    basePositions = {};
-    Object.keys(DRAGON_PARTS).forEach(k => {
-      const p = DRAGON_PARTS[k];
-      if (p && p.position) {
-        basePositions[k] = {
-          y: p.position.y,
-          z: p.position.z,
-          rotY: p.rotation ? p.rotation.y : 0,
-          rotZ: p.rotation ? p.rotation.z : 0,
-          scaleY: p.scale ? p.scale.y : 1,
+    // Store base values for animation
+    baseState = {};
+    Object.keys(P).forEach(k => {
+      if (P[k] && P[k].position) {
+        baseState[k] = {
+          y: P[k].position.y,
+          ry: P[k].rotation ? P[k].rotation.y : 0,
+          rz: P[k].rotation ? P[k].rotation.z : 0,
         };
       }
     });
@@ -625,51 +493,28 @@ window.Scene = (function() {
   }
 
   // --------------------------------------------------------
-  // IDLE ANIMATION — uses stored base positions
+  // IDLE ANIMATION
   // --------------------------------------------------------
   function animateIdle(time) {
-    const P = DRAGON_PARTS;
-    const B = basePositions;
-    if (!P.torso || !B.torso) return;
+    if (!P.body) return;
+    const B = baseState;
 
-    // Breathing: torso scale Y
-    const breath = Math.sin(time * 1.6) * 0.012;
-    P.torso.scale.y = B.torso.scaleY + breath;
-
-    // Head bob
-    if (P.head && B.head) {
-      P.head.position.y = B.head.y + Math.sin(time * 1.3) * 0.008;
-    }
-    // Snout follows head
-    if (P.snout && B.snout) {
-      P.snout.position.y = B.snout.y + Math.sin(time * 1.3) * 0.008;
-    }
-    // Jaw follows head
-    if (P.jaw && B.jaw) {
-      P.jaw.position.y = B.jaw.y + Math.sin(time * 1.3) * 0.008;
+    // Subtle body breathing — slight Y bob
+    if (P.body && B.body) {
+      P.body.position.y = B.body.y + Math.sin(time * 1.5) * 0.008;
     }
 
-    // Tail sway (all segments)
-    const sway = Math.sin(time * 1.0) * 0.12;
-    if (P.tailSeg1) P.tailSeg1.rotation.y = sway * 0.5;
-    if (P.tailSeg2) P.tailSeg2.rotation.y = sway * 0.8;
-    if (P.tailTip) P.tailTip.rotation.y = sway * 1.0;
-
-    // Wing settle
-    if (P.wingArmL && B.wingArmL) {
-      const wingBob = Math.sin(time * 0.7) * 0.02;
-      P.wingArmL.rotation.z = B.wingArmL.rotZ + wingBob;
-    }
-    if (P.wingArmR && B.wingArmR) {
-      const wingBob = Math.sin(time * 0.7) * 0.02;
-      P.wingArmR.rotation.z = B.wingArmR.rotZ - wingBob;
+    // Wing flutter
+    if (P.wingL && B.wingL) {
+      P.wingL.rotation.z = Math.sin(time * 0.7) * 0.03;
+      P.wingR.rotation.z = -Math.sin(time * 0.7) * 0.03;
     }
 
     // Fuel sac pulse
-    if (P.fuelSac && P.fuelSac.material && P.fuelSac.material.emissiveIntensity !== undefined) {
-      const baseIntensity = P.fuelSac.material.userData_baseIntensity ||
-        (P.fuelSac.material.userData_baseIntensity = P.fuelSac.material.emissiveIntensity);
-      P.fuelSac.material.emissiveIntensity = baseIntensity + Math.sin(time * 2.2) * 0.15;
+    if (P.fuelSac && P.fuelSac.material) {
+      const bi = P.fuelSac.material._baseEI;
+      if (bi === undefined) P.fuelSac.material._baseEI = P.fuelSac.material.emissiveIntensity;
+      P.fuelSac.material.emissiveIntensity = (P.fuelSac.material._baseEI || 0.5) + Math.sin(time * 2.0) * 0.15;
     }
   }
 
@@ -678,41 +523,37 @@ window.Scene = (function() {
   // --------------------------------------------------------
   function initBattleArena(arenaKey, playerTraits, playerTint, enemyTraits, enemyTint) {
     currentMode = 'battle';
-    camera.position.set(0, 5, 12);
-    controls.target.set(0, 1.5, 0);
+    camera.position.set(0, 4.5, 11);
+    controls.target.set(0, 1.2, 0);
 
     const arenaColors = {
-      mountains: 0x1a2a22, tundra: 0x1a2a3a,
-      volcanic: 0x2a1010, forest: 0x0e1a0e, plains: 0x2a2a1a
+      mountains: 0x141e18, tundra: 0x141e28,
+      volcanic: 0x1e1010, forest: 0x0a140a, plains: 0x1a1a10
     };
-    scene.background = new THREE.Color(arenaColors[arenaKey] || 0x0c0c1e);
+    scene.background = new THREE.Color(arenaColors[arenaKey] || 0x0e0e1e);
 
-    dragonGroup.position.set(-3, 0, 0);
-    dragonGroup.rotation.y = Math.PI * 0.15;
+    dragonGroup.position.set(-2.5, 0, 0);
+    dragonGroup.rotation.y = Math.PI * 0.12;
 
-    if (enemyGroup) scene.remove(enemyGroup);
+    if (enemyGroup) { clearGroup(enemyGroup, EP); scene.remove(enemyGroup); }
     enemyGroup = new THREE.Group();
-    const enemyBuilt = buildDragon(enemyTraits, enemyTint, ENEMY_PARTS);
-    enemyBuilt.children.forEach(child => enemyGroup.add(child));
-    enemyGroup.position.set(3, 0, 0);
-    enemyGroup.rotation.y = -Math.PI * 0.15;
+    const built = buildDragon(enemyTraits, enemyTint, EP);
+    built.children.forEach(c => enemyGroup.add(c));
+    enemyGroup.position.set(2.5, 0, 0);
+    enemyGroup.rotation.y = -Math.PI * 0.12;
     scene.add(enemyGroup);
   }
 
   function returnToLab() {
     currentMode = 'lab';
-    camera.position.set(4.5, 3.0, 5.5);
-    controls.target.set(0, 1.4, 0);
+    camera.position.set(3.5, 2.8, 5.0);
+    controls.target.set(0, 1.2, 0);
     dragonGroup.position.set(0, 0, 0);
     dragonGroup.rotation.y = 0;
-    scene.background = new THREE.Color(0x0c0c1e);
-    scene.fog = new THREE.FogExp2(0x0c0c1e, 0.035);
+    scene.background = new THREE.Color(0x0e0e1e);
+    scene.fog = new THREE.FogExp2(0x0e0e1e, 0.028);
 
-    if (enemyGroup) {
-      scene.remove(enemyGroup);
-      enemyGroup = null;
-    }
-    Object.keys(ENEMY_PARTS).forEach(k => delete ENEMY_PARTS[k]);
+    if (enemyGroup) { clearGroup(enemyGroup, EP); scene.remove(enemyGroup); enemyGroup = null; }
   }
 
   // --------------------------------------------------------
@@ -720,68 +561,48 @@ window.Scene = (function() {
   // --------------------------------------------------------
   function animateBattleTick(tickRecord) {
     if (!tickRecord) return;
+    const pa = tickRecord.playerAction;
+    const ea = tickRecord.enemyAction;
 
-    const pAction = tickRecord.playerAction;
-    const eAction = tickRecord.enemyAction;
-
-    if (['lunge', 'bite', 'claw', 'pressure'].includes(pAction)) {
-      animateLunge(dragonGroup, 0.3);
-    }
-    if (['lunge', 'bite', 'claw', 'pressure'].includes(eAction)) {
-      animateLunge(enemyGroup, -0.3);
-    }
-
-    if (['fireBurst', 'sustainedFire'].includes(pAction)) {
-      playFireEffect(dragonGroup, enemyGroup);
-    }
-    if (['fireBurst', 'sustainedFire'].includes(eAction)) {
-      playFireEffect(enemyGroup, dragonGroup);
-    }
-
-    if (tickRecord.playerDamageDealt > 5 && enemyGroup) {
-      playImpactEffect(enemyGroup.position.clone().add(new THREE.Vector3(0, 1.5, 0)));
-    }
-    if (tickRecord.enemyDamageDealt > 5) {
-      playImpactEffect(dragonGroup.position.clone().add(new THREE.Vector3(0, 1.5, 0)));
-    }
+    if (['lunge','bite','claw','pressure'].includes(pa)) animateLunge(dragonGroup, 0.3);
+    if (['lunge','bite','claw','pressure'].includes(ea)) animateLunge(enemyGroup, -0.3);
+    if (['fireBurst','sustainedFire'].includes(pa)) playFireEffect(dragonGroup, enemyGroup);
+    if (['fireBurst','sustainedFire'].includes(ea)) playFireEffect(enemyGroup, dragonGroup);
+    if (tickRecord.playerDamageDealt > 5 && enemyGroup) playImpactEffect(enemyGroup.position.clone().add(new THREE.Vector3(0,1.3,0)));
+    if (tickRecord.enemyDamageDealt > 5) playImpactEffect(dragonGroup.position.clone().add(new THREE.Vector3(0,1.3,0)));
   }
 
   let lungeAnims = [];
-  function animateLunge(group, offset) {
-    if (!group) return;
-    lungeAnims.push({ group, offset, startZ: group.position.z, phase: 0, duration: 0.4 });
+  function animateLunge(grp, offset) {
+    if (!grp) return;
+    lungeAnims.push({ group: grp, offset, startZ: grp.position.z, phase: 0, duration: 0.35 });
   }
 
   let fireParticles = [];
-  function playFireEffect(source, target) {
-    if (!source || !target) return;
-    const start = source.position.clone().add(new THREE.Vector3(0, 1.8, 0.5));
-    const end = target.position.clone().add(new THREE.Vector3(0, 1.4, 0));
-
-    for (let i = 0; i < 15; i++) {
-      const geo = new THREE.SphereGeometry(0.03 + Math.random() * 0.04, 6, 4);
+  function playFireEffect(src, tgt) {
+    if (!src || !tgt) return;
+    const start = src.position.clone().add(new THREE.Vector3(0, 1.5, 0.4));
+    const end = tgt.position.clone().add(new THREE.Vector3(0, 1.2, 0));
+    for (let i = 0; i < 14; i++) {
+      const geo = new THREE.SphereGeometry(0.03 + Math.random() * 0.03, 5, 4);
       const mat = new THREE.MeshBasicMaterial({
-        color: new THREE.Color().setHSL(0.04 + Math.random() * 0.06, 1, 0.45 + Math.random() * 0.3),
+        color: new THREE.Color().setHSL(0.04 + Math.random() * 0.06, 1, 0.4 + Math.random() * 0.3),
         transparent: true, opacity: 0.9
       });
       const p = new THREE.Mesh(geo, mat);
-      p.position.copy(start).add(new THREE.Vector3(
-        (Math.random() - 0.5) * 0.15, (Math.random() - 0.5) * 0.15, 0
-      ));
+      p.position.copy(start).add(new THREE.Vector3((Math.random()-0.5)*0.12, (Math.random()-0.5)*0.12, 0));
       scene.add(p);
-      fireParticles.push({
-        mesh: p, start: start.clone(), end: end.clone(),
-        progress: i * -0.04, speed: 1.8 + Math.random() * 0.6
-      });
+      fireParticles.push({ mesh: p, start: start.clone(), end: end.clone(), progress: i * -0.04, speed: 1.6 + Math.random() * 0.6 });
     }
   }
 
   let impactFlashes = [];
-  function playImpactEffect(position) {
-    const geo = new THREE.SphereGeometry(0.12, 8, 6);
-    const mat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1 });
-    const flash = new THREE.Mesh(geo, mat);
-    flash.position.copy(position);
+  function playImpactEffect(pos) {
+    const flash = new THREE.Mesh(
+      new THREE.SphereGeometry(0.1, 8, 6),
+      new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1 })
+    );
+    flash.position.copy(pos);
     scene.add(flash);
     impactFlashes.push({ mesh: flash, life: 1.0 });
   }
@@ -793,12 +614,9 @@ window.Scene = (function() {
     animationId = requestAnimationFrame(animate);
     const delta = clock.getDelta();
     const time = clock.getElapsedTime();
-
     controls.update();
 
-    if (currentMode === 'lab') {
-      animateIdle(time);
-    }
+    if (currentMode === 'lab') animateIdle(time);
 
     lungeAnims = lungeAnims.filter(la => {
       la.phase += delta / la.duration;
@@ -811,34 +629,25 @@ window.Scene = (function() {
     fireParticles = fireParticles.filter(fp => {
       fp.progress += delta * fp.speed;
       if (fp.progress < 0) return true;
-      if (fp.progress >= 1) {
-        scene.remove(fp.mesh); fp.mesh.geometry.dispose(); fp.mesh.material.dispose();
-        return false;
-      }
+      if (fp.progress >= 1) { scene.remove(fp.mesh); fp.mesh.geometry.dispose(); fp.mesh.material.dispose(); return false; }
       fp.mesh.position.lerpVectors(fp.start, fp.end, fp.progress);
-      fp.mesh.position.y += Math.sin(fp.progress * Math.PI) * 0.25;
+      fp.mesh.position.y += Math.sin(fp.progress * Math.PI) * 0.2;
       fp.mesh.material.opacity = 1 - fp.progress * 0.8;
-      fp.mesh.scale.setScalar(1 + fp.progress * 0.8);
+      fp.mesh.scale.setScalar(1 + fp.progress * 0.7);
       return true;
     });
 
     impactFlashes = impactFlashes.filter(fl => {
       fl.life -= delta * 4;
-      if (fl.life <= 0) {
-        scene.remove(fl.mesh); fl.mesh.geometry.dispose(); fl.mesh.material.dispose();
-        return false;
-      }
+      if (fl.life <= 0) { scene.remove(fl.mesh); fl.mesh.geometry.dispose(); fl.mesh.material.dispose(); return false; }
       fl.mesh.material.opacity = fl.life;
-      fl.mesh.scale.setScalar(1 + (1 - fl.life) * 2);
+      fl.mesh.scale.setScalar(1 + (1 - fl.life) * 1.8);
       return true;
     });
 
     renderer.render(scene, camera);
   }
 
-  // --------------------------------------------------------
-  // RESIZE
-  // --------------------------------------------------------
   function resize(container) {
     if (!renderer || !container) return;
     renderer.setSize(container.clientWidth, container.clientHeight);
@@ -846,21 +655,13 @@ window.Scene = (function() {
     camera.updateProjectionMatrix();
   }
 
-  // --------------------------------------------------------
-  // ENVIRONMENT PREVIEW
-  // --------------------------------------------------------
   function setEnvironment(habitatKey) {
-    const envColors = {
-      mountains: { bg: 0x141e18 }, tundra: { bg: 0x141e28 },
-      volcanic: { bg: 0x1e1010 }, forest: { bg: 0x0a140a },
-      plains: { bg: 0x1a1a10 }
-    };
-    const env = envColors[habitatKey] || { bg: 0x0c0c1e };
-    scene.background = new THREE.Color(env.bg);
+    const colors = { mountains: 0x121e16, tundra: 0x121e28, volcanic: 0x1e0e0e, forest: 0x0a140a, plains: 0x181810 };
+    scene.background = new THREE.Color(colors[habitatKey] || 0x0e0e1e);
   }
 
   function resetEnvironment() {
-    scene.background = new THREE.Color(0x0c0c1e);
+    scene.background = new THREE.Color(0x0e0e1e);
   }
 
   return {
@@ -868,7 +669,6 @@ window.Scene = (function() {
     initBattleArena, returnToLab, animateBattleTick,
     playFireEffect, playImpactEffect,
     setEnvironment, resetEnvironment, resize,
-    _dragonGroup: dragonGroup,
-    _DRAGON_PARTS: DRAGON_PARTS
+    _dragonGroup: dragonGroup, _DRAGON_PARTS: P
   };
 })();
