@@ -162,3 +162,21 @@
   .sp-shop-bundles { grid-template-columns: 1fr; }
   .sp-shop-modal { padding: 16px; }
 }
+
+/* ── Admin testing button (dev only) ── */
+.sp-shop-admin-unlock {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px 16px;
+  background: #7c3aed;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  letter-spacing: 0.02em;
+}
+.sp-shop-admin-unlock:hover { background: #6d28d9; }

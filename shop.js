@@ -105,10 +105,25 @@ function buildModal(cfg) {
   var modal = document.createElement('div');
   modal.className = 'sp-shop-modal';
 
-  // Title
+  // Title — triple-click activates admin mode
   var title = document.createElement('div');
   title.className = 'sp-shop-title';
   title.innerHTML = '&#x1F6CD; ' + _t('shopTitle', 'Shop') + ' &mdash; ' + _t('shopPremiumBundles', 'Premium Bundles');
+  var _titleClicks = 0;
+  title.addEventListener('click', function () {
+    _titleClicks++;
+    if (_titleClicks >= 3) {
+      _titleClicks = 0;
+      if (window.Arcade && Arcade.activateAdminMode) {
+        Arcade.activateAdminMode();
+      } else {
+        try { localStorage.setItem('arc_admin', '1'); } catch(e) {}
+      }
+      if (adminBtn) adminBtn.style.display = '';
+      status.textContent = '🔑 Admin mode on — click Unlock All below.';
+      status.className = 'sp-shop-status success';
+    }
+  });
   modal.appendChild(title);
 
   // Bundles grid
