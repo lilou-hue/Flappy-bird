@@ -54,13 +54,44 @@
      UNLOCK TIERS
      ════════════════════════════════════════════════════════════ */
   var UNLOCKS = [
-    { energy: 50,   id: 'trail_pink',    label: 'Pink Trail' },
-    { energy: 150,  id: 'paddle_neon',   label: 'Neon Paddle' },
-    { energy: 300,  id: 'ball_heart',    label: 'Heart Ball' },
-    { energy: 500,  id: 'trail_rainbow', label: 'Rainbow Trail' },
-    { energy: 800,  id: 'paddle_fire',   label: 'Fire Paddle' },
-    { energy: 1200, id: 'ball_star',     label: 'Star Ball' }
+    { energy: 50,   id: 'trail_pink',    label: 'Pink Trail',    slot: 'trail' },
+    { energy: 150,  id: 'paddle_neon',   label: 'Neon Paddle',   slot: 'paddle' },
+    { energy: 300,  id: 'ball_heart',    label: 'Heart Ball',    slot: 'ball' },
+    { energy: 500,  id: 'trail_rainbow', label: 'Rainbow Trail', slot: 'trail' },
+    { energy: 800,  id: 'paddle_fire',   label: 'Fire Paddle',   slot: 'paddle' },
+    { energy: 1200, id: 'ball_star',     label: 'Star Ball',     slot: 'ball' }
   ];
+
+  /* ── Equipped cosmetics helper ── */
+  function getEquipped() {
+    var p = loadProgress();
+    return p.equipped || {};
+  }
+  function equipItem(id) {
+    var p = loadProgress();
+    for (var i = 0; i < UNLOCKS.length; i++) {
+      if (UNLOCKS[i].id === id) { p.equipped[UNLOCKS[i].slot] = id; break; }
+    }
+    saveProgress(p);
+  }
+  function unequipSlot(slot) {
+    var p = loadProgress();
+    delete p.equipped[slot];
+    saveProgress(p);
+  }
+
+  /* ── Draw star utility ── */
+  function drawStar(ctx, cx, cy, outerR, innerR, points) {
+    ctx.beginPath();
+    for (var i = 0; i < points * 2; i++) {
+      var r = i % 2 === 0 ? outerR : innerR;
+      var a = (i * Math.PI / points) - Math.PI / 2;
+      if (i === 0) ctx.moveTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+      else ctx.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+    }
+    ctx.closePath();
+    ctx.fill();
+  }
 
   /* ════════════════════════════════════════════════════════════
      PERSONALITY MESSAGES
@@ -493,6 +524,9 @@
     for (var i = 0; i < UNLOCKS.length; i++) {
       if (progress.energy >= UNLOCKS[i].energy && progress.unlocked.indexOf(UNLOCKS[i].id) === -1) {
         progress.unlocked.push(UNLOCKS[i].id);
+        // Auto-equip newly unlocked item
+        if (!progress.equipped) progress.equipped = {};
+        progress.equipped[UNLOCKS[i].slot] = UNLOCKS[i].id;
         newUnlock = UNLOCKS[i];
       }
     }
@@ -639,41 +673,91 @@
     }
     ctx.globalAlpha = 1;
 
-    // ── Ball trail ──
-    if (g.intensity > 0.2) {
+    // ── Ball trail (cosmetic-aware) ──
+    var eq = getEquipped();
+    var hasTrail = eq.trail || (g.intensity > 0.2);
+    if (hasTrail) {
+      var rainbowColors = ['#ff1744', '#ff9100', '#ffea00', '#00e676', '#2979ff', '#d500f9'];
       for (var bi = 0; bi < g.balls.length; bi++) {
         var ball = g.balls[bi];
         for (var ti = 0; ti < ball.trail.length; ti++) {
-          var ta = (ti / ball.trail.length) * g.intensity * 0.4;
+          var tPct = ti / ball.trail.length;
+          var ta = tPct * 0.6;
+          // Increase trail alpha if cosmetic trail equipped
+          if (eq.trail) ta = tPct * 0.8;
           ctx.globalAlpha = ta;
-          ctx.fillStyle = '#ff6b9d';
+
+          if (eq.trail === 'trail_rainbow') {
+            ctx.fillStyle = rainbowColors[ti % rainbowColors.length];
+          } else if (eq.trail === 'trail_pink') {
+            ctx.fillStyle = '#ff6b9d';
+          } else {
+            ctx.fillStyle = '#ff6b9d';
+          }
+
+          var trailR = BALL_R * (0.4 + tPct * 0.5);
           ctx.beginPath();
-          ctx.arc(ball.trail[ti].x, ball.trail[ti].y, BALL_R * 0.7, 0, Math.PI * 2);
+          ctx.arc(ball.trail[ti].x, ball.trail[ti].y, trailR, 0, Math.PI * 2);
           ctx.fill();
         }
       }
       ctx.globalAlpha = 1;
     }
 
-    // ── Paddles ──
+    // ── Paddles (cosmetic-aware) ──
     var glowBlur = g.intensity * 20;
 
     // Player paddle
     ctx.save();
-    if (g.glowPulse > 0 || glowBlur > 0) {
-      ctx.shadowColor = '#82b1ff';
-      ctx.shadowBlur = glowBlur + g.glowPulse * 20;
+    if (eq.paddle === 'paddle_fire') {
+      // Fire paddle: animated orange-red gradient + ember particles
+      ctx.shadowColor = '#ff6b00';
+      ctx.shadowBlur = 18 + Math.sin(g.frameCount * 0.15) * 8 + g.glowPulse * 15;
+      var fireGrad = ctx.createLinearGradient(g.player.x, g.player.y, g.player.x, g.player.y + g.player.h);
+      var shift = Math.sin(g.frameCount * 0.1) * 0.15 + 0.5;
+      fireGrad.addColorStop(0, '#ffeb3b');
+      fireGrad.addColorStop(shift, '#ff6d00');
+      fireGrad.addColorStop(1, '#d50000');
+      ctx.fillStyle = fireGrad;
+      // Spawn ember particles
+      if (g.frameCount % 3 === 0) {
+        g.particles.push({
+          x: g.player.x + g.player.w / 2 + (Math.random() - 0.5) * 6,
+          y: g.player.y + Math.random() * g.player.h,
+          vx: 0.5 + Math.random(), vy: (Math.random() - 0.5) * 1.5,
+          alpha: 0.8, size: 1 + Math.random() * 2.5,
+          color: pick(['#ffeb3b', '#ff6d00', '#ff1744']), isHeart: false
+        });
+      }
+    } else if (eq.paddle === 'paddle_neon') {
+      // Neon paddle: cycling rainbow gradient + bright glow
+      ctx.shadowColor = 'hsl(' + (g.frameCount * 3 % 360) + ',100%,60%)';
+      ctx.shadowBlur = 14 + g.glowPulse * 18;
+      var neonGrad = ctx.createLinearGradient(g.player.x, g.player.y, g.player.x, g.player.y + g.player.h);
+      var hue1 = g.frameCount * 3 % 360;
+      var hue2 = (hue1 + 60) % 360;
+      var hue3 = (hue1 + 120) % 360;
+      neonGrad.addColorStop(0, 'hsl(' + hue1 + ',100%,65%)');
+      neonGrad.addColorStop(0.5, 'hsl(' + hue2 + ',100%,65%)');
+      neonGrad.addColorStop(1, 'hsl(' + hue3 + ',100%,65%)');
+      ctx.fillStyle = neonGrad;
+    } else {
+      // Default paddle
+      if (g.glowPulse > 0 || glowBlur > 0) {
+        ctx.shadowColor = '#82b1ff';
+        ctx.shadowBlur = glowBlur + g.glowPulse * 20;
+      }
+      var paddleGrad = ctx.createLinearGradient(g.player.x, g.player.y, g.player.x, g.player.y + g.player.h);
+      paddleGrad.addColorStop(0, '#82b1ff');
+      paddleGrad.addColorStop(1, '#5c8ee6');
+      ctx.fillStyle = paddleGrad;
     }
-    var paddleGrad = ctx.createLinearGradient(g.player.x, g.player.y, g.player.x, g.player.y + g.player.h);
-    paddleGrad.addColorStop(0, '#82b1ff');
-    paddleGrad.addColorStop(1, '#5c8ee6');
-    ctx.fillStyle = paddleGrad;
     ctx.beginPath();
     ctx.roundRect(g.player.x, g.player.y, g.player.w, g.player.h, 6);
     ctx.fill();
     ctx.restore();
 
-    // AI paddle
+    // AI paddle (always default style)
     ctx.save();
     if (glowBlur > 0) {
       ctx.shadowColor = '#ff6b9d';
@@ -688,23 +772,44 @@
     ctx.fill();
     ctx.restore();
 
-    // ── Balls ──
+    // ── Balls (cosmetic-aware) ──
     for (var bdi = 0; bdi < g.balls.length; bdi++) {
       var bd = g.balls[bdi];
       ctx.save();
-      if (glowBlur > 0) {
-        ctx.shadowColor = '#ffeb3b';
-        ctx.shadowBlur = glowBlur + 5;
+
+      if (eq.ball === 'ball_heart') {
+        // Heart Ball: renders as a heart shape
+        ctx.shadowColor = '#ff1744';
+        ctx.shadowBlur = 12 + glowBlur;
+        ctx.fillStyle = '#ff1744';
+        var heartSize = BALL_R * 2.8;
+        drawHeart(ctx, bd.x, bd.y - heartSize * 0.35, heartSize);
+      } else if (eq.ball === 'ball_star') {
+        // Star Ball: rotating star with golden glow
+        ctx.shadowColor = '#ffd600';
+        ctx.shadowBlur = 14 + glowBlur;
+        ctx.translate(bd.x, bd.y);
+        ctx.rotate(g.frameCount * 0.06);
+        ctx.fillStyle = '#ffd600';
+        drawStar(ctx, 0, 0, BALL_R * 1.4, BALL_R * 0.55, 5);
+        // Inner bright core
+        ctx.fillStyle = '#fff8e1';
+        drawStar(ctx, 0, 0, BALL_R * 0.6, BALL_R * 0.25, 5);
+      } else {
+        // Default ball
+        if (glowBlur > 0) {
+          ctx.shadowColor = '#ffeb3b';
+          ctx.shadowBlur = glowBlur + 5;
+        }
+        var ballGrad = ctx.createRadialGradient(bd.x - 2, bd.y - 2, 1, bd.x, bd.y, BALL_R);
+        ballGrad.addColorStop(0, '#fff');
+        ballGrad.addColorStop(0.6, '#ff6b9d');
+        ballGrad.addColorStop(1, '#e8457a');
+        ctx.fillStyle = ballGrad;
+        ctx.beginPath();
+        ctx.arc(bd.x, bd.y, BALL_R, 0, Math.PI * 2);
+        ctx.fill();
       }
-      // Ball gradient
-      var ballGrad = ctx.createRadialGradient(bd.x - 2, bd.y - 2, 1, bd.x, bd.y, BALL_R);
-      ballGrad.addColorStop(0, '#fff');
-      ballGrad.addColorStop(0.6, '#ff6b9d');
-      ballGrad.addColorStop(1, '#e8457a');
-      ctx.fillStyle = ballGrad;
-      ctx.beginPath();
-      ctx.arc(bd.x, bd.y, BALL_R, 0, Math.PI * 2);
-      ctx.fill();
       ctx.restore();
     }
 
@@ -1042,11 +1147,157 @@
   }
 
   /* ════════════════════════════════════════════════════════════
+     ADMIN PANEL
+     ════════════════════════════════════════════════════════════ */
+  function createAdminPanel() {
+    // Remove existing panel if any
+    var existing = document.getElementById('hsArcadeAdmin');
+    if (existing) { existing.remove(); return; }
+
+    var panel = document.createElement('div');
+    panel.id = 'hsArcadeAdmin';
+    panel.style.cssText = 'position:fixed;top:10px;right:10px;z-index:9999;background:rgba(15,5,30,0.95);' +
+      'border:1px solid rgba(179,136,255,0.4);border-radius:12px;padding:16px;font-family:Nunito,sans-serif;' +
+      'color:#fff;font-size:13px;max-width:320px;max-height:90vh;overflow-y:auto;backdrop-filter:blur(10px);' +
+      'box-shadow:0 8px 32px rgba(0,0,0,0.5);';
+
+    function refresh() {
+      var p = loadProgress();
+      var html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">' +
+        '<span style="font-weight:800;font-size:16px;color:#b388ff;">ADMIN PANEL</span>' +
+        '<button onclick="document.getElementById(\'hsArcadeAdmin\').remove()" ' +
+        'style="background:none;border:none;color:#888;font-size:18px;cursor:pointer;">x</button></div>';
+
+      // Stats
+      html += '<div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:10px;margin-bottom:10px;">';
+      html += '<div style="color:#ff6b9d;font-weight:700;margin-bottom:6px;">STATS</div>';
+      html += '<div>Heart Energy: <b style="color:#b388ff;">' + p.energy + '</b></div>';
+      html += '<div>Best Combo: <b style="color:#ffeb3b;">x' + p.best + '</b></div>';
+      html += '<div>Unlocked: <b>' + p.unlocked.length + '/' + UNLOCKS.length + '</b></div>';
+      html += '</div>';
+
+      // Set energy
+      html += '<div style="margin-bottom:10px;">';
+      html += '<label style="color:#aaa;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Set Energy</label>';
+      html += '<div style="display:flex;gap:6px;margin-top:4px;">';
+      [0, 50, 150, 300, 500, 800, 1200, 5000].forEach(function(val) {
+        var isCurrent = p.energy === val;
+        html += '<button data-action="setEnergy" data-val="' + val + '" style="padding:4px 8px;border-radius:6px;' +
+          'border:1px solid ' + (isCurrent ? '#b388ff' : 'rgba(255,255,255,0.15)') + ';' +
+          'background:' + (isCurrent ? 'rgba(179,136,255,0.3)' : 'rgba(255,255,255,0.05)') + ';' +
+          'color:#fff;font-size:11px;cursor:pointer;font-weight:600;">' + val + '</button>';
+      });
+      html += '</div></div>';
+
+      // Cosmetics
+      html += '<div style="color:#ff6b9d;font-weight:700;margin-bottom:8px;">COSMETICS</div>';
+
+      var slots = { trail: 'Trail', paddle: 'Paddle', ball: 'Ball' };
+      Object.keys(slots).forEach(function(slot) {
+        html += '<div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:8px;margin-bottom:8px;">';
+        html += '<div style="color:#aaa;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">' + slots[slot] + '</div>';
+
+        // Default option
+        var isDefault = !p.equipped || !p.equipped[slot];
+        html += '<button data-action="unequip" data-slot="' + slot + '" style="display:inline-block;padding:4px 10px;' +
+          'border-radius:6px;margin:2px;border:1px solid ' + (isDefault ? '#82b1ff' : 'rgba(255,255,255,0.15)') + ';' +
+          'background:' + (isDefault ? 'rgba(130,177,255,0.2)' : 'rgba(255,255,255,0.05)') + ';' +
+          'color:#fff;font-size:11px;cursor:pointer;font-weight:600;">Default</button>';
+
+        UNLOCKS.forEach(function(u) {
+          if (u.slot !== slot) return;
+          var isUnlocked = p.unlocked.indexOf(u.id) !== -1;
+          var isEquipped = p.equipped && p.equipped[slot] === u.id;
+          var borderColor = isEquipped ? '#ffeb3b' : (isUnlocked ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.08)');
+          var bgColor = isEquipped ? 'rgba(255,235,59,0.2)' : (isUnlocked ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.02)');
+          var textColor = isUnlocked ? '#fff' : '#555';
+
+          html += '<button data-action="equip" data-id="' + u.id + '" data-slot="' + slot + '" ' +
+            'style="display:inline-block;padding:4px 10px;border-radius:6px;margin:2px;' +
+            'border:1px solid ' + borderColor + ';background:' + bgColor + ';' +
+            'color:' + textColor + ';font-size:11px;cursor:pointer;font-weight:600;">' +
+            u.label + (isUnlocked ? '' : ' [' + u.energy + ']') +
+            (isEquipped ? ' *' : '') + '</button>';
+        });
+
+        html += '</div>';
+      });
+
+      // Actions
+      html += '<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">';
+      html += '<button data-action="unlockAll" style="padding:6px 12px;border-radius:8px;border:1px solid #00e676;' +
+        'background:rgba(0,230,118,0.15);color:#00e676;font-size:12px;cursor:pointer;font-weight:700;">Unlock All</button>';
+      html += '<button data-action="lockAll" style="padding:6px 12px;border-radius:8px;border:1px solid #ff5252;' +
+        'background:rgba(255,82,82,0.15);color:#ff5252;font-size:12px;cursor:pointer;font-weight:700;">Lock All</button>';
+      html += '<button data-action="reset" style="padding:6px 12px;border-radius:8px;border:1px solid #ff9100;' +
+        'background:rgba(255,145,0,0.15);color:#ff9100;font-size:12px;cursor:pointer;font-weight:700;">Full Reset</button>';
+      html += '</div>';
+
+      panel.innerHTML = html;
+    }
+
+    panel.addEventListener('click', function(e) {
+      var btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      var action = btn.getAttribute('data-action');
+      var p = loadProgress();
+
+      if (action === 'setEnergy') {
+        p.energy = parseInt(btn.getAttribute('data-val'));
+        // Re-check unlocks based on new energy
+        for (var i = 0; i < UNLOCKS.length; i++) {
+          if (p.energy >= UNLOCKS[i].energy && p.unlocked.indexOf(UNLOCKS[i].id) === -1) {
+            p.unlocked.push(UNLOCKS[i].id);
+          }
+        }
+        saveProgress(p);
+      } else if (action === 'equip') {
+        var id = btn.getAttribute('data-id');
+        var slot = btn.getAttribute('data-slot');
+        // Force unlock if not yet unlocked (admin override)
+        if (p.unlocked.indexOf(id) === -1) p.unlocked.push(id);
+        if (!p.equipped) p.equipped = {};
+        p.equipped[slot] = id;
+        saveProgress(p);
+      } else if (action === 'unequip') {
+        var uSlot = btn.getAttribute('data-slot');
+        if (p.equipped) delete p.equipped[uSlot];
+        saveProgress(p);
+      } else if (action === 'unlockAll') {
+        UNLOCKS.forEach(function(u) {
+          if (p.unlocked.indexOf(u.id) === -1) p.unlocked.push(u.id);
+        });
+        p.energy = Math.max(p.energy, 1200);
+        saveProgress(p);
+      } else if (action === 'lockAll') {
+        p.unlocked = [];
+        p.equipped = {};
+        saveProgress(p);
+      } else if (action === 'reset') {
+        p = { energy: 0, best: 0, unlocked: [], equipped: {} };
+        saveProgress(p);
+        saveTop10([]);
+      }
+
+      refresh();
+    });
+
+    document.body.appendChild(panel);
+    refresh();
+  }
+
+  /* ════════════════════════════════════════════════════════════
      PUBLIC API
      ════════════════════════════════════════════════════════════ */
   window._HSArcade = {
     start: startArcadeMode,
-    stop: stopArcadeMode
+    stop: stopArcadeMode,
+    admin: createAdminPanel,
+    // Direct access for console testing
+    equip: equipItem,
+    unequip: unequipSlot,
+    getProgress: loadProgress,
+    setProgress: saveProgress
   };
 
 })();

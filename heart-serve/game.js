@@ -3446,6 +3446,10 @@
     showScreen('title');
   });
 
+  $('arcadeAdminBtn').addEventListener('click', function() {
+    if (typeof window._HSArcade !== 'undefined') window._HSArcade.admin();
+  });
+
   // Arcade restart support
   document.addEventListener('arcade-restart', function() {
     localStorage.removeItem(getSaveKey());

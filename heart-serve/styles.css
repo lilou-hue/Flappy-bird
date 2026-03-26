@@ -1045,3 +1045,25 @@ body {
   background: rgba(255,255,255,0.15);
   color: #fff;
 }
+.btn-admin-arcade {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border: 1px solid rgba(179,136,255,0.3);
+  border-radius: 20px;
+  background: rgba(179,136,255,0.1);
+  color: rgba(179,136,255,0.7);
+  cursor: pointer;
+  z-index: 20;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.btn-admin-arcade:hover {
+  background: rgba(179,136,255,0.25);
+  color: #b388ff;
+}
