@@ -1056,7 +1056,7 @@
   }
   var state = loadState();
   function loadState() {
-    try { var s = JSON.parse(localStorage.getItem(getSaveKey())); if (s && s.day) return s; } catch(e) {}
+    try { var s = JSON.parse(localStorage.getItem(getSaveKey())); if (s && typeof s === 'object' && s.day >= 1 && s.day <= TOTAL_DAYS) return s; } catch(e) {}
     return defaultState();
   }
   function saveState() { localStorage.setItem(getSaveKey(), JSON.stringify(state)); }
@@ -1951,7 +1951,7 @@
   }
 
   function totalAffection() {
-    return (state.affection.hana || 0) + (state.affection.yuki || 0) + (state.affection.rin || 0);
+    return getCharKeys().reduce(function(sum, k) { return sum + (state.affection[k] || 0); }, 0);
   }
 
   /* ════════════════════════════════════════════════════════════
@@ -3289,7 +3289,7 @@
       choiceBtn.textContent = choice.text;
       choiceBtn.addEventListener('click', function() {
         if (typeof HSAudio !== 'undefined') HSAudio.click();
-        addAffection(charKey, choice.aff);
+        addAffection(charKey, Math.round(choice.aff * getAffectionMultiplier()));
         // Show reaction, then auto-advance
         reactionEl.textContent = ch.name.split(' ')[0] + ': ' + choice.react;
         reactionEl.style.display = '';

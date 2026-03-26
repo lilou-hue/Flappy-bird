@@ -103,8 +103,10 @@
   function today() { return new Date().toISOString().slice(0, 10); }
 
   function loadJSON(key, fallback) {
-    try { return JSON.parse(localStorage.getItem(key)) || fallback; }
-    catch { return fallback; }
+    try {
+      var parsed = JSON.parse(localStorage.getItem(key));
+      return (parsed && typeof parsed === 'object') ? parsed : fallback;
+    } catch (e) { return fallback; }
   }
 
   function saveJSON(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
@@ -1350,6 +1352,11 @@
     setTimeout(function() {
       document.addEventListener('keydown', restartOnKey);
     }, 300); /* small delay so the key that ended the game doesn't trigger restart */
+
+    var homeLink = overlay.querySelector('.arc-scorecard__btn--home');
+    if (homeLink) {
+      homeLink.addEventListener('click', function() { document.removeEventListener('keydown', restartOnKey); });
+    }
 
     requestAnimationFrame(function () {
       overlay.classList.add('arc-scorecard--show');
