@@ -313,6 +313,11 @@
       s.todayGamesPlayed = [];
     }
 
+    /* Save last score for improvement tracking */
+    if (!s.lastScores) s.lastScores = {};
+    var previousScore = s.lastScores[gameId] || 0;
+    s.lastScores[gameId] = score;
+
     /* Track plays */
     s.totalGamesPlayed++;
     s.gamesPlayed[gameId] = (s.gamesPlayed[gameId] || 0) + 1;
@@ -343,8 +348,25 @@
       coinsEarned = Math.floor(coinsEarned * activeEvent.multiplier);
     }
 
+    /* Apply active power-up */
+    var activePU = consumePowerUp();
+    var puDef = null;
+    if (activePU) {
+      puDef = POWER_UPS.find(function(p) { return p.id === activePU.id; });
+      if (puDef) {
+        if (puDef.multiplier) coinsEarned = Math.floor(coinsEarned * puDef.multiplier);
+      }
+    }
+
     setState(s);
     addCoins(coinsEarned);
+
+    /* Lucky drop roll */
+    var luckMult = (puDef && puDef.luckBoost) ? puDef.luckBoost : 1;
+    var luckyDrop = rollLuckyDrop(luckMult);
+
+    /* Holy moment detection */
+    var holyMoment = detectHolyMoment(gameId, score, currentBest, isNewBest);
 
     /* Check challenges */
     var challengesCompleted = checkChallenges(gameId, score, isNewBest);
@@ -352,12 +374,30 @@
     /* Check achievements */
     var newAchievements = checkAchievements();
 
+    /* Check quest milestones */
+    var questMilestones = checkQuestMilestones();
+
     /* Analytics */
     track('game_over', { game_id: gameId, score: score, is_new_best: isNewBest, coins_earned: coinsEarned });
 
-    /* Show achievement popups */
+    /* Cascade popups with staggered timing */
+    var popupDelay = 0;
+
+    /* Holy moment first (most dramatic) */
+    if (holyMoment) {
+      setTimeout(function() { showHolyMoment(holyMoment); }, 200);
+      popupDelay += 3000;
+    }
+
+    /* Lucky drop */
+    if (luckyDrop) {
+      setTimeout(function() { showLuckyDropPopup(luckyDrop); }, popupDelay + 300);
+      popupDelay += 2000;
+    }
+
+    /* Achievement popups */
     newAchievements.forEach(function (a, i) {
-      setTimeout(function () { showAchievementPopup(a); }, 300 * (i + 1));
+      setTimeout(function () { showAchievementPopup(a); }, popupDelay + 300 * (i + 1));
     });
 
     return {
@@ -365,6 +405,9 @@
       isNewBest: isNewBest,
       newAchievements: newAchievements,
       challengesCompleted: challengesCompleted,
+      luckyDrop: luckyDrop,
+      holyMoment: holyMoment,
+      powerUpUsed: puDef,
     };
   }
 
@@ -504,12 +547,423 @@
   /* ── Chaos Events (time-based multipliers) ── */
   function getActiveEvent() {
     var hour = new Date().getUTCHours();
-    /* Double coins: 12-13 UTC and 20-21 UTC daily */
     if (hour === 12 || hour === 20) return { type: 'double_coins', label: '🎰 DOUBLE COINS HOUR', multiplier: 2 };
-    /* Weekend bonus: Sat/Sun */
     var day = new Date().getUTCDay();
     if (day === 0 || day === 6) return { type: 'weekend_bonus', label: '🎉 WEEKEND BONUS', multiplier: 1.5 };
     return null;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     NEW SYSTEMS — Dramatic Game Over, Main Quest, Micro-Choices,
+     Lucky Drops, Holy Moments, Social Pressure
+     ═══════════════════════════════════════════════════════════════ */
+
+  /* ── 1. DRAMATIC GAME OVER MESSAGES ── */
+  var GAME_OVER_MESSAGES = {
+    terrible: [
+      { title: 'YOU FUMBLED 😭', sub: 'That was... something.' },
+      { title: 'TRAGIC 💀', sub: 'We\'ll pretend that didn\'t happen.' },
+      { title: 'WRECKED', sub: 'The game didn\'t even break a sweat.' },
+      { title: 'BRO...', sub: 'Even the NPCs felt sorry for you.' },
+      { title: 'NOT YOUR DAY', sub: 'Try again. Or don\'t. We understand.' },
+      { title: 'F IN THE CHAT', sub: 'Respects have been paid.' },
+    ],
+    mediocre: [
+      { title: 'MEH 🤷', sub: 'You can do better. Probably.' },
+      { title: 'ALMOST DECENT', sub: 'Your mom would be... neutral.' },
+      { title: 'MID RUN 😐', sub: 'Neither impressive nor embarrassing.' },
+      { title: 'COULD BE WORSE', sub: 'Could also be better though.' },
+      { title: 'SOLID... ISH', sub: 'We\'ve seen worse. We\'ve also seen better.' },
+    ],
+    good: [
+      { title: 'NOT BAD! 💪', sub: 'Now do it again but better.' },
+      { title: 'CLEAN RUN ✨', sub: 'That was actually decent.' },
+      { title: 'YOU\'RE COOKING 🔥', sub: 'Something is heating up.' },
+      { title: 'NICE ONE', sub: 'The arena noticed.' },
+      { title: 'LEVELING UP ⬆️', sub: 'You\'re getting dangerous.' },
+    ],
+    amazing: [
+      { title: 'INSANE 🤯', sub: 'Wait... THAT just happened?!' },
+      { title: 'ABSOLUTELY UNHINGED', sub: 'Somebody clip that.' },
+      { title: 'LEGENDARY 👑', sub: 'The arena bows to you.' },
+      { title: 'BUILT DIFFERENT', sub: 'You just broke the game.' },
+      { title: 'GOATED 🐐', sub: 'Hall of fame material right here.' },
+      { title: 'DEMON MODE 👿', sub: 'That was unholy.' },
+    ],
+    newBest: [
+      { title: 'NEW RECORD! 🌟', sub: 'You just outdid yourself.' },
+      { title: 'PERSONAL BEST 🏆', sub: 'Past you is crying right now.' },
+      { title: 'EVOLUTION 🧬', sub: 'You\'re literally getting better.' },
+    ],
+  };
+
+  function getGameOverMessage(gameId, score, best, isNewBest) {
+    var game = GAMES[gameId];
+    if (!game || !game.thresholds) return { title: game ? game.name : gameId, sub: '' };
+    var t3 = game.thresholds;
+
+    if (isNewBest && score > 0) {
+      var pool = GAME_OVER_MESSAGES.newBest;
+      return pool[Math.floor(Math.random() * pool.length)];
+    }
+
+    var tier;
+    if (score === 0) tier = 'terrible';
+    else if (score < t3[0] * 0.5) tier = 'terrible';
+    else if (score < t3[0]) tier = 'mediocre';
+    else if (score < t3[1]) tier = 'good';
+    else tier = 'amazing';
+
+    var pool = GAME_OVER_MESSAGES[tier];
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  /* ── 2. NEAR-MISS / "WHY DID I LOSE?" CLARITY ── */
+  function getNearMissText(gameId, score, best) {
+    var game = GAMES[gameId];
+    if (!game || !game.thresholds) return null;
+    var t3 = game.thresholds;
+    var lines = [];
+
+    for (var i = 0; i < t3.length; i++) {
+      if (score < t3[i]) {
+        var diff = t3[i] - score;
+        var pct = Math.round((score / t3[i]) * 100);
+        if (pct >= 70) {
+          lines.push('🤏 Just ' + diff + ' away from the next bonus tier!');
+        } else if (pct >= 50) {
+          lines.push('Halfway to the next tier. ' + diff + ' more and you\'d unlock bonus coins.');
+        }
+        break;
+      }
+    }
+
+    if (!isNaN(best) && best > 0 && score < best && score > 0) {
+      var bestDiff = best - score;
+      var bestPct = Math.round((score / best) * 100);
+      if (bestPct >= 90) {
+        lines.push('So close to your best! Just ' + bestDiff + ' away.');
+      } else if (bestPct >= 75) {
+        lines.push(bestDiff + ' short of your personal record. You got this.');
+      }
+    }
+
+    if (score === 0) {
+      lines.push('Pro tip: scoring points helps. Just saying.');
+    }
+
+    return lines.length ? lines[0] : null;
+  }
+
+  /* ── 3. MAIN QUEST SYSTEM ── */
+  var QUEST_MILESTONES = [
+    { points: 100,    title: 'Rookie',          reward: 25,   icon: '🌱' },
+    { points: 500,    title: 'Contender',       reward: 50,   icon: '⚔️' },
+    { points: 1000,   title: 'Arena Warrior',   reward: 100,  icon: '🛡️' },
+    { points: 2500,   title: 'Elite Slayer',    reward: 200,  icon: '⚡' },
+    { points: 5000,   title: 'Dimension Walker', reward: 350, icon: '🌌' },
+    { points: 10000,  title: 'Legendary',       reward: 500,  icon: '👑' },
+    { points: 25000,  title: 'Mythic',          reward: 1000, icon: '🔮' },
+    { points: 50000,  title: 'Transcendent',    reward: 2000, icon: '⭐' },
+    { points: 100000, title: 'GOD MODE',        reward: 5000, icon: '💠' },
+  ];
+
+  function getQuestState() {
+    return loadJSON('arcade_quest', { claimedMilestones: [], lastTotal: 0 });
+  }
+  function setQuestState(q) { saveJSON('arcade_quest', q); }
+
+  function getTotalArenaPoints() {
+    var total = 0;
+    Object.keys(GAMES).forEach(function(id) {
+      var g = GAMES[id];
+      if (g.bestKey) {
+        total += Number(localStorage.getItem(g.bestKey)) || 0;
+      }
+    });
+    return total;
+  }
+
+  function getQuestProgress() {
+    var total = getTotalArenaPoints();
+    var currentTier = null;
+    var nextTier = null;
+
+    for (var i = 0; i < QUEST_MILESTONES.length; i++) {
+      if (total >= QUEST_MILESTONES[i].points) {
+        currentTier = QUEST_MILESTONES[i];
+      } else {
+        nextTier = QUEST_MILESTONES[i];
+        break;
+      }
+    }
+
+    if (!nextTier && total >= QUEST_MILESTONES[QUEST_MILESTONES.length - 1].points) {
+      currentTier = QUEST_MILESTONES[QUEST_MILESTONES.length - 1];
+    }
+
+    var prevPoints = currentTier ? currentTier.points : 0;
+    var nextPoints = nextTier ? nextTier.points : (currentTier ? currentTier.points : 1);
+    var progress = nextTier ? Math.min(((total - prevPoints) / (nextPoints - prevPoints)) * 100, 100) : 100;
+
+    return {
+      total: total,
+      currentTier: currentTier,
+      nextTier: nextTier,
+      progress: progress,
+      title: currentTier ? currentTier.title : 'Newcomer',
+      icon: currentTier ? currentTier.icon : '🎮',
+    };
+  }
+
+  function checkQuestMilestones() {
+    var total = getTotalArenaPoints();
+    var quest = getQuestState();
+    var newlyReached = [];
+
+    QUEST_MILESTONES.forEach(function(m) {
+      if (total >= m.points && quest.claimedMilestones.indexOf(m.points) === -1) {
+        quest.claimedMilestones.push(m.points);
+        newlyReached.push(m);
+        addCoins(m.reward);
+      }
+    });
+
+    if (newlyReached.length) {
+      quest.lastTotal = total;
+      setQuestState(quest);
+      newlyReached.forEach(function(m, i) {
+        setTimeout(function() { showQuestMilestonePopup(m); }, 600 * (i + 1));
+      });
+    }
+
+    return newlyReached;
+  }
+
+  function showQuestMilestonePopup(milestone) {
+    var toast = document.createElement('div');
+    toast.className = 'arc-quest-toast';
+    toast.innerHTML =
+      '<div class="arc-quest-toast__icon">' + milestone.icon + '</div>' +
+      '<div class="arc-quest-toast__body">' +
+        '<div class="arc-quest-toast__title">RANK UP!</div>' +
+        '<div class="arc-quest-toast__rank">' + milestone.title + '</div>' +
+        '<div class="arc-quest-toast__reward">+' + milestone.reward + ' coins</div>' +
+      '</div>';
+    document.body.appendChild(toast);
+    requestAnimationFrame(function () { toast.classList.add('arc-quest-toast--show'); });
+    setTimeout(function () {
+      toast.classList.remove('arc-quest-toast--show');
+      setTimeout(function () { toast.remove(); }, 500);
+    }, 4500);
+  }
+
+  /* ── 4. MICRO-CHOICES (Pre-game power-ups) ── */
+  var POWER_UPS = [
+    { id: 'double_coins', name: 'Coin Magnet', icon: '🧲', cost: 15, desc: '2x coins this round', multiplier: 2 },
+    { id: 'lucky_charm',  name: 'Lucky Charm', icon: '🍀', cost: 20, desc: 'Higher chance of rare drops', luckBoost: 3 },
+    { id: 'score_boost',  name: 'Adrenaline',  icon: '⚡', cost: 25, desc: '+20% score bonus on game over', scoreMultiplier: 1.2 },
+  ];
+
+  function getActivePowerUp() {
+    var pu = loadJSON('arcade_active_powerup', null);
+    if (pu && pu.id && pu.expiry > Date.now()) return pu;
+    return null;
+  }
+
+  function activatePowerUp(powerUpId, gameId) {
+    var pu = POWER_UPS.find(function(p) { return p.id === powerUpId; });
+    if (!pu) return { success: false, reason: 'Unknown power-up' };
+    if (!spendCoins(pu.cost)) return { success: false, reason: 'Not enough coins' };
+    saveJSON('arcade_active_powerup', {
+      id: pu.id,
+      gameId: gameId,
+      expiry: Date.now() + 300000,
+    });
+    track('powerup_activate', { powerup_id: pu.id, game_id: gameId, cost: pu.cost });
+    return { success: true, powerUp: pu };
+  }
+
+  function consumePowerUp() {
+    var pu = getActivePowerUp();
+    if (pu) saveJSON('arcade_active_powerup', null);
+    return pu;
+  }
+
+  function showPowerUpSelector(gameId) {
+    if (document.querySelector('.arc-powerup-selector')) return;
+    var coins = getState().coins;
+    var overlay = document.createElement('div');
+    overlay.className = 'arc-powerup-selector';
+
+    var html = '<div class="arc-powerup-selector__card">' +
+      '<h3 class="arc-powerup-selector__title">⚡ Choose a Power-Up</h3>' +
+      '<p class="arc-powerup-selector__sub">Boost your next run (optional)</p>' +
+      '<div class="arc-powerup-selector__grid">';
+
+    POWER_UPS.forEach(function(pu) {
+      var canAfford = coins >= pu.cost;
+      html += '<button class="arc-powerup-card' + (canAfford ? '' : ' arc-powerup-card--locked') + '" data-id="' + pu.id + '"' + (canAfford ? '' : ' disabled') + '>' +
+        '<div class="arc-powerup-card__icon">' + pu.icon + '</div>' +
+        '<div class="arc-powerup-card__name">' + pu.name + '</div>' +
+        '<div class="arc-powerup-card__desc">' + pu.desc + '</div>' +
+        '<div class="arc-powerup-card__cost">' + (canAfford ? '🪙 ' + pu.cost : '🔒 Need ' + pu.cost) + '</div>' +
+      '</button>';
+    });
+
+    html += '</div>' +
+      '<button class="arc-powerup-selector__skip">No thanks, just play ➡️</button>' +
+      '</div>';
+
+    overlay.innerHTML = html;
+
+    overlay.querySelectorAll('.arc-powerup-card:not([disabled])').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var result = activatePowerUp(btn.dataset.id, gameId);
+        if (result.success) {
+          showPowerUpActivatedToast(result.powerUp);
+          overlay.remove();
+        }
+      });
+    });
+
+    overlay.querySelector('.arc-powerup-selector__skip').addEventListener('click', function() {
+      overlay.remove();
+    });
+
+    requestAnimationFrame(function() { overlay.classList.add('arc-powerup-selector--show'); });
+    document.body.appendChild(overlay);
+  }
+
+  function showPowerUpActivatedToast(pu) {
+    var toast = document.createElement('div');
+    toast.className = 'arc-ach-toast';
+    toast.innerHTML =
+      '<div class="arc-ach-toast__icon">' + pu.icon + '</div>' +
+      '<div class="arc-ach-toast__body">' +
+        '<div class="arc-ach-toast__title">POWER-UP ACTIVE</div>' +
+        '<div class="arc-ach-toast__name">' + pu.name + '</div>' +
+        '<div class="arc-ach-toast__reward">' + pu.desc + '</div>' +
+      '</div>';
+    document.body.appendChild(toast);
+    requestAnimationFrame(function () { toast.classList.add('arc-ach-toast--show'); });
+    setTimeout(function () {
+      toast.classList.remove('arc-ach-toast--show');
+      setTimeout(function () { toast.remove(); }, 400);
+    }, 2500);
+  }
+
+  /* ── 5. LUCKY DROPS (Controlled RNG) ── */
+  var LUCKY_DROPS = [
+    { chance: 0.08,  name: 'Lucky Coins!',  icon: '🌟', coins: 15,  rarity: 'uncommon' },
+    { chance: 0.03,  name: 'Coin Shower!',  icon: '💰', coins: 50,  rarity: 'rare' },
+    { chance: 0.008, name: 'JACKPOT!!',     icon: '🎰', coins: 200, rarity: 'legendary' },
+    { chance: 0.15,  name: 'Bonus Round',   icon: '✨', coins: 5,   rarity: 'common' },
+  ];
+
+  function rollLuckyDrop(luckMultiplier) {
+    var mult = luckMultiplier || 1;
+    for (var i = 0; i < LUCKY_DROPS.length; i++) {
+      var drop = LUCKY_DROPS[i];
+      if (Math.random() < drop.chance * mult) {
+        addCoins(drop.coins);
+        track('lucky_drop', { drop_name: drop.name, coins: drop.coins, rarity: drop.rarity });
+        return drop;
+      }
+    }
+    return null;
+  }
+
+  function showLuckyDropPopup(drop) {
+    var toast = document.createElement('div');
+    toast.className = 'arc-lucky-toast arc-lucky-toast--' + drop.rarity;
+    toast.innerHTML =
+      '<div class="arc-lucky-toast__icon">' + drop.icon + '</div>' +
+      '<div class="arc-lucky-toast__body">' +
+        '<div class="arc-lucky-toast__title">' + drop.name + '</div>' +
+        '<div class="arc-lucky-toast__reward">+' + drop.coins + ' coins!</div>' +
+      '</div>';
+    document.body.appendChild(toast);
+    requestAnimationFrame(function () { toast.classList.add('arc-lucky-toast--show'); });
+    var duration = drop.rarity === 'legendary' ? 5000 : 3500;
+    setTimeout(function () {
+      toast.classList.remove('arc-lucky-toast--show');
+      setTimeout(function () { toast.remove(); }, 500);
+    }, duration);
+  }
+
+  /* ── 6. HOLY MOMENTS ── */
+  function detectHolyMoment(gameId, score, best, isNewBest) {
+    var game = GAMES[gameId];
+    if (!game || !game.thresholds) return null;
+
+    if (isNewBest && best > 0 && score >= best * 2) {
+      return { type: 'double_best', text: 'DOUBLED YOUR BEST', sub: best + ' → ' + score + ' — that\'s a 2x jump!' };
+    }
+
+    if (score >= game.thresholds[2]) {
+      return { type: 'max_tier', text: 'TOP TIER REACHED', sub: 'You\'re in the top 3% of players.' };
+    }
+
+    if (isNewBest) {
+      for (var i = game.thresholds.length - 1; i >= 0; i--) {
+        if (score >= game.thresholds[i] && best < game.thresholds[i]) {
+          return { type: 'threshold_break', text: 'LEVEL BREAKTHROUGH!', sub: 'You just crossed the ' + game.thresholds[i] + '-point barrier!' };
+        }
+      }
+    }
+
+    return null;
+  }
+
+  function showHolyMoment(moment) {
+    var overlay = document.createElement('div');
+    overlay.className = 'arc-holy-moment';
+    overlay.innerHTML =
+      '<div class="arc-holy-moment__content">' +
+        '<div class="arc-holy-moment__text">' + moment.text + '</div>' +
+        '<div class="arc-holy-moment__sub">' + moment.sub + '</div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    requestAnimationFrame(function() { overlay.classList.add('arc-holy-moment--show'); });
+    setTimeout(function() {
+      overlay.classList.remove('arc-holy-moment--show');
+      setTimeout(function() { overlay.remove(); }, 600);
+    }, 2500);
+  }
+
+  /* ── 7. SOCIAL PRESSURE ── */
+  function getSocialNudge() {
+    var s = getState();
+    var challenges = getChallenges();
+    var nudges = [];
+
+    if (challenges.date === today()) {
+      var done = challenges.challenges.filter(function(c) { return c.completed; }).length;
+      var total = challenges.challenges.length;
+      if (done < total) {
+        nudges.push('Only ' + (total - done) + ' challenge' + (total - done > 1 ? 's' : '') + ' left today. Don\'t miss out.');
+      }
+    }
+
+    var streak = getStreak();
+    if (streak.streak >= 3 && streak.lastDate !== today()) {
+      nudges.push('⚠️ Your ' + streak.streak + '-day streak is on the line. Play now or lose it all.');
+    }
+
+    var quest = getQuestProgress();
+    if (quest.nextTier) {
+      var remaining = quest.nextTier.points - quest.total;
+      if (remaining > 0 && remaining < quest.nextTier.points * 0.3) {
+        nudges.push('Just ' + remaining + ' points from ' + quest.nextTier.title + ' rank. So close.');
+      }
+    }
+
+    if (s.totalGamesPlayed > 0 && s.totalGamesPlayed < 10) {
+      nudges.push('Only ' + (10 - s.totalGamesPlayed) + ' more games until you unlock something special.');
+    }
+
+    return nudges.length ? nudges[Math.floor(Math.random() * nudges.length)] : null;
   }
 
   function getDailyChallenges() {
@@ -726,9 +1180,9 @@
     var eventMult = activeEvent ? activeEvent.multiplier : 1;
     var totalCoins = Math.floor((coinsBase + coinsNewBest + thresholdBonus) * eventMult);
 
-    /* Near-miss: how close to next threshold */
-    var nearMissText = '';
-    if (game.thresholds) {
+    /* Near-miss: enhanced clarity */
+    var nearMissText = getNearMissText(gameId, score, best || 0);
+    if (!nearMissText && game.thresholds) {
       for (var ti = 0; ti < game.thresholds.length; ti++) {
         if (score < game.thresholds[ti]) {
           var diff = game.thresholds[ti] - score;
@@ -738,6 +1192,9 @@
         }
       }
     }
+
+    /* Dramatic game over message */
+    var dramatic = getGameOverMessage(gameId, score, best || 0, isNewBest);
 
     /* Daily challenges status */
     var challenges = getDailyChallenges();
@@ -751,7 +1208,9 @@
     var html =
       '<div class="arc-scorecard__card">' +
         (activeEvent ? '<div class="arc-scorecard__event">' + activeEvent.label + '</div>' : '') +
-        '<h2 class="arc-scorecard__title">' + game.name + '</h2>' +
+        '<div class="arc-scorecard__dramatic">' + dramatic.title + '</div>' +
+        (dramatic.sub ? '<div class="arc-scorecard__dramatic-sub">' + dramatic.sub + '</div>' : '') +
+        '<div class="arc-scorecard__gamename">' + game.name + '</div>' +
         (isNewBest ? '<div class="arc-scorecard__newbest">' + t('arcNewBest', 'New Best!') + '</div>' : '') +
         (percentile ? '<div class="arc-scorecard__percentile">' + percentile + '</div>' : '') +
         (nearMissText && !percentile ? '<div class="arc-scorecard__nearmiss">' + nearMissText + '</div>' : '') +
@@ -792,10 +1251,12 @@
           '</div>'
         ) : '') +
         '<div class="arc-scorecard__actions">' +
-          '<button class="arc-scorecard__btn arc-scorecard__btn--challenge" title="Challenge a friend">\u2694\uFE0F ' + t('arcChallenge', 'Challenge Friend') + '</button>' +
-          '<button class="arc-scorecard__btn arc-scorecard__btn--share" title="Copy viral share">' + t('arcShare', 'Share') + '</button>' +
-          '<button class="arc-scorecard__btn arc-scorecard__btn--again">' + t('arcPlayAgain', 'Play Again') + '</button>' +
-          '<a href="/" class="arc-scorecard__btn arc-scorecard__btn--home">' + t('arcHome', 'Home') + '</a>' +
+          '<button class="arc-scorecard__btn arc-scorecard__btn--again" autofocus>' + t('arcPlayAgain', 'Play Again') + ' &#x25B6;</button>' +
+          '<div class="arc-scorecard__actions-secondary">' +
+            '<button class="arc-scorecard__btn arc-scorecard__btn--challenge" title="Challenge a friend">\u2694\uFE0F ' + t('arcChallenge', 'Challenge Friend') + '</button>' +
+            '<button class="arc-scorecard__btn arc-scorecard__btn--share" title="Copy viral share">' + t('arcShare', 'Share') + '</button>' +
+            '<a href="/" class="arc-scorecard__btn arc-scorecard__btn--home">' + t('arcHome', 'Home') + '</a>' +
+          '</div>' +
         '</div>' +
       '</div>';
 
@@ -824,14 +1285,30 @@
       }
     });
 
-    /* Play again button */
-    overlay.querySelector('.arc-scorecard__btn--again').addEventListener('click', function () {
+    /* Play again button — instant restart, zero friction */
+    var againBtn = overlay.querySelector('.arc-scorecard__btn--again');
+    function doRestart() {
       overlay.remove();
-      /* Trigger restart — dispatch custom event games can listen for */
+      document.removeEventListener('keydown', restartOnKey);
       document.dispatchEvent(new CustomEvent('arcade-restart'));
-    });
+    }
+    againBtn.addEventListener('click', doRestart);
 
-    requestAnimationFrame(function () { overlay.classList.add('arc-scorecard--show'); });
+    /* Press Space or Enter to instantly restart — "one more run" loop */
+    function restartOnKey(e) {
+      if (e.code === 'Space' || e.code === 'Enter') {
+        e.preventDefault();
+        doRestart();
+      }
+    }
+    setTimeout(function() {
+      document.addEventListener('keydown', restartOnKey);
+    }, 300); /* small delay so the key that ended the game doesn't trigger restart */
+
+    requestAnimationFrame(function () {
+      overlay.classList.add('arc-scorecard--show');
+      againBtn.focus();
+    });
 
     return overlay;
   }
@@ -962,6 +1439,13 @@
     GAMES: GAMES,
     GAME_IDS: GAME_IDS,
     applyTheme: applyTheme,
+    /* New systems */
+    getQuestProgress: getQuestProgress,
+    getSocialNudge: getSocialNudge,
+    showPowerUpSelector: showPowerUpSelector,
+    getActivePowerUp: getActivePowerUp,
+    POWER_UPS: POWER_UPS,
+    QUEST_MILESTONES: QUEST_MILESTONES,
   };
 
 })();

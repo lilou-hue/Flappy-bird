@@ -145,6 +145,23 @@
         100% { transform: translate(10px, 10px) scale(1.02); }
       }
 
+      /* ── Floating particles ── */
+      .particle {
+        position: fixed;
+        width: 3px; height: 3px;
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 0;
+        opacity: 0;
+        animation: particleFloat linear infinite;
+      }
+      @keyframes particleFloat {
+        0% { opacity: 0; transform: translateY(0) translateX(0); }
+        10% { opacity: 0.5; }
+        90% { opacity: 0.5; }
+        100% { opacity: 0; transform: translateY(-100vh) translateX(var(--drift)); }
+      }
+
       /* ── Dot grid ── */
       .ambient::after {
         content: "";
@@ -3663,6 +3680,27 @@
               '</div>';
             }).join('');
           });
+        }
+      })();
+    </script>
+    <script>
+      /* ── Floating Particles — makes the site feel alive ── */
+      (function() {
+        var colors = ['#c084fc', '#f472b6', '#38bdf8', '#facc15', '#22c55e'];
+        var container = document.querySelector('.ambient');
+        if (!container || window.innerWidth < 600) return; /* skip on mobile for perf */
+
+        for (var i = 0; i < 15; i++) {
+          var p = document.createElement('div');
+          p.className = 'particle';
+          var color = colors[Math.floor(Math.random() * colors.length)];
+          var left = Math.random() * 100;
+          var dur = 8 + Math.random() * 12;
+          var delay = Math.random() * dur;
+          var drift = (Math.random() - 0.5) * 80;
+          var size = 2 + Math.random() * 2;
+          p.style.cssText = 'left:' + left + '%;bottom:-10px;width:' + size + 'px;height:' + size + 'px;background:' + color + ';animation-duration:' + dur + 's;animation-delay:-' + delay + 's;--drift:' + drift + 'px;';
+          container.appendChild(p);
         }
       })();
     </script>

@@ -344,7 +344,14 @@ body:has(.arc-nav) {
 
 .arc-scorecard__actions {
   display: flex;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.arc-scorecard__actions-secondary {
+  display: flex;
+  gap: 0.4rem;
   justify-content: center;
   flex-wrap: wrap;
 }
@@ -373,18 +380,63 @@ body:has(.arc-nav) {
   background: linear-gradient(135deg, #c084fc, #a855f7);
   border-color: transparent;
   color: #fff;
+  width: 100%;
+  padding: 0.9rem 1.5rem;
+  font-size: 1.1rem;
+  border-radius: 14px;
+  letter-spacing: 0.03em;
+  box-shadow: 0 0 20px rgba(192,132,252,0.3);
+  animation: playAgainPulse 2s ease-in-out infinite;
+}
+
+@keyframes playAgainPulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(192,132,252,0.3); }
+  50% { box-shadow: 0 0 30px rgba(192,132,252,0.5), 0 0 60px rgba(192,132,252,0.15); }
 }
 
 .arc-scorecard__btn--again:hover {
   background: linear-gradient(135deg, #d8b4fe, #c084fc);
+  transform: translateY(-2px);
+}
+
+.arc-scorecard__btn--again:focus {
+  outline: 2px solid rgba(192,132,252,0.6);
+  outline-offset: 2px;
 }
 
 .arc-scorecard__btn--share {
   background: rgba(255,255,255,0.05);
+  font-size: 0.78rem;
 }
 
 .arc-scorecard__btn--home {
   background: rgba(255,255,255,0.05);
+  font-size: 0.78rem;
+}
+
+.arc-scorecard__btn--challenge {
+  font-size: 0.78rem;
+}
+
+/* Dramatic game over message */
+.arc-scorecard__dramatic {
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin-bottom: 0.1rem;
+}
+.arc-scorecard__dramatic-sub {
+  font-size: 0.82rem;
+  color: #a1a1aa;
+  margin-bottom: 0.5rem;
+  font-style: italic;
+}
+.arc-scorecard__gamename {
+  font-size: 0.75rem;
+  color: #71717a;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
 }
 
 /* ── Achievement Popup Toast ── */
