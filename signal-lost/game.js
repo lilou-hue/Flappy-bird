@@ -165,6 +165,8 @@ var SignalLost = (function () {
 
   function resetState() {
     arcadeReported = false;
+    if (_endGameTimer1) { clearTimeout(_endGameTimer1); _endGameTimer1 = null; }
+    if (_endGameTimer2) { clearTimeout(_endGameTimer2); _endGameTimer2 = null; }
     power = POWER_MAX;
     currentCam = 0;
     doorLeft = false;
@@ -387,7 +389,7 @@ var SignalLost = (function () {
     SLAudio.scare();
     // Flash red then show game over
     drawJumpscare();
-    setTimeout(function () { endGame(); }, 2000);
+    _endGameTimer1 = setTimeout(function () { _endGameTimer1 = null; endGame(); }, 2000);
   }
 
   function powerOut() {
@@ -397,14 +399,17 @@ var SignalLost = (function () {
     power = 0;
     updatePowerUI();
     SLAudio.setDrone(1);
-    setTimeout(function () {
+    _endGameTimer2 = setTimeout(function () {
+      _endGameTimer2 = null;
       SLAudio.scare();
       drawJumpscare();
-      setTimeout(function () { endGame(); }, 2000);
+      _endGameTimer1 = setTimeout(function () { _endGameTimer1 = null; endGame(); }, 2000);
     }, 2000);
   }
 
   var arcadeReported = false;
+  var _endGameTimer1 = null;
+  var _endGameTimer2 = null;
 
   function win() {
     running = false;
