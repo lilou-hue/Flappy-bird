@@ -181,8 +181,14 @@
   function setChallenges(c) { saveJSON('arcade_challenges', c); }
 
   function getShop() {
-    var s = loadJSON('arcade_shop', { purchased: [], equipped: { badge: null, theme: null, frame: null, title: null } });
-    if (!s.equipped.title) s.equipped.title = null; /* backfill for old saves */
+    var s = loadJSON('arcade_shop', {});
+    /* Defensive backfill — old saves may be missing keys */
+    if (!Array.isArray(s.purchased)) s.purchased = [];
+    if (!s.equipped || typeof s.equipped !== 'object') s.equipped = {};
+    if (!s.equipped.badge)  s.equipped.badge  = null;
+    if (!s.equipped.theme)  s.equipped.theme  = null;
+    if (!s.equipped.frame)  s.equipped.frame  = null;
+    if (!s.equipped.title)  s.equipped.title  = null;
     return s;
   }
   function setShop(s) { saveJSON('arcade_shop', s); }

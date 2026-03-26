@@ -2723,3 +2723,22 @@ body:has(.arc-nav) {
   font-style: italic;
   margin-top: 2px;
 }
+
+/* ── Shop.js real-money admin unlock button ── */
+.sp-shop-admin-unlock {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+}
+.sp-shop-admin-unlock:hover {
+  background: linear-gradient(135deg, #6d28d9, #4338ca);
+}

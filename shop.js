@@ -14,6 +14,7 @@ var config = null;
 var overlayEl = null;
 var statusEl = null;
 var inputEl = null;
+var adminBtnEl = null;
 var lemonReady = false;
 
 function _t(key, fallback) {
@@ -195,6 +196,14 @@ function buildModal(cfg) {
   status.id = 'spShopStatus';
   modal.appendChild(status);
 
+  // Admin unlock button — only shown when Arcade admin mode is active
+  var adminBtn = document.createElement('button');
+  adminBtn.className = 'sp-shop-admin-unlock';
+  adminBtn.type = 'button';
+  adminBtn.innerHTML = '🔑 Unlock All (Admin Testing)';
+  adminBtn.style.display = 'none';
+  modal.appendChild(adminBtn);
+
   // Close button
   var closeBtn = document.createElement('button');
   closeBtn.className = 'sp-shop-close';
@@ -215,7 +224,20 @@ function buildModal(cfg) {
     if (e.key === 'Enter') redeem(input.value);
   });
 
-  return { overlay: overlay, status: status, input: input };
+  adminBtn.onclick = function () {
+    if (!config) return;
+    var allItems = [];
+    config.bundles.forEach(function (b) {
+      b.items.forEach(function (id) {
+        if (allItems.indexOf(id) === -1) allItems.push(id);
+      });
+    });
+    if (config.onUnlock) config.onUnlock(allItems);
+    status.textContent = '🔑 All items unlocked (admin mode)';
+    status.className = 'sp-shop-status success';
+  };
+
+  return { overlay: overlay, status: status, input: input, adminBtn: adminBtn };
 }
 
 /* ── Redeem code ── */
@@ -299,6 +321,7 @@ var Shop = {
     overlayEl = els.overlay;
     statusEl = els.status;
     inputEl = els.input;
+    adminBtnEl = els.adminBtn;
 
     // Preload Lemonsqueezy SDK if any bundle uses it
     var hasLemon = cfg.bundles.some(function (b) {
@@ -320,6 +343,10 @@ var Shop = {
     statusEl.textContent = '';
     statusEl.className = 'sp-shop-status';
     inputEl.value = '';
+    /* Show admin unlock button only when Arcade admin mode is active */
+    if (adminBtnEl) {
+      adminBtnEl.style.display = (window.Arcade && Arcade.isAdminMode()) ? '' : 'none';
+    }
     overlayEl.classList.add('visible');
   },
 
