@@ -55,42 +55,43 @@
   /* ── Shop items ── */
   const SHOP_ITEMS = [
     /* ── Badges — personality-driven status symbols ── */
-    { id: 'badge_flame',     cat: 'badge', nameKey: 'arcShopFlameBadge',     icon: '🔥', cost: 100,  rarity: 'common',    desc: 'For those who run hot' },
-    { id: 'badge_wizard',    cat: 'badge', nameKey: 'arcShopWizardBadge',    icon: '🧙', cost: 200,  rarity: 'uncommon',  desc: 'Mysterious and unpredictable' },
-    { id: 'badge_snake',     cat: 'badge', nameKey: 'arcShopSnakeBadge',     icon: '🐍', cost: 300,  rarity: 'rare',      desc: 'Cold. Patient. Deadly.' },
-    { id: 'badge_alien',     cat: 'badge', nameKey: 'arcShopAlienBadge',     icon: '👾', cost: 400,  rarity: 'epic',      desc: 'Not from around here' },
-    { id: 'badge_demon',     cat: 'badge', nameKey: 'arcShopDemonBadge',     icon: '😈', cost: 450,  rarity: 'epic',      desc: 'Pure chaos energy' },
-    { id: 'badge_crown',     cat: 'badge', nameKey: 'arcShopCrownBadge',     icon: '👑', cost: 700,  rarity: 'legendary', desc: 'Royalty. No further questions.' },
+    { id: 'badge_flame',     cat: 'badge', nameKey: 'arcShopFlameBadge',     displayName: 'Hothead',       icon: '🔥', cost: 100,  rarity: 'common',    desc: 'For those who run hot' },
+    { id: 'badge_wizard',    cat: 'badge', nameKey: 'arcShopWizardBadge',    displayName: 'The Wizard',    icon: '🧙', cost: 200,  rarity: 'uncommon',  desc: 'Mysterious and unpredictable' },
+    { id: 'badge_snake',     cat: 'badge', nameKey: 'arcShopSnakeBadge',     displayName: 'Cold Blooded',  icon: '🐍', cost: 300,  rarity: 'rare',      desc: 'Cold. Patient. Deadly.' },
+    { id: 'badge_alien',     cat: 'badge', nameKey: 'arcShopAlienBadge',     displayName: 'Void Walker',   icon: '👾', cost: 400,  rarity: 'epic',      desc: 'Not from around here' },
+    { id: 'badge_demon',     cat: 'badge', nameKey: 'arcShopDemonBadge',     displayName: 'Chaos Lord',    icon: '😈', cost: 450,  rarity: 'epic',      desc: 'Pure chaos energy' },
+    { id: 'badge_crown',     cat: 'badge', nameKey: 'arcShopCrownBadge',     displayName: 'The Monarch',   icon: '👑', cost: 700,  rarity: 'legendary', desc: 'Royalty. No further questions.' },
     /* Achievement-locked prestige badges — cannot be bought, only earned */
-    { id: 'badge_diamond',   cat: 'badge', nameKey: 'arcShopDiamondBadge',   icon: '💎', cost: 0, requireAch: 'monthly_master', rarity: 'legendary', desc: 'Earned by the dedicated few' },
-    { id: 'badge_lightning', cat: 'badge', nameKey: 'arcShopLightningBadge', icon: '⚡', cost: 0, requireAch: 'arcade_rat',     rarity: 'epic',      desc: 'Speed is everything' },
-    { id: 'badge_ghost',     cat: 'badge', nameKey: 'arcShopGhostBadge',     icon: '👻', cost: 0, requireAch: 'explorer',       rarity: 'epic',      desc: 'Seen everything' },
+    { id: 'badge_diamond',   cat: 'badge', nameKey: 'arcShopDiamondBadge',   displayName: 'Diamond',       icon: '💎', cost: 0, requireAch: 'monthly_master', rarity: 'legendary', desc: 'Earned by the dedicated few' },
+    { id: 'badge_lightning', cat: 'badge', nameKey: 'arcShopLightningBadge', displayName: 'Speed Demon',   icon: '⚡', cost: 0, requireAch: 'arcade_rat',     rarity: 'epic',      desc: 'Speed is everything' },
+    { id: 'badge_ghost',     cat: 'badge', nameKey: 'arcShopGhostBadge',     displayName: 'The Ghost',     icon: '👻', cost: 0, requireAch: 'explorer',       rarity: 'epic',      desc: 'Seen everything' },
     /* ── Themes — full site color overhauls ── */
-    { id: 'theme_void',   cat: 'theme', nameKey: 'arcShopVoidTheme',   icon: '🌑', cost: 350, vars: { '--accent': '#a855f7', '--accent2': '#7c3aed', '--accent3': '#6d28d9' }, desc: 'Deep space purple' },
-    { id: 'theme_sakura', cat: 'theme', nameKey: 'arcShopSakuraTheme', icon: '🌸', cost: 350, vars: { '--accent': '#ec4899', '--accent2': '#f472b6', '--accent3': '#db2777' }, desc: 'Cherry blossom pink' },
-    { id: 'theme_cyber',  cat: 'theme', nameKey: 'arcShopCyberTheme',  icon: '⚡', cost: 400, vars: { '--accent': '#facc15', '--accent2': '#06b6d4', '--accent3': '#84cc16' }, desc: 'Neon city nights' },
-    { id: 'theme_blood',  cat: 'theme', nameKey: 'arcShopBloodTheme',  icon: '🩸', cost: 350, vars: { '--accent': '#ef4444', '--accent2': '#b91c1c', '--accent3': '#9f1239' }, desc: 'Blood moon red' },
-    { id: 'theme_ocean',  cat: 'theme', nameKey: 'arcShopOceanTheme',  icon: '🌊', cost: 300, vars: { '--accent': '#38bdf8', '--accent2': '#06b6d4', '--accent3': '#0ea5e9' }, desc: 'Open ocean blue' },
+    { id: 'theme_void',   cat: 'theme', nameKey: 'arcShopVoidTheme',   displayName: 'Void',         icon: '🌑', cost: 350, vars: { '--accent': '#a855f7', '--accent2': '#7c3aed', '--accent3': '#6d28d9' }, desc: 'Deep space purple' },
+    { id: 'theme_sakura', cat: 'theme', nameKey: 'arcShopSakuraTheme', displayName: 'Sakura',       icon: '🌸', cost: 350, vars: { '--accent': '#ec4899', '--accent2': '#f472b6', '--accent3': '#db2777' }, desc: 'Cherry blossom pink' },
+    { id: 'theme_cyber',  cat: 'theme', nameKey: 'arcShopCyberTheme',  displayName: 'Cyberpunk',    icon: '⚡', cost: 400, vars: { '--accent': '#facc15', '--accent2': '#06b6d4', '--accent3': '#84cc16' }, desc: 'Neon city nights' },
+    { id: 'theme_blood',  cat: 'theme', nameKey: 'arcShopBloodTheme',  displayName: 'Blood Moon',   icon: '🩸', cost: 350, vars: { '--accent': '#ef4444', '--accent2': '#b91c1c', '--accent3': '#9f1239' }, desc: 'Blood moon red' },
+    { id: 'theme_ocean',  cat: 'theme', nameKey: 'arcShopOceanTheme',  displayName: 'Ocean',        icon: '🌊', cost: 300, vars: { '--accent': '#38bdf8', '--accent2': '#06b6d4', '--accent3': '#0ea5e9' }, desc: 'Open ocean blue' },
     /* ── Frames — animated scorecard & profile borders ── */
-    { id: 'frame_holo',      cat: 'frame', nameKey: 'arcShopHoloFrame',      icon: '💿', cost: 700, rarity: 'legendary', desc: 'Holographic rainbow shimmer' },
-    { id: 'frame_lightning', cat: 'frame', nameKey: 'arcShopLightningFrame', icon: '⚡', cost: 550, rarity: 'epic',      desc: 'Crackling electric border' },
-    { id: 'frame_void',      cat: 'frame', nameKey: 'arcShopVoidFrame',      icon: '🌌', cost: 500, rarity: 'epic',      desc: 'Dark matter pulse' },
-    { id: 'frame_fire',      cat: 'frame', nameKey: 'arcShopFireFrame',      icon: '🔥', cost: 400, rarity: 'rare',      desc: 'Living fire border' },
-    { id: 'frame_gold',      cat: 'frame', nameKey: 'arcShopGoldFrame',      icon: '🥇', cost: 300, rarity: 'rare',      desc: 'Classic gold trim' },
+    { id: 'frame_holo',      cat: 'frame', nameKey: 'arcShopHoloFrame',      displayName: 'Holographic',    icon: '💿', cost: 700, rarity: 'legendary', desc: 'Holographic rainbow shimmer' },
+    { id: 'frame_lightning', cat: 'frame', nameKey: 'arcShopLightningFrame', displayName: 'Lightning Storm', icon: '⚡', cost: 550, rarity: 'epic',      desc: 'Crackling electric border' },
+    { id: 'frame_void',      cat: 'frame', nameKey: 'arcShopVoidFrame',      displayName: 'Dark Matter',     icon: '🌌', cost: 500, rarity: 'epic',      desc: 'Dark matter pulse' },
+    { id: 'frame_fire',      cat: 'frame', nameKey: 'arcShopFireFrame',      displayName: 'Inferno',         icon: '🔥', cost: 400, rarity: 'rare',      desc: 'Living fire border' },
+    { id: 'frame_gold',      cat: 'frame', nameKey: 'arcShopGoldFrame',      displayName: 'Gold Trim',       icon: '🥇', cost: 300, rarity: 'rare',      desc: 'Classic gold trim' },
     /* ── Titles — shown on scorecard and leaderboard ── */
-    { id: 'title_grinder', cat: 'title', nameKey: 'arcShopTitleGrinder', icon: '📈', cost: 200,  label: 'The Grinder',  rarity: 'uncommon', desc: 'You show up every day' },
-    { id: 'title_ghost',   cat: 'title', nameKey: 'arcShopTitleGhost',   icon: '👻', cost: 300,  label: 'Invisible',    rarity: 'rare',     desc: 'Here and gone' },
-    { id: 'title_chaos',   cat: 'title', nameKey: 'arcShopTitleChaos',   icon: '🌀', cost: 500,  label: 'Chaos Agent',  rarity: 'epic',     desc: 'Unpredictable by design' },
-    { id: 'title_legend',  cat: 'title', nameKey: 'arcShopTitleLegend',  icon: '🏆', cost: 900,  label: 'The Legend',   rarity: 'legendary',desc: 'The name speaks for itself' },
-    { id: 'title_goat',    cat: 'title', nameKey: 'arcShopTitleGoat',    icon: '🐐', cost: 1500, label: 'G.O.A.T.',     rarity: 'legendary',desc: 'Greatest of all time. Period.' },
+    { id: 'title_grinder', cat: 'title', nameKey: 'arcShopTitleGrinder', displayName: 'The Grinder',  icon: '📈', cost: 200,  label: 'The Grinder',  rarity: 'uncommon', desc: 'You show up every day' },
+    { id: 'title_ghost',   cat: 'title', nameKey: 'arcShopTitleGhost',   displayName: 'Invisible',    icon: '👻', cost: 300,  label: 'Invisible',    rarity: 'rare',     desc: 'Here and gone' },
+    { id: 'title_chaos',   cat: 'title', nameKey: 'arcShopTitleChaos',   displayName: 'Chaos Agent',  icon: '🌀', cost: 500,  label: 'Chaos Agent',  rarity: 'epic',     desc: 'Unpredictable by design' },
+    { id: 'title_legend',  cat: 'title', nameKey: 'arcShopTitleLegend',  displayName: 'The Legend',   icon: '🏆', cost: 900,  label: 'The Legend',   rarity: 'legendary',desc: 'The name speaks for itself' },
+    { id: 'title_goat',    cat: 'title', nameKey: 'arcShopTitleGoat',    displayName: 'G.O.A.T.',     icon: '🐐', cost: 1500, label: 'G.O.A.T.',     rarity: 'legendary',desc: 'Greatest of all time. Period.' },
     /* ── Powers — consumable boosts that activate immediately ── */
-    { id: 'power_coinx2', cat: 'power', nameKey: 'arcShopCoinRush',    icon: '💰', cost: 300, effect: 'coinx2_1h',    desc: '2× coins earned for 1 hour' },
-    { id: 'power_lucky',  cat: 'power', nameKey: 'arcShopLuckyStar',   icon: '🌟', cost: 200, effect: 'lucky_next',   desc: 'Guaranteed lucky drop next game' },
-    { id: 'power_magnet', cat: 'power', nameKey: 'arcShopCoinMagnet',  icon: '🧲', cost: 250, effect: 'magnet_24h',   desc: '+10 bonus coins every game for 24h' },
-    { id: 'streak_shield',cat: 'power', nameKey: 'arcShopStreakShield',icon: '🛡️', cost: 150, effect: 'streak_shield', desc: 'Protect your streak from breaking once' },
+    { id: 'power_coinx2', cat: 'power', nameKey: 'arcShopCoinRush',    displayName: 'Coin Rush',     icon: '💰', cost: 300, effect: 'coinx2_1h',    desc: '2× coins earned for 1 hour' },
+    { id: 'power_lucky',  cat: 'power', nameKey: 'arcShopLuckyStar',   displayName: 'Lucky Star',    icon: '🌟', cost: 200, effect: 'lucky_next',   desc: 'Guaranteed lucky drop next game' },
+    { id: 'power_magnet', cat: 'power', nameKey: 'arcShopCoinMagnet',  displayName: 'Coin Magnet',   icon: '🧲', cost: 250, effect: 'magnet_24h',   desc: '+10 bonus coins every game for 24h' },
+    { id: 'streak_shield',cat: 'power', nameKey: 'arcShopStreakShield',displayName: 'Streak Shield', icon: '🛡️', cost: 150, effect: 'streak_shield', desc: 'Protect your streak from breaking once' },
   ];
   SHOP_ITEMS.forEach(function(item) {
-    Object.defineProperty(item, 'name', { get: function() { return t(item.nameKey, item.nameKey); }, enumerable: true });
+    /* Use displayName as fallback so items never show raw i18n keys */
+    Object.defineProperty(item, 'name', { get: function() { return t(item.nameKey, item.displayName); }, enumerable: true });
   });
 
   /* ── Challenge templates ── */
@@ -227,18 +228,26 @@
   }
 
   function adminUnlockAll() {
+    /* Give enough coins to buy everything */
+    var s = getState();
+    s.coins = Math.max(s.coins, 99999);
+    s.totalCoinsEarned = Math.max(s.totalCoinsEarned, 99999);
+    setState(s);
+    updateCoinDisplays();
+
+    /* Mark all items as purchased */
     var shop = getShop();
     SHOP_ITEMS.forEach(function(item) {
-      if (item.cat !== 'power' && item.id !== 'streak_shield' && shop.purchased.indexOf(item.id) === -1) {
+      if (shop.purchased.indexOf(item.id) === -1) {
         shop.purchased.push(item.id);
       }
     });
+    setShop(shop);
+
     /* Activate all timed powers */
     activateShopPower('coinx2_1h');
     activateShopPower('magnet_24h');
     activateShopPower('lucky_next');
-    if (shop.purchased.indexOf('streak_shield') === -1) shop.purchased.push('streak_shield');
-    setShop(shop);
   }
 
   function showAdminToast(msg) {
