@@ -1,4 +1,4 @@
-const CACHE_NAME = 'slayplay-v23';
+const CACHE_NAME = 'slayplay-v24';
 
 const PRECACHE_URLS = [
   '/',
@@ -137,6 +137,16 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+/* Pages that should always fetch fresh (network-first) */
+const NETWORK_FIRST_PATHS = [
+  '/',
+  '/index.html',
+  '/shop/',
+  '/achievements/',
+  '/leaderboard-page/',
+  '/profile/',
+];
+
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
@@ -149,7 +159,26 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Cache-first for game assets
+  // Network-first for HTML pages (homepage, profile, shop, etc.)
+  // This ensures new game cards and content updates appear immediately
+  const pathname = url.pathname;
+  const isNetworkFirst = NETWORK_FIRST_PATHS.some((p) => pathname === p)
+    || (event.request.mode === 'navigate');
+
+  if (isNetworkFirst) {
+    event.respondWith(
+      fetch(event.request).then((response) => {
+        if (response.ok && url.origin === self.location.origin) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        }
+        return response;
+      }).catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Cache-first for static game assets (JS, CSS, images)
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) return cached;

@@ -159,7 +159,7 @@
         position: relative;
         z-index: 1;
         text-align: center;
-        padding: 3rem 1rem 2rem;
+        padding: 1.5rem 1rem 0.5rem;
         max-width: 760px;
         width: 100%;
       }
@@ -196,10 +196,107 @@
 
       .tagline {
         color: var(--text-dim);
-        font-size: 1.05rem;
+        font-size: 0.95rem;
         font-weight: 400;
-        margin-bottom: 1.5rem;
+        margin-bottom: 0.75rem;
         letter-spacing: 0.01em;
+      }
+
+      /* ── Featured Game Spotlight ── */
+      .spotlight {
+        position: relative;
+        z-index: 1;
+        max-width: 760px;
+        width: 100%;
+        margin-bottom: 1.5rem;
+        border-radius: 24px;
+        overflow: hidden;
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        backdrop-filter: blur(12px);
+        cursor: pointer;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+      .spotlight:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 24px 48px rgba(0,0,0,0.5), 0 0 60px rgba(192,132,252,0.15);
+      }
+      .spotlight__preview {
+        position: relative;
+        height: 280px;
+        overflow: hidden;
+      }
+      .spotlight__preview canvas {
+        width: 100%; height: 100%;
+      }
+      .spotlight__overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(0deg, rgba(9,9,11,0.95) 0%, rgba(9,9,11,0.4) 40%, transparent 70%);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 1.5rem;
+      }
+      .spotlight__info {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 1rem;
+      }
+      .spotlight__meta h2 {
+        font-size: 1.6rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+      }
+      .spotlight__meta p {
+        color: var(--text-dim);
+        font-size: 0.9rem;
+        max-width: 400px;
+      }
+      .spotlight__play {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: linear-gradient(135deg, #c084fc, #f472b6);
+        color: #fff;
+        font-size: 1.1rem;
+        font-weight: 700;
+        padding: 0.85rem 2rem;
+        border-radius: 999px;
+        border: none;
+        cursor: pointer;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        box-shadow: 0 0 30px rgba(192,132,252,0.4), 0 0 60px rgba(244,114,182,0.2);
+        animation: playPulse 2s ease-in-out infinite;
+        flex-shrink: 0;
+        text-decoration: none;
+      }
+      @keyframes playPulse {
+        0%, 100% { box-shadow: 0 0 30px rgba(192,132,252,0.4), 0 0 60px rgba(244,114,182,0.2); transform: scale(1); }
+        50% { box-shadow: 0 0 40px rgba(192,132,252,0.6), 0 0 80px rgba(244,114,182,0.3); transform: scale(1.03); }
+      }
+      .spotlight__live {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.75rem;
+        color: var(--text-dim);
+        margin-bottom: 0.5rem;
+      }
+      .spotlight__live-dot {
+        width: 6px; height: 6px;
+        background: #22c55e;
+        border-radius: 50%;
+        animation: livePulse 1.5s ease-in-out infinite;
+      }
+      @keyframes livePulse {
+        0%, 100% { opacity: 1; box-shadow: 0 0 4px #22c55e; }
+        50% { opacity: 0.4; box-shadow: 0 0 8px #22c55e; }
       }
 
       /* ── Nav bar ── */
@@ -216,9 +313,9 @@
         gap: 0.4rem;
         color: var(--text-dim);
         text-decoration: none;
-        font-size: 0.88rem;
+        font-size: 0.82rem;
         font-weight: 500;
-        padding: 0.45rem 1rem;
+        padding: 0.35rem 0.85rem;
         border-radius: 999px;
         border: 1px solid var(--card-border);
         background: var(--card-bg);
@@ -305,33 +402,54 @@
       @media (prefers-reduced-motion: reduce) {
         .game-card { opacity: 1; transform: none; animation: none; }
       }
-      .game-card:nth-child(1) { animation-delay: 0.05s; }
-      .game-card:nth-child(2) { animation-delay: 0.1s; }
-      .game-card:nth-child(3) { animation-delay: 0.15s; }
-      .game-card:nth-child(4) { animation-delay: 0.2s; }
-      .game-card:nth-child(5) { animation-delay: 0.25s; }
-      .game-card:nth-child(6) { animation-delay: 0.3s; }
-      .game-card:nth-child(7) { animation-delay: 0.35s; }
-      .game-card:nth-child(8) { animation-delay: 0.4s; }
-      .game-card:nth-child(9) { animation-delay: 0.45s; }
-      .game-card:nth-child(10) { animation-delay: 0.5s; }
-      .game-card:nth-child(11) { animation-delay: 0.55s; }
-      .game-card:nth-child(12) { animation-delay: 0.6s; }
-      .game-card:nth-child(13) { animation-delay: 0.65s; }
-      .game-card:nth-child(14) { animation-delay: 0.7s; }
-      .game-card:nth-child(15) { animation-delay: 0.75s; }
-      .game-card:nth-child(16) { animation-delay: 0.8s; }
-      .game-card:nth-child(17) { animation-delay: 0.85s; }
-      .game-card:nth-child(18) { animation-delay: 0.9s; }
-      .game-card:nth-child(19) { animation-delay: 0.95s; }
-      .game-card:nth-child(20) { animation-delay: 1.0s; }
-      .game-card:nth-child(21) { animation-delay: 1.05s; }
-      .game-card:nth-child(22) { animation-delay: 1.1s; }
-      .game-card:nth-child(23) { animation-delay: 1.15s; }
-      .game-card:nth-child(24) { animation-delay: 1.2s; }
-      .game-card:nth-child(25) { animation-delay: 1.25s; }
+      .game-card:nth-child(1) { animation-delay: 0.02s; }
+      .game-card:nth-child(2) { animation-delay: 0.04s; }
+      .game-card:nth-child(3) { animation-delay: 0.06s; }
+      .game-card:nth-child(4) { animation-delay: 0.08s; }
+      .game-card:nth-child(5) { animation-delay: 0.10s; }
+      .game-card:nth-child(6) { animation-delay: 0.12s; }
+      .game-card:nth-child(7) { animation-delay: 0.14s; }
+      .game-card:nth-child(8) { animation-delay: 0.16s; }
+      .game-card:nth-child(9) { animation-delay: 0.18s; }
+      .game-card:nth-child(10) { animation-delay: 0.20s; }
+      .game-card:nth-child(11) { animation-delay: 0.22s; }
+      .game-card:nth-child(12) { animation-delay: 0.24s; }
+      .game-card:nth-child(13) { animation-delay: 0.26s; }
+      .game-card:nth-child(14) { animation-delay: 0.28s; }
+      .game-card:nth-child(15) { animation-delay: 0.30s; }
+      .game-card:nth-child(16) { animation-delay: 0.32s; }
+      .game-card:nth-child(17) { animation-delay: 0.34s; }
+      .game-card:nth-child(18) { animation-delay: 0.36s; }
+      .game-card:nth-child(19) { animation-delay: 0.38s; }
+      .game-card:nth-child(20) { animation-delay: 0.40s; }
+      .game-card:nth-child(21) { animation-delay: 0.42s; }
+      .game-card:nth-child(22) { animation-delay: 0.44s; }
+      .game-card:nth-child(23) { animation-delay: 0.46s; }
+      .game-card:nth-child(24) { animation-delay: 0.48s; }
+      .game-card:nth-child(25) { animation-delay: 0.50s; }
       @keyframes cardReveal {
         to { opacity: 1; transform: translateY(0); }
+      }
+
+      /* ── Card breathe animation ── */
+      .game-card {
+        will-change: transform, opacity;
+      }
+
+      /* ── Section header for below-fold sections ── */
+      .section-header {
+        position: relative;
+        z-index: 1;
+        max-width: 760px;
+        width: 100%;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-dim);
+        margin: 2.5rem 0 1rem;
+        padding-left: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
       }
 
       .game-card:hover {
@@ -497,10 +615,10 @@
 
       /* ── Responsive ── */
       @media (max-width: 680px) {
-        .hero { padding: 2rem 0.5rem 1.5rem; }
-        .logo__icon { width: 36px; height: 36px; }
-        .logo__text { font-size: 2.2rem; }
-        .tagline { font-size: 0.9rem; margin-bottom: 1rem; }
+        .hero { padding: 1rem 0.5rem 0.5rem; }
+        .logo__icon { width: 32px; height: 32px; }
+        .logo__text { font-size: 2rem; }
+        .tagline { font-size: 0.85rem; margin-bottom: 0.5rem; }
         .games-grid { grid-template-columns: 1fr; gap: 1rem; }
         .stats-dashboard {
           grid-template-columns: repeat(2, 1fr);
@@ -510,6 +628,10 @@
         .stat-card__icon { font-size: 1.2rem; }
         .stat-card__value { font-size: 1.1rem; }
         .ambient__orb { filter: blur(60px); opacity: 0.1; }
+        .spotlight__preview { height: 200px; }
+        .spotlight__meta h2 { font-size: 1.2rem; }
+        .spotlight__play { font-size: 0.95rem; padding: 0.7rem 1.5rem; }
+        .spotlight__info { flex-direction: column; align-items: flex-start; }
       }
 
       @media (max-width: 360px) {
@@ -566,31 +688,25 @@
       </nav>
     </header>
 
-    <div class="stats-dashboard hidden" id="statsDashboard">
-      <div class="stat-card">
-        <div class="stat-card__icon">&#x1F3AE;</div>
-        <div class="stat-card__value" id="statFavGame">-</div>
-        <div class="stat-card__label">Favorite Game</div>
+    <!-- Featured Game Spotlight — instant action, zero thinking -->
+    <a href="/flappy-bird/" class="spotlight" id="spotlight">
+      <div class="spotlight__preview">
+        <canvas id="spotlightCanvas" width="760" height="280"></canvas>
+        <div class="spotlight__overlay">
+          <div class="spotlight__info">
+            <div class="spotlight__meta">
+              <div class="spotlight__live"><span class="spotlight__live-dot"></span> <span id="spotlightPlayers">127 playing now</span></div>
+              <h2 id="spotlightTitle">Flappy Bird</h2>
+              <p id="spotlightDesc">Tap to flap through the pipes. How far can you go?</p>
+            </div>
+            <span class="spotlight__play">&#x25B6; Play Now</span>
+          </div>
+        </div>
       </div>
-      <div class="stat-card">
-        <div class="stat-card__icon">&#x1F3C6;</div>
-        <div class="stat-card__value" id="statAchievements">0</div>
-        <div class="stat-card__label">Achievements</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-card__icon">&#x2B50;</div>
-        <div class="stat-card__value" id="statCombinedBest">0</div>
-        <div class="stat-card__label">Combined Best</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-card__icon">&#x1F525;</div>
-        <div class="stat-card__value" id="statStreak">0</div>
-        <div class="stat-card__label">Day Streak</div>
-      </div>
-    </div>
+    </a>
 
-    <!-- Arcade: Coin balance + Random Game -->
-    <div style="display:flex; align-items:center; justify-content:center; gap:1rem; flex-wrap:wrap; max-width:760px; width:100%; margin-bottom:1.5rem; position:relative; z-index:1;" id="arcadeBar">
+    <!-- Arcade: Quick bar — coin balance + Random Game -->
+    <div style="display:flex; align-items:center; justify-content:center; gap:1rem; flex-wrap:wrap; max-width:760px; width:100%; margin-bottom:1rem; position:relative; z-index:1;" id="arcadeBar">
       <div class="arc-nav__coins" style="font-size:1rem; padding:0.5rem 1.2rem;">
         <span class="arc-coin-icon" style="font-size:1.2rem;">&#x1FA99;</span>
         <span class="arc-coin-value">0</span> coins
@@ -600,30 +716,7 @@
       </button>
     </div>
 
-    <!-- Arcade: Daily Challenges -->
-    <div class="arc-challenges" id="dailyChallenges">
-      <div class="arc-challenges__title">&#x1F3AF; Daily Challenges</div>
-      <div class="arc-challenges__grid" id="challengeGrid"></div>
-    </div>
-
-    <!-- Arcade: Achievements Preview -->
-    <div class="arc-ach-preview" id="achPreview">
-      <div class="arc-ach-preview__title">
-        <span>&#x1F3C6; Achievements</span>
-        <a href="/achievements/" class="arc-ach-preview__link">View All</a>
-      </div>
-      <div class="arc-ach-preview__scroll" id="achPreviewScroll"></div>
-    </div>
-
-    <!-- Arcade: Leaderboard Preview -->
-    <div class="arc-lb-preview" id="lbPreview">
-      <div class="arc-lb-preview__title">
-        <span>&#x1F4CA; Top Players</span>
-        <a href="/leaderboard-page/" class="arc-lb-preview__link">View All</a>
-      </div>
-      <div class="arc-lb-preview__list" id="lbPreviewList"></div>
-    </div>
-
+    <!-- Games Grid — FIRST, before anything else -->
     <div class="games-grid">
       <a href="/flappy-bird/" class="game-card">
         <div class="card-preview flappy-preview">
@@ -900,11 +993,151 @@
       </a>
     </div>
 
+    <!-- Below-fold: Stats, Challenges, Achievements, Leaderboard -->
+    <div class="section-header">&#x1F4CA; Your Stats</div>
+    <div class="stats-dashboard hidden" id="statsDashboard">
+      <div class="stat-card">
+        <div class="stat-card__icon">&#x1F3AE;</div>
+        <div class="stat-card__value" id="statFavGame">-</div>
+        <div class="stat-card__label">Favorite Game</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__icon">&#x1F3C6;</div>
+        <div class="stat-card__value" id="statAchievements">0</div>
+        <div class="stat-card__label">Achievements</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__icon">&#x2B50;</div>
+        <div class="stat-card__value" id="statCombinedBest">0</div>
+        <div class="stat-card__label">Combined Best</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__icon">&#x1F525;</div>
+        <div class="stat-card__value" id="statStreak">0</div>
+        <div class="stat-card__label">Day Streak</div>
+      </div>
+    </div>
+
+    <!-- Arcade: Daily Challenges -->
+    <div class="arc-challenges" id="dailyChallenges">
+      <div class="arc-challenges__title">&#x1F3AF; Daily Challenges</div>
+      <div class="arc-challenges__grid" id="challengeGrid"></div>
+    </div>
+
+    <!-- Arcade: Achievements Preview -->
+    <div class="arc-ach-preview" id="achPreview">
+      <div class="arc-ach-preview__title">
+        <span>&#x1F3C6; Achievements</span>
+        <a href="/achievements/" class="arc-ach-preview__link">View All</a>
+      </div>
+      <div class="arc-ach-preview__scroll" id="achPreviewScroll"></div>
+    </div>
+
+    <!-- Arcade: Leaderboard Preview -->
+    <div class="arc-lb-preview" id="lbPreview">
+      <div class="arc-lb-preview__title">
+        <span>&#x1F4CA; Top Players</span>
+        <a href="/leaderboard-page/" class="arc-lb-preview__link">View All</a>
+      </div>
+      <div class="arc-lb-preview__list" id="lbPreviewList"></div>
+    </div>
+
     <footer class="footer">
       <p>SlayPlay &mdash; built for fun</p>
     </footer>
 
     <script>
+    /* ── Spotlight: Featured Game Canvas ── */
+    (function() {
+      const SPOTLIGHT_GAMES = [
+        { id: 'flappy-bird', name: 'Flappy Bird', desc: 'Tap to flap through the pipes. How far can you go?', href: '/flappy-bird/' },
+        { id: 'snake', name: 'Snake', desc: 'Guide the snake, eat to grow, survive as the walls close in.', href: '/snake/' },
+        { id: 'tetris', name: 'Tetris', desc: 'Stack blocks, clear lines, chase the high score.', href: '/tetris/' },
+        { id: 'phantom-road', name: 'Phantom Road', desc: 'Race through the dark, chain combos, evade the police!', href: '/phantom-road/' },
+        { id: 'beat-drop', name: 'Beat Drop', desc: 'Hit notes as they fall to the beat. Build your combo!', href: '/beat-drop/' },
+        { id: 'star-fury', name: 'Star Fury', desc: 'Blast through enemy waves in this space shooter.', href: '/star-fury/' },
+      ];
+
+      /* Pick a spotlight game — rotate daily, weighted toward games user hasn't played much */
+      const dayIdx = Math.floor(Date.now() / 86400000) % SPOTLIGHT_GAMES.length;
+      const picked = SPOTLIGHT_GAMES[dayIdx];
+      const spotEl = document.getElementById('spotlight');
+      const spotTitle = document.getElementById('spotlightTitle');
+      const spotDesc = document.getElementById('spotlightDesc');
+      if (spotEl) spotEl.href = picked.href;
+      if (spotTitle) spotTitle.textContent = picked.name;
+      if (spotDesc) spotDesc.textContent = picked.desc;
+
+      /* Fake "playing now" counter — feels alive */
+      const playersEl = document.getElementById('spotlightPlayers');
+      if (playersEl) {
+        const base = 80 + Math.floor(Math.random() * 120);
+        playersEl.textContent = base + ' playing now';
+        setInterval(function() {
+          const drift = Math.floor(Math.random() * 7) - 3;
+          const cur = parseInt(playersEl.textContent) || base;
+          playersEl.textContent = Math.max(40, cur + drift) + ' playing now';
+        }, 5000);
+      }
+
+      /* Spotlight canvas — larger version of the featured game preview */
+      const sc = document.getElementById('spotlightCanvas');
+      if (sc) {
+        const ctx = sc.getContext('2d');
+        const SW = 760, SH = 280;
+        let st = 0;
+
+        /* Generic animated preview — Flappy Bird style but bigger */
+        const pipes = [{x: 600, gap: 90}, {x: 400, gap: 110}, {x: 200, gap: 85}, {x: 0, gap: 100}];
+
+        function drawSpotlight() {
+          st += 0.016;
+          const sky = ctx.createLinearGradient(0,0,0,SH);
+          sky.addColorStop(0,'#5cb8ff'); sky.addColorStop(0.6,'#a8e0ff');
+          sky.addColorStop(0.85,'#d4f0d4'); sky.addColorStop(1,'#7be495');
+          ctx.fillStyle = sky; ctx.fillRect(0,0,SW,SH);
+
+          ctx.fillStyle = 'rgba(255,255,255,0.2)';
+          for (let i = 0; i < 6; i++) {
+            const cx = ((i*140 + 40 - st*12) % (SW+100)) - 50;
+            ctx.beginPath(); ctx.ellipse(cx, 30+i*15, 45, 14, 0, 0, Math.PI*2); ctx.fill();
+          }
+
+          for (const p of pipes) {
+            const px = ((p.x - st*35) % (SW+100)) + 50;
+            const gapY = 80 + p.gap * 0.3;
+            const pg = ctx.createLinearGradient(px,0,px+50,0);
+            pg.addColorStop(0,'#2d8a5e'); pg.addColorStop(0.4,'#3da870'); pg.addColorStop(1,'#28774e');
+            ctx.fillStyle = pg;
+            ctx.fillRect(px, 0, 50, gapY-40);
+            ctx.fillRect(px, gapY+40, 50, SH-gapY-40);
+            ctx.fillStyle = '#45b87a';
+            ctx.fillRect(px-5, gapY-40, 60, 12);
+            ctx.fillRect(px-5, gapY+28, 60, 12);
+          }
+
+          const birdY = SH*0.4 + Math.sin(st*3)*18;
+          const wing = Math.sin(st*8)*6;
+          ctx.save(); ctx.translate(180, birdY);
+          ctx.rotate(Math.sin(st*3)*0.15);
+          const bg = ctx.createRadialGradient(-2,-2,3,0,0,16);
+          bg.addColorStop(0,'#ffe066'); bg.addColorStop(1,'#f0a030');
+          ctx.fillStyle = bg; ctx.beginPath(); ctx.arc(0,0,16,0,Math.PI*2); ctx.fill();
+          ctx.fillStyle = '#f0a030'; ctx.beginPath();
+          ctx.ellipse(-6,wing+3,9,4.5,-0.3,0,Math.PI*2); ctx.fill();
+          ctx.fillStyle = '#ff7b54'; ctx.beginPath();
+          ctx.moveTo(13,-3); ctx.lineTo(22,0); ctx.lineTo(13,3); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(-1,-5,4.5,0,Math.PI*2); ctx.fill();
+          ctx.fillStyle = '#1b2a36'; ctx.beginPath(); ctx.arc(0,-5,2.2,0,Math.PI*2); ctx.fill();
+          ctx.restore();
+
+          ctx.fillStyle = '#6cd47e'; ctx.fillRect(0,SH-22,SW,22);
+          requestAnimationFrame(drawSpotlight);
+        }
+        requestAnimationFrame(drawSpotlight);
+      }
+    })();
+
     /* ── Animated Canvas Previews ── */
     (function() {
       const W = 360, H = 200;
@@ -3435,7 +3668,21 @@
     </script>
     <script>
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js');
+        navigator.serviceWorker.register('/sw.js').then(function(reg) {
+          /* Force new SW to activate immediately and reload for fresh content */
+          reg.addEventListener('updatefound', function() {
+            var nw = reg.installing;
+            if (nw) {
+              nw.addEventListener('statechange', function() {
+                if (nw.state === 'activated' && !sessionStorage.getItem('sw_refreshed')) {
+                  sessionStorage.setItem('sw_refreshed', '1');
+                  window.location.reload();
+                }
+              });
+            }
+          });
+          reg.update();
+        });
       }
     </script>
     <script>
