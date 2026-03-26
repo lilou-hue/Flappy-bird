@@ -37,7 +37,7 @@ window.Battle = (function() {
         hp: BC.hpBase,
         stamina: BC.staminaBase,
         fireSystem: BC.fireSystemBase,
-        position: 0,
+        position: 2,
         lastAction: null,
         evading: false,
         bracing: false,
@@ -51,7 +51,7 @@ window.Battle = (function() {
         hp: BC.hpBase,
         stamina: BC.staminaBase,
         fireSystem: BC.fireSystemBase,
-        position: 10,
+        position: 6,
         lastAction: null,
         evading: false,
         bracing: false,
@@ -82,41 +82,50 @@ window.Battle = (function() {
 
     const scores = {};
 
+    // ---- CORE FIX: Dragons must want to fight, not kite ----
+    // Approach/attack scores are much higher than retreat scores.
+    // seekDistance only scores well when HP is critical.
+
     if (isClose) {
-      // Melee options
-      scores.bite = combatant.stats.attackPower * beh.aggression * 0.8;
-      scores.claw = combatant.stats.attackPower * beh.aggression * 0.6;
-      scores.tailStrike = combatant.stats.attackPower * 0.4 + (beh.patience * 10); // knockback utility
+      // Melee — primary combat actions, high base scores
+      scores.bite = 30 + combatant.stats.attackPower * beh.aggression * 0.5;
+      scores.claw = 25 + combatant.stats.attackPower * beh.aggression * 0.4;
+      scores.tailStrike = 15 + combatant.stats.attackPower * 0.3;
     } else {
-      // Ranged / approach options
-      scores.lunge = beh.aggression * combatant.stats.burstSpeed * 0.4;
-      scores.pressure = beh.aggression * 20;
-      scores.seekDistance = (1 - beh.aggression) * 25;
+      // Not close — strongly prefer closing distance
+      scores.lunge = 35 + beh.aggression * combatant.stats.burstSpeed * 0.3;
+      scores.pressure = 30 + beh.aggression * 15;
+      // seekDistance only if desperate (low HP and not aggressive)
+      scores.seekDistance = hpRatio < 0.3 ? (1 - beh.aggression) * 20 : 2;
     }
 
-    // Fire options (range-independent but affected by distance)
+    // Fire options — ranged attacks are a reason to NOT close sometimes
     if (fireRatio > 0.2 && combatant.stats.fireAttack > 15) {
       const fireViable = combatant.results.fire.stability > 25;
       const inRange = distance <= combatant.stats.fireRange;
       if (inRange && fireViable) {
-        scores.fireBurst = combatant.stats.fireAttack * beh.firePreference * 0.7;
+        scores.fireBurst = 20 + combatant.stats.fireAttack * beh.firePreference * 0.5;
         if (fireRatio > 0.4 && staminaRatio > 0.3) {
-          scores.sustainedFire = combatant.stats.fireAttack * beh.firePreference * 0.9;
+          scores.sustainedFire = 25 + combatant.stats.fireAttack * beh.firePreference * 0.6;
         }
+      } else if (!inRange && fireViable && beh.firePreference > 0.6) {
+        // Fire-focused dragon wants to close to fire range
+        scores.lunge = (scores.lunge || 0) + 10;
+        scores.pressure = (scores.pressure || 0) + 8;
       }
     }
 
-    // Defensive options
-    scores.evade = (1 - hpRatio) * combatant.stats.mobility * 0.3 + (1 - beh.aggression) * 15;
-    scores.brace = beh.patience * combatant.stats.resilience * 0.2;
+    // Defensive — only significant when hurt
+    scores.evade = hpRatio < 0.5 ? (1 - hpRatio) * combatant.stats.mobility * 0.4 : 3;
+    scores.brace = hpRatio < 0.4 ? beh.patience * combatant.stats.resilience * 0.3 : 2;
 
-    // Recovery
-    if (staminaRatio < 0.4) {
-      scores.recover = (1 - staminaRatio) * 40 * beh.patience;
+    // Recovery — only when stamina is actually low
+    if (staminaRatio < 0.25) {
+      scores.recover = (1 - staminaRatio) * 30 * beh.patience;
     }
 
-    // Reposition
-    scores.reposition = combatant.stats.mobility * 0.15;
+    // Reposition — low priority tactical option
+    scores.reposition = 5 + combatant.stats.mobility * 0.05;
 
     // Intelligence-based tactical bonus: boost the best action
     const tacticalMod = combatant.stats.tacticalEfficiency * 0.01;
@@ -155,10 +164,9 @@ window.Battle = (function() {
     return chosen;
   }
 
-  // Simple player action selection (mirrors AI but uses player dragon traits)
+  // Player dragon AI — slightly more aggressive than balanced to ensure fights happen
   function choosePlayerAction(combatant, opponent, state) {
-    // Player dragon uses same AI logic but without behavior object (defaults to balanced)
-    const temp = { ...combatant, behavior: { aggression: 0.5, patience: 0.5, firePreference: 0.4 } };
+    const temp = { ...combatant, behavior: { aggression: 0.65, patience: 0.35, firePreference: 0.5 } };
     return chooseAction(temp, opponent, state);
   }
 
