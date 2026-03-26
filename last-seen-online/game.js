@@ -1180,7 +1180,8 @@
 
     // Check for choice on this note
     if (entry.choice && !state.choicesMade[entry.choice]) {
-      setTimeout(function() { showNoteChoice(entry.choice); }, 2000);
+      if (_noteChoiceTimer) clearTimeout(_noteChoiceTimer);
+      _noteChoiceTimer = setTimeout(function() { _noteChoiceTimer = null; showNoteChoice(entry.choice); }, 2000);
     }
 
     showScreen('noteDetail', { slide: true });
@@ -1246,6 +1247,7 @@
   });
 
   $('noteDetailBack').addEventListener('click', function() {
+    if (_noteChoiceTimer) { clearTimeout(_noteChoiceTimer); _noteChoiceTimer = null; }
     if (typeof Audio_LSO !== 'undefined') Audio_LSO.back();
     renderNotesList();
     showScreen('notes');
@@ -1302,6 +1304,7 @@
           if (finalCompletion > best) {
             localStorage.setItem('lastSeenOnlineBest', String(finalCompletion));
           }
+          document.body.appendChild(Arcade.createScoreCard('last-seen-online', finalCompletion, best));
         }
 
         checkAchievements();
@@ -1395,6 +1398,7 @@
   }
 
   var ambientTensionInterval = null;
+  var _noteChoiceTimer = null;
 
   // Arcade restart support
   document.addEventListener('arcade-restart', function() {

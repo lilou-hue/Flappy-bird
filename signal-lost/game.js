@@ -164,6 +164,7 @@ var SignalLost = (function () {
   }
 
   function resetState() {
+    arcadeReported = false;
     power = POWER_MAX;
     currentCam = 0;
     doorLeft = false;
@@ -433,6 +434,7 @@ var SignalLost = (function () {
     if (!arcadeReported && typeof Arcade !== 'undefined') {
       arcadeReported = true;
       Arcade.onGameOver('signal-lost', score);
+      document.body.appendChild(Arcade.createScoreCard('signal-lost', score, bestTime));
     }
   }
 
