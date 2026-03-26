@@ -524,7 +524,10 @@
     if (state === STATES.DRAWING || state === STATES.COUNTDOWN) return;
     startGame();
   });
-  document.addEventListener('arcade-restart', () => { startGame(); });
+  document.addEventListener('arcade-restart', () => {
+    if (state === STATES.DRAWING || state === STATES.COUNTDOWN) return;
+    startGame();
+  });
 
   /* ── Leaderboard toggle ── */
   if (lbToggle && typeof Leaderboard !== 'undefined') {

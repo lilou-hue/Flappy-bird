@@ -436,7 +436,7 @@ function endGame() {
   }
   stats.bestScore = bestScore;
   stats.longestTime = Math.max(stats.longestTime, runTime);
-  if (!stats.usedJetpack) stats.noJetpackScore = score;
+  if (!stats.usedJetpack) stats.noJetpackScore = Math.max(stats.noJetpackScore || 0, score);
   saveData();
   checkAchievements();
   restartBtn.hidden = false;
