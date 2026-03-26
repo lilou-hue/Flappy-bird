@@ -317,7 +317,13 @@
     /* Track session start — currently a no-op placeholder */
   }
 
+  var _lastGameOverTime = 0;
+
   function onGameOver(gameId, score) {
+    var now = Date.now();
+    if (now - _lastGameOverTime < 1000) return { coinsEarned: 0, isNewBest: false, newAchievements: [], challengesCompleted: [], luckyDrop: null, holyMoment: null, powerUpUsed: null };
+    _lastGameOverTime = now;
+
     var s = getState();
     var d = today();
 
@@ -409,8 +415,8 @@
 
     /* Holy moment first (most dramatic) */
     if (holyMoment) {
-      setTimeout(function() { showHolyMoment(holyMoment); }, 200);
-      popupDelay += 3000;
+      setTimeout(function() { showHolyMoment(holyMoment); }, 300);
+      popupDelay += 3500;
     }
 
     /* Lucky drop */
@@ -421,7 +427,13 @@
 
     /* Achievement popups */
     newAchievements.forEach(function (a, i) {
-      setTimeout(function () { showAchievementPopup(a); }, popupDelay + 300 * (i + 1));
+      setTimeout(function () { showAchievementPopup(a); }, popupDelay + 500 + 600 * i);
+    });
+    popupDelay += newAchievements.length * 600 + 500;
+
+    /* Quest milestone popups (cascaded after achievements) */
+    questMilestones.forEach(function (m, i) {
+      setTimeout(function () { showQuestMilestonePopup(m); }, popupDelay + 600 * (i + 1));
     });
 
     return {
@@ -760,9 +772,6 @@
     if (newlyReached.length) {
       quest.lastTotal = total;
       setQuestState(quest);
-      newlyReached.forEach(function(m, i) {
-        setTimeout(function() { showQuestMilestonePopup(m); }, 600 * (i + 1));
-      });
     }
 
     return newlyReached;
@@ -999,7 +1008,15 @@
 
   function getDailyChallenges() {
     return generateDailyChallenges().map(function (c) {
-      return { id: c.id, desc: c.desc, reward: c.reward, completed: c.completed, type: c.type, gameId: c.gameId, target: c.target };
+      var desc = c.desc;
+      if (c.type === 'score' && c.gameId) {
+        desc = getChallTpl(CHALLENGE_TEMPLATES[0].tplKey).replace('{target}', c.target).replace('{game}', GAMES[c.gameId].name);
+      } else if (c.type === 'play') {
+        desc = getChallTpl(CHALLENGE_TEMPLATES[1].tplKey).replace('{target}', c.target);
+      } else if (c.type === 'beat_best' && c.gameId) {
+        desc = getChallTpl(CHALLENGE_TEMPLATES[2].tplKey).replace('{game}', GAMES[c.gameId].name);
+      }
+      return { id: c.id, desc: desc, reward: c.reward, completed: c.completed, type: c.type, gameId: c.gameId, target: c.target };
     });
   }
 
@@ -1206,7 +1223,7 @@
     var overlay = document.createElement('div');
     overlay.className = 'arc-scorecard';
 
-    var isNewBest = score > (best || 0) && score > 0;
+    var isNewBest = opts.isNewBest != null ? opts.isNewBest : (score > (best || 0) && score > 0);
     var thresholdBonus = getThresholdBonus(gameId, score);
     var coinsBase = 5;
     var coinsNewBest = isNewBest ? 10 : 0;

@@ -95,9 +95,16 @@ const Leaderboard = (() => {
         if (e.key === 'Enter') submit();
       });
 
-      modal.append(heading, input, btn);
+      var skipBtn = document.createElement('button');
+      skipBtn.textContent = t('lbSkip', 'Skip');
+      skipBtn.className = 'lb-skip-btn';
+      skipBtn.style.cssText = 'margin-top:8px;background:none;border:1px solid #555;color:#aaa;padding:6px 16px;border-radius:6px;cursor:pointer;font-size:0.85rem;';
+      skipBtn.addEventListener('click', function() { overlay.remove(); resolve(''); });
+
+      modal.append(heading, input, btn, skipBtn);
       overlay.appendChild(modal);
       document.body.appendChild(overlay);
+      overlay.addEventListener('click', function(e) { if (e.target === overlay) { overlay.remove(); resolve(''); } });
 
       requestAnimationFrame(() => input.focus());
     });

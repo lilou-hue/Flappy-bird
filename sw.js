@@ -167,13 +167,16 @@ self.addEventListener('fetch', (event) => {
 
   if (isNetworkFirst) {
     event.respondWith(
-      fetch(event.request).then((response) => {
-        if (response.ok && url.origin === self.location.origin) {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-        }
-        return response;
-      }).catch(() => caches.match(event.request))
+      Promise.race([
+        fetch(event.request).then((response) => {
+          if (response.ok && url.origin === self.location.origin) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000))
+      ]).catch(() => caches.match(event.request))
     );
     return;
   }

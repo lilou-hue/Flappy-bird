@@ -196,6 +196,9 @@
             };
           });
 
+          // Only include players with at least 3 games for reliable ranking
+          rows = rows.filter(function(r) { return r.gamesPlayed >= 3; });
+
           // Sort: lower average = better; tie-break by more games played
           rows.sort(function (a, b) {
             if (a.avg !== b.avg) return a.avg - b.avg;
