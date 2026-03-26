@@ -1250,6 +1250,7 @@
       equippedBadge: shop.equipped.badge,
       equippedFrame: shop.equipped.frame,
       equippedTheme: shop.equipped.theme,
+      equippedTitle: shop.equipped.title,
       purchased: shop.purchased,
     };
   }
@@ -1354,6 +1355,8 @@
 
     var overlay = document.createElement('div');
     overlay.className = 'arc-scorecard';
+    var equippedFrame = getShop().equipped.frame;
+    if (equippedFrame) overlay.dataset.frame = equippedFrame;
 
     var isNewBest = opts.isNewBest != null ? opts.isNewBest : (score > (best || 0) && score > 0);
     var thresholdBonus = getThresholdBonus(gameId, score);
@@ -1402,6 +1405,7 @@
         '<div class="arc-scorecard__dramatic">' + dramatic.title + '</div>' +
         (dramatic.sub ? '<div class="arc-scorecard__dramatic-sub">' + dramatic.sub + '</div>' : '') +
         '<div class="arc-scorecard__gamename">' + game.name + '</div>' +
+        (function() { var eq = getShop().equipped.title; var ti = eq ? SHOP_ITEMS.find(function(i){return i.id===eq;}) : null; return ti ? '<div class="arc-scorecard__title arc-scorecard__title--' + (ti.rarity || 'common') + '">' + ti.icon + ' ' + ti.label + '</div>' : ''; })() +
         (isNewBest ? '<div class="arc-scorecard__newbest">' + t('arcNewBest', 'New Best!') + '</div>' : '') +
         (percentile ? '<div class="arc-scorecard__percentile">' + percentile + '</div>' : '') +
         (nearMissText && !percentile ? '<div class="arc-scorecard__nearmiss">' + nearMissText + '</div>' : '') +
@@ -1569,10 +1573,20 @@
     var challenges = getDailyChallenges();
     var pendingCount = challenges.filter(function(c) { return !c.completed; }).length;
 
+    /* Equipped badge + title for HUD */
+    var shop = getShop();
+    var equippedBadgeItem = shop.equipped.badge ? SHOP_ITEMS.find(function(i) { return i.id === shop.equipped.badge; }) : null;
+    var equippedTitleItem = shop.equipped.title ? SHOP_ITEMS.find(function(i) { return i.id === shop.equipped.title; }) : null;
+    var adminMode = isAdminMode();
+    var badgeHtml = equippedBadgeItem ? '<div class="arc-nav__badge arc-nav__badge--' + (equippedBadgeItem.rarity || 'common') + '" title="' + equippedBadgeItem.name + '">' + equippedBadgeItem.icon + '</div>' : '';
+    var titleHtml = equippedTitleItem ? '<div class="arc-nav__title">' + equippedTitleItem.label + '</div>' : '';
+    var adminHtml = adminMode ? '<div class="arc-nav__admin" title="Admin mode active — click to disable" id="arcAdminIndicator">🔑 ADMIN</div>' : '';
+
     if (isGamePage) {
       nav.innerHTML =
         '<a href="/" class="arc-nav__link arc-nav__link--home" title="Home">&#x1F3E0;</a>' +
         '<div class="arc-nav__right">' +
+          adminHtml +
           (activeEvent ? '<div class="arc-nav__event">' + activeEvent.label + '</div>' : '') +
           (streak.streak > 0 ? '<div class="arc-nav__streak' + streakClass + '" title="' + streak.streak + '-day streak' + (streakAtRisk ? ' — AT RISK!' : '') + '">&#x1F525; ' + streak.streak + '</div>' : '') +
           '<div class="arc-nav__coins"><span class="arc-coin-icon">&#x1FA99;</span> <span class="arc-coin-value">' + coins + '</span></div>' +
@@ -1587,6 +1601,9 @@
           '<a href="/profile/" class="arc-nav__link' + (window.location.pathname.indexOf('/profile') === 0 ? ' arc-nav__link--active' : '') + '">' + t('arcNavProfile', 'Profile') + '</a>' +
         '</div>' +
         '<div class="arc-nav__right">' +
+          adminHtml +
+          titleHtml +
+          badgeHtml +
           (activeEvent ? '<div class="arc-nav__event">' + activeEvent.label + '</div>' : '') +
           (pendingCount > 0 ? '<div class="arc-nav__challenges" title="' + pendingCount + ' challenges remaining">📋 ' + pendingCount + '</div>' : '') +
           (streak.streak > 0 ? '<div class="arc-nav__streak' + streakClass + '" title="' + streak.streak + '-day streak' + (streakAtRisk ? ' — AT RISK!' : '') + '">&#x1F525; ' + streak.streak + '</div>' : '') +
@@ -1624,6 +1641,15 @@
         updateStreakCountdown();
         setInterval(updateStreakCountdown, 60000);
       }
+    }
+
+    /* Admin indicator click — toggle off */
+    var adminEl = nav.querySelector('#arcAdminIndicator');
+    if (adminEl) {
+      adminEl.addEventListener('click', function() {
+        deactivateAdminMode();
+        adminEl.remove();
+      });
     }
   }
 
@@ -2038,6 +2064,16 @@
 
   /* ── Auto-init ── */
   function autoInit() {
+    /* Check for admin activation via URL param */
+    try {
+      var urlAdmin = new URLSearchParams(window.location.search).get('admin');
+      if (urlAdmin === 'slay2024') {
+        activateAdminMode();
+        /* Clean the URL without reload */
+        var cleanUrl = window.location.pathname;
+        window.history.replaceState({}, '', cleanUrl);
+      }
+    } catch (e) {}
     applyTheme();
     showChallengeBanner();
     checkOGBadge();
@@ -2092,6 +2128,18 @@
     getPlayerMemory: getPlayerMemory,
     getReturnTrigger: getReturnTrigger,
     SECRET_ACHIEVEMENTS: SECRET_ACHIEVEMENTS,
+    /* Admin mode */
+    isAdminMode: isAdminMode,
+    activateAdminMode: activateAdminMode,
+    deactivateAdminMode: deactivateAdminMode,
+    adminUnlockAll: adminUnlockAll,
+    /* Shop powers */
+    getActiveShopPowerStatus: getActiveShopPowerStatus,
+    getEquippedTitle: function() {
+      var shop = getShop();
+      if (!shop.equipped.title) return null;
+      return SHOP_ITEMS.find(function(i) { return i.id === shop.equipped.title; }) || null;
+    },
   };
 
 })();

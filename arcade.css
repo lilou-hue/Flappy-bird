@@ -2374,3 +2374,334 @@ body:has(.arc-nav) {
 .lb-rarity-epic {
   background: linear-gradient(135deg, rgba(168,85,247,0.08), rgba(139,92,246,0.04)) !important;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   SHOP REDESIGN — Badges, Titles, Frames, Powers
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Rarity glow system ── */
+@keyframes holoShimmer {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@keyframes lightningBorder {
+  0%, 100% { box-shadow: 0 0 8px #facc15, 0 0 20px #facc15, inset 0 0 4px rgba(250,204,21,0.1); }
+  50%       { box-shadow: 0 0 16px #38bdf8, 0 0 40px #38bdf8, inset 0 0 8px rgba(56,189,248,0.15); }
+}
+@keyframes voidPulse {
+  0%, 100% { box-shadow: 0 0 12px #7c3aed, 0 0 30px rgba(124,58,237,0.3); }
+  50%       { box-shadow: 0 0 20px #a855f7, 0 0 50px rgba(168,85,247,0.4); }
+}
+@keyframes fireBorder {
+  0%, 100% { box-shadow: 0 0 10px #ef4444, 0 0 24px rgba(239,68,68,0.3); }
+  33%       { box-shadow: 0 0 14px #f97316, 0 0 32px rgba(249,115,22,0.4); }
+  66%       { box-shadow: 0 0 10px #eab308, 0 0 20px rgba(234,179,8,0.3); }
+}
+@keyframes legendaryGlow {
+  0%, 100% { filter: drop-shadow(0 0 6px #facc15); }
+  50%       { filter: drop-shadow(0 0 14px #f59e0b); }
+}
+@keyframes epicGlow {
+  0%, 100% { filter: drop-shadow(0 0 4px #a855f7); }
+  50%       { filter: drop-shadow(0 0 10px #c084fc); }
+}
+
+/* ── Shop item cards ── */
+.arc-shop-item {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 16px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.arc-shop-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+}
+.arc-shop-item--legendary {
+  border-color: rgba(250,204,21,0.3);
+  background: linear-gradient(135deg, rgba(250,204,21,0.06), rgba(245,158,11,0.03));
+}
+.arc-shop-item--epic {
+  border-color: rgba(168,85,247,0.3);
+  background: linear-gradient(135deg, rgba(168,85,247,0.06), rgba(139,92,246,0.03));
+}
+.arc-shop-item--rare {
+  border-color: rgba(56,189,248,0.25);
+  background: linear-gradient(135deg, rgba(56,189,248,0.05), rgba(6,182,212,0.03));
+}
+
+.arc-shop-item__rarity {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+.arc-shop-item--legendary .arc-shop-item__rarity { color: #facc15; }
+.arc-shop-item--epic     .arc-shop-item__rarity { color: #c084fc; }
+.arc-shop-item--rare     .arc-shop-item__rarity { color: #38bdf8; }
+.arc-shop-item--uncommon .arc-shop-item__rarity { color: #4ade80; opacity: 0.6; }
+
+.arc-shop-item__icon {
+  font-size: 2.2rem;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.arc-shop-item__icon--legendary { animation: legendaryGlow 2s ease-in-out infinite; }
+.arc-shop-item__icon--epic      { animation: epicGlow 2.5s ease-in-out infinite; }
+
+.arc-shop-item__name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.9);
+}
+.arc-shop-item__label {
+  font-size: 0.75rem;
+  color: #c084fc;
+  font-style: italic;
+}
+.arc-shop-item__desc {
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.45);
+  line-height: 1.4;
+}
+.arc-shop-item__cost {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #facc15;
+  margin-top: 2px;
+}
+
+/* ── Shop buttons ── */
+.arc-shop-btn {
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.75rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.2s, transform 0.1s;
+  margin-top: auto;
+}
+.arc-shop-btn:hover:not(:disabled) { opacity: 0.88; transform: scale(1.02); }
+.arc-shop-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+.arc-shop-btn--equipped {
+  background: linear-gradient(135deg, #059669, #10b981);
+}
+.arc-shop-btn--owned {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+}
+.arc-shop-btn--active {
+  background: linear-gradient(135deg, #059669, #10b981);
+  font-size: 0.7rem;
+}
+.arc-shop-btn--locked {
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.4);
+  cursor: not-allowed;
+}
+
+/* ── Shop grid ── */
+.arc-shop-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+/* ── Active powers bar ── */
+.arc-active-powers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 14px;
+  background: rgba(250,204,21,0.06);
+  border: 1px solid rgba(250,204,21,0.2);
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+.arc-active-powers__label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #facc15;
+}
+.arc-active-powers__pill {
+  font-size: 0.75rem;
+  padding: 3px 10px;
+  background: rgba(250,204,21,0.1);
+  border: 1px solid rgba(250,204,21,0.25);
+  border-radius: 999px;
+  color: rgba(255,255,255,0.85);
+}
+
+/* ── Shop toast ── */
+.arc-shop-toast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #1e1b2e;
+  border: 1px solid rgba(168,85,247,0.3);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s;
+  white-space: nowrap;
+}
+.arc-shop-toast--visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ── Admin panel ── */
+.arc-shop-admin {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  z-index: 100;
+}
+.arc-shop-admin:hover { opacity: 1 !important; }
+.arc-shop-admin__btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+.arc-shop-admin__btn:hover { background: rgba(255,255,255,0.15); }
+
+/* ── Admin toast ── */
+.arc-admin-toast {
+  position: fixed;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-10px);
+  background: #1e1b2e;
+  border: 1px solid #facc15;
+  color: #facc15;
+  padding: 8px 20px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s;
+}
+.arc-admin-toast--visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ── Nav HUD badge + title ── */
+.arc-nav__badge {
+  font-size: 1.1rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+}
+.arc-nav__badge--legendary { animation: legendaryGlow 2s ease-in-out infinite; }
+.arc-nav__badge--epic      { animation: epicGlow 2.5s ease-in-out infinite; }
+
+.arc-nav__title {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #c084fc;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  background: rgba(168,85,247,0.1);
+  border: 1px solid rgba(168,85,247,0.2);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.arc-nav__admin {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #facc15;
+  background: rgba(250,204,21,0.1);
+  border: 1px solid rgba(250,204,21,0.3);
+  border-radius: 999px;
+  padding: 2px 8px;
+  cursor: pointer;
+  animation: adminPulse 2s ease-in-out infinite;
+}
+@keyframes adminPulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.7; }
+}
+
+/* ── Scorecard title display ── */
+.arc-scorecard__title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 3px 12px;
+  border-radius: 999px;
+  display: inline-block;
+  margin: 4px auto 0;
+}
+.arc-scorecard__title--common    { color: rgba(255,255,255,0.6); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); }
+.arc-scorecard__title--uncommon  { color: #4ade80; background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.2); }
+.arc-scorecard__title--rare      { color: #38bdf8; background: rgba(56,189,248,0.08); border: 1px solid rgba(56,189,248,0.2); }
+.arc-scorecard__title--epic      { color: #c084fc; background: rgba(192,132,252,0.08); border: 1px solid rgba(192,132,252,0.2); animation: epicGlow 2.5s ease-in-out infinite; }
+.arc-scorecard__title--legendary { color: #facc15; background: rgba(250,204,21,0.08); border: 1px solid rgba(250,204,21,0.3); animation: legendaryGlow 2s ease-in-out infinite; }
+
+/* ── Frame effects on scorecard ── */
+.arc-scorecard[data-frame="frame_holo"] .arc-scorecard__card {
+  border-image: linear-gradient(135deg, #ff0080, #ff8c00, #40e0d0, #ff0080) 1;
+  animation: holoShimmer 3s ease infinite;
+  background-size: 200% 200%;
+  box-shadow: 0 0 20px rgba(255,0,128,0.2), 0 0 40px rgba(64,224,208,0.15);
+}
+.arc-scorecard[data-frame="frame_lightning"] .arc-scorecard__card {
+  animation: lightningBorder 1.5s ease-in-out infinite;
+}
+.arc-scorecard[data-frame="frame_void"] .arc-scorecard__card {
+  animation: voidPulse 2s ease-in-out infinite;
+}
+.arc-scorecard[data-frame="frame_fire"] .arc-scorecard__card {
+  animation: fireBorder 2s ease-in-out infinite;
+}
+.arc-scorecard[data-frame="frame_gold"] .arc-scorecard__card {
+  box-shadow: 0 0 16px rgba(250,204,21,0.25), 0 0 40px rgba(250,204,21,0.1);
+  border-color: rgba(250,204,21,0.3);
+}
+
+/* ── Equipped display extra label ── */
+.arc-equipped__sublabel {
+  font-size: 0.65rem;
+  color: #c084fc;
+  font-style: italic;
+  margin-top: 2px;
+}
