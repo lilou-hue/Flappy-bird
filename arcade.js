@@ -405,6 +405,7 @@
   }
 
   var _lastGameOverTime = 0;
+  var _lastGameResult = null; /* cached for createScoreCard fallback */
 
   function onGameOver(gameId, score) {
     var now = Date.now();
@@ -539,7 +540,7 @@
       setTimeout(function () { showQuestMilestonePopup(m); }, popupDelay + 600 * (i + 1));
     });
 
-    return {
+    var result = {
       coinsEarned: coinsEarned,
       isNewBest: isNewBest,
       newAchievements: newAchievements,
@@ -548,6 +549,8 @@
       holyMoment: holyMoment,
       powerUpUsed: puDef,
     };
+    _lastGameResult = result;
+    return result;
   }
 
   function getCoins() { return getState().coins; }
@@ -1358,7 +1361,8 @@
     var equippedFrame = getShop().equipped.frame;
     if (equippedFrame) overlay.dataset.frame = equippedFrame;
 
-    var isNewBest = opts.isNewBest != null ? opts.isNewBest : (score > (best || 0) && score > 0);
+    var isNewBest = opts.isNewBest != null ? opts.isNewBest :
+      (_lastGameResult ? _lastGameResult.isNewBest : (score > (best || 0) && score > 0));
     var thresholdBonus = getThresholdBonus(gameId, score);
     var coinsBase = 5;
     var coinsNewBest = isNewBest ? 10 : 0;
@@ -1366,7 +1370,8 @@
     var challengeLink = encodeChallengeLink(gameId, score);
     var activeEvent = getActiveEvent();
     var eventMult = activeEvent ? activeEvent.multiplier : 1;
-    var totalCoins = opts.coinsEarned != null ? opts.coinsEarned : Math.floor((coinsBase + coinsNewBest + thresholdBonus) * eventMult);
+    var totalCoins = opts.coinsEarned != null ? opts.coinsEarned :
+      (_lastGameResult ? _lastGameResult.coinsEarned : Math.floor((coinsBase + coinsNewBest + thresholdBonus) * eventMult));
 
     /* Near-miss: enhanced clarity */
     var nearMissText = getNearMissText(gameId, score, best || 0);

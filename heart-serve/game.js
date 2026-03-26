@@ -1920,7 +1920,7 @@
       pCtx.restore();
     }
   }
-  setInterval(updateParticles, 1000 / 30);
+  var _particleInterval = setInterval(updateParticles, 1000 / 30);
 
   /* ════════════════════════════════════════════════════════════
      AFFECTION SYSTEM
@@ -2894,9 +2894,11 @@
         pong.aiEffectTimer = puType.duration;
       }
     } else if (puType.id === 'speed_ball') {
-      pong.ball.speed *= 1.5;
-      pong.ball.vx *= 1.5;
-      pong.ball.vy *= 1.5;
+      var newSpeed = Math.min(pong.ball.speed * 1.5, 10);
+      var ratio = newSpeed / (pong.ball.speed || 1);
+      pong.ball.speed = newSpeed;
+      pong.ball.vx *= ratio;
+      pong.ball.vy *= ratio;
     } else if (puType.id === 'freeze') {
       if (target === 'player') {
         pong.freezeAI = puType.duration;
@@ -3497,6 +3499,7 @@
 
   // Arcade restart support
   document.addEventListener('arcade-restart', function() {
+    if (typeof _particleInterval !== 'undefined') clearInterval(_particleInterval);
     localStorage.removeItem(getSaveKey());
     state = defaultState();
     location.reload();
