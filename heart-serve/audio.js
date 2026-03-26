@@ -188,11 +188,67 @@ var HSAudio = (function() {
     });
   }
 
+  function comboHit(combo) {
+    play(function(c) {
+      var baseFreq = 800 + Math.min(combo * 30, 1200);
+      var o = c.createOscillator(), g = c.createGain();
+      o.type = 'triangle'; o.frequency.value = baseFreq;
+      o.frequency.exponentialRampToValueAtTime(baseFreq * 0.5, c.currentTime + 0.1);
+      g.gain.setValueAtTime(0.12, c.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.12);
+      o.connect(g).connect(c.destination);
+      o.start(c.currentTime); o.stop(c.currentTime + 0.12);
+    });
+  }
+
+  function chaosEvent() {
+    play(function(c) {
+      var t = c.currentTime;
+      [400, 600, 800, 1200, 1600].forEach(function(f, i) {
+        var o = c.createOscillator(), g = c.createGain();
+        o.type = 'sawtooth'; o.frequency.value = f;
+        g.gain.setValueAtTime(0.06, t + i * 0.05);
+        g.gain.exponentialRampToValueAtTime(0.001, t + i * 0.05 + 0.15);
+        o.connect(g).connect(c.destination);
+        o.start(t + i * 0.05); o.stop(t + i * 0.05 + 0.15);
+      });
+    });
+  }
+
+  function death() {
+    play(function(c) {
+      var t = c.currentTime;
+      var o = c.createOscillator(), g = c.createGain();
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(500, t);
+      o.frequency.exponentialRampToValueAtTime(80, t + 0.5);
+      g.gain.setValueAtTime(0.1, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+      o.connect(g).connect(c.destination);
+      o.start(t); o.stop(t + 0.5);
+    });
+  }
+
+  function newRecord() {
+    play(function(c) {
+      var t = c.currentTime;
+      [523, 659, 784, 1047, 1319, 1568].forEach(function(f, i) {
+        var o = c.createOscillator(), g = c.createGain();
+        o.type = 'sine'; o.frequency.value = f;
+        g.gain.setValueAtTime(0.1, t + i * 0.08);
+        g.gain.exponentialRampToValueAtTime(0.001, t + i * 0.08 + 0.3);
+        o.connect(g).connect(c.destination);
+        o.start(t + i * 0.08); o.stop(t + i * 0.08 + 0.3);
+      });
+    });
+  }
+
   function toggleMute() { muted = !muted; return muted; }
   function isMuted() { return muted; }
 
   return { hit:hit, score:score, losePoint:losePoint, heartGain:heartGain,
            click:click, win:win, lose:lose, serve:serve, toggleMute:toggleMute,
            isMuted:isMuted, powerUp:powerUp, giftGive:giftGive,
-           jealousy:jealousy, fever:fever, eventFanfare:eventFanfare };
+           jealousy:jealousy, fever:fever, eventFanfare:eventFanfare,
+           comboHit:comboHit, chaosEvent:chaosEvent, death:death, newRecord:newRecord };
 })();

@@ -982,3 +982,66 @@ body {
   from { opacity: 0; }
   to { opacity: 1; }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   ARCADE MODE
+   ═══════════════════════════════════════════════════════════════ */
+.btn-arcade {
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 700;
+  padding: 10px 28px;
+  border: 2px solid var(--lavender);
+  border-radius: 50px;
+  background: linear-gradient(135deg, rgba(179,136,255,0.15), rgba(255,107,157,0.15));
+  color: var(--lavender);
+  cursor: pointer;
+  margin-top: 12px;
+  transition: all 0.2s ease;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  animation: arcadePulse 2.5s ease-in-out infinite;
+}
+.btn-arcade:hover {
+  background: linear-gradient(135deg, rgba(179,136,255,0.3), rgba(255,107,157,0.3));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(179,136,255,0.35);
+}
+@keyframes arcadePulse {
+  0%, 100% { box-shadow: 0 0 0 rgba(179,136,255,0); }
+  50% { box-shadow: 0 0 20px rgba(179,136,255,0.25); }
+}
+
+#arcadeModeScreen {
+  padding: 0;
+  background: #0a0514;
+  justify-content: center;
+  align-items: center;
+}
+#arcadePongCanvas {
+  display: block;
+  width: 100%;
+  max-width: 580px;
+  height: auto;
+  border-radius: 8px;
+}
+.btn-back-arcade {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 16px;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 20px;
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.6);
+  cursor: pointer;
+  z-index: 20;
+  transition: all 0.2s;
+}
+.btn-back-arcade:hover {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+}

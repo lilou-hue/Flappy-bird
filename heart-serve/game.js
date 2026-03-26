@@ -1069,7 +1069,8 @@
   var screens = {
     title: $('titleScreen'), select: $('selectScreen'),
     dialogue: $('dialogueScreen'), match: $('matchScreen'),
-    results: $('resultsScreen'), ending: $('endingScreen')
+    results: $('resultsScreen'), ending: $('endingScreen'),
+    arcadeMode: $('arcadeModeScreen')
   };
 
   /* ════════════════════════════════════════════════════════════
@@ -3432,6 +3433,17 @@
 
   $('homeBtn').addEventListener('click', function() {
     window.location.href = '/';
+  });
+
+  // Arcade Mode button
+  $('arcadeModeBtn').addEventListener('click', function() {
+    showScreen('arcadeMode');
+    if (typeof window._HSArcade !== 'undefined') window._HSArcade.start();
+  });
+
+  $('arcadeBackBtn').addEventListener('click', function() {
+    if (typeof window._HSArcade !== 'undefined') window._HSArcade.stop();
+    showScreen('title');
   });
 
   // Arcade restart support

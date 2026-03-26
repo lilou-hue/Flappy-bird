@@ -51,6 +51,7 @@
         </div>
         <button class="btn btn-primary btn-glow" id="startBtn" data-i18n="hsNewGame" style="display:none">New Game</button>
         <button class="btn btn-secondary" id="continueBtn" data-i18n="hsContinue" style="display:none">Continue</button>
+        <button class="btn btn-arcade" id="arcadeModeBtn">Arcade Mode</button>
         <!-- Ending gallery -->
         <div class="ending-gallery-wrap" style="display:none">
           <p class="gallery-label">Endings Unlocked</p>
@@ -139,6 +140,12 @@
       </div>
     </div>
 
+    <!-- ═══ ARCADE MODE SCREEN ═══ -->
+    <div class="screen" id="arcadeModeScreen">
+      <canvas id="arcadePongCanvas" width="580" height="380"></canvas>
+      <button class="btn btn-back-arcade" id="arcadeBackBtn">Back</button>
+    </div>
+
     <!-- ═══ ENDING SCREEN ═══ -->
     <div class="screen" id="endingScreen">
       <div class="ending-card">
@@ -169,6 +176,7 @@
   <script src="audio.js"></script>
   <script src="boys.js"></script>
   <script src="game.js"></script>
+  <script src="arcade-mode.js"></script>
   <script>if(typeof Arcade!=='undefined')Arcade.injectNavHUD();</script>
 </body>
 </html>
