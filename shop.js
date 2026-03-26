@@ -246,6 +246,21 @@ function redeem(code) {
   var upper = code.trim().toUpperCase();
   if (!upper) return;
 
+  /* Secret admin activation code — works from any game page */
+  if (upper === 'SLAY2024ADMIN') {
+    if (window.Arcade && Arcade.activateAdminMode) {
+      Arcade.activateAdminMode();
+    } else {
+      /* Fallback: set localStorage directly if Arcade not loaded */
+      try { localStorage.setItem('arc_admin', '1'); } catch(e) {}
+    }
+    if (adminBtnEl) adminBtnEl.style.display = '';
+    if (inputEl) inputEl.value = '';
+    statusEl.textContent = '🔑 Admin mode on — click Unlock All to unlock items.';
+    statusEl.className = 'sp-shop-status success';
+    return;
+  }
+
   var bundleId = config.codes[upper];
   if (!bundleId) {
     /* Also try the raw input (Lemonsqueezy license keys are mixed-case UUIDs) */
