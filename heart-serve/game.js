@@ -1988,7 +1988,19 @@
 
   $('continueBtn').addEventListener('click', function() {
     if (typeof HSAudio !== 'undefined') HSAudio.click();
-    goToSelect();
+    // Restore to the actual saved screen, not just character select
+    var savedScreen = state.screen;
+    if (savedScreen && savedScreen !== 'title' && savedScreen !== 'arcadeMode') {
+      showScreen(savedScreen);
+      // Re-initialize the screen context
+      if (savedScreen === 'select') goToSelect();
+      else if (savedScreen === 'dialogue') showDialogue();
+      else if (savedScreen === 'match') showMatch();
+      else if (savedScreen === 'results') showResults();
+      else goToSelect();
+    } else {
+      goToSelect();
+    }
   });
 
   function initTitle() {
@@ -2004,7 +2016,9 @@
     var saved = null;
     try { saved = JSON.parse(localStorage.getItem(getSaveKey())); } catch(e) {}
     if (saved && saved.day && saved.day > 1) {
-      $('continueBtn').style.display = '';
+      var contBtn = $('continueBtn');
+      contBtn.style.display = '';
+      contBtn.textContent = 'Continue — Day ' + saved.day;
     }
 
     // Mute button
@@ -3400,6 +3414,10 @@
     var total = totalAffection();
     $('endingScoreText').textContent = _t('hsTotalAffection') + ': ' + total;
 
+    // Mark this route as completed
+    state.ended = true;
+    saveState();
+
     // Arcade integration
     if (typeof Arcade !== 'undefined') {
       Arcade.onGameOver('heart-serve', total);
@@ -3415,6 +3433,18 @@
           spawnHeart(Math.random() * gcRect.width, Math.random() * gcRect.height * 0.5, 1);
         }, i * 200);
       }
+    }
+
+    // Show "Try the other route?" if player hasn't played the other route
+    var otherRouteBtn = $('otherRouteBtn');
+    if (otherRouteBtn) {
+      var otherRoute = currentRoute === 'girls' ? 'boys' : 'girls';
+      var otherSaveKey = 'heartServeState_' + otherRoute;
+      var otherSave = null;
+      try { otherSave = JSON.parse(localStorage.getItem(otherSaveKey)); } catch(e) {}
+      var otherCompleted = otherSave && otherSave.ended;
+      otherRouteBtn.style.display = otherCompleted ? 'none' : '';
+      otherRouteBtn.textContent = '✨ Try the ' + (otherRoute === 'boys' ? 'Boys' : 'Girls') + ' Route?';
     }
   }
 
@@ -3434,6 +3464,21 @@
   $('homeBtn').addEventListener('click', function() {
     window.location.href = '/';
   });
+
+  // "Try the other route?" button
+  var otherRouteBtnEl = $('otherRouteBtn');
+  if (otherRouteBtnEl) {
+    otherRouteBtnEl.addEventListener('click', function() {
+      var otherRoute = currentRoute === 'girls' ? 'boys' : 'girls';
+      localStorage.removeItem(getSaveKey());
+      currentRoute = otherRoute;
+      localStorage.setItem('heartServeRoute', otherRoute);
+      state = defaultState();
+      saveState();
+      showScreen('title');
+      initTitle();
+    });
+  }
 
   // Arcade Mode button
   $('arcadeModeBtn').addEventListener('click', function() {
@@ -3462,23 +3507,13 @@
      ════════════════════════════════════════════════════════════ */
   function init() {
     initTitle();
-
-    // If saved state exists mid-game, can continue
-    if (state.day > 1 && state.day <= TOTAL_DAYS && state.screen !== 'title') {
-      // Show title with continue option
-      showScreen('title');
-    } else {
-      showScreen('title');
-    }
+    showScreen('title');
   }
 
 
   /* ── i18n DOM init ── */
   if (typeof I18N !== 'undefined') {
     I18N.applyDOM();
-    if (typeof I18N.createSelector === 'function') {
-      I18N.createSelector(document.querySelector('#titleScreen .title-content'));
-    }
   }
 
   init();

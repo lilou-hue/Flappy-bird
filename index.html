@@ -357,7 +357,6 @@
         position: relative;
         z-index: 1;
       }
-      .stats-dashboard.hidden { display: none; }
 
       .stat-card {
         background: var(--card-bg);
@@ -561,6 +560,35 @@
         text-transform: uppercase;
       }
 
+      /* Featured card */
+      .game-card--featured {
+        grid-column: span 2;
+      }
+      .game-card--featured .card-preview canvas {
+        width: 100%;
+        height: 240px;
+      }
+      .game-card--featured .card-preview {
+        height: 240px;
+      }
+      @media (max-width: 600px) {
+        .game-card--featured { grid-column: span 1; }
+      }
+      .card-badge {
+        display: inline-block;
+        padding: 0.15rem 0.6rem;
+        border-radius: 999px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        margin-bottom: 0.4rem;
+      }
+      .card-badge--new {
+        background: linear-gradient(90deg, #ff6bb5, #a855f7);
+        color: #fff;
+      }
+
       .flappy-preview   { background: linear-gradient(180deg, #7bd0ff, #d7f3ff 65%, #7be495 100%); }
       .methane-preview   { background: linear-gradient(180deg, #182550, #11153d, #040612); }
       .snake-preview     { background: linear-gradient(180deg, #0a2e1a, #051a0d, #020a05); }
@@ -655,6 +683,30 @@
         .logo__text { font-size: 1.8rem; }
         .nav-pill { font-size: 0.8rem; padding: 0.4rem 0.8rem; }
       }
+
+      /* ── See All button ── */
+      .see-all-btn {
+        display: block;
+        margin: 1.2rem auto 0;
+        padding: 0.7rem 2rem;
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 999px;
+        color: var(--text-dim);
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s, color 0.2s, border-color 0.2s;
+        position: relative;
+        z-index: 1;
+        max-width: 760px;
+        width: 100%;
+      }
+      .see-all-btn:hover {
+        background: rgba(255,255,255,0.08);
+        color: var(--text);
+        border-color: rgba(255,255,255,0.2);
+      }
     </style>
     <!-- Preload critical assets for faster perceived load -->
     <link rel="preload" href="/arcade.js" as="script">
@@ -714,7 +766,7 @@
         <div class="spotlight__overlay">
           <div class="spotlight__info">
             <div class="spotlight__meta">
-              <div class="spotlight__live"><span class="spotlight__live-dot"></span> <span id="spotlightPlayers">127 playing now</span></div>
+              <div class="spotlight__live"><span class="spotlight__live-dot"></span> Featured</div>
               <h2 id="spotlightTitle">Flappy Bird</h2>
               <p id="spotlightDesc">Tap to flap through the pipes. How far can you go?</p>
             </div>
@@ -758,11 +810,50 @@
       </div>
     </div>
 
+    <!-- Stats Dashboard — shown above grid when user has data -->
+    <div id="statsSection" style="display:none">
+    <div class="section-header">&#x1F4CA; Your Stats</div>
+    <div class="stats-dashboard" id="statsDashboard">
+      <div class="stat-card">
+        <div class="stat-card__icon">&#x1F3AE;</div>
+        <div class="stat-card__value" id="statFavGame">-</div>
+        <div class="stat-card__label">Favorite Game</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__icon">&#x1F3C6;</div>
+        <div class="stat-card__value" id="statAchievements">0</div>
+        <div class="stat-card__label">Achievements</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__icon">&#x2B50;</div>
+        <div class="stat-card__value" id="statCombinedBest">0</div>
+        <div class="stat-card__label">Combined Best</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__icon">&#x1F525;</div>
+        <div class="stat-card__value" id="statStreak">0</div>
+        <div class="stat-card__label">Day Streak</div>
+      </div>
+    </div>
+    </div><!-- /statsSection -->
+
     <!-- Choose Your Zone -->
     <div class="zone-label">&#x1F30C; Enter a Zone</div>
 
     <!-- Games Grid -->
     <div class="games-grid">
+      <a href="/heart-serve/" class="game-card game-card--featured">
+        <div class="card-preview heart-serve-preview">
+          <canvas id="heartServeCanvas" width="360" height="200"></canvas>
+        </div>
+        <div class="card-body">
+          <span class="card-badge card-badge--new">&#x2728; New</span>
+          <h2>HeartServe: Arcade Mode</h2>
+          <p>Infinite pong with combo chains, chaos events, and cosmetic unlocks. How high can you go?</p>
+          <span class="card-tag" style="background:rgba(255,107,181,0.15);color:#ff6bb5">Dating Sim + Arcade</span>
+        </div>
+      </a>
+
       <a href="/flappy-bird/" class="game-card">
         <div class="card-preview flappy-preview">
           <canvas id="flappyCanvas" width="360" height="200"></canvas>
@@ -818,7 +909,7 @@
         </div>
       </a>
 
-      <a href="/unicorn-clicker/" class="game-card">
+      <div id="gamesGridMore" class="games-grid-more" style="display:contents">
         <div class="card-preview unicorn-preview">
           <canvas id="unicornCanvas" width="360" height="200"></canvas>
         </div>
@@ -1004,16 +1095,6 @@
         </div>
       </a>
 
-      <a href="/heart-serve/" class="game-card">
-        <div class="card-preview heart-serve-preview">
-          <canvas id="heartServeCanvas" width="360" height="200"></canvas>
-        </div>
-        <div class="card-body">
-          <h2>HeartServe</h2>
-          <p>A dating sim meets ping pong — build friendships through dialogue and matches!</p>
-          <span class="card-tag" style="background:rgba(255,107,181,0.15);color:#ff6bb5">Dating Sim</span>
-        </div>
-      </a>
 
       <a href="/signal-lost/" class="game-card">
         <div class="card-preview signal-lost-preview">
@@ -1036,35 +1117,72 @@
           <span class="card-tag" style="background:rgba(74,240,192,0.15);color:#4af0c0">Simulation</span>
         </div>
       </a>
+      </div><!-- /gamesGridMore -->
     </div>
 
-    <!-- Below-fold: Stats, Challenges, Achievements, Leaderboard -->
-    <div class="section-header">&#x1F4CA; Your Stats</div>
-    <div class="stats-dashboard hidden" id="statsDashboard">
-      <div class="stat-card">
-        <div class="stat-card__icon">&#x1F3AE;</div>
-        <div class="stat-card__value" id="statFavGame">-</div>
-        <div class="stat-card__label">Favorite Game</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-card__icon">&#x1F3C6;</div>
-        <div class="stat-card__value" id="statAchievements">0</div>
-        <div class="stat-card__label">Achievements</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-card__icon">&#x2B50;</div>
-        <div class="stat-card__value" id="statCombinedBest">0</div>
-        <div class="stat-card__label">Combined Best</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-card__icon">&#x1F525;</div>
-        <div class="stat-card__value" id="statStreak">0</div>
-        <div class="stat-card__label">Day Streak</div>
-      </div>
-    </div>
+    <!-- See All toggle button -->
+    <button class="see-all-btn" id="seeAllBtn">&#x25BC; See All Games (19 more)</button>
+    <script>
+    /* ── Grid collapse + lazy-load ── */
+    (function() {
+      var more = document.getElementById('gamesGridMore');
+      var btn = document.getElementById('seeAllBtn');
+      var expanded = false;
+
+      /* Hide "more" cards by hiding all children */
+      function collapse() {
+        if (!more) return;
+        Array.from(more.children).forEach(function(card) {
+          card.style.display = 'none';
+        });
+        btn.style.display = '';
+      }
+      function expand() {
+        if (!more) return;
+        Array.from(more.children).forEach(function(card) {
+          card.style.display = '';
+        });
+        btn.textContent = '&#x25B2; Show Less';
+        btn.innerHTML = '&#x25B2; Show Less';
+        expanded = true;
+        setupObserver();
+      }
+
+      if (btn) {
+        btn.addEventListener('click', function() {
+          if (!expanded) expand();
+          else {
+            collapse();
+            expanded = false;
+            btn.innerHTML = '&#x25BC; See All Games (19 more)';
+            window.scrollTo({ top: document.querySelector('.games-grid').offsetTop - 80, behavior: 'smooth' });
+          }
+        });
+      }
+      collapse();
+
+      /* Intersection Observer for lazy-loading canvas previews */
+      function setupObserver() {
+        if (!('IntersectionObserver' in window)) return;
+        var canvases = document.querySelectorAll('.card-preview canvas');
+        var obs = new IntersectionObserver(function(entries) {
+          entries.forEach(function(entry) {
+            if (entry.isIntersecting) {
+              /* Canvas draw functions are already running — just ensure they start */
+              entry.target.dataset.visible = '1';
+              obs.unobserve(entry.target);
+            }
+          });
+        }, { rootMargin: '200px' });
+        canvases.forEach(function(c) { obs.observe(c); });
+      }
+      /* Observe canvases in the visible section immediately */
+      setupObserver();
+    })();
+    </script>
 
     <!-- Arcade: Daily Challenges -->
-    <div class="arc-challenges" id="dailyChallenges">
+    <div class="arc-challenges" id="dailyChallenges" style="display:none">
       <div class="arc-challenges__title">&#x1F3AF; Daily Challenges</div>
       <div class="arc-challenges__grid" id="challengeGrid"></div>
     </div>
@@ -1094,36 +1212,14 @@
     <script>
     /* ── Spotlight: Featured Game Canvas ── */
     (function() {
-      const SPOTLIGHT_GAMES = [
-        { id: 'flappy-bird', name: 'Flappy Bird', desc: 'Tap to flap through the pipes. How far can you go?', href: '/flappy-bird/' },
-        { id: 'snake', name: 'Snake', desc: 'Guide the snake, eat to grow, survive as the walls close in.', href: '/snake/' },
-        { id: 'tetris', name: 'Tetris', desc: 'Stack blocks, clear lines, chase the high score.', href: '/tetris/' },
-        { id: 'phantom-road', name: 'Phantom Road', desc: 'Race through the dark, chain combos, evade the police!', href: '/phantom-road/' },
-        { id: 'beat-drop', name: 'Beat Drop', desc: 'Hit notes as they fall to the beat. Build your combo!', href: '/beat-drop/' },
-        { id: 'star-fury', name: 'Star Fury', desc: 'Blast through enemy waves in this space shooter.', href: '/star-fury/' },
-      ];
-
-      /* Pick a spotlight game — rotate daily, weighted toward games user hasn't played much */
-      const dayIdx = Math.floor(Date.now() / 86400000) % SPOTLIGHT_GAMES.length;
-      const picked = SPOTLIGHT_GAMES[dayIdx];
+      /* HeartServe Arcade Mode is permanently featured in the spotlight */
+      const picked = { id: 'heart-serve', name: 'HeartServe: Arcade Mode', desc: 'Infinite pong — combo chains, chaos events, Heart Energy unlocks. Go!', href: '/heart-serve/' };
       const spotEl = document.getElementById('spotlight');
       const spotTitle = document.getElementById('spotlightTitle');
       const spotDesc = document.getElementById('spotlightDesc');
       if (spotEl) spotEl.href = picked.href;
       if (spotTitle) spotTitle.textContent = picked.name;
       if (spotDesc) spotDesc.textContent = picked.desc;
-
-      /* Fake "playing now" counter — feels alive */
-      const playersEl = document.getElementById('spotlightPlayers');
-      if (playersEl) {
-        const base = 80 + Math.floor(Math.random() * 120);
-        playersEl.textContent = base + ' playing now';
-        setInterval(function() {
-          const drift = Math.floor(Math.random() * 7) - 3;
-          const cur = parseInt(playersEl.textContent) || base;
-          playersEl.textContent = Math.max(40, cur + drift) + ' playing now';
-        }, 5000);
-      }
 
       /* Spotlight canvas — larger version of the featured game preview */
       const sc = document.getElementById('spotlightCanvas');
@@ -3626,7 +3722,8 @@
         const streak = streakData.streak || 0;
 
         if (totalAch > 0 || combinedBest > 0 || maxPlayed > 0) {
-          dashboard.classList.remove('hidden');
+          var statsSection = document.getElementById('statsSection');
+          if (statsSection) statsSection.style.display = '';
           document.getElementById('statFavGame').textContent = favGame || '-';
           document.getElementById('statAchievements').textContent = totalAch;
           document.getElementById('statCombinedBest').textContent = combinedBest.toLocaleString();
@@ -3650,7 +3747,8 @@
         /* Render daily challenges */
         var challenges = Arcade.getDailyChallenges();
         var cGrid = document.getElementById('challengeGrid');
-        if (cGrid) {
+        var challengesSection = document.getElementById('dailyChallenges');
+        if (cGrid && challenges.length) {
           cGrid.innerHTML = challenges.map(function (c) {
             return '<div class="arc-challenge-card' + (c.completed ? ' arc-challenge-card--done' : '') + '">' +
               '<div class="arc-challenge-card__desc">' + c.desc + '</div>' +
@@ -3660,6 +3758,7 @@
               '</div>' +
             '</div>';
           }).join('');
+          if (challengesSection) challengesSection.style.display = '';
         }
 
         /* Render achievements preview */
@@ -3716,20 +3815,27 @@
         /* ── Arena Quest Progress Bar ── */
         if (typeof Arcade !== 'undefined' && Arcade.getQuestProgress) {
           var q = Arcade.getQuestProgress();
-          var questTitle = document.getElementById('questTitle');
-          var questRank = document.getElementById('questRank');
-          var questFill = document.getElementById('questFill');
-          var questPoints = document.getElementById('questPoints');
-          var questNext = document.getElementById('questNext');
+          var arenaQuestEl = document.getElementById('arenaQuest');
 
-          if (questTitle) questTitle.innerHTML = q.icon + ' Arena Rank: <strong>' + q.title + '</strong>';
-          if (questRank) questRank.textContent = q.total.toLocaleString() + ' pts';
-          if (questFill) questFill.style.width = q.progress + '%';
-          if (questPoints) questPoints.textContent = q.total.toLocaleString() + ' total points';
-          if (questNext && q.nextTier) {
-            questNext.textContent = 'Next: ' + q.nextTier.title + ' (' + q.nextTier.points.toLocaleString() + ' pts)';
-          } else if (questNext) {
-            questNext.textContent = 'MAX RANK ACHIEVED';
+          /* Hide for new users — 0 pts "Newcomer" before first play is demotivating */
+          if (q.total === 0) {
+            if (arenaQuestEl) arenaQuestEl.style.display = 'none';
+          } else {
+            var questTitle = document.getElementById('questTitle');
+            var questRank = document.getElementById('questRank');
+            var questFill = document.getElementById('questFill');
+            var questPoints = document.getElementById('questPoints');
+            var questNext = document.getElementById('questNext');
+
+            if (questTitle) questTitle.innerHTML = q.icon + ' Arena Rank: <strong>' + q.title + '</strong>';
+            if (questRank) questRank.textContent = q.total.toLocaleString() + ' pts';
+            if (questFill) questFill.style.width = q.progress + '%';
+            if (questPoints) questPoints.textContent = q.total.toLocaleString() + ' total points';
+            if (questNext && q.nextTier) {
+              questNext.textContent = 'Next: ' + q.nextTier.title + ' (' + q.nextTier.points.toLocaleString() + ' pts)';
+            } else if (questNext) {
+              questNext.textContent = 'MAX RANK ACHIEVED';
+            }
           }
         }
 

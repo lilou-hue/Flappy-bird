@@ -34,22 +34,22 @@
 
   /* ── Site-wide achievements ── */
   const ACHIEVEMENTS = [
-    { id: 'first_steps',       nameKey: 'arcAchFirstSteps',      descKey: 'arcAchFirstStepsDesc',      icon: '👶', reward: 10 },
-    { id: 'getting_hooked',    nameKey: 'arcAchGettingHooked',   descKey: 'arcAchGettingHookedDesc',   icon: '🎣', reward: 25 },
-    { id: 'arcade_rat',        nameKey: 'arcAchArcadeRat',       descKey: 'arcAchArcadeRatDesc',       icon: '🐀', reward: 100 },
-    { id: 'explorer',          nameKey: 'arcAchExplorer',        descKey: 'arcAchExplorerDesc',        icon: '🧭', reward: 75 },
-    { id: 'coin_collector',    nameKey: 'arcAchCoinCollector',   descKey: 'arcAchCoinCollectorDesc',   icon: '🪙', reward: 50 },
-    { id: 'big_spender',       nameKey: 'arcAchBigSpender',      descKey: 'arcAchBigSpenderDesc',      icon: '💰', reward: 100 },
-    { id: 'hat_trick',         nameKey: 'arcAchHatTrick',        descKey: 'arcAchHatTrickDesc',        icon: '🎩', reward: 30 },
-    { id: 'weekly_warrior',    nameKey: 'arcAchWeeklyWarrior',   descKey: 'arcAchWeeklyWarriorDesc',   icon: '⚔️', reward: 75 },
-    { id: 'monthly_master',    nameKey: 'arcAchMonthlyMaster',   descKey: 'arcAchMonthlyMasterDesc',   icon: '👑', reward: 200 },
-    { id: 'high_roller',       nameKey: 'arcAchHighRoller',      descKey: 'arcAchHighRollerDesc',      icon: '🎰', reward: 50 },
-    { id: 'challenge_accepted',nameKey: 'arcAchChallengeAccepted',descKey: 'arcAchChallengeAcceptedDesc',icon: '✅', reward: 15 },
-    { id: 'challenge_streak',  nameKey: 'arcAchChallengeStreak', descKey: 'arcAchChallengeStreakDesc', icon: '🔥', reward: 100 },
+    { id: 'first_steps',       nameKey: 'arcAchFirstSteps',       descKey: 'arcAchFirstStepsDesc',       n: 'First Steps',       d: 'Play your first game',            icon: '👶', reward: 10 },
+    { id: 'getting_hooked',    nameKey: 'arcAchGettingHooked',    descKey: 'arcAchGettingHookedDesc',    n: 'Getting Hooked',    d: 'Play 5 different games',          icon: '🎣', reward: 25 },
+    { id: 'arcade_rat',        nameKey: 'arcAchArcadeRat',        descKey: 'arcAchArcadeRatDesc',        n: 'Arcade Rat',        d: 'Play 50 games',                   icon: '🐀', reward: 100 },
+    { id: 'explorer',          nameKey: 'arcAchExplorer',         descKey: 'arcAchExplorerDesc',         n: 'Explorer',          d: 'Play every available game',       icon: '🧭', reward: 75 },
+    { id: 'coin_collector',    nameKey: 'arcAchCoinCollector',    descKey: 'arcAchCoinCollectorDesc',    n: 'Coin Collector',    d: 'Earn 500 coins',                  icon: '🪙', reward: 50 },
+    { id: 'big_spender',       nameKey: 'arcAchBigSpender',       descKey: 'arcAchBigSpenderDesc',       n: 'Big Spender',       d: 'Spend 2,000 coins in the shop',   icon: '💰', reward: 100 },
+    { id: 'hat_trick',         nameKey: 'arcAchHatTrick',         descKey: 'arcAchHatTrickDesc',         n: 'Hat Trick',         d: 'Keep a 3-day play streak',        icon: '🎩', reward: 30 },
+    { id: 'weekly_warrior',    nameKey: 'arcAchWeeklyWarrior',    descKey: 'arcAchWeeklyWarriorDesc',    n: 'Weekly Warrior',    d: 'Keep a 7-day play streak',        icon: '⚔️', reward: 75 },
+    { id: 'monthly_master',    nameKey: 'arcAchMonthlyMaster',    descKey: 'arcAchMonthlyMasterDesc',    n: 'Monthly Master',    d: 'Keep a 30-day play streak',       icon: '👑', reward: 200 },
+    { id: 'high_roller',       nameKey: 'arcAchHighRoller',       descKey: 'arcAchHighRollerDesc',       n: 'High Roller',       d: 'Spend 500 coins in the shop',     icon: '🎰', reward: 50 },
+    { id: 'challenge_accepted',nameKey: 'arcAchChallengeAccepted',descKey: 'arcAchChallengeAcceptedDesc',n: 'Challenge Accepted',d: 'Complete a daily challenge',       icon: '✅', reward: 15 },
+    { id: 'challenge_streak',  nameKey: 'arcAchChallengeStreak',  descKey: 'arcAchChallengeStreakDesc',  n: 'Challenge Streak',  d: 'Complete 7 daily challenges',     icon: '🔥', reward: 100 },
   ];
   ACHIEVEMENTS.forEach(function(a) {
-    Object.defineProperty(a, 'name', { get: function() { return t(a.nameKey, a.nameKey); }, enumerable: true });
-    Object.defineProperty(a, 'desc', { get: function() { return t(a.descKey, a.descKey); }, enumerable: true });
+    Object.defineProperty(a, 'name', { get: function() { return t(a.nameKey, a.n); }, enumerable: true });
+    Object.defineProperty(a, 'desc', { get: function() { return t(a.descKey, a.d); }, enumerable: true });
   });
 
   /* ── Shop items ── */
@@ -472,9 +472,9 @@
 
     result.isNewDay = true;
 
-    /* Check if yesterday */
+    /* Check if yesterday — use UTC consistently to match today() */
     var yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setUTCDate(yesterday.getUTCDate() - 1);
     var yStr = yesterday.toISOString().slice(0, 10);
 
     if (streak.lastDate === yStr) {
@@ -799,7 +799,7 @@
   var POWER_UPS = [
     { id: 'double_coins', name: 'Coin Magnet', icon: '🧲', cost: 15, desc: '2x coins this round', multiplier: 2 },
     { id: 'lucky_charm',  name: 'Lucky Charm', icon: '🍀', cost: 20, desc: 'Higher chance of rare drops', luckBoost: 3 },
-    { id: 'score_boost',  name: 'Adrenaline',  icon: '⚡', cost: 25, desc: '+20% score bonus on game over', scoreMultiplier: 1.2 },
+    { id: 'score_boost',  name: 'Adrenaline',  icon: '⚡', cost: 25, desc: '+20% to score thresholds (earn coins faster)', scoreMultiplier: 1.2 },
   ];
 
   function getActivePowerUp() {
@@ -1464,6 +1464,35 @@
 
     document.body.prepend(nav);
     applyTheme();
+
+    /* Streak countdown — show hours remaining until midnight if streak is at risk */
+    if (streakAtRisk) {
+      var streakEl = nav.querySelector('.arc-nav__streak--atrisk');
+      if (streakEl) {
+        function updateStreakCountdown() {
+          var now = new Date();
+          var midnight = new Date(now);
+          midnight.setHours(24, 0, 0, 0);
+          var msLeft = midnight - now;
+          var hoursLeft = Math.floor(msLeft / 3600000);
+          var minsLeft = Math.floor((msLeft % 3600000) / 60000);
+          var label = hoursLeft > 0
+            ? hoursLeft + 'h left'
+            : minsLeft + 'm left';
+          streakEl.title = streak.streak + '-day streak — AT RISK! ' + label;
+          /* Show inline countdown */
+          var countdownSpan = streakEl.querySelector('.streak-countdown');
+          if (!countdownSpan) {
+            countdownSpan = document.createElement('span');
+            countdownSpan.className = 'streak-countdown';
+            streakEl.appendChild(countdownSpan);
+          }
+          countdownSpan.textContent = ' (' + label + ')';
+        }
+        updateStreakCountdown();
+        setInterval(updateStreakCountdown, 60000);
+      }
+    }
   }
 
   /* ═══════════════════════════════════════════════════════════════

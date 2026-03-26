@@ -89,6 +89,11 @@
   padding: 0.3rem 0.6rem;
   border: 1px solid rgba(239,68,68,0.3);
 }
+.streak-countdown {
+  font-size: 0.72rem;
+  font-weight: 500;
+  opacity: 0.85;
+}
 .arc-nav__streak--hot {
   color: #f59e0b;
   text-shadow: 0 0 8px rgba(245,158,11,0.4);
