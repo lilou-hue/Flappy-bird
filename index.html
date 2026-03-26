@@ -910,6 +910,7 @@
       </a>
 
       <div id="gamesGridMore" class="games-grid-more" style="display:contents">
+      <a href="/unicorn-clicker/" class="game-card">
         <div class="card-preview unicorn-preview">
           <canvas id="unicornCanvas" width="360" height="200"></canvas>
         </div>
@@ -1123,6 +1124,101 @@
     <!-- See All toggle button -->
     <button class="see-all-btn" id="seeAllBtn">&#x25BC; See All Games (19 more)</button>
     <script>
+    /* ── Random game order + 30-min featured rotation ── */
+    (function() {
+      var SLOT_MS = 30 * 60 * 1000;
+      var slot = Math.floor(Date.now() / SLOT_MS);
+
+      function makeRng(seed) {
+        return function() {
+          seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+          var t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+          t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+          return ((t ^ t >>> 14) >>> 0) / 4294967296;
+        };
+      }
+
+      function shuffle(arr, rng) {
+        for (var i = arr.length - 1; i > 0; i--) {
+          var j = Math.floor(rng() * (i + 1));
+          var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+        }
+      }
+
+      var FEATURED_GAMES = [
+        { href: '/heart-serve/',        name: 'HeartServe: Arcade Mode',    desc: 'Infinite pong — combo chains, chaos events, Heart Energy unlocks. How high can you go?' },
+        { href: '/flappy-bird/',        name: 'Flappy Bird',                desc: 'Tap to flap through the pipes. How far can you go?' },
+        { href: '/methane-drift/',      name: 'Methane Drift',              desc: 'Drift through an alien methane sky. Dodge hazards and activate symbiosis to survive.' },
+        { href: '/snake/',              name: 'Snake',                      desc: 'Guide the snake, eat to grow, and survive as the walls close in.' },
+        { href: '/phantom-road/',       name: 'Phantom Road',               desc: 'Race through the dark, chain combos, grab power-ups, and evade the police!' },
+        { href: '/rivals/',             name: 'Rivals',                     desc: 'Round-based tactical shooter. Buy weapons, outsmart opponents, first to 5 wins!' },
+        { href: '/star-fury/',          name: 'Star Fury',                  desc: 'Blast through waves of enemies. Chain combos, grab power-ups, defeat bosses!' },
+        { href: '/beat-drop/',          name: 'Beat Drop',                  desc: 'Hit notes as they fall to the beat. Procedural music builds with your combo!' },
+        { href: '/signal-lost/',        name: 'Signal Lost',                desc: 'Monitor security cameras. Something is stalking through the facility. Don\'t let it reach you.' },
+        { href: '/gravity-garden/',     name: 'Gravity Garden',             desc: 'Plant planets and build a solar system. Newtonian gravity — collisions end it all!' },
+        { href: '/astro-miner/',        name: 'Astro Miner',                desc: 'Jump between asteroids, collect crystals, and dodge hazards in deep space.' },
+        { href: '/lumina/',             name: 'Lumina',                     desc: 'Descend through a dark crystalline cavern. Your light is all that reveals the way.' },
+        { href: '/gun-game/',           name: 'Gun Game',                   desc: 'Flap and shoot! Destroy pipes with 8 weapon tiers. Advance through them all to win!' },
+        { href: '/tetris/',             name: 'Tetris',                     desc: 'Stack tetrominoes, clear lines, and chase the high score. Neon puzzle action!' },
+      ];
+
+      function applyFeatured(featured) {
+        var spotEl = document.getElementById('spotlight');
+        var spotTitle = document.getElementById('spotlightTitle');
+        var spotDesc = document.getElementById('spotlightDesc');
+        if (spotEl) spotEl.href = featured.href;
+        if (spotTitle) spotTitle.textContent = featured.name;
+        if (spotDesc) spotDesc.textContent = featured.desc;
+      }
+
+      var featured = FEATURED_GAMES[slot % FEATURED_GAMES.length];
+      applyFeatured(featured);
+
+      /* Shuffle all game cards using time-slot seed */
+      var grid = document.querySelector('.games-grid');
+      var more = document.getElementById('gamesGridMore');
+      if (grid && more) {
+        var allCards = Array.from(grid.querySelectorAll('a.game-card'));
+        var rng = makeRng(slot);
+        shuffle(allCards, rng);
+
+        /* Move the featured game's card to position 0 */
+        var fi = allCards.findIndex(function(c) { return c.getAttribute('href') === featured.href; });
+        if (fi > 0) { allCards.unshift(allCards.splice(fi, 1)[0]); }
+
+        /* Apply / remove featured class */
+        allCards.forEach(function(c, i) {
+          c.classList.toggle('game-card--featured', i === 0);
+        });
+
+        /* Detach all cards, clear more, reinsert */
+        allCards.forEach(function(c) { c.parentNode.removeChild(c); });
+        more.innerHTML = '';
+
+        var VISIBLE = 6;
+        for (var i = 0; i < allCards.length; i++) {
+          if (i < VISIBLE) grid.insertBefore(allCards[i], more);
+          else more.appendChild(allCards[i]);
+        }
+
+        /* Update button text with real count */
+        var btn = document.getElementById('seeAllBtn');
+        if (btn && allCards.length > VISIBLE) {
+          btn.innerHTML = '&#x25BC; See All Games (' + (allCards.length - VISIBLE) + ' more)';
+        }
+      }
+
+      /* Rotate spotlight every 30 min without reloading the page */
+      var msUntilNext = (slot + 1) * SLOT_MS - Date.now();
+      setTimeout(function rotate() {
+        slot = Math.floor(Date.now() / SLOT_MS);
+        applyFeatured(FEATURED_GAMES[slot % FEATURED_GAMES.length]);
+        setTimeout(rotate, SLOT_MS);
+      }, msUntilNext);
+    })();
+    </script>
+
+    <script>
     /* ── Grid collapse + lazy-load ── */
     (function() {
       var more = document.getElementById('gamesGridMore');
@@ -1154,7 +1250,7 @@
           else {
             collapse();
             expanded = false;
-            btn.innerHTML = '&#x25BC; See All Games (19 more)';
+            btn.innerHTML = '&#x25BC; See All Games (' + more.children.length + ' more)';
             window.scrollTo({ top: document.querySelector('.games-grid').offsetTop - 80, behavior: 'smooth' });
           }
         });
@@ -1217,15 +1313,6 @@
     <script>
     /* ── Spotlight: Featured Game Canvas ── */
     (function() {
-      /* HeartServe Arcade Mode is permanently featured in the spotlight */
-      const picked = { id: 'heart-serve', name: 'HeartServe: Arcade Mode', desc: 'Infinite pong — combo chains, chaos events, Heart Energy unlocks. Go!', href: '/heart-serve/' };
-      const spotEl = document.getElementById('spotlight');
-      const spotTitle = document.getElementById('spotlightTitle');
-      const spotDesc = document.getElementById('spotlightDesc');
-      if (spotEl) spotEl.href = picked.href;
-      if (spotTitle) spotTitle.textContent = picked.name;
-      if (spotDesc) spotDesc.textContent = picked.desc;
-
       /* Spotlight canvas — larger version of the featured game preview */
       const sc = document.getElementById('spotlightCanvas');
       if (sc) {
