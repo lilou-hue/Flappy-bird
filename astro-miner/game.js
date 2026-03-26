@@ -425,6 +425,7 @@ function killPlayer() {
 let isNewBest = false;
 
 function endGame() {
+  if (state === STATE.GAMEOVER) return;
   state = STATE.GAMEOVER;
   Audio.stopDrone();
   isNewBest = false;

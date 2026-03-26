@@ -7155,7 +7155,8 @@ function randomizeOutfit() {
   CATEGORIES.forEach(cat => {
     if (useDress && (cat === 'top' || cat === 'bottom')) { delete equipped[cat]; return; }
     if (!useDress && cat === 'dress') { delete equipped[cat]; return; }
-    const catItems = ITEMS.filter(it => it.category === cat);
+    const catItems = ITEMS.filter(it => it.category === cat && isItemUnlocked(it.id));
+    if (!catItems.length) return;
     const item = catItems[Math.floor(Math.random() * catItems.length)];
     const ci = Math.floor(Math.random() * item.colors.length);
     equipped[cat] = { itemId: item.id, colorIdx: ci };
@@ -7284,6 +7285,7 @@ function startChallenge() {
   Audio.init(); Audio.resume(); Audio.challengeStart();
   challengeActive = true;
   equipped = {};
+  colorCycleCount = {};
   currentChallengeTheme = CHALLENGE_THEMES[Math.floor(Math.random() * CHALLENGE_THEMES.length)];
   challengeTimer = 60;
 

@@ -291,7 +291,7 @@
 
     var checks = {
       first_steps:        s.totalGamesPlayed >= 1,
-      getting_hooked:     s.totalGamesPlayed >= 5,
+      getting_hooked:     s.uniqueGamesPlayed.length >= 5,
       arcade_rat:         s.totalGamesPlayed >= 50,
       explorer:           s.uniqueGamesPlayed.length >= GAME_IDS.length,
       coin_collector:     s.totalCoinsEarned >= 500,
@@ -586,17 +586,20 @@
     if (streak.lastDate === yStr) {
       streak.streak++;
     } else if (streak.lastDate) {
-      /* STREAK BROKEN — check for shield */
+      /* STREAK BROKEN — check for shield (only valid if exactly one day was missed) */
+      var twoDaysAgo = new Date();
+      twoDaysAgo.setUTCDate(twoDaysAgo.getUTCDate() - 2);
+      var tdStr = twoDaysAgo.toISOString().slice(0, 10);
       var shop = getShop();
       var shieldIdx = shop.purchased.indexOf('streak_shield');
-      if (shieldIdx !== -1) {
-        /* Shield consumed — streak saved! */
+      if (shieldIdx !== -1 && streak.lastDate === tdStr) {
+        /* Shield consumed — streak saved! (missed exactly one day) */
         shop.purchased.splice(shieldIdx, 1);
         setShop(shop);
         result.shieldUsed = true;
         /* Don't increment, but don't reset either */
       } else {
-        /* No shield — streak dies */
+        /* No shield or gap > 1 day — streak dies */
         result.streakBroken = true;
         result.lostStreak = streak.streak;
         streak.streak = 1;
@@ -1001,10 +1004,10 @@
 
   /* ── 5. LUCKY DROPS (Controlled RNG) ── */
   var LUCKY_DROPS = [
+    { chance: 0.15,  name: 'Bonus Round',   icon: '✨', coins: 5,   rarity: 'common' },
     { chance: 0.08,  name: 'Lucky Coins!',  icon: '🌟', coins: 15,  rarity: 'uncommon' },
     { chance: 0.03,  name: 'Coin Shower!',  icon: '💰', coins: 50,  rarity: 'rare' },
     { chance: 0.008, name: 'JACKPOT!!',     icon: '🎰', coins: 200, rarity: 'legendary' },
-    { chance: 0.15,  name: 'Bonus Round',   icon: '✨', coins: 5,   rarity: 'common' },
   ];
 
   function rollLuckyDrop(luckMultiplier) {

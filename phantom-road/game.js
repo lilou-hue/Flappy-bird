@@ -736,6 +736,7 @@ function restartGame() {
 }
 
 function gameOver() {
+  if (state.phase === "gameover") return;
   state.phase = "gameover";
   state.crashX = state.carX;
   state.crashY = state.carY;

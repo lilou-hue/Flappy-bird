@@ -499,7 +499,7 @@ function endGame() {
   // Stats (skip in practice mode)
   if (!practiceMode) {
     if (score > achData.stats.bestScore) achData.stats.bestScore = score;
-    if (combo > achData.stats.bestCombo) achData.stats.bestCombo = combo;
+    if (sessionBestCombo > achData.stats.bestCombo) achData.stats.bestCombo = sessionBestCombo;
     if (perfectStreak > achData.stats.bestPerfectStreak) achData.stats.bestPerfectStreak = perfectStreak;
     achData.stats.totalHits += totalHits;
     if (bpm > achData.stats.maxBPM) achData.stats.maxBPM = bpm;
