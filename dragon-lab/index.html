@@ -11,16 +11,16 @@
   <header class="app-header">
     <div class="header-left">
       <h1 class="app-title">Dragon Engineering Lab</h1>
-      <span class="app-subtitle">Biological Systems Simulation</span>
     </div>
     <nav class="tab-bar">
       <button class="tab-btn active" data-tab="build">Build</button>
       <button class="tab-btn" data-tab="simulate">Simulate</button>
       <button class="tab-btn" data-tab="habitat">Habitat</button>
       <button class="tab-btn" data-tab="battle">Battle</button>
-      <button class="tab-btn" data-tab="science">Science Notes</button>
+      <button class="tab-btn" data-tab="science">Science</button>
     </nav>
     <div class="header-right">
+      <button class="mode-toggle" id="btn-mode" title="Switch Basic / Advanced">Basic</button>
       <button class="btn-icon" id="btn-tutorial" title="Replay Tutorial">?</button>
     </div>
   </header>
@@ -29,9 +29,10 @@
   <main class="app-main">
     <!-- LEFT PANEL: Controls -->
     <aside class="panel panel-left" id="controls-panel">
-      <!-- Action buttons -->
       <div class="action-bar">
         <button class="btn-primary" id="btn-simulate">Run Simulation</button>
+      </div>
+      <div class="action-bar-secondary">
         <button class="btn-secondary" id="btn-randomize">Randomize</button>
         <button class="btn-secondary" id="btn-reset">Reset</button>
         <button class="btn-secondary" id="btn-save">Save</button>
@@ -43,7 +44,7 @@
         <div id="presets-container" class="presets-row"></div>
       </div>
 
-      <!-- Sliders -->
+      <!-- Sliders (populated by JS) -->
       <div id="sliders-container" class="sliders-container"></div>
     </aside>
 
@@ -54,7 +55,6 @@
 
     <!-- RIGHT PANEL: Results / Context -->
     <aside class="panel panel-right">
-      <!-- BUILD TAB -->
       <div class="tab-content active" id="tab-build">
         <div class="panel-title">Quick Preview</div>
         <div id="results-content" class="results-content">
@@ -62,13 +62,11 @@
         </div>
       </div>
 
-      <!-- SIMULATE TAB -->
       <div class="tab-content" id="tab-simulate">
         <div class="panel-title">Simulation Results</div>
         <div id="results-content-sim" class="results-content"></div>
       </div>
 
-      <!-- HABITAT TAB -->
       <div class="tab-content" id="tab-habitat">
         <div class="panel-title">Habitat Testing</div>
         <div id="habitat-selector" class="habitat-selector"></div>
@@ -76,14 +74,12 @@
         <button class="btn-secondary" id="btn-hab-return" style="margin-top:12px">Reset Environment</button>
       </div>
 
-      <!-- BATTLE TAB -->
       <div class="tab-content" id="tab-battle">
         <div class="panel-title" id="battle-panel">Battle Arena</div>
         <div id="battle-setup" class="battle-setup"></div>
         <div id="battle-display" class="battle-display" style="display:none"></div>
       </div>
 
-      <!-- SCIENCE NOTES TAB -->
       <div class="tab-content" id="tab-science">
         <div class="panel-title">Research Database</div>
         <div id="science-notes-content" class="science-notes-content"></div>
@@ -91,7 +87,7 @@
     </aside>
   </main>
 
-  <!-- SCRIPTS (load order matters) -->
+  <!-- SCRIPTS -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.135.0/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.135.0/examples/js/controls/OrbitControls.js"></script>
   <script src="data.js"></script>

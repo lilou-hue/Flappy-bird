@@ -8,8 +8,25 @@ window.UI = (function() {
   const DATA = window.DragonData;
 
   let activeTab = 'build';
+  let advancedMode = false;
   let onTraitChange = null;
   let onFireDesignChange = null;
+
+  // Basic mode groups: each maps to multiple traits with averaging
+  const BASIC_GROUPS = [
+    { id: 'body', label: 'Body', icon: '🦴', traits: ['bodyMass', 'musclePower', 'stomachCapacity'],
+      desc: 'Size, strength, and digestive capacity' },
+    { id: 'wings', label: 'Wings', icon: '🦅', traits: ['wingspan', 'wingArea'],
+      desc: 'Wing size and lift surface' },
+    { id: 'defense', label: 'Defense', icon: '🛡️', traits: ['boneDensity', 'scaleThickness', 'insulation'],
+      desc: 'Armor, structure, and thermal protection' },
+    { id: 'mind', label: 'Intelligence', icon: '🧠', traits: ['intelligence'],
+      desc: 'Neural complexity and tactical ability' },
+    { id: 'fire', label: 'Fire Power', icon: '🔥', traits: ['fuelGlandSize', 'ignitionEfficiency', 'metabolism'],
+      desc: 'Fuel production, ignition, and metabolic support' },
+    { id: 'agility', label: 'Agility', icon: '💨', traits: ['tailSize', 'neckLength'],
+      desc: 'Balance, maneuverability, and reach' },
+  ];
 
   // --------------------------------------------------------
   // TAB SYSTEM
@@ -40,11 +57,53 @@ window.UI = (function() {
     if (!container) return;
     container.innerHTML = '';
 
-    // Group sliders by category
-    const groups = { physical: [], flight: [], fire: [], energy: [], structure: [], survival: [] };
-    DATA.TRAITS.forEach(t => {
-      (groups[t.group] || groups.physical).push(t);
+    if (advancedMode) {
+      renderAdvancedSliders(traits, container);
+      renderFireDesignPanel(fireDesign, container);
+    } else {
+      renderBasicSliders(traits, container);
+    }
+  }
+
+  // ---- BASIC MODE: grouped sliders ----
+  function renderBasicSliders(traits, container) {
+    BASIC_GROUPS.forEach(group => {
+      // Compute average value for the group
+      const avg = Math.round(group.traits.reduce((sum, tid) => sum + traits[tid], 0) / group.traits.length);
+
+      const section = document.createElement('div');
+      section.className = 'slider-group slider-group--basic';
+      section.innerHTML = `
+        <div class="basic-slider-card">
+          <div class="basic-slider-header">
+            <span class="basic-slider-icon">${group.icon}</span>
+            <div class="basic-slider-info">
+              <span class="basic-slider-label">${group.label}</span>
+              <span class="basic-slider-desc">${group.desc}</span>
+            </div>
+            <span class="basic-slider-value">${avg}</span>
+          </div>
+          <input type="range" min="1" max="10" step="1" value="${avg}" class="basic-range">
+        </div>
+      `;
+      container.appendChild(section);
+
+      const slider = section.querySelector('.basic-range');
+      slider.addEventListener('input', (e) => {
+        const newVal = parseInt(e.target.value);
+        section.querySelector('.basic-slider-value').textContent = newVal;
+        // Set all traits in this group to the same value
+        group.traits.forEach(tid => {
+          if (onTraitChange) onTraitChange(tid, newVal);
+        });
+      });
     });
+  }
+
+  // ---- ADVANCED MODE: individual sliders with collapsible groups ----
+  function renderAdvancedSliders(traits, container) {
+    const groups = { physical: [], flight: [], fire: [], energy: [], structure: [], survival: [] };
+    DATA.TRAITS.forEach(t => { (groups[t.group] || groups.physical).push(t); });
 
     const groupLabels = {
       physical: 'Physical Traits', flight: 'Flight Systems',
@@ -55,8 +114,15 @@ window.UI = (function() {
     Object.keys(groups).forEach(groupKey => {
       if (groups[groupKey].length === 0) return;
       const section = document.createElement('div');
-      section.className = 'slider-group';
-      section.innerHTML = `<div class="slider-group-label">${groupLabels[groupKey]}</div>`;
+      section.className = 'slider-group slider-group--advanced';
+
+      const header = document.createElement('div');
+      header.className = 'slider-group-label slider-group-label--collapsible';
+      header.innerHTML = `<span>${groupLabels[groupKey]}</span><span class="collapse-arrow">▾</span>`;
+      section.appendChild(header);
+
+      const content = document.createElement('div');
+      content.className = 'slider-group-content';
 
       groups[groupKey].forEach(traitConfig => {
         const val = traits[traitConfig.id];
@@ -75,26 +141,27 @@ window.UI = (function() {
             </span>
           </div>
           <input type="range" min="${traitConfig.min}" max="${traitConfig.max}" step="1" value="${val}">
-          <div class="trait-impact">${window.Explanations.traitImpact(traitConfig.id, val)}</div>
         `;
-        section.appendChild(div);
+        content.appendChild(div);
 
-        // Slider event
         const slider = div.querySelector('input[type="range"]');
         slider.addEventListener('input', (e) => {
           const newVal = parseInt(e.target.value);
           div.querySelector('.trait-value').textContent = newVal;
           div.querySelector('.trait-descriptor').textContent = window.Dragon.getDescriptor(traitConfig.id, newVal);
-          div.querySelector('.trait-impact').textContent = window.Explanations.traitImpact(traitConfig.id, newVal);
           if (onTraitChange) onTraitChange(traitConfig.id, newVal);
         });
       });
 
+      section.appendChild(content);
       container.appendChild(section);
-    });
 
-    // Fire Design Panel
-    renderFireDesignPanel(fireDesign, container);
+      // Collapsible toggle
+      header.addEventListener('click', () => {
+        content.classList.toggle('collapsed');
+        header.querySelector('.collapse-arrow').textContent = content.classList.contains('collapsed') ? '▸' : '▾';
+      });
+    });
   }
 
   // Update slider positions from traits object
@@ -612,10 +679,20 @@ window.UI = (function() {
     }
   }
 
+  function setAdvancedMode(val) {
+    advancedMode = val;
+    const btn = document.getElementById('btn-mode');
+    if (btn) btn.textContent = advancedMode ? 'Advanced' : 'Basic';
+    document.body.classList.toggle('advanced-mode', advancedMode);
+  }
+
+  function isAdvancedMode() { return advancedMode; }
+
   return {
     initTabs, switchTab, renderSliders, updateSliders, updateFireCompat,
     renderResults, renderHabitatSelector, renderHabitatResults,
     renderBattleSetup, renderBattleInProgress, renderBattleSummary,
-    renderScienceNotes, renderPresets, showNotification, highlightElement
+    renderScienceNotes, renderPresets, showNotification, highlightElement,
+    setAdvancedMode, isAdvancedMode
   };
 })();

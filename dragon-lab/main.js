@@ -277,6 +277,17 @@ window.App = (function() {
       });
     }
 
+    // Mode toggle (Basic / Advanced)
+    const modeBtn = document.getElementById('btn-mode');
+    if (modeBtn) {
+      modeBtn.addEventListener('click', () => {
+        const newMode = !window.UI.isAdvancedMode();
+        window.UI.setAdvancedMode(newMode);
+        window.UI.renderSliders(currentDragon.traits, currentDragon.fireDesign, onTraitChange, onFireDesignChange);
+        window.UI.showNotification(newMode ? 'Advanced mode — all controls visible' : 'Basic mode — simplified controls', 'info');
+      });
+    }
+
     // Return to lab from habitat
     const habReturnBtn = document.getElementById('btn-hab-return');
     if (habReturnBtn) {
