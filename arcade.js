@@ -145,7 +145,7 @@
   function setState(s) { saveJSON('arcade_state', s); }
 
   function getStreak() {
-    return loadJSON('arcade_playStreak', { lastDate: null, streak: 0, longestStreak: 0, coinsClaimedToday: false });
+    return loadJSON('arcade_playStreak', { lastDate: null, streak: 0, longestStreak: 0 });
   }
   function setStreak(s) { saveJSON('arcade_playStreak', s); }
 
@@ -194,7 +194,7 @@
       arcade_rat:         s.totalGamesPlayed >= 50,
       explorer:           s.uniqueGamesPlayed.length >= GAME_IDS.length,
       coin_collector:     s.totalCoinsEarned >= 500,
-      big_spender:        s.totalCoinsEarned >= 2000,
+      big_spender:        (s.totalCoinsSpent || 0) >= 2000,
       hat_trick:          streak.streak >= 3,
       weekly_warrior:     streak.streak >= 7,
       monthly_master:     streak.streak >= 30,
@@ -337,10 +337,21 @@
     }
     var isNewBest = score > currentBest;
 
+    /* Apply active power-up (consume before coin calc so scoreMultiplier is available) */
+    var activePU = consumePowerUp(gameId);
+    var puDef = null;
+    if (activePU) {
+      puDef = POWER_UPS.find(function(p) { return p.id === activePU.id; });
+    }
+
+    /* Apply score boost power-up to threshold bonus calculation */
+    var coinScore = score;
+    if (puDef && puDef.scoreMultiplier) coinScore = Math.floor(score * puDef.scoreMultiplier);
+
     /* Calculate coins */
     var coinsEarned = 5; /* base completion */
     if (isNewBest && score > 0) coinsEarned += 10;
-    coinsEarned += getThresholdBonus(gameId, score);
+    coinsEarned += getThresholdBonus(gameId, coinScore);
 
     /* Apply chaos event multiplier */
     var activeEvent = getActiveEvent();
@@ -348,14 +359,9 @@
       coinsEarned = Math.floor(coinsEarned * activeEvent.multiplier);
     }
 
-    /* Apply active power-up */
-    var activePU = consumePowerUp();
-    var puDef = null;
-    if (activePU) {
-      puDef = POWER_UPS.find(function(p) { return p.id === activePU.id; });
-      if (puDef) {
-        if (puDef.multiplier) coinsEarned = Math.floor(coinsEarned * puDef.multiplier);
-      }
+    /* Apply coin multiplier power-up */
+    if (puDef && puDef.multiplier) {
+      coinsEarned = Math.floor(coinsEarned * puDef.multiplier);
     }
 
     setState(s);
@@ -473,7 +479,6 @@
     if (streak.streak === 30) award += 250;
 
     streak.lastDate = d;
-    streak.coinsClaimedToday = true;
     setStreak(streak);
     addCoins(award);
 
@@ -545,6 +550,8 @@
   }
 
   /* ── Chaos Events (time-based multipliers) ── */
+  /* Priority: hourly events (2x) are checked first and take precedence over
+     weekend bonus (1.5x). If both apply, the higher hourly multiplier wins. */
   function getActiveEvent() {
     var hour = new Date().getUTCHours();
     if (hour === 12 || hour === 20) return { type: 'double_coins', label: '🎰 DOUBLE COINS HOUR', multiplier: 2 };
@@ -681,6 +688,9 @@
         total += Number(localStorage.getItem(g.bestKey)) || 0;
       }
     });
+    /* Include Unicorn Clicker lifetime SP (has no bestKey) */
+    var ucSave = loadJSON('unicornClickerSave', {});
+    if (ucSave.lifetimeSP) total += ucSave.lifetimeSP;
     return total;
   }
 
@@ -784,9 +794,12 @@
     return { success: true, powerUp: pu };
   }
 
-  function consumePowerUp() {
+  function consumePowerUp(gameId) {
     var pu = getActivePowerUp();
-    if (pu) saveJSON('arcade_active_powerup', null);
+    if (pu) {
+      if (gameId && pu.gameId && pu.gameId !== gameId) return null;
+      saveJSON('arcade_active_powerup', null);
+    }
     return pu;
   }
 
@@ -987,6 +1000,10 @@
     if (!item) return { success: false, reason: t('arcItemNotFound', 'Item not found') };
     var shop = getShop();
     if (shop.purchased.indexOf(id) !== -1) return { success: false, reason: t('arcAlreadyOwned', 'Already owned') };
+    if (item.requireAch) {
+      var ach = getAch();
+      if (ach.unlocked.indexOf(item.requireAch) === -1) return { success: false, reason: t('arcAchRequired', 'Achievement required') };
+    }
     if (!spendCoins(item.cost)) return { success: false, reason: t('arcNotEnoughCoins', 'Not enough coins') };
     shop = getShop();
     shop.purchased.push(id);
@@ -1156,7 +1173,8 @@
   }
 
   /* ── Score card overlay ── */
-  function createScoreCard(gameId, score, best) {
+  function createScoreCard(gameId, score, best, opts) {
+    opts = opts || {};
     var game = GAMES[gameId] || { name: gameId };
     var result = null;
 
@@ -1178,7 +1196,7 @@
     var challengeLink = encodeChallengeLink(gameId, score);
     var activeEvent = getActiveEvent();
     var eventMult = activeEvent ? activeEvent.multiplier : 1;
-    var totalCoins = Math.floor((coinsBase + coinsNewBest + thresholdBonus) * eventMult);
+    var totalCoins = opts.coinsEarned != null ? opts.coinsEarned : Math.floor((coinsBase + coinsNewBest + thresholdBonus) * eventMult);
 
     /* Near-miss: enhanced clarity */
     var nearMissText = getNearMissText(gameId, score, best || 0);
@@ -1270,6 +1288,8 @@
         navigator.clipboard.writeText(text).then(function () {
           this.textContent = '\u2705 ' + t('arcCopied', 'Copied!');
           setTimeout(function () { this.textContent = '\u2694\uFE0F ' + t('arcChallenge', 'Challenge Friend'); }.bind(this), 2000);
+        }.bind(this)).catch(function () {
+          this.textContent = '\u2694\uFE0F ' + t('arcChallenge', 'Challenge Friend');
         }.bind(this));
       }
     });
@@ -1281,6 +1301,8 @@
         navigator.clipboard.writeText(text).then(function () {
           this.textContent = t('arcCopied', 'Copied!');
           setTimeout(function () { this.textContent = t('arcShare', 'Share'); }.bind(this), 2000);
+        }.bind(this)).catch(function () {
+          this.textContent = t('arcShare', 'Share');
         }.bind(this));
       }
     });

@@ -25,15 +25,34 @@ function _t(key, fallback) {
 }
 
 /* ── Lemonsqueezy SDK loader ── */
+var lemonPendingCallbacks = [];
+var lemonCheckInterval = null;
+
 function ensureLemonSDK(cb) {
+  /* SDK already loaded — fire immediately */
   if (lemonReady && window.LemonSqueezy) { cb(); return; }
+
+  /* Queue this callback */
+  lemonPendingCallbacks.push(cb);
+
   if (document.getElementById('lemonsqueezy-js')) {
-    /* Already loading, wait for it */
-    var check = setInterval(function () {
-      if (window.LemonSqueezy) { lemonReady = true; clearInterval(check); cb(); }
-    }, 100);
+    /* Script tag exists but SDK not ready yet — start ONE shared interval */
+    if (!lemonCheckInterval) {
+      lemonCheckInterval = setInterval(function () {
+        if (window.LemonSqueezy) {
+          lemonReady = true;
+          clearInterval(lemonCheckInterval);
+          lemonCheckInterval = null;
+          var cbs = lemonPendingCallbacks.slice();
+          lemonPendingCallbacks = [];
+          cbs.forEach(function (fn) { fn(); });
+        }
+      }, 100);
+    }
     return;
   }
+
+  /* First call — create the script tag */
   var script = document.createElement('script');
   script.id = 'lemonsqueezy-js';
   script.src = 'https://app.lemonsqueezy.com/js/lemon.js';
@@ -43,7 +62,13 @@ function ensureLemonSDK(cb) {
       window.LemonSqueezy.Setup({ eventHandler: handleLemonEvent });
       lemonReady = true;
     }
-    cb();
+    var cbs = lemonPendingCallbacks.slice();
+    lemonPendingCallbacks = [];
+    if (lemonCheckInterval) {
+      clearInterval(lemonCheckInterval);
+      lemonCheckInterval = null;
+    }
+    cbs.forEach(function (fn) { fn(); });
   };
   document.head.appendChild(script);
 }
