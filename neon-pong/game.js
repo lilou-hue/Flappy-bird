@@ -695,6 +695,7 @@ function endMatch() {
   matchOver = true;
   BGMusic.stop();
   achData.stats.gamesPlayed++;
+  var npBest = Number(localStorage.getItem('neonPongBest')) || 0;
 
   if (playerScore >= WIN_SCORE) {
     achData.stats.wins++;
@@ -703,7 +704,6 @@ function endMatch() {
     if (bestDown >= 5) achData.stats.comeback5 = true;
     if (difficulty === 'hard') achData.stats.hardWin = true;
     var npScore = playerScore * 100 + (WIN_SCORE - aiScore) * 10;
-    var npBest = Number(localStorage.getItem('neonPongBest')) || 0;
     if (npScore > npBest) { npBest = npScore; localStorage.setItem('neonPongBest', npBest); }
     try { initLB(); Leaderboard.submitScore('neon-pong', npScore); } catch (e) {}
     if (typeof Arcade !== 'undefined') {
@@ -714,6 +714,7 @@ function endMatch() {
     Audio.playDefeat();
     if (typeof Arcade !== 'undefined') {
       Arcade.onGameOver('neon-pong', 0);
+      document.body.appendChild(Arcade.createScoreCard('neon-pong', 0, npBest));
     }
   }
   checkAch();

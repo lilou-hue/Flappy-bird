@@ -1502,6 +1502,7 @@ function eatFood(now) {
 }
 
 function die() {
+  if (state.phase === "dead") return;
   state.phase = "dead";
   playSound(soundDeath);
   haptics.death();

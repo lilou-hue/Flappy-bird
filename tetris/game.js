@@ -868,6 +868,7 @@
   /*  Game over                                                          */
   /* ================================================================== */
   function triggerGameOver() {
+    if (state.phase === "gameover") return;
     state.phase = "gameover";
     state.current = null;
     state.gameOverAnim = 0;
