@@ -1146,7 +1146,7 @@ function finishCrash() {
   }
   if (typeof Arcade !== 'undefined') {
     Arcade.onGameOver('methane-drift', world.score);
-    document.body.appendChild(Arcade.createScoreCard('methane-drift', world.score, Number(localStorage.getItem('methaneDriftBest'))||0));
+    document.body.appendChild(Arcade.createScoreCard('methane-drift', world.score, world.best));
   }
 
   /* Stop music */

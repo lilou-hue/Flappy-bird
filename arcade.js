@@ -54,22 +54,40 @@
 
   /* ── Shop items ── */
   const SHOP_ITEMS = [
-    { id: 'badge_fire',    cat: 'badge', nameKey: 'arcShopFireBadge',    icon: '🔥', cost: 100 },
-    { id: 'badge_star',    cat: 'badge', nameKey: 'arcShopStarBadge',    icon: '⭐', cost: 200 },
-    { id: 'badge_skull',   cat: 'badge', nameKey: 'arcShopSkullBadge',   icon: '💀', cost: 300 },
-    { id: 'badge_crown',   cat: 'badge', nameKey: 'arcShopCrownBadge',   icon: '👑', cost: 500 },
+    /* ── Badges — personality-driven status symbols ── */
+    { id: 'badge_flame',     cat: 'badge', nameKey: 'arcShopFlameBadge',     icon: '🔥', cost: 100,  rarity: 'common',    desc: 'For those who run hot' },
+    { id: 'badge_wizard',    cat: 'badge', nameKey: 'arcShopWizardBadge',    icon: '🧙', cost: 200,  rarity: 'uncommon',  desc: 'Mysterious and unpredictable' },
+    { id: 'badge_snake',     cat: 'badge', nameKey: 'arcShopSnakeBadge',     icon: '🐍', cost: 300,  rarity: 'rare',      desc: 'Cold. Patient. Deadly.' },
+    { id: 'badge_alien',     cat: 'badge', nameKey: 'arcShopAlienBadge',     icon: '👾', cost: 400,  rarity: 'epic',      desc: 'Not from around here' },
+    { id: 'badge_demon',     cat: 'badge', nameKey: 'arcShopDemonBadge',     icon: '😈', cost: 450,  rarity: 'epic',      desc: 'Pure chaos energy' },
+    { id: 'badge_crown',     cat: 'badge', nameKey: 'arcShopCrownBadge',     icon: '👑', cost: 700,  rarity: 'legendary', desc: 'Royalty. No further questions.' },
     /* Achievement-locked prestige badges — cannot be bought, only earned */
-    { id: 'badge_diamond', cat: 'badge', nameKey: 'arcShopDiamondBadge', icon: '💎', cost: 0, requireAch: 'monthly_master', rarity: 'legendary' },
-    { id: 'badge_lightning',cat: 'badge', nameKey: 'arcShopLightningBadge',icon: '⚡', cost: 0, requireAch: 'arcade_rat', rarity: 'epic' },
-    { id: 'badge_ghost',   cat: 'badge', nameKey: 'arcShopGhostBadge',  icon: '👻', cost: 0, requireAch: 'explorer', rarity: 'epic' },
-    { id: 'theme_ocean',   cat: 'theme', nameKey: 'arcShopOceanTheme',   icon: '🌊', cost: 300, vars: { '--accent': '#38bdf8', '--accent2': '#06b6d4', '--accent3': '#0ea5e9' } },
-    { id: 'theme_flame',   cat: 'theme', nameKey: 'arcShopFlameTheme',   icon: '🔥', cost: 300, vars: { '--accent': '#f97316', '--accent2': '#ef4444', '--accent3': '#eab308' } },
-    { id: 'theme_forest',  cat: 'theme', nameKey: 'arcShopForestTheme',  icon: '🌲', cost: 300, vars: { '--accent': '#22c55e', '--accent2': '#10b981', '--accent3': '#84cc16' } },
-    { id: 'frame_gold',    cat: 'frame', nameKey: 'arcShopGoldFrame',    icon: '🥇', cost: 250 },
-    { id: 'frame_rainbow', cat: 'frame', nameKey: 'arcShopRainbowFrame', icon: '🌈', cost: 350 },
-    { id: 'frame_neon',    cat: 'frame', nameKey: 'arcShopNeonFrame',    icon: '💜', cost: 400 },
-    /* Streak shield — protects one streak break */
-    { id: 'streak_shield', cat: 'consumable', nameKey: 'arcShopStreakShield', icon: '🛡️', cost: 150 },
+    { id: 'badge_diamond',   cat: 'badge', nameKey: 'arcShopDiamondBadge',   icon: '💎', cost: 0, requireAch: 'monthly_master', rarity: 'legendary', desc: 'Earned by the dedicated few' },
+    { id: 'badge_lightning', cat: 'badge', nameKey: 'arcShopLightningBadge', icon: '⚡', cost: 0, requireAch: 'arcade_rat',     rarity: 'epic',      desc: 'Speed is everything' },
+    { id: 'badge_ghost',     cat: 'badge', nameKey: 'arcShopGhostBadge',     icon: '👻', cost: 0, requireAch: 'explorer',       rarity: 'epic',      desc: 'Seen everything' },
+    /* ── Themes — full site color overhauls ── */
+    { id: 'theme_void',   cat: 'theme', nameKey: 'arcShopVoidTheme',   icon: '🌑', cost: 350, vars: { '--accent': '#a855f7', '--accent2': '#7c3aed', '--accent3': '#6d28d9' }, desc: 'Deep space purple' },
+    { id: 'theme_sakura', cat: 'theme', nameKey: 'arcShopSakuraTheme', icon: '🌸', cost: 350, vars: { '--accent': '#ec4899', '--accent2': '#f472b6', '--accent3': '#db2777' }, desc: 'Cherry blossom pink' },
+    { id: 'theme_cyber',  cat: 'theme', nameKey: 'arcShopCyberTheme',  icon: '⚡', cost: 400, vars: { '--accent': '#facc15', '--accent2': '#06b6d4', '--accent3': '#84cc16' }, desc: 'Neon city nights' },
+    { id: 'theme_blood',  cat: 'theme', nameKey: 'arcShopBloodTheme',  icon: '🩸', cost: 350, vars: { '--accent': '#ef4444', '--accent2': '#b91c1c', '--accent3': '#9f1239' }, desc: 'Blood moon red' },
+    { id: 'theme_ocean',  cat: 'theme', nameKey: 'arcShopOceanTheme',  icon: '🌊', cost: 300, vars: { '--accent': '#38bdf8', '--accent2': '#06b6d4', '--accent3': '#0ea5e9' }, desc: 'Open ocean blue' },
+    /* ── Frames — animated scorecard & profile borders ── */
+    { id: 'frame_holo',      cat: 'frame', nameKey: 'arcShopHoloFrame',      icon: '💿', cost: 700, rarity: 'legendary', desc: 'Holographic rainbow shimmer' },
+    { id: 'frame_lightning', cat: 'frame', nameKey: 'arcShopLightningFrame', icon: '⚡', cost: 550, rarity: 'epic',      desc: 'Crackling electric border' },
+    { id: 'frame_void',      cat: 'frame', nameKey: 'arcShopVoidFrame',      icon: '🌌', cost: 500, rarity: 'epic',      desc: 'Dark matter pulse' },
+    { id: 'frame_fire',      cat: 'frame', nameKey: 'arcShopFireFrame',      icon: '🔥', cost: 400, rarity: 'rare',      desc: 'Living fire border' },
+    { id: 'frame_gold',      cat: 'frame', nameKey: 'arcShopGoldFrame',      icon: '🥇', cost: 300, rarity: 'rare',      desc: 'Classic gold trim' },
+    /* ── Titles — shown on scorecard and leaderboard ── */
+    { id: 'title_grinder', cat: 'title', nameKey: 'arcShopTitleGrinder', icon: '📈', cost: 200,  label: 'The Grinder',  rarity: 'uncommon', desc: 'You show up every day' },
+    { id: 'title_ghost',   cat: 'title', nameKey: 'arcShopTitleGhost',   icon: '👻', cost: 300,  label: 'Invisible',    rarity: 'rare',     desc: 'Here and gone' },
+    { id: 'title_chaos',   cat: 'title', nameKey: 'arcShopTitleChaos',   icon: '🌀', cost: 500,  label: 'Chaos Agent',  rarity: 'epic',     desc: 'Unpredictable by design' },
+    { id: 'title_legend',  cat: 'title', nameKey: 'arcShopTitleLegend',  icon: '🏆', cost: 900,  label: 'The Legend',   rarity: 'legendary',desc: 'The name speaks for itself' },
+    { id: 'title_goat',    cat: 'title', nameKey: 'arcShopTitleGoat',    icon: '🐐', cost: 1500, label: 'G.O.A.T.',     rarity: 'legendary',desc: 'Greatest of all time. Period.' },
+    /* ── Powers — consumable boosts that activate immediately ── */
+    { id: 'power_coinx2', cat: 'power', nameKey: 'arcShopCoinRush',    icon: '💰', cost: 300, effect: 'coinx2_1h',    desc: '2× coins earned for 1 hour' },
+    { id: 'power_lucky',  cat: 'power', nameKey: 'arcShopLuckyStar',   icon: '🌟', cost: 200, effect: 'lucky_next',   desc: 'Guaranteed lucky drop next game' },
+    { id: 'power_magnet', cat: 'power', nameKey: 'arcShopCoinMagnet',  icon: '🧲', cost: 250, effect: 'magnet_24h',   desc: '+10 bonus coins every game for 24h' },
+    { id: 'streak_shield',cat: 'power', nameKey: 'arcShopStreakShield',icon: '🛡️', cost: 150, effect: 'streak_shield', desc: 'Protect your streak from breaking once' },
   ];
   SHOP_ITEMS.forEach(function(item) {
     Object.defineProperty(item, 'name', { get: function() { return t(item.nameKey, item.nameKey); }, enumerable: true });
@@ -162,9 +180,78 @@
   function setChallenges(c) { saveJSON('arcade_challenges', c); }
 
   function getShop() {
-    return loadJSON('arcade_shop', { purchased: [], equipped: { badge: null, theme: null, frame: null } });
+    var s = loadJSON('arcade_shop', { purchased: [], equipped: { badge: null, theme: null, frame: null, title: null } });
+    if (!s.equipped.title) s.equipped.title = null; /* backfill for old saves */
+    return s;
   }
   function setShop(s) { saveJSON('arcade_shop', s); }
+
+  /* ── Shop Powers (timed/single-use consumable tracking) ── */
+  function getShopPowers() {
+    return loadJSON('arc_shopPowers', {});
+  }
+  function setShopPowers(p) { saveJSON('arc_shopPowers', p); }
+
+  function activateShopPower(effect) {
+    var p = getShopPowers();
+    var now = Date.now();
+    if (effect === 'coinx2_1h')    { p.coinx2  = { expires: now + 3600000 }; }
+    if (effect === 'magnet_24h')   { p.magnet  = { expires: now + 86400000 }; }
+    if (effect === 'lucky_next')   { p.lucky   = { active: true }; }
+    if (effect === 'streak_shield'){ /* handled via shop.purchased */ }
+    setShopPowers(p);
+  }
+
+  function getActiveShopPowerStatus() {
+    var p = getShopPowers();
+    var now = Date.now();
+    var active = {};
+    if (p.coinx2 && p.coinx2.expires > now) active.coinx2 = Math.ceil((p.coinx2.expires - now) / 60000); /* minutes left */
+    if (p.magnet && p.magnet.expires > now) active.magnet = Math.ceil((p.magnet.expires - now) / 60000);
+    if (p.lucky  && p.lucky.active)         active.lucky  = true;
+    return active;
+  }
+
+  /* ── Admin Mode ── */
+  function isAdminMode() { return localStorage.getItem('arc_admin') === '1'; }
+
+  function activateAdminMode() {
+    localStorage.setItem('arc_admin', '1');
+    adminUnlockAll();
+    showAdminToast('🔑 Admin mode ON — all items unlocked for testing');
+  }
+
+  function deactivateAdminMode() {
+    localStorage.removeItem('arc_admin');
+    showAdminToast('🔓 Admin mode OFF');
+  }
+
+  function adminUnlockAll() {
+    var shop = getShop();
+    SHOP_ITEMS.forEach(function(item) {
+      if (item.cat !== 'power' && item.id !== 'streak_shield' && shop.purchased.indexOf(item.id) === -1) {
+        shop.purchased.push(item.id);
+      }
+    });
+    /* Activate all timed powers */
+    activateShopPower('coinx2_1h');
+    activateShopPower('magnet_24h');
+    activateShopPower('lucky_next');
+    shop.purchased.push('streak_shield');
+    setShop(shop);
+  }
+
+  function showAdminToast(msg) {
+    var el = document.createElement('div');
+    el.className = 'arc-admin-toast';
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(function() { el.classList.add('arc-admin-toast--visible'); }, 50);
+    setTimeout(function() {
+      el.classList.remove('arc-admin-toast--visible');
+      setTimeout(function() { if (el.parentNode) el.parentNode.removeChild(el); }, 400);
+    }, 3000);
+  }
 
   /* ── Coin management ── */
   function addCoins(amount) {
@@ -384,11 +471,27 @@
       coinsEarned = Math.floor(coinsEarned * puDef.multiplier);
     }
 
+    /* Apply shop powers */
+    var shopPowers = getShopPowers();
+    var now2 = Date.now();
+    if (shopPowers.coinx2 && shopPowers.coinx2.expires > now2) {
+      coinsEarned = Math.floor(coinsEarned * 2);
+    }
+    if (shopPowers.magnet && shopPowers.magnet.expires > now2) {
+      coinsEarned += 10;
+    }
+
     setState(s);
     addCoins(coinsEarned);
 
-    /* Lucky drop roll */
+    /* Lucky drop roll — shop lucky power guarantees a drop */
     var luckMult = (puDef && puDef.luckBoost) ? puDef.luckBoost : 1;
+    if (shopPowers.lucky && shopPowers.lucky.active) {
+      luckMult = Math.max(luckMult, 10); /* near-certain lucky drop */
+      var p2 = getShopPowers();
+      delete p2.lucky;
+      setShopPowers(p2);
+    }
     var luckyDrop = rollLuckyDrop(luckMult);
 
     /* Holy moment detection */
@@ -1022,29 +1125,58 @@
 
   function getShopItems() {
     var shop = getShop();
+    var admin = isAdminMode();
+    var powers = getActiveShopPowerStatus();
     return SHOP_ITEMS.map(function (item) {
-      return Object.assign({}, item, {
-        purchased: shop.purchased.indexOf(item.id) !== -1,
-        equipped: shop.equipped[item.cat] === item.id,
-      });
+      var purchased = admin || shop.purchased.indexOf(item.id) !== -1;
+      var equipped = shop.equipped[item.cat] === item.id;
+      var extra = {};
+      /* For powers, add real-time status */
+      if (item.cat === 'power') {
+        if (item.effect === 'coinx2_1h')    extra.powerActive = powers.coinx2 ? powers.coinx2 + 'm left' : false;
+        if (item.effect === 'magnet_24h')   extra.powerActive = powers.magnet ? powers.magnet + 'm left' : false;
+        if (item.effect === 'lucky_next')   extra.powerActive = powers.lucky ? 'ready' : false;
+        if (item.effect === 'streak_shield')extra.powerActive = purchased ? 'ready' : false;
+      }
+      return Object.assign({}, item, extra, { purchased: purchased, equipped: equipped });
     });
   }
 
   function purchaseItem(id) {
     var item = SHOP_ITEMS.find(function (i) { return i.id === id; });
     if (!item) return { success: false, reason: t('arcItemNotFound', 'Item not found') };
+    var admin = isAdminMode();
     var shop = getShop();
-    if (shop.purchased.indexOf(id) !== -1) return { success: false, reason: t('arcAlreadyOwned', 'Already owned') };
-    if (item.requireAch) {
+
+    /* Powers can always be re-purchased (consumables) */
+    var isPower = item.cat === 'power';
+    if (!isPower && shop.purchased.indexOf(id) !== -1) {
+      return { success: false, reason: t('arcAlreadyOwned', 'Already owned') };
+    }
+    if (item.requireAch && !admin) {
       var ach = getAch();
       if (ach.unlocked.indexOf(item.requireAch) === -1) return { success: false, reason: t('arcAchRequired', 'Achievement required') };
     }
-    if (!spendCoins(item.cost)) return { success: false, reason: t('arcNotEnoughCoins', 'Not enough coins') };
+    if (!admin && item.cost > 0 && !spendCoins(item.cost)) {
+      return { success: false, reason: t('arcNotEnoughCoins', 'Not enough coins') };
+    }
     shop = getShop();
-    shop.purchased.push(id);
-    setShop(shop);
-    track('shop_purchase', { item_id: id, item_name: item.name, item_cost: item.cost });
-    return { success: true };
+
+    if (isPower) {
+      /* Powers: activate immediately, don't stay in purchased (except streak_shield) */
+      if (item.effect === 'streak_shield') {
+        if (shop.purchased.indexOf(id) === -1) shop.purchased.push(id);
+        setShop(shop);
+      } else {
+        activateShopPower(item.effect);
+      }
+    } else {
+      if (shop.purchased.indexOf(id) === -1) shop.purchased.push(id);
+      setShop(shop);
+    }
+
+    if (!admin) track('shop_purchase', { item_id: id, item_name: item.name, item_cost: item.cost });
+    return { success: true, activated: isPower };
   }
 
   function equipItem(id) {

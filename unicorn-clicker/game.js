@@ -401,13 +401,18 @@
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch(e) {}
     saveUCAch();
   }
+  const UC_LAST_REPORTED_KEY = 'ucLastReportedSP';
   function saveAndReport() {
     save();
-    if (typeof Leaderboard !== 'undefined' && state.lifetimeSP > 0 && Leaderboard.getNickname()) {
-      Leaderboard.submitScore('unicorn-clicker', Math.floor(state.lifetimeSP));
+    var currentSP = Math.floor(state.lifetimeSP);
+    var lastReported = parseInt(localStorage.getItem(UC_LAST_REPORTED_KEY) || '0', 10);
+    if (currentSP <= lastReported) return; // no progress since last report
+    localStorage.setItem(UC_LAST_REPORTED_KEY, String(currentSP));
+    if (typeof Leaderboard !== 'undefined' && currentSP > 0 && Leaderboard.getNickname()) {
+      Leaderboard.submitScore('unicorn-clicker', currentSP);
     }
     if (typeof Arcade !== 'undefined') {
-      Arcade.onGameOver('unicorn-clicker', Math.floor(state.lifetimeSP));
+      Arcade.onGameOver('unicorn-clicker', currentSP);
     }
   }
 

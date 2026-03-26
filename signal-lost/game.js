@@ -403,6 +403,8 @@ var SignalLost = (function () {
     }, 2000);
   }
 
+  var arcadeReported = false;
+
   function win() {
     running = false;
     gameOver = true;
@@ -418,15 +420,18 @@ var SignalLost = (function () {
     ctx2d.fillStyle = '#888';
     ctx2d.font = '20px Space Grotesk, monospace';
     ctx2d.fillText('You survived the night.', CANVAS_W / 2, CANVAS_H / 2 + 30);
-    if (typeof Arcade !== 'undefined') {
+    if (!arcadeReported && typeof Arcade !== 'undefined') {
+      arcadeReported = true;
       Arcade.onGameOver('signal-lost', score);
+      document.body.appendChild(Arcade.createScoreCard('signal-lost', score, bestTime));
     }
   }
 
   function endGame() {
     var score = Math.floor(survivalTime);
     saveBest(score);
-    if (typeof Arcade !== 'undefined') {
+    if (!arcadeReported && typeof Arcade !== 'undefined') {
+      arcadeReported = true;
       Arcade.onGameOver('signal-lost', score);
     }
   }

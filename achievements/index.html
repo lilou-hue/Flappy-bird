@@ -100,6 +100,8 @@
         { icon: '&#x1F3D7;', name: 'Stack Tower', key: 'stackTowerAch', total: 8, href: '/stack-tower/' },
         { icon: '&#x1F457;', name: 'Dress-Up', key: 'dressUpAchievements', total: 10, href: '/dress-up/' },
         { icon: '&#x1F52B;', name: 'Rivals', key: 'rivalsAch', total: 10, href: '/rivals/' },
+        { icon: '&#x1FA90;', name: 'Gravity Garden', key: 'gravityGardenAch', total: 6, href: '/gravity-garden/' },
+        { icon: '&#x1F4F1;', name: 'Last Seen Online', key: 'lso_achievements', total: 6, href: '/last-seen-online/', isList: true },
       ];
 
       var gameGrid = document.getElementById('gameAchGrid');
@@ -110,6 +112,9 @@
         if (data) {
           if (g.key === 'methaneDriftProgress' && data.achievements) {
             count = Object.values(data.achievements).filter(Boolean).length;
+          } else if (g.isList && Array.isArray(data)) {
+            /* Raw array of unlocked IDs (e.g. last-seen-online) */
+            count = data.length;
           } else if (Array.isArray(data.unlocked)) {
             count = data.unlocked.length;
           } else if (typeof data === 'object' && !Array.isArray(data)) {

@@ -1391,11 +1391,14 @@
     }
 
     // Ambient tension update interval
-    setInterval(updateAmbientTension, 5000);
+    ambientTensionInterval = setInterval(updateAmbientTension, 5000);
   }
+
+  var ambientTensionInterval = null;
 
   // Arcade restart support
   document.addEventListener('arcade-restart', function() {
+    if (ambientTensionInterval) { clearInterval(ambientTensionInterval); ambientTensionInterval = null; }
     localStorage.removeItem(SAVE_KEY);
     localStorage.removeItem('lso_achievements');
     state = defaultState();

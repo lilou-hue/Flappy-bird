@@ -1905,7 +1905,7 @@ const update = (deltaSeconds) => {
 
   if (gameState.isGameOver) {
     saveBestScore();
-    if (!feathersSpawned) {
+    if (!feathersSpawned && !gunState.victoryTriggered) {
       spawnFeatherParticles();
       feathersSpawned = true;
       demoteTier();
