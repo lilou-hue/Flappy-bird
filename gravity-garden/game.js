@@ -365,6 +365,7 @@ let predictedPath = [];
 document.getElementById('bestScore').textContent = bestScore;
 
 function resetGame() {
+  Audio.stopDrone();
   planets = [];
   particles = [];
   score = 0;
@@ -506,6 +507,7 @@ function getDragVelocity() {
 }
 
 function endGame() {
+  if (gameOver) return;
   gameOver = true;
   Audio.stopDrone();
   Audio.playGameOver();
