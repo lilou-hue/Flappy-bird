@@ -39,9 +39,12 @@
 
     <div class="arc-shop-grid" id="shopGrid"></div>
 
-    <!-- Admin mode toggle -->
-    <div class="arc-shop-admin" id="adminPanel">
-      <button class="arc-shop-admin__btn" id="adminToggleBtn" title="Secret admin toggle">🔑</button>
+    <!-- Dev admin toggle — visible at bottom of page -->
+    <div class="arc-shop-admin-bar" id="adminBar">
+      <button class="arc-shop-admin-bar__btn" id="adminToggleBtn">
+        <span id="adminBtnIcon">🔑</span> <span id="adminBtnLabel">Enable Admin Mode</span>
+      </button>
+      <div class="arc-shop-admin-bar__hint">or visit <code>?admin=slay2024</code></div>
     </div>
   </div>
 
@@ -196,38 +199,20 @@
         renderShop();
       });
 
-      /* Admin panel — secret key combo: type "ADMIN" anywhere */
-      var keyBuffer = '';
-      document.addEventListener('keydown', function(e) {
-        keyBuffer = (keyBuffer + e.key).slice(-5).toUpperCase();
-        if (keyBuffer === 'ADMIN') {
-          if (Arcade.isAdminMode()) {
-            Arcade.deactivateAdminMode();
-            showShopToast('🔓 Admin mode OFF');
-          } else {
-            Arcade.activateAdminMode();
-            showShopToast('🔑 Admin mode ON — all items unlocked!');
-          }
-          document.getElementById('adminPanel').style.display = 'none';
-          renderShop();
-          renderEquipped();
-          renderActivePowers();
-        }
-      });
-
-      /* Also show secret button after 3s on the page (hidden until hover) */
-      setTimeout(function() {
-        document.getElementById('adminPanel').style.opacity = '0.15';
-      }, 3000);
+      function updateAdminButton() {
+        var on = Arcade.isAdminMode();
+        document.getElementById('adminBtnIcon').textContent = on ? '🔓' : '🔑';
+        document.getElementById('adminBtnLabel').textContent = on ? 'Admin Mode ON — click to disable' : 'Enable Admin Mode';
+        document.getElementById('adminToggleBtn').className = 'arc-shop-admin-bar__btn' + (on ? ' arc-shop-admin-bar__btn--on' : '');
+      }
 
       document.getElementById('adminToggleBtn').addEventListener('click', function() {
         if (Arcade.isAdminMode()) {
           Arcade.deactivateAdminMode();
-          showShopToast('🔓 Admin mode OFF');
         } else {
           Arcade.activateAdminMode();
-          showShopToast('🔑 Admin mode ON — all items unlocked!');
         }
+        updateAdminButton();
         renderShop();
         renderEquipped();
         renderActivePowers();
@@ -236,6 +221,7 @@
       renderEquipped();
       renderShop();
       renderActivePowers();
+      updateAdminButton();
     })();
   </script>
 </body>

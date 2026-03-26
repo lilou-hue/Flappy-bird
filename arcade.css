@@ -2576,30 +2576,48 @@ body:has(.arc-nav) {
   transform: translateX(-50%) translateY(0);
 }
 
-/* ── Admin panel ── */
-.arc-shop-admin {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  opacity: 0;
-  transition: opacity 0.3s;
-  z-index: 100;
-}
-.arc-shop-admin:hover { opacity: 1 !important; }
-.arc-shop-admin__btn {
-  width: 36px;
-  height: 36px;
-  border: none;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.08);
-  cursor: pointer;
-  font-size: 1rem;
+/* ── Admin bar (dev testing panel at bottom of shop page) ── */
+.arc-shop-admin-bar {
+  margin-top: 40px;
+  padding: 16px;
+  border-top: 1px solid rgba(255,255,255,0.06);
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  transition: background 0.2s;
+  gap: 8px;
+  opacity: 0.5;
+  transition: opacity 0.2s;
 }
-.arc-shop-admin__btn:hover { background: rgba(255,255,255,0.15); }
+.arc-shop-admin-bar:hover { opacity: 1; }
+.arc-shop-admin-bar__btn {
+  padding: 10px 20px;
+  border: 1px solid rgba(250,204,21,0.3);
+  border-radius: 10px;
+  background: rgba(250,204,21,0.06);
+  color: #facc15;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.2s, border-color 0.2s;
+}
+.arc-shop-admin-bar__btn:hover { background: rgba(250,204,21,0.12); border-color: rgba(250,204,21,0.5); }
+.arc-shop-admin-bar__btn--on {
+  background: rgba(239,68,68,0.08);
+  border-color: rgba(239,68,68,0.35);
+  color: #f87171;
+}
+.arc-shop-admin-bar__hint {
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.3);
+}
+.arc-shop-admin-bar__hint code {
+  background: rgba(255,255,255,0.06);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  color: rgba(255,255,255,0.45);
+}
 
 /* ── Admin toast ── */
 .arc-admin-toast {

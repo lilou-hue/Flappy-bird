@@ -2072,18 +2072,27 @@
     return lines.length > 0 ? lines[0] : null;
   }
 
+  /* ── Sync admin URL param check — runs immediately at script load time
+        BEFORE any page inline scripts (which render the shop), so
+        isAdminMode() is already true when renderShop() first runs ── */
+  (function() {
+    try {
+      if (new URLSearchParams(window.location.search).get('admin') === 'slay2024') {
+        localStorage.setItem('arc_admin', '1');
+        adminUnlockAll();
+        window.history.replaceState({}, '', window.location.pathname);
+        /* Toast shown after DOM is ready */
+        window._arcAdminJustActivated = true;
+      }
+    } catch(e) {}
+  })();
+
   /* ── Auto-init ── */
   function autoInit() {
-    /* Check for admin activation via URL param */
-    try {
-      var urlAdmin = new URLSearchParams(window.location.search).get('admin');
-      if (urlAdmin === 'slay2024') {
-        activateAdminMode();
-        /* Clean the URL without reload */
-        var cleanUrl = window.location.pathname;
-        window.history.replaceState({}, '', cleanUrl);
-      }
-    } catch (e) {}
+    if (window._arcAdminJustActivated) {
+      delete window._arcAdminJustActivated;
+      showAdminToast('🔑 Admin mode ON — all items unlocked!');
+    }
     applyTheme();
     showChallengeBanner();
     checkOGBadge();
