@@ -301,6 +301,10 @@
         transform: translateY(24px);
         animation: cardReveal 0.5s ease forwards;
       }
+      /* Fallback: if animation hasn't run after 3s, force cards visible */
+      @media (prefers-reduced-motion: reduce) {
+        .game-card { opacity: 1; transform: none; animation: none; }
+      }
       .game-card:nth-child(1) { animation-delay: 0.05s; }
       .game-card:nth-child(2) { animation-delay: 0.1s; }
       .game-card:nth-child(3) { animation-delay: 0.15s; }
@@ -3438,10 +3442,12 @@
       /* Skeleton → real content transition: game cards fade in with stagger */
       (function () {
         var cards = document.querySelectorAll('.game-card');
+        var revealed = new Set();
         var observer = new IntersectionObserver(function (entries) {
           entries.forEach(function (entry) {
             if (entry.isIntersecting) {
               entry.target.style.animationPlayState = 'running';
+              revealed.add(entry.target);
               observer.unobserve(entry.target);
             }
           });
@@ -3450,6 +3456,16 @@
           card.style.animationPlayState = 'paused';
           observer.observe(card);
         });
+        /* Safety net: force all cards visible after 4s regardless */
+        setTimeout(function () {
+          cards.forEach(function (card) {
+            if (!revealed.has(card)) {
+              card.style.opacity = '1';
+              card.style.transform = 'none';
+              card.style.animation = 'none';
+            }
+          });
+        }, 4000);
 
         /* Show OG badge on hub if earned */
         if (typeof Arcade !== 'undefined' && Arcade.getOGBadge) {
