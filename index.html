@@ -696,7 +696,9 @@
         </svg>
         <span class="logo__text">SlayPlay</span>
       </div>
-      <p class="tagline" data-i18n="pickAGame">Pick a game. Start slaying.</p>
+      <div class="arena-lore">&#x2694;&#xFE0F; Welcome to the Arena &#x2694;&#xFE0F;</div>
+      <p class="tagline" data-i18n="pickAGame">Players compete across dimensions. Choose your zone.</p>
+      <p class="arena-subtitle">Every game feeds your rank. Every point matters.</p>
       <nav class="nav-bar">
         <a href="/achievements/" class="nav-pill">&#x1F3C6; Achievements</a>
         <a href="/shop/" class="nav-pill">&#x1F6D2; Shop</a>
@@ -733,7 +735,33 @@
       </button>
     </div>
 
-    <!-- Games Grid — FIRST, before anything else -->
+    <!-- Arena: Main Quest Progress -->
+    <div class="arc-quest" id="arenaQuest">
+      <div class="arc-quest__header">
+        <div class="arc-quest__title" id="questTitle">&#x1F3AE; Arena Rank: Newcomer</div>
+        <div class="arc-quest__rank" id="questRank"></div>
+      </div>
+      <div class="arc-quest__bar">
+        <div class="arc-quest__fill" id="questFill" style="width: 0%"></div>
+      </div>
+      <div class="arc-quest__info">
+        <span id="questPoints">0 total points</span>
+        <span class="arc-quest__next" id="questNext"></span>
+      </div>
+    </div>
+
+    <!-- Arena: Social Nudge -->
+    <div class="arc-nudge" id="socialNudge" style="display:none;">
+      <div class="arc-nudge__inner">
+        <span class="arc-nudge__icon">&#x1F525;</span>
+        <span id="nudgeText"></span>
+      </div>
+    </div>
+
+    <!-- Choose Your Zone -->
+    <div class="zone-label">&#x1F30C; Enter a Zone</div>
+
+    <!-- Games Grid -->
     <div class="games-grid">
       <a href="/flappy-bird/" class="game-card">
         <div class="card-preview flappy-preview">
@@ -1060,7 +1088,7 @@
     </div>
 
     <footer class="footer">
-      <p>SlayPlay &mdash; built for fun</p>
+      <p>SlayPlay Arena &mdash; compete across dimensions</p>
     </footer>
 
     <script>
@@ -3680,6 +3708,39 @@
               '</div>';
             }).join('');
           });
+        }
+
+        /* ── Arena Quest Progress Bar ── */
+        if (typeof Arcade !== 'undefined' && Arcade.getQuestProgress) {
+          var q = Arcade.getQuestProgress();
+          var questTitle = document.getElementById('questTitle');
+          var questRank = document.getElementById('questRank');
+          var questFill = document.getElementById('questFill');
+          var questPoints = document.getElementById('questPoints');
+          var questNext = document.getElementById('questNext');
+
+          if (questTitle) questTitle.innerHTML = q.icon + ' Arena Rank: <strong>' + q.title + '</strong>';
+          if (questRank) questRank.textContent = q.total.toLocaleString() + ' pts';
+          if (questFill) questFill.style.width = q.progress + '%';
+          if (questPoints) questPoints.textContent = q.total.toLocaleString() + ' total points';
+          if (questNext && q.nextTier) {
+            questNext.textContent = 'Next: ' + q.nextTier.title + ' (' + q.nextTier.points.toLocaleString() + ' pts)';
+          } else if (questNext) {
+            questNext.textContent = 'MAX RANK ACHIEVED';
+          }
+        }
+
+        /* ── Social Nudge ── */
+        if (typeof Arcade !== 'undefined' && Arcade.getSocialNudge) {
+          var nudge = Arcade.getSocialNudge();
+          if (nudge) {
+            var nudgeEl = document.getElementById('socialNudge');
+            var nudgeText = document.getElementById('nudgeText');
+            if (nudgeEl && nudgeText) {
+              nudgeText.textContent = nudge;
+              nudgeEl.style.display = '';
+            }
+          }
         }
       })();
     </script>

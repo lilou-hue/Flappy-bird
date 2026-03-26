@@ -1228,6 +1228,526 @@ body:has(.arc-nav) {
   width: 40%;
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   NEW SYSTEMS
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Dramatic Score Card ── */
+.arc-scorecard__dramatic {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #fafafa;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.15rem;
+  animation: dramaticReveal 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes dramaticReveal {
+  0% { transform: scale(0.5); opacity: 0; }
+  60% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.arc-scorecard__dramatic-sub {
+  font-size: 0.82rem;
+  color: #a1a1aa;
+  margin-bottom: 0.5rem;
+  font-style: italic;
+}
+
+.arc-scorecard__gamename {
+  font-size: 0.75rem;
+  color: #71717a;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.5rem;
+}
+
+.arc-scorecard__nearmiss {
+  background: rgba(251,146,60,0.08);
+  border: 1px solid rgba(251,146,60,0.2);
+  color: #fb923c;
+  font-size: 0.78rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  font-weight: 500;
+}
+
+.arc-scorecard__event {
+  display: inline-block;
+  background: linear-gradient(135deg, rgba(250,204,21,0.15), rgba(251,146,60,0.15));
+  border: 1px solid rgba(250,204,21,0.3);
+  color: #facc15;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+  animation: arcPulse 1.5s ease-in-out infinite;
+}
+
+.arc-scorecard__challenges {
+  background: rgba(255,255,255,0.03);
+  border-radius: 10px;
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 0.75rem;
+}
+
+.arc-scorecard__challenges-title {
+  font-size: 0.72rem;
+  color: #71717a;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.4rem;
+  font-weight: 600;
+}
+
+.arc-scorecard__challenge {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.78rem;
+  color: #a1a1aa;
+  padding: 0.15rem 0;
+}
+
+.arc-scorecard__challenge--done { color: #22c55e; }
+
+.arc-scorecard__challenge-reward {
+  color: #facc15;
+  font-weight: 600;
+  font-size: 0.72rem;
+}
+
+.arc-scorecard__streak {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.82rem;
+  color: #fb923c;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.arc-scorecard__streak-warning {
+  font-size: 0.72rem;
+  color: #ef4444;
+  font-weight: 500;
+  animation: arcPulse 1.5s ease-in-out infinite;
+}
+
+/* ── Main Quest Progress ── */
+.arc-quest {
+  max-width: 760px;
+  width: 100%;
+  margin-bottom: 1.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.arc-quest__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.arc-quest__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fafafa;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.arc-quest__rank {
+  font-size: 0.82rem;
+  color: #c084fc;
+  font-weight: 600;
+}
+
+.arc-quest__bar {
+  height: 12px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 0.4rem;
+}
+
+.arc-quest__fill {
+  height: 100%;
+  background: linear-gradient(90deg, #c084fc, #f472b6, #fb923c);
+  border-radius: 999px;
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 12px rgba(192,132,252,0.4);
+}
+
+.arc-quest__info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: #71717a;
+}
+
+.arc-quest__next { color: #a1a1aa; }
+
+/* ── Quest Milestone Toast ── */
+.arc-quest-toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.8);
+  z-index: 10000;
+  background: linear-gradient(145deg, #1a1a2e, #2d1b4e);
+  border: 2px solid rgba(192,132,252,0.5);
+  border-radius: 20px;
+  padding: 1.5rem 2rem;
+  text-align: center;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.7), 0 0 60px rgba(192,132,252,0.2);
+  opacity: 0;
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-family: "Space Grotesk", system-ui, sans-serif;
+}
+
+.arc-quest-toast--show {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.arc-quest-toast__icon {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+  animation: questBounce 0.6s ease-out;
+}
+
+@keyframes questBounce {
+  0% { transform: scale(0); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+
+.arc-quest-toast__title {
+  font-size: 0.7rem;
+  color: #c084fc;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.arc-quest-toast__rank {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #fafafa;
+  margin-bottom: 0.3rem;
+}
+
+.arc-quest-toast__reward {
+  font-size: 0.85rem;
+  color: #facc15;
+  font-weight: 600;
+}
+
+/* ── Power-Up Selector ── */
+.arc-powerup-selector {
+  position: fixed;
+  inset: 0;
+  z-index: 9996;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(8px);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  font-family: "Space Grotesk", system-ui, sans-serif;
+}
+
+.arc-powerup-selector--show { opacity: 1; }
+
+.arc-powerup-selector__card {
+  background: linear-gradient(145deg, #1a1a2e, #16162a);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 24px;
+  padding: 1.8rem 1.5rem;
+  max-width: 420px;
+  width: 92%;
+  text-align: center;
+}
+
+.arc-powerup-selector__title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #fafafa;
+  margin-bottom: 0.3rem;
+}
+
+.arc-powerup-selector__sub {
+  font-size: 0.82rem;
+  color: #71717a;
+  margin-bottom: 1.2rem;
+}
+
+.arc-powerup-selector__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.arc-powerup-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 0.8rem 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  color: inherit;
+}
+
+.arc-powerup-card:hover:not([disabled]) {
+  border-color: rgba(192,132,252,0.4);
+  background: rgba(192,132,252,0.08);
+  transform: translateY(-2px);
+}
+
+.arc-powerup-card--locked {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.arc-powerup-card__icon { font-size: 1.8rem; margin-bottom: 0.3rem; }
+.arc-powerup-card__name { font-size: 0.78rem; font-weight: 600; color: #fafafa; margin-bottom: 0.2rem; }
+.arc-powerup-card__desc { font-size: 0.68rem; color: #a1a1aa; margin-bottom: 0.3rem; line-height: 1.3; }
+.arc-powerup-card__cost { font-size: 0.72rem; color: #facc15; font-weight: 600; }
+
+.arc-powerup-selector__skip {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #a1a1aa;
+  padding: 0.5rem 1.5rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.arc-powerup-selector__skip:hover {
+  color: #fafafa;
+  border-color: rgba(255,255,255,0.2);
+}
+
+/* ── Lucky Drop Toast ── */
+.arc-lucky-toast {
+  position: fixed;
+  top: 4.5rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(-120%);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: 14px;
+  padding: 0.8rem 1.3rem;
+  min-width: 220px;
+  max-width: 360px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-family: "Space Grotesk", system-ui, sans-serif;
+}
+
+.arc-lucky-toast--show { transform: translateX(-50%) translateY(0); }
+
+.arc-lucky-toast--common {
+  background: linear-gradient(135deg, #1a1a2e, #1e1b4b);
+  border: 1px solid rgba(192,132,252,0.3);
+}
+
+.arc-lucky-toast--uncommon {
+  background: linear-gradient(135deg, #1a2e1a, #1b4b1e);
+  border: 1px solid rgba(34,197,94,0.4);
+}
+
+.arc-lucky-toast--rare {
+  background: linear-gradient(135deg, #1a1a2e, #1b2e4b);
+  border: 1px solid rgba(56,189,248,0.5);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 30px rgba(56,189,248,0.15);
+}
+
+.arc-lucky-toast--legendary {
+  background: linear-gradient(135deg, #2e2a1a, #4b3b1b);
+  border: 2px solid rgba(250,204,21,0.6);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 40px rgba(250,204,21,0.2);
+  animation: legendaryPulse 1s ease-in-out infinite;
+}
+
+@keyframes legendaryPulse {
+  0%, 100% { box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 40px rgba(250,204,21,0.2); }
+  50% { box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 60px rgba(250,204,21,0.4); }
+}
+
+.arc-lucky-toast__icon { font-size: 1.8rem; flex-shrink: 0; }
+.arc-lucky-toast__title { font-size: 0.95rem; color: #fafafa; font-weight: 700; }
+.arc-lucky-toast__reward { font-size: 0.82rem; color: #facc15; font-weight: 600; }
+
+/* ── Holy Moment (Full-screen dramatic flash) ── */
+.arc-holy-moment {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.85);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.arc-holy-moment--show { opacity: 1; }
+
+.arc-holy-moment__content {
+  text-align: center;
+  transform: scale(0.5);
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.arc-holy-moment--show .arc-holy-moment__content { transform: scale(1); }
+
+.arc-holy-moment__text {
+  font-size: 3rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  background: linear-gradient(135deg, #facc15, #fb923c, #f472b6, #c084fc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  background-size: 300% 300%;
+  animation: holyShimmer 1s ease-in-out infinite;
+  filter: drop-shadow(0 0 30px rgba(250,204,21,0.3));
+  font-family: "Space Grotesk", system-ui, sans-serif;
+}
+
+@keyframes holyShimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.arc-holy-moment__sub {
+  font-size: 1rem;
+  color: #e4e4e7;
+  margin-top: 0.5rem;
+  font-family: "Space Grotesk", system-ui, sans-serif;
+}
+
+/* ── Social Nudge Banner ── */
+.arc-nudge {
+  max-width: 760px;
+  width: 100%;
+  margin-bottom: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.arc-nudge__inner {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(251,146,60,0.06);
+  border: 1px solid rgba(251,146,60,0.15);
+  border-radius: 12px;
+  padding: 0.6rem 1rem;
+  font-size: 0.82rem;
+  color: #e4e4e7;
+  animation: nudgeFadeIn 0.5s ease;
+}
+
+@keyframes nudgeFadeIn {
+  0% { opacity: 0; transform: translateY(-8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.arc-nudge__icon { font-size: 1.1rem; flex-shrink: 0; }
+
+/* ── Streak Toast ── */
+.arc-streak-toast {
+  position: fixed;
+  top: 4.5rem;
+  right: 1rem;
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: 14px;
+  padding: 0.8rem 1.2rem;
+  min-width: 240px;
+  max-width: 340px;
+  transform: translateX(120%);
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-family: "Space Grotesk", system-ui, sans-serif;
+}
+
+.arc-streak-toast--show { transform: translateX(0); }
+
+.arc-streak-toast--lost {
+  background: linear-gradient(135deg, #2e1a1a, #4b1b1b);
+  border: 1px solid rgba(239,68,68,0.4);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 30px rgba(239,68,68,0.1);
+}
+
+.arc-streak-toast--shield {
+  background: linear-gradient(135deg, #1a1a2e, #1b2e4b);
+  border: 1px solid rgba(56,189,248,0.4);
+}
+
+.arc-streak-toast--milestone {
+  background: linear-gradient(135deg, #2e2a1a, #4b3b1b);
+  border: 1px solid rgba(251,146,60,0.4);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 30px rgba(251,146,60,0.1);
+}
+
+.arc-streak-toast__icon { font-size: 1.8rem; flex-shrink: 0; }
+.arc-streak-toast__title { font-size: 0.9rem; color: #fafafa; font-weight: 700; }
+.arc-streak-toast__text { font-size: 0.78rem; color: #a1a1aa; line-height: 1.35; }
+
+/* ── Arena Lore ── */
+.arena-lore {
+  font-size: 0.78rem;
+  color: rgba(192,132,252,0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.arena-subtitle {
+  font-size: 0.88rem;
+  color: #71717a;
+  margin-bottom: 0.75rem;
+  font-style: italic;
+}
+
+.zone-label {
+  font-size: 0.68rem;
+  color: rgba(192,132,252,0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  padding-left: 0.25rem;
+  max-width: 760px;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
 /* ── Responsive ── */
 @media (max-width: 680px) {
   .arc-nav:not(.arc-nav--compact) {
