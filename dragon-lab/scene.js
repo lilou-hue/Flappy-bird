@@ -99,7 +99,7 @@ window.Scene = (function () {
     if (!el) {
       el = document.createElement('div');
       el.id = '_dbg';
-      el.style.cssText = 'position:fixed;bottom:8px;left:8px;background:rgba(0,0,0,0.8);color:#0f0;font:12px monospace;padding:6px 10px;z-index:9999;border-radius:4px;max-width:90vw;white-space:pre-wrap';
+      el.style.cssText = 'position:fixed;top:60px;left:8px;background:rgba(0,0,0,0.9);color:#0f0;font:14px monospace;padding:8px 12px;z-index:99999;border-radius:4px;max-width:90vw;white-space:pre-wrap;pointer-events:none';
       document.body.appendChild(el);
     }
     el.textContent = msg;
