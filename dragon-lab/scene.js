@@ -1,43 +1,44 @@
 // ============================================================
 // Dragon Engineering Lab — Three.js Scene
-// Lab environment rendered in WebGL.
-// Dragon is a GLB model with MeshToonMaterial (cel shading).
-// Canvas overlay kept for battle mode only.
+// GLB model with per-vertex deformation driven by trait sliders.
+// Body regions identified spatially: wings, neck/head, tail,
+// front legs, hind legs, body bulk — all deformed independently.
 // ============================================================
 
 window.Scene = (function () {
   let renderer, scene, camera, controls, clock;
   let currentMode = 'lab';
-  let labObjects = [];
+  let labObjects   = [];
 
-  // Canvas overlay — battle mode only
   let overlay, _container;
 
-  // Dragon state
   let _pTraits = null, _pTint = '#3a6e5a';
   let _eTraits = null, _eTint = '#3a6e5a';
 
-  // 3D dragon model
   let dragonModel     = null;
   let dragonMaterials = [];
   let dragonMeshes    = [];
   let dragonLoaded    = false;
   let _lastTint       = null;
+  let _lastTraitHash  = null;
 
-  // Dynamic lights driven by traits
   let rimLight  = null;
   let fireLight = null;
 
-  // Battle particles
   let pPos = new THREE.Vector3(-3, 1.5, 0);
   let ePos = new THREE.Vector3( 3, 1.5, 0);
-  let lungeAnims    = [];
-  let fireParticles = [];
-  let impactFlashes = [];
+  let lungeAnims = [], fireParticles = [], impactFlashes = [];
 
   // --------------------------------------------------------
-  // TRAIT NORMALISATION  (0 → 1)
+  // HELPERS
   // --------------------------------------------------------
+  // Smooth-step falloff: 0 when x<=a, 1 when x>=b
+  function ss(a, b, x) {
+    const t = Math.max(0, Math.min(1, (x - a) / (b - a)));
+    return t * t * (3 - 2 * t);
+  }
+
+  // Trait normalisation → 0..1
   function norm(traits) {
     const n = {};
     if (!window.DragonData) return n;
@@ -45,6 +46,11 @@ window.Scene = (function () {
       n[tr.id] = Math.max(0, Math.min(1, (traits[tr.id] - tr.min) / (tr.max - tr.min)));
     });
     return n;
+  }
+
+  function traitHash(traits) {
+    if (!traits || !window.DragonData) return '';
+    return DragonData.TRAITS.map(tr => Math.round((traits[tr.id] || 0) * 10)).join(',');
   }
 
   // --------------------------------------------------------
@@ -72,18 +78,17 @@ window.Scene = (function () {
 
     controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.target.set(0, 1.2, 0);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.08;
-    controls.maxPolarAngle = Math.PI * 0.82;
-    controls.minDistance = 2;
-    controls.maxDistance = 22;
+    controls.enableDamping  = true;
+    controls.dampingFactor  = 0.08;
+    controls.maxPolarAngle  = Math.PI * 0.82;
+    controls.minDistance    = 2;
+    controls.maxDistance    = 22;
     controls.update();
 
     setupLabLighting();
     setupLabFloor();
     loadDragonModel();
 
-    // Canvas overlay — visible while GLB loads, then battle only
     overlay = document.createElement('canvas');
     overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none';
     overlay.style.display = 'block';
@@ -101,7 +106,7 @@ window.Scene = (function () {
   }
 
   // --------------------------------------------------------
-  // LOAD 3D DRAGON MODEL
+  // LOAD GLB
   // --------------------------------------------------------
   function loadDragonModel() {
     if (!THREE.GLTFLoader) return;
@@ -111,18 +116,15 @@ window.Scene = (function () {
       (gltf) => {
         dragonModel = gltf.scene;
 
-        // Auto-fit: centre + sit on floor
         const box  = new THREE.Box3().setFromObject(dragonModel);
         const size = new THREE.Vector3();
         box.getSize(size);
 
-        const targetH = 2.8;
-        const sc = targetH / size.y;
+        const sc = 2.8 / size.y;
         dragonModel.scale.setScalar(sc);
 
-        // Store for trait-driven rescaling
-        dragonModel.userData.baseScale  = sc;
-        dragonModel.userData.meshMinY   = box.min.y;   // local-space bottom (negative)
+        dragonModel.userData.baseScale   = sc;
+        dragonModel.userData.meshMinY    = box.min.y;
         dragonModel.userData.meshCentreX = (box.min.x + box.max.x) / 2;
         dragonModel.userData.meshCentreZ = (box.min.z + box.max.z) / 2;
 
@@ -134,15 +136,21 @@ window.Scene = (function () {
         dragonModel.userData.baseRotY = Math.PI * 0.1;
         dragonModel.rotation.y = dragonModel.userData.baseRotY;
 
-        // Apply toon material + vertex colors to every mesh
         dragonMaterials = [];
         dragonMeshes    = [];
+
         dragonModel.traverse((child) => {
           if (!child.isMesh) return;
-          // Pre-compute per-mesh local bbox for vertex colour mapping
+
+          // Make geometry writable
+          child.geometry = child.geometry.clone();
           child.geometry.computeBoundingBox();
           child.userData.localBox = child.geometry.boundingBox.clone();
 
+          // Pre-compute vertex skinning weights for each body region
+          initDeformWeights(child);
+
+          // Toon material using vertex colours
           child.material = new THREE.MeshToonMaterial({
             vertexColors: true,
             side: THREE.DoubleSide,
@@ -152,15 +160,13 @@ window.Scene = (function () {
           dragonMaterials.push(child.material);
           dragonMeshes.push(child);
         });
+
         paintVertexColors(_pTint);
 
         scene.add(dragonModel);
         dragonLoaded = true;
 
-        // Apply current trait state immediately
         if (_pTraits) applyTraits(_pTraits, _pTint);
-
-        // Swap to 3D; hide canvas fallback
         if (overlay) overlay.style.display = 'none';
       },
       undefined,
@@ -172,59 +178,200 @@ window.Scene = (function () {
   }
 
   // --------------------------------------------------------
-  // VERTEX COLOURS — paint body regions from tint
-  // belly lighter/cream, dorsal main tint, wings brighter
+  // PRE-COMPUTE DEFORMATION WEIGHTS
+  // One weight per region per vertex, stored as typed arrays.
+  //
+  // Coordinate frame (from analysis):
+  //   X: -0.62 (left wing tip) → +0.62 (right wing tip)
+  //   Y: -0.85 (feet) → +0.84 (back / top)
+  //   Z: -1.00 (tail) → +1.00 (head+neck, held high)
+  // --------------------------------------------------------
+  function initDeformWeights(child) {
+    const geo  = child.geometry;
+    const attr = geo.attributes.position;
+    const n    = attr.count;
+
+    // Store original positions for re-deformation
+    const orig = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) {
+      orig[i*3]   = attr.getX(i);
+      orig[i*3+1] = attr.getY(i);
+      orig[i*3+2] = attr.getZ(i);
+    }
+    child.userData.origPos = orig;
+
+    // Five region weight arrays
+    const wWing     = new Float32Array(n);
+    const wNeck     = new Float32Array(n);
+    const wTail     = new Float32Array(n);
+    const wFrontLeg = new Float32Array(n);
+    const wHindLeg  = new Float32Array(n);
+
+    for (let i = 0; i < n; i++) {
+      const x = orig[i*3], y = orig[i*3+1], z = orig[i*3+2];
+
+      // Wings: wide X, above waist
+      wWing[i] = ss(0.26, 0.42, Math.abs(x)) * ss(-0.28, 0.06, y);
+
+      // Neck + head: +Z end, elevated
+      wNeck[i] = ss(0.24, 0.52, z) * ss(-0.12, 0.14, y);
+
+      // Tail: -Z end
+      wTail[i] = ss(-0.38, -0.65, z);  // rises as z→ -1
+
+      // Front legs: low Y, Z < 0 half
+      wFrontLeg[i] = ss(-0.16, -0.46, y) * ss(0.06, -0.14, z);
+
+      // Hind legs: low Y, mild +Z, not too far toward head
+      wHindLeg[i] = ss(-0.10, -0.38, y) * ss(-0.05, 0.20, z) * (1 - ss(0.42, 0.62, z));
+    }
+
+    child.userData.weights = { wWing, wNeck, wTail, wFrontLeg, wHindLeg };
+  }
+
+  // --------------------------------------------------------
+  // DEFORM VERTICES from trait values
+  // Called every time a slider moves (28k verts ≈ <5ms).
+  // --------------------------------------------------------
+  function applyDeformation(child, n) {
+    const { origPos, weights } = child.userData;
+    if (!origPos || !weights) return;
+
+    const { wWing, wNeck, wTail, wFrontLeg, wHindLeg } = weights;
+    const attr  = child.geometry.attributes.position;
+    const count = attr.count;
+
+    // Scale factors centered around 1.0 = default (trait 0.5)
+    // each produces a range that makes visual sense
+    const wingW   = 0.45 + (n.wingspan  || 0.5) * 1.10;   // 0.45 – 1.55
+    const wingA   = 0.55 + (n.wingArea  || 0.5) * 0.90;   // 0.55 – 1.45  (Y thickness)
+    const neckL   = 0.50 + (n.neckLength|| 0.5) * 1.00;   // 0.50 – 1.50
+    const tailS   = 0.40 + (n.tailSize  || 0.5) * 1.20;   // 0.40 – 1.60
+    const legH    = 0.65 + (n.musclePower||0.5) * 0.70;   // 0.65 – 1.35
+    const bulkX   = 0.72 + (n.bodyMass  || 0.5) * 0.56;   // body width
+    const bulkZ   = 0.78 + (n.musclePower||0.5) * 0.44;   // body depth
+    const bulkY   = 0.82 + (n.boneDensity||0.5) * 0.36;   // body height
+
+    // Pivot points in local mesh coordinates
+    const WING_ROOT  = 0.26;   // |X| where wing leaves body
+    const NECK_BASE  = 0.24;   // Z at base of neck
+    const TAIL_ROOT  = -0.38;  // Z at tail root
+    const LEG_HIP_Y  = -0.16;  // Y at hip / shoulder attachment
+
+    for (let i = 0; i < count; i++) {
+      const ox = origPos[i*3], oy = origPos[i*3+1], oz = origPos[i*3+2];
+
+      const wW  = wWing[i];
+      const wN  = wNeck[i];
+      const wT  = wTail[i];
+      const wFL = wFrontLeg[i];
+      const wHL = wHindLeg[i];
+      // Body region = whatever isn't claimed by specialised regions
+      const wB  = Math.max(0, 1 - wW - wN - wT - wFL - wHL);
+
+      let dx = 0, dy = 0, dz = 0;
+
+      // ---- Wings: stretch X outward from wing root ----
+      if (wW > 0.001) {
+        const sign   = ox >= 0 ? 1 : -1;
+        const pivot  = sign * WING_ROOT;
+        const newX   = pivot + (ox - pivot) * wingW;
+        const newY   = oy * wingA;          // thicker/thinner membrane
+        dx += (newX - ox) * wW;
+        dy += (newY - oy) * wW;
+      }
+
+      // ---- Neck + head: stretch Z forward from neck base ----
+      if (wN > 0.001) {
+        const newZ = NECK_BASE + (oz - NECK_BASE) * neckL;
+        dz += (newZ - oz) * wN;
+      }
+
+      // ---- Tail: stretch Z backward from tail root ----
+      if (wT > 0.001) {
+        const newZ = TAIL_ROOT + (oz - TAIL_ROOT) * tailS;
+        dz += (newZ - oz) * wT;
+      }
+
+      // ---- Front legs: scale Y downward from hip ----
+      if (wFL > 0.001) {
+        const newY = LEG_HIP_Y + (oy - LEG_HIP_Y) * legH;
+        dy += (newY - oy) * wFL;
+      }
+
+      // ---- Hind legs: scale Y downward from hip ----
+      if (wHL > 0.001) {
+        const newY = LEG_HIP_Y + (oy - LEG_HIP_Y) * legH;
+        dy += (newY - oy) * wHL;
+      }
+
+      // ---- Body bulk: scale X/Z/Y of central mass ----
+      if (wB > 0.001) {
+        dx += ox * (bulkX - 1) * wB;
+        dz += oz * (bulkZ - 1) * wB;
+        dy += oy * (bulkY - 1) * wB;
+      }
+
+      attr.setXYZ(i, ox + dx, oy + dy, oz + dz);
+    }
+
+    attr.needsUpdate = true;
+    child.geometry.computeVertexNormals();
+  }
+
+  // --------------------------------------------------------
+  // VERTEX COLOURS  — map body zones to colour palette
+  // Computed from ORIGINAL positions (before deformation).
   // --------------------------------------------------------
   function paintVertexColors(tintHex) {
     if (!dragonMeshes.length) return;
     _lastTint = tintHex;
 
-    const tint = new THREE.Color(tintHex);
-
-    // Derive palette
-    const belly  = tint.clone().lerp(new THREE.Color(0.95, 0.88, 0.75), 0.50).multiplyScalar(1.12);
-    const dorsal = tint.clone().multiplyScalar(0.82);
-    const wing   = tint.clone().lerp(new THREE.Color(1, 1, 1), 0.30).multiplyScalar(1.08);
-    const leg    = tint.clone().multiplyScalar(0.72);
+    const tint   = new THREE.Color(tintHex);
+    const belly  = tint.clone().lerp(new THREE.Color(0.96, 0.88, 0.74), 0.52).multiplyScalar(1.12);
+    const dorsal = tint.clone().multiplyScalar(0.80);
+    const wing   = tint.clone().lerp(new THREE.Color(1, 1, 1), 0.28).multiplyScalar(1.10);
+    const leg    = tint.clone().multiplyScalar(0.68);
+    const neck   = tint.clone().lerp(new THREE.Color(1, 1, 1), 0.15);
 
     dragonMeshes.forEach((child) => {
-      const geo = child.geometry;
-      const pos = geo.attributes.position;
-      const lb  = child.userData.localBox;
-      const cnt = pos.count;
+      const geo   = child.geometry;
+      const orig  = child.userData.origPos;
+      if (!orig) return;
+      const n     = geo.attributes.position.count;
+      const lb    = child.userData.localBox;
+      const spanY = lb.max.y - lb.min.y || 1;
+      const spanX = lb.max.x - lb.min.x || 1;
+      const centX = (lb.min.x + lb.max.x) / 2;
+      const halfX = spanX / 2;
 
-      const spanY  = lb.max.y - lb.min.y || 1;
-      const spanX  = lb.max.x - lb.min.x || 1;
-      const centX  = (lb.min.x + lb.max.x) / 2;
-      const halfX  = spanX / 2;
+      const buf = new Float32Array(n * 3);
 
-      const buf = new Float32Array(cnt * 3);
+      for (let i = 0; i < n; i++) {
+        const x = orig[i*3], y = orig[i*3+1], z = orig[i*3+2];
 
-      for (let i = 0; i < cnt; i++) {
-        const lx = pos.getX(i);
-        const ly = pos.getY(i);
+        // ty: 0 = feet, 1 = back
+        const ty = (y - lb.min.y) / spanY;
+        // tx: 0 = centre, 1 = wing tip
+        const tx = Math.abs(x - centX) / halfX;
+        // tz: 0–1 front → back
+        const tz = (z - lb.min.z) / (lb.max.z - lb.min.z || 1);
 
-        // ty: 0 = very bottom (belly), 1 = very top (dorsal)
-        const ty = (ly - lb.min.y) / spanY;
-        // tx: 0 = body centre, 1 = wing tip
-        const tx = Math.abs(lx - centX) / halfX;
+        // Base: belly↔dorsal by height
+        const c = new THREE.Color().lerpColors(belly, dorsal, Math.pow(ty, 0.65));
 
-        // belly ↔ dorsal blend by height
-        const c = new THREE.Color().lerpColors(belly, dorsal, Math.pow(ty, 0.7));
+        // Wing blend
+        if (tx > 0.55) c.lerp(wing, ss(0.55, 0.85, tx));
 
-        // wings blend in at outer extremes
-        if (tx > 0.60) {
-          c.lerp(wing, Math.pow((tx - 0.60) / 0.40, 1.2) * 0.75);
-        }
+        // Leg blend (low Y, not in wings)
+        if (ty < 0.28 && tx < 0.60) c.lerp(leg, ss(0.28, 0.0, ty) * 0.6);
 
-        // lower legs — slightly darker
-        if (ty < 0.22 && tx < 0.55) {
-          c.lerp(leg, (0.22 - ty) / 0.22 * 0.5);
-        }
+        // Neck/head blend (+Z, elevated)
+        if (tz > 0.70 && ty > 0.45) c.lerp(neck, ss(0.70, 0.90, tz) * 0.5);
 
-        buf[i * 3]     = c.r;
-        buf[i * 3 + 1] = c.g;
-        buf[i * 3 + 2] = c.b;
+        buf[i*3]   = c.r;
+        buf[i*3+1] = c.g;
+        buf[i*3+2] = c.b;
       }
 
       geo.setAttribute('color', new THREE.BufferAttribute(buf, 3));
@@ -233,80 +380,64 @@ window.Scene = (function () {
   }
 
   // --------------------------------------------------------
-  // APPLY TRAITS → 3D MODEL
+  // APPLY TRAITS → deform + colour + lights
   // --------------------------------------------------------
   function applyTraits(traits, tintHex) {
     if (!dragonLoaded || !dragonModel) return;
 
-    const n   = norm(traits);
+    const n    = norm(traits);
     const base = dragonModel.userData.baseScale;
 
-    // ---- SCALE ----
-    // bodyMass: overall size 0.75–1.25
-    // wingspan: widens the dragon (x) 0.80–1.40
-    // musclePower: deepens the body (z) 0.85–1.20
-    // boneDensity: adds height (y) 0.90–1.15
-    const scMass   = 0.75 + (n.bodyMass    || 0.5) * 0.50;
-    const scWing   = 0.80 + (n.wingspan    || 0.5) * 0.60;
-    const scMuscle = 0.85 + (n.musclePower || 0.5) * 0.35;
-    const scBone   = 0.90 + (n.boneDensity || 0.5) * 0.25;
+    // Overall model scale (overall body size from bodyMass)
+    const scMass = 0.78 + (n.bodyMass || 0.5) * 0.44;
+    dragonModel.scale.setScalar(base * scMass);
+    dragonModel.position.y = -dragonModel.userData.meshMinY * base * scMass;
 
-    const sx = base * scMass * scWing;
-    const sy = base * scMass * scBone;
-    const sz = base * scMass * scMuscle;
-    dragonModel.scale.set(sx, sy, sz);
+    // Per-vertex deformation — skip if traits unchanged
+    const hash = traitHash(traits);
+    if (hash !== _lastTraitHash) {
+      _lastTraitHash = hash;
+      dragonMeshes.forEach(child => applyDeformation(child, n));
+    }
 
-    // Recalculate floor Y so bottom always touches ground
-    dragonModel.position.y = -dragonModel.userData.meshMinY * sy;
-
-    // ---- VERTEX COLOURS — repaint only when tint changes ----
+    // Vertex colours — repaint only on tint change
     if (tintHex !== _lastTint) paintVertexColors(tintHex);
 
-    // ---- FIRE GLOW emission ----
-    const nFuel   = n.fuelGlandSize       || 0;
-    const nIgn    = n.ignitionEfficiency  || 0;
+    // Fire emission
+    const nFuel   = n.fuelGlandSize      || 0;
+    const nIgn    = n.ignitionEfficiency || 0;
     const glowAmt = nFuel * 0.5 + nFuel * nIgn * 0.5;
     const fireCol = new THREE.Color(1.0, 0.3 + nIgn * 0.2, 0);
-
     for (const mat of dragonMaterials) {
       mat.emissive.copy(fireCol).multiplyScalar(glowAmt * 0.45);
       mat.needsUpdate = true;
     }
 
-    // ---- RIM LIGHT — tinted to dragon colour ----
+    // Rim light — tracks tint colour
     if (rimLight) {
       rimLight.color.set(tintHex);
-      rimLight.intensity = 0.28 + (n.scaleThickness || 0.4) * 0.18;
+      rimLight.intensity = 0.28 + (n.scaleThickness || 0.4) * 0.20;
     }
 
-    // ---- FIRE BELLY LIGHT ----
+    // Belly fire light
     if (fireLight) {
-      fireLight.color.set(0xff5500);
       fireLight.intensity = glowAmt * 1.2;
-      // Position under the dragon's belly
-      const bellyCentreY = dragonModel.position.y + sy * 0.35;
-      fireLight.position.set(
-        dragonModel.position.x,
-        bellyCentreY,
-        dragonModel.position.z + sz * 0.2
-      );
+      fireLight.position.set(0, dragonModel.position.y + 0.6, 0.3);
     }
 
-    // ---- IDLE ANIM PARAMS (stored for animate loop) ----
-    dragonModel.userData.metabRate = 0.65 + (n.metabolism || 0.5) * 0.70;
+    // Idle anim params
+    dragonModel.userData.metabRate = 0.65 + (n.metabolism  || 0.5) * 0.70;
     dragonModel.userData.muscleAmp = 0.025 + (n.musclePower || 0.5) * 0.04;
   }
 
   // --------------------------------------------------------
-  // LIGHTING — tuned for toon cel shading
+  // LIGHTING
   // --------------------------------------------------------
   function setupLabLighting() {
     scene.children.filter(c => c.isLight).forEach(l => scene.remove(l));
 
-    // Soft ambient — keeps shadow side from going pure black
     scene.add(new THREE.HemisphereLight(0x334466, 0x112233, 0.55));
 
-    // Key light — main toon shadow split, slightly warm
     const key = new THREE.DirectionalLight(0xeef4ff, 1.8);
     key.position.set(3, 8, 5);
     key.castShadow = true;
@@ -318,19 +449,16 @@ window.Scene = (function () {
     scene.add(key);
     labObjects.push(key);
 
-    // Rim — colour updated dynamically from tint
     rimLight = new THREE.DirectionalLight(0x44ffbb, 0.35);
     rimLight.position.set(-5, 3, -4);
     scene.add(rimLight);
     labObjects.push(rimLight);
 
-    // Floor bounce — cool blue
     const bounce = new THREE.PointLight(0x1144aa, 0.4, 14);
     bounce.position.set(0, -0.2, 0);
     scene.add(bounce);
     labObjects.push(bounce);
 
-    // Fire belly light — intensity driven by fuelGlandSize
     fireLight = new THREE.PointLight(0xff5500, 0, 5);
     fireLight.position.set(0, 0.5, 0.3);
     scene.add(fireLight);
@@ -381,17 +509,14 @@ window.Scene = (function () {
 
     controls.update();
 
-    // Idle animation
     if (dragonLoaded && dragonModel && currentMode === 'lab') {
-      const rate = dragonModel.userData.metabRate || 0.9;
-      const amp  = dragonModel.userData.muscleAmp || 0.04;
+      const rate   = dragonModel.userData.metabRate || 0.9;
+      const amp    = dragonModel.userData.muscleAmp || 0.04;
       const floorY = -dragonModel.userData.meshMinY * dragonModel.scale.y;
-      dragonModel.position.y  = floorY + Math.sin(time * rate) * amp;
-      dragonModel.rotation.y  = (dragonModel.userData.baseRotY || 0)
-                                + Math.sin(time * 0.18) * 0.18;
+      dragonModel.position.y = floorY + Math.sin(time * rate) * amp;
+      dragonModel.rotation.y = (dragonModel.userData.baseRotY || 0) + Math.sin(time * 0.18) * 0.18;
     }
 
-    // Canvas: draw 2D dragon while loading, or during battle
     if (overlay && overlay.style.display !== 'none' && _pTraits) {
       if (currentMode === 'battle' && _eTraits) {
         DragonCanvas.drawBattle(overlay, _pTraits, _pTint, _eTraits, _eTint, time);
@@ -428,25 +553,17 @@ window.Scene = (function () {
   }
 
   // --------------------------------------------------------
-  // BATTLE ARENA
+  // BATTLE
   // --------------------------------------------------------
   function initBattleArena(arenaKey, playerTraits, playerTint, enemyTraits, enemyTint) {
     currentMode = 'battle';
-    _pTraits = playerTraits;
-    _pTint   = playerTint  || '#3a6e5a';
-    _eTraits = enemyTraits;
-    _eTint   = enemyTint   || '#6e3a3a';
-
+    _pTraits = playerTraits; _pTint = playerTint  || '#3a6e5a';
+    _eTraits = enemyTraits;  _eTint = enemyTint   || '#6e3a3a';
     if (dragonModel) dragonModel.visible = false;
     if (overlay) overlay.style.display = 'block';
-
     camera.position.set(0, 2, 10);
     controls.target.set(0, 0.5, 0);
-
-    const arenaColors = {
-      mountains: 0x2a3a2e, tundra: 0x2a3a4a,
-      volcanic:  0x3a1a1a, forest: 0x1a2a1a, plains: 0x3a3a2a
-    };
+    const arenaColors = { mountains:0x2a3a2e, tundra:0x2a3a4a, volcanic:0x3a1a1a, forest:0x1a2a1a, plains:0x3a3a2a };
     scene.background = new THREE.Color(arenaColors[arenaKey] || 0x06060f);
   }
 
@@ -461,13 +578,10 @@ window.Scene = (function () {
     scene.fog = new THREE.FogExp2(0x06060f, 0.045);
   }
 
-  // --------------------------------------------------------
-  // BATTLE EFFECTS
-  // --------------------------------------------------------
   function animateBattleTick(tickRecord) {
     if (!tickRecord) return;
-    if (['fireBurst', 'sustainedFire'].includes(tickRecord.playerAction)) playFireEffect(pPos, ePos);
-    if (['fireBurst', 'sustainedFire'].includes(tickRecord.enemyAction))  playFireEffect(ePos, pPos);
+    if (['fireBurst','sustainedFire'].includes(tickRecord.playerAction)) playFireEffect(pPos, ePos);
+    if (['fireBurst','sustainedFire'].includes(tickRecord.enemyAction))  playFireEffect(ePos, pPos);
     if (tickRecord.playerDamageDealt > 5) playImpactEffect(ePos.clone().add(new THREE.Vector3(0, 0.5, 0)));
     if (tickRecord.enemyDamageDealt  > 5) playImpactEffect(pPos.clone().add(new THREE.Vector3(0, 0.5, 0)));
   }
@@ -475,11 +589,8 @@ window.Scene = (function () {
   function playFireEffect(start, end) {
     for (let i = 0; i < 10; i++) {
       const geo = new THREE.SphereGeometry(0.05 + Math.random() * 0.04, 5, 4);
-      const mat = new THREE.MeshBasicMaterial({
-        color: new THREE.Color().setHSL(0.05 + Math.random() * 0.05, 1, 0.5 + Math.random() * 0.3),
-        transparent: true, opacity: 0.9
-      });
-      const p = new THREE.Mesh(geo, mat);
+      const mat = new THREE.MeshBasicMaterial({ color: new THREE.Color().setHSL(0.05 + Math.random() * 0.05, 1, 0.5 + Math.random() * 0.3), transparent: true, opacity: 0.9 });
+      const p   = new THREE.Mesh(geo, mat);
       p.position.copy(start).add(new THREE.Vector3((Math.random() - 0.5) * 0.3, 0, 0));
       scene.add(p);
       fireParticles.push({ mesh: p, start: start.clone(), end: end.clone(), progress: i * -0.06, speed: 1.5 + Math.random() * 0.5 });
@@ -496,24 +607,15 @@ window.Scene = (function () {
   }
 
   // --------------------------------------------------------
-  // ENVIRONMENT
+  // ENVIRONMENT / RESIZE
   // --------------------------------------------------------
   function setEnvironment(habitatKey) {
-    const ec = {
-      mountains: { bg: 0x1a2a1e }, tundra: { bg: 0x1a2a3a },
-      volcanic:  { bg: 0x2a1010 }, forest: { bg: 0x0a1a0a },
-      plains:    { bg: 0x1a1a10 }
-    };
-    scene.background = new THREE.Color((ec[habitatKey] || { bg: 0x06060f }).bg);
+    const ec = { mountains:{bg:0x1a2a1e}, tundra:{bg:0x1a2a3a}, volcanic:{bg:0x2a1010}, forest:{bg:0x0a1a0a}, plains:{bg:0x1a1a10} };
+    scene.background = new THREE.Color((ec[habitatKey] || { bg:0x06060f }).bg);
   }
 
-  function resetEnvironment() {
-    scene.background = new THREE.Color(0x06060f);
-  }
+  function resetEnvironment() { scene.background = new THREE.Color(0x06060f); }
 
-  // --------------------------------------------------------
-  // RESIZE
-  // --------------------------------------------------------
   function resize(container) {
     if (!renderer) return;
     renderer.setSize(container.clientWidth, container.clientHeight);
