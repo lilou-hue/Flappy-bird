@@ -1391,6 +1391,7 @@ const update = (deltaSeconds) => {
 
   if (gameState.isGameOver) {
     const wasNewBest = gameState.score > gameState.best;
+    const prevBest = gameState.best;
     saveBestScore();
     if (!gameState._achCounted) {
       gameState._achCounted = true;
@@ -1404,7 +1405,7 @@ const update = (deltaSeconds) => {
       }
       if (typeof Arcade !== 'undefined') {
         const arcResult = Arcade.onGameOver('flappy-bird', gameState.score);
-        document.body.appendChild(Arcade.createScoreCard('flappy-bird', gameState.score, gameState.best));
+        document.body.appendChild(Arcade.createScoreCard('flappy-bird', gameState.score, prevBest));
       }
     }
     if (!feathersSpawned) {

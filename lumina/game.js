@@ -928,13 +928,14 @@
       updateParticles(dt * 0.3);
       if (dyingTimer <= 0) {
         state = STATE.GAMEOVER; stopAmbient();
+        const prevBest = bestScore;
         if (score > bestScore) { bestScore = score; saveBest(bestScore); bestEl.textContent = bestScore; }
         if (typeof Leaderboard !== 'undefined' && score > 0) {
           Leaderboard.submitScore('lumina', score).then(() => Leaderboard.refresh('lumina'));
         }
         if (typeof Arcade !== 'undefined') {
           Arcade.onGameOver('lumina', score);
-          document.body.appendChild(Arcade.createScoreCard('lumina', score, bestScore));
+          document.body.appendChild(Arcade.createScoreCard('lumina', score, prevBest));
         }
         lmAchStats.bestDepth = Math.max(lmAchStats.bestDepth, score);
         checkLmAch(); showLmAchPopup(); saveLmAch();

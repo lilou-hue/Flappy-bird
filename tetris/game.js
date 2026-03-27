@@ -878,6 +878,7 @@
     state.shakeTimer = 15;
     state.shakeIntensity = 8;
     state.wasNewBest = false;
+    const prevBest = state.best;
     if (state.score > state.best) {
       state.wasNewBest = true;
       state.best = state.score;
@@ -888,7 +889,7 @@
     }
     if (typeof Arcade !== 'undefined') {
       Arcade.onGameOver('tetris', state.score);
-      document.body.appendChild(Arcade.createScoreCard('tetris', state.score, state.best));
+      document.body.appendChild(Arcade.createScoreCard('tetris', state.score, prevBest));
     }
     tetAchStats.gamesPlayed++;
     tetAchStats.bestScore = Math.max(tetAchStats.bestScore, state.score);

@@ -1527,6 +1527,7 @@ function die() {
     );
   }
 
+  const prevBest = state.best;
   if (state.score > state.best) {
     state.best = state.score;
     bestScoreLabel.textContent = state.best;
@@ -1538,7 +1539,7 @@ function die() {
   }
   if (typeof Arcade !== 'undefined') {
     Arcade.onGameOver('snake', state.score);
-    document.body.appendChild(Arcade.createScoreCard('snake', state.score, state.best));
+    document.body.appendChild(Arcade.createScoreCard('snake', state.score, prevBest));
   }
 
   checkSnAch();
