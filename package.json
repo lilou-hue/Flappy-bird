@@ -11,6 +11,7 @@
   "description": "",
   "dependencies": {
     "puppeteer": "^24.37.5",
-    "serve": "^14.2.5"
+    "serve": "^14.2.5",
+    "sharp": "^0.34.5"
   }
 }
