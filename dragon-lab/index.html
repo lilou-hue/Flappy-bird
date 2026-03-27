@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- Google tag (gtag.js) -->
+  <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-VMLC97VBGN"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -19,32 +19,62 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- HEADER -->
-  <header class="app-header">
-    <div class="header-left">
-      <h1 class="app-title">Dragon Engineering Lab</h1>
+
+<div class="lab-shell">
+
+  <!-- ═══ HEADER HUD ═══ -->
+  <header class="lab-header">
+    <div class="hud-brand">
+      <a href="/" class="back-link">← Back</a>
+      <span class="hud-logo">🧬</span>
+      <div class="hud-title-stack">
+        <div class="hud-title">Dragon Engineering Lab</div>
+        <div class="hud-subtitle">Genetic Research Facility</div>
+      </div>
     </div>
-    <nav class="tab-bar">
-      <button class="tab-btn active" data-tab="build">Build</button>
-      <button class="tab-btn" data-tab="simulate">Simulate</button>
-      <button class="tab-btn" data-tab="habitat">Habitat</button>
-      <button class="tab-btn" data-tab="battle">Battle</button>
-      <button class="tab-btn" data-tab="challenges">Challenges</button>
-      <button class="tab-btn" data-tab="science">Science</button>
-    </nav>
-    <div class="header-right">
+
+    <div class="hud-tabs">
+      <nav class="tab-bar">
+        <button class="tab-btn active" data-tab="build">Build</button>
+        <button class="tab-btn" data-tab="simulate">Simulate</button>
+        <button class="tab-btn" data-tab="habitat">Habitat</button>
+        <button class="tab-btn" data-tab="battle">Battle</button>
+        <button class="tab-btn" data-tab="challenges">Challenges</button>
+        <button class="tab-btn" data-tab="science">Science</button>
+      </nav>
+    </div>
+
+    <div class="hud-tools">
       <button class="mode-toggle" id="btn-mode" title="Switch Basic / Advanced">Basic</button>
       <button class="btn-icon" id="btn-tutorial" title="Replay Tutorial">?</button>
     </div>
   </header>
 
-  <!-- MAIN LAYOUT -->
-  <main class="app-main">
-    <!-- LEFT PANEL: Controls -->
-    <aside class="panel panel-left" id="controls-panel">
-      <!-- Dragon name -->
-      <div class="dragon-name-wrap">
-        <input type="text" id="dragon-name-input" class="dragon-name-input" placeholder="Name your dragon..." maxlength="32" autocomplete="off">
+  <!-- ═══ MAIN LAYOUT ═══ -->
+  <main class="lab-main">
+
+    <!-- ─── LEFT PANEL: Controls ─── -->
+    <aside class="lab-panel--left">
+
+      <!-- Dragon Identity -->
+      <div class="dragon-id-card">
+        <input type="text" id="dragon-name-input" class="dragon-name-input"
+          placeholder="Name your dragon..." maxlength="32" autocomplete="off">
+        <div class="dragon-id-meta">
+          <span id="prog-stage-name" class="dragon-stage-badge">🥚 Egg</span>
+          <span id="prog-level-badge" class="dragon-level-badge">LVL 1</span>
+        </div>
+        <div class="prog-xp-track">
+          <div class="prog-xp-bar">
+            <div class="prog-xp-fill" id="prog-xp-fill" style="width:0%"></div>
+          </div>
+          <div class="prog-xp-text" id="prog-xp-text">0 / 90 XP</div>
+        </div>
+      </div>
+
+      <!-- Appearance: Color Picker -->
+      <div class="color-strip">
+        <div class="section-label">Appearance</div>
         <div class="color-row" id="color-row">
           <div class="color-swatch active" data-color="#3a6e5a" style="background:#3a6e5a" title="Forest"></div>
           <div class="color-swatch" data-color="#7a2828" style="background:#7a2828" title="Crimson"></div>
@@ -59,14 +89,6 @@
           </label>
         </div>
       </div>
-      <div class="action-bar">
-        <button class="btn-primary" id="btn-simulate">Run Simulation</button>
-      </div>
-      <div class="action-bar-secondary">
-        <button class="btn-secondary" id="btn-randomize">Randomize</button>
-        <button class="btn-secondary" id="btn-reset">Reset</button>
-        <button class="btn-secondary" id="btn-save">Save</button>
-      </div>
 
       <!-- Presets -->
       <div class="presets-section">
@@ -74,21 +96,81 @@
         <div id="presets-container" class="presets-row"></div>
       </div>
 
-      <!-- Sliders (populated by JS) -->
+      <!-- Primary CTA -->
+      <div class="action-primary">
+        <button class="btn-simulate-cta" id="btn-simulate">
+          <span>⚡</span> Run Simulation
+        </button>
+      </div>
+
+      <!-- Secondary Actions -->
+      <div class="action-secondary">
+        <button class="btn-secondary" id="btn-randomize">🎲 Random</button>
+        <button class="btn-secondary" id="btn-reset">↺ Reset</button>
+        <button class="btn-secondary" id="btn-save">💾 Save</button>
+      </div>
+
+      <!-- Trait Sliders (populated by JS) -->
       <div id="sliders-container" class="sliders-container"></div>
     </aside>
 
-    <!-- CENTER: 3D Canvas -->
-    <section class="panel panel-center">
-      <div id="canvas-container" class="canvas-container"></div>
+    <!-- ─── CENTER: Specimen Chamber ─── -->
+    <section class="lab-pod">
+      <div class="pod-chamber-wrap">
+        <div class="pod-chamber" id="pod-chamber">
+          <div class="pod-frame-corners"></div>
+          <div class="pod-label">Specimen Chamber</div>
+          <div id="canvas-container" class="canvas-container"></div>
+        </div>
+      </div>
+
+      <!-- Live stat strip (populated after simulation) -->
+      <div class="pod-status" id="pod-status">
+        <div class="pod-stat">
+          <div class="pod-stat-label">Flight</div>
+          <div class="pod-stat-value" id="pod-stat-flight">—</div>
+          <div class="pod-stat-bar">
+            <div class="pod-stat-fill pod-stat-fill--flight" id="pod-bar-flight" style="width:0%"></div>
+          </div>
+        </div>
+        <div class="pod-stat">
+          <div class="pod-stat-label">Fire</div>
+          <div class="pod-stat-value" id="pod-stat-fire">—</div>
+          <div class="pod-stat-bar">
+            <div class="pod-stat-fill pod-stat-fill--fire" id="pod-bar-fire" style="width:0%"></div>
+          </div>
+        </div>
+        <div class="pod-stat">
+          <div class="pod-stat-label">Durability</div>
+          <div class="pod-stat-value" id="pod-stat-durability">—</div>
+          <div class="pod-stat-bar">
+            <div class="pod-stat-fill pod-stat-fill--durability" id="pod-bar-durability" style="width:0%"></div>
+          </div>
+        </div>
+        <div class="pod-stat">
+          <div class="pod-stat-label">Energy</div>
+          <div class="pod-stat-value" id="pod-stat-energy">—</div>
+          <div class="pod-stat-bar">
+            <div class="pod-stat-fill pod-stat-fill--energy" id="pod-bar-energy" style="width:0%"></div>
+          </div>
+        </div>
+        <div class="pod-stat">
+          <div class="pod-stat-label">Survival</div>
+          <div class="pod-stat-value" id="pod-stat-survival">—</div>
+          <div class="pod-stat-bar">
+            <div class="pod-stat-fill pod-stat-fill--survival" id="pod-bar-survival" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
     </section>
 
-    <!-- RIGHT PANEL: Results / Context -->
-    <aside class="panel panel-right">
+    <!-- ─── RIGHT PANEL: Results / Data ─── -->
+    <aside class="lab-panel--right">
+
       <div class="tab-content active" id="tab-build">
-        <div class="panel-title">Quick Preview</div>
+        <div class="panel-title">Analysis Preview</div>
         <div id="results-content" class="results-content">
-          <p class="placeholder-text">Adjust traits and run a simulation to see results.</p>
+          <p class="placeholder-text">Adjust traits and run a simulation<br>to see your dragon's viability here.</p>
         </div>
       </div>
 
@@ -101,7 +183,7 @@
         <div class="panel-title">Habitat Testing</div>
         <div id="habitat-selector" class="habitat-selector"></div>
         <div id="habitat-results" class="habitat-results"></div>
-        <button class="btn-secondary" id="btn-hab-return" style="margin-top:12px">Reset Environment</button>
+        <button class="btn-secondary" id="btn-hab-return" style="margin-top:12px;width:100%">Reset Environment</button>
       </div>
 
       <div class="tab-content" id="tab-battle">
@@ -111,7 +193,10 @@
       </div>
 
       <div class="tab-content" id="tab-challenges">
-        <div class="panel-title">Challenges <span id="challenge-progress-label" class="challenge-progress-label"></span></div>
+        <div class="panel-title">
+          Challenges
+          <span id="challenge-progress-label" class="challenge-progress-label"></span>
+        </div>
         <div id="challenges-content" class="challenges-content"></div>
       </div>
 
@@ -119,23 +204,30 @@
         <div class="panel-title">Research Database</div>
         <div id="science-notes-content" class="science-notes-content"></div>
       </div>
-    </aside>
-  </main>
 
-  <!-- SCRIPTS -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.135.0/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.135.0/examples/js/controls/OrbitControls.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.135.0/examples/js/loaders/GLTFLoader.js"></script>
-  <script src="data.js?v=6"></script>
-  <script src="challenges.js?v=6"></script>
-  <script src="dragon.js?v=6"></script>
-  <script src="simulation.js?v=6"></script>
-  <script src="explanations.js?v=6"></script>
-  <script src="dragon-canvas.js?v=9"></script>
-  <script src="scene.js?v=12"></script>
-  <script src="battle.js?v=9"></script>
-  <script src="ui.js?v=9"></script>
-  <script src="tutorial.js?v=9"></script>
-  <script src="main.js?v=9"></script>
+    </aside>
+
+  </main>
+</div>
+
+<!-- Level-up flash overlay -->
+<div class="prog-levelup-flash" id="prog-levelup-flash"></div>
+
+<!-- SCRIPTS -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.135.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.135.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.135.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="data.js?v=6"></script>
+<script src="challenges.js?v=6"></script>
+<script src="dragon.js?v=6"></script>
+<script src="simulation.js?v=6"></script>
+<script src="explanations.js?v=6"></script>
+<script src="dragon-canvas.js?v=9"></script>
+<script src="scene.js?v=11"></script>
+<script src="battle.js?v=9"></script>
+<script src="ui.js?v=9"></script>
+<script src="tutorial.js?v=9"></script>
+<script src="main.js?v=9"></script>
+<script src="progress.js?v=1"></script>
 </body>
 </html>

@@ -135,6 +135,7 @@ window.App = (function() {
     previousResults = currentResults;
     currentResults = window.Simulation.evaluate(currentDragon);
     window.UI.renderResults(currentResults, previousResults);
+    if (window.Progress) window.Progress.updatePodStatus(currentResults);
 
     // Personal bests
     const newBests = window.UI.checkPersonalBests(currentResults);
@@ -152,6 +153,7 @@ window.App = (function() {
     if (newlyUnlocked.length > 0) {
       newlyUnlocked.forEach(function(c) {
         window.UI.showNotification('Challenge unlocked: ' + c.icon + ' ' + c.title, 'success');
+        if (window.Progress) window.Progress.award(150);
       });
     }
     window.UI.renderChallenges();
@@ -295,6 +297,7 @@ window.App = (function() {
     // Render summary
     window.UI.renderBattleSummary(battleState);
     wireBattleSummaryButtons();
+    if (window.Progress) window.Progress.award(battleState.winner === 'player' ? 80 : 30);
 
     // Check challenges
     const { newlyUnlocked } = window.Challenges.evaluate(currentResults, rec);
