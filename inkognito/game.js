@@ -1136,6 +1136,7 @@
     state = STATES.GAME_OVER;
     gameOverFlash = 1.0; gameOverRingRadius = 0; gameOverRingAlpha = 0.8;
     wasNewBest = false;
+    const prevBest = bestScore;
     if (score > bestScore) {
       wasNewBest = true;
       bestScore = score;
@@ -1150,7 +1151,7 @@
     }
     if (typeof Arcade !== 'undefined') {
       Arcade.onGameOver('inkognito', score);
-      document.body.appendChild(Arcade.createScoreCard('inkognito', score, bestScore));
+      document.body.appendChild(Arcade.createScoreCard('inkognito', score, prevBest));
     }
 
     // Achievement checks
@@ -1813,6 +1814,11 @@
   }
 
   requestAnimationFrame(gameLoop);
+
+  // ── Arcade integration ──
+  document.addEventListener('arcade-restart', function () {
+    startGame();
+  });
 
   // ── Ko-fi Shop ──
   if (typeof Shop !== 'undefined') {

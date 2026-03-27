@@ -760,6 +760,7 @@ function gameOver() {
   }
 
   state.wasNewBest = false;
+  const prevBest = state.bestScore;
   if (state.score > state.bestScore) {
     state.wasNewBest = true;
     state.bestScore = state.score;
@@ -781,7 +782,7 @@ function gameOver() {
   }
   if (typeof Arcade !== 'undefined') {
     Arcade.onGameOver('phantom-road', state.score);
-    document.body.appendChild(Arcade.createScoreCard('phantom-road', state.score, Number(localStorage.getItem('phantomRoadBest'))||0));
+    document.body.appendChild(Arcade.createScoreCard('phantom-road', state.score, prevBest));
   }
 
   prAchStats.gamesPlayed++;

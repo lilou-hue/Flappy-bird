@@ -415,6 +415,7 @@ var SignalLost = (function () {
     running = false;
     gameOver = true;
     var score = Math.floor(survivalTime);
+    var prevBest = bestTime;
     saveBest(score);
     // Draw 6 AM screen
     ctx2d.fillStyle = '#000';
@@ -429,17 +430,19 @@ var SignalLost = (function () {
     if (!arcadeReported && typeof Arcade !== 'undefined') {
       arcadeReported = true;
       Arcade.onGameOver('signal-lost', score);
-      document.body.appendChild(Arcade.createScoreCard('signal-lost', score, bestTime));
+      document.body.appendChild(Arcade.createScoreCard('signal-lost', score, prevBest));
     }
   }
 
   function endGame() {
+    if (arcadeReported) return;
     var score = Math.floor(survivalTime);
+    var prevBest = bestTime;
     saveBest(score);
-    if (!arcadeReported && typeof Arcade !== 'undefined') {
+    if (typeof Arcade !== 'undefined') {
       arcadeReported = true;
       Arcade.onGameOver('signal-lost', score);
-      document.body.appendChild(Arcade.createScoreCard('signal-lost', score, bestTime));
+      document.body.appendChild(Arcade.createScoreCard('signal-lost', score, prevBest));
     }
   }
 

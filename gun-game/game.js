@@ -954,12 +954,13 @@ function triggerVictory() {
   saveGGAch();
   checkGGAch();
   Audio.gunVictory();
+  const prevBest = gameState.best;
   saveBestScore();
   const totalScore = gameState.score + gunState.totalDestroyed * 2;
   if (typeof Leaderboard !== 'undefined') Leaderboard.submitScore('gun-game', totalScore);
   if (typeof Arcade !== 'undefined') {
     Arcade.onGameOver('gun-game', totalScore);
-    document.body.appendChild(Arcade.createScoreCard('gun-game', totalScore, Number(localStorage.getItem('gunGameBest'))||0));
+    document.body.appendChild(Arcade.createScoreCard('gun-game', totalScore, prevBest));
   }
 }
 
@@ -1904,6 +1905,7 @@ const update = (deltaSeconds) => {
   }
 
   if (gameState.isGameOver) {
+    const prevBest = gameState.best;
     saveBestScore();
     if (!feathersSpawned && !gunState.victoryTriggered) {
       spawnFeatherParticles();
@@ -1915,7 +1917,7 @@ const update = (deltaSeconds) => {
       if (typeof Leaderboard !== 'undefined') Leaderboard.submitScore('gun-game', totalScore);
       if (typeof Arcade !== 'undefined') {
         Arcade.onGameOver('gun-game', totalScore);
-        document.body.appendChild(Arcade.createScoreCard('gun-game', totalScore, Number(localStorage.getItem('gunGameBest'))||0));
+        document.body.appendChild(Arcade.createScoreCard('gun-game', totalScore, prevBest));
       }
       ggAchStats.gamesPlayed++;
       if (totalScore > ggAchStats.bestScore) ggAchStats.bestScore = totalScore;
@@ -2546,7 +2548,7 @@ restartButton.addEventListener("click", () => {
   fullGunReset();
   resetGame();
 });
-document.addEventListener('arcade-restart', () => { fullGunReset(); resetGame(); });
+document.addEventListener('arcade-restart', () => { fullGunReset(); resetGame(); startGame(); });
 
 /* --- Mute toggle --- */
 const muteButton = document.getElementById("muteButton");

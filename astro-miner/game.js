@@ -429,6 +429,7 @@ function endGame() {
   state = STATE.GAMEOVER;
   Audio.stopDrone();
   isNewBest = false;
+  const prevBest = bestScore;
   if (score > bestScore) {
     bestScore = score;
     bestNode.textContent = bestScore;
@@ -448,7 +449,7 @@ function endGame() {
   }
   if (typeof Arcade !== 'undefined') {
     Arcade.onGameOver('astro-miner', score);
-    document.body.appendChild(Arcade.createScoreCard('astro-miner', score, bestScore));
+    document.body.appendChild(Arcade.createScoreCard('astro-miner', score, prevBest));
   }
 }
 
