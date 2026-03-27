@@ -1241,7 +1241,7 @@
         btn.textContent = '&#x25B2; Show Less';
         btn.innerHTML = '&#x25B2; Show Less';
         expanded = true;
-        setupObserver();
+        window._setupCanvasObserver && window._setupCanvasObserver();
       }
 
       if (btn) {

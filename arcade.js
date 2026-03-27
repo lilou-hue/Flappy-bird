@@ -489,8 +489,9 @@
     var now2 = Date.now();
     if (puDef && puDef.multiplier) {
       coinsEarned = Math.floor(coinsEarned * puDef.multiplier);
-    } else if (shopPowers.coinx2 && shopPowers.coinx2.expires > now2) {
-      /* Only apply shop coinx2 if micro-choice didn't already double */
+    }
+    /* Apply shop coinx2 only if micro-choice coin multiplier didn't already fire */
+    if (!(puDef && puDef.multiplier) && shopPowers.coinx2 && shopPowers.coinx2.expires > now2) {
       coinsEarned = Math.floor(coinsEarned * 2);
     }
 
@@ -595,7 +596,8 @@
     result.isNewDay = true;
 
     /* Check if yesterday — use UTC consistently to match today() */
-    var yesterday = new Date();
+    var nowDate = new Date(); /* single snapshot to avoid midnight-UTC race */
+    var yesterday = new Date(nowDate);
     yesterday.setUTCDate(yesterday.getUTCDate() - 1);
     var yStr = yesterday.toISOString().slice(0, 10);
 
@@ -603,7 +605,7 @@
       streak.streak++;
     } else if (streak.lastDate) {
       /* STREAK BROKEN — check for shield (only valid if exactly one day was missed) */
-      var twoDaysAgo = new Date();
+      var twoDaysAgo = new Date(nowDate);
       twoDaysAgo.setUTCDate(twoDaysAgo.getUTCDate() - 2);
       var tdStr = twoDaysAgo.toISOString().slice(0, 10);
       var shop = getShop();
@@ -1020,10 +1022,12 @@
 
   /* ── 5. LUCKY DROPS (Controlled RNG) ── */
   var LUCKY_DROPS = [
-    { chance: 0.15,  name: 'Bonus Round',   icon: '✨', coins: 5,   rarity: 'common' },
-    { chance: 0.08,  name: 'Lucky Coins!',  icon: '🌟', coins: 15,  rarity: 'uncommon' },
-    { chance: 0.03,  name: 'Coin Shower!',  icon: '💰', coins: 50,  rarity: 'rare' },
+    /* Evaluated rarest-first so jackpot/rare entries get a real chance
+       even when luckMult is high (common-first would always block them) */
     { chance: 0.008, name: 'JACKPOT!!',     icon: '🎰', coins: 200, rarity: 'legendary' },
+    { chance: 0.03,  name: 'Coin Shower!',  icon: '💰', coins: 50,  rarity: 'rare' },
+    { chance: 0.08,  name: 'Lucky Coins!',  icon: '🌟', coins: 15,  rarity: 'uncommon' },
+    { chance: 0.15,  name: 'Bonus Round',   icon: '✨', coins: 5,   rarity: 'common' },
   ];
 
   function rollLuckyDrop(luckMultiplier) {
