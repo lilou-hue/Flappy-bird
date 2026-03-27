@@ -176,10 +176,6 @@ window.DragonCanvas = (function () {
     const fsx  = ox + bw * 0.14,   fsy = oy + bh * 0.42;
     const fsGl = Math.max(0.1, 0.42 + n.fuelGlandSize * 0.78 + Math.sin(t * 2.5) * 0.18);
 
-    // Neck perpendicular vectors (for tube shape)
-    const pb = perp(nbx, nby, nex, ney, nrBase);
-    const pe = perp(nbx, nby, nex, ney, nrEnd);
-
     // ============================================================
     // LOCAL HELPER — draw one segmented toe + knuckle + digital pad + filled claw
     // Closes over: ctx, n, dark, skin, bone, belly, lerp, rc, perp, clawLen
@@ -704,14 +700,16 @@ window.DragonCanvas = (function () {
     {
       const finN        = 6 + Math.floor(n.scaleThickness * 5);
       const finMaxH     = (6.0 + n.scaleThickness * 11.0) * sc;
-      const spineStartX = nbx - W * 0.012;
+      const spineStartX = nbx - W * 0.030;   // past neck tube dorsal edge (~19px)
       const spineEndX   = tbx + bw * 0.10;
 
       for (let fi = 0; fi < finN; fi++) {
         const tp  = fi / (finN - 1);
         // Distribute fins from just behind neck socket to just before tail base
         const fx  = spineStartX - tp * (spineStartX - spineEndX);
-        const fy  = oy - bh * (0.95 + musF * 0.10 - 0.04 * Math.sin(tp * Math.PI));
+        // Ramp fin base from nby at shoulder → spine height at tp≥0.20
+        const fyRef = oy - bh * (0.95 + musF * 0.10);
+        const fy  = (fyRef + (nby - fyRef) * Math.max(0, 1 - tp * 5)) - bh * 0.04 * Math.sin(tp * Math.PI);
         const fh  = finMaxH * Math.max(0.08, Math.sin(tp * Math.PI));   // tapers to zero at both ends
         const fw  = fh * (0.18 + 0.10 * (1 - tp));  // slightly wider toward tail
         const lean = -fh * 0.10;                      // gentle backward lean
@@ -1218,7 +1216,7 @@ window.DragonCanvas = (function () {
       {
         const nFinN = 3 + Math.floor(n.scaleThickness * 3);
         for (let fi = 0; fi < nFinN; fi++) {
-          const fu  = 0.08 + fi / (nFinN - 0.1) * 0.84;
+          const fu  = fi / (nFinN - 0.1) * 0.92;   // start at neck base (fu=0)
           const fp  = bezN(fu);
           const fp2 = bezN(Math.min(fu + 0.07, 1));
           // Local +perp then flip to dorsal (-pn direction)
