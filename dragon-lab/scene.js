@@ -28,8 +28,9 @@ window.Scene = (function () {
   let lungeAnims = [], fireParticles = [], impactFlashes = [];
 
   // ── raw source data kept for cloning ─────────────────────
-  let _srcMeshData = [];   // [{origPos, weights, localBox, indexAttr, colorAttr}]
-  let _srcModelMeta = {};  // baseScale, meshMinY, meshCentreX, meshCentreZ
+  let _srcDragonRoot = null; // original gltf.scene (untouched, used for cloning)
+  let _srcMeshData   = [];   // [{origPos, weights, localBox}] — one per mesh in traversal order
+  let _srcModelMeta  = {};   // baseScale, meshMinY, meshCentreX, meshCentreZ
 
   // --------------------------------------------------------
   // HELPERS
@@ -112,7 +113,7 @@ window.Scene = (function () {
     loader.load('assets/dragon.glb', (gltf) => {
       const root = gltf.scene;
 
-      // Compute bounding box at scale=1
+      // Compute bounding box (at scale = 1, no transforms on this model)
       const box  = new THREE.Box3().setFromObject(root);
       const size = new THREE.Vector3();
       box.getSize(size);
@@ -125,8 +126,12 @@ window.Scene = (function () {
         meshCentreZ:  (box.min.z + box.max.z) / 2,
       };
 
-      // Extract and cache raw source data from each mesh
-      _srcMeshData = [];
+      // Pre-compute deformation data from each source mesh.
+      // We keep _srcDragonRoot intact so buildInstance can clone its geometries
+      // (same reliable approach as child.geometry.clone() that Three.js handles well).
+      _srcDragonRoot = root;
+      _srcMeshData   = [];
+
       root.traverse((child) => {
         if (!child.isMesh) return;
         const geo  = child.geometry;
@@ -141,15 +146,11 @@ window.Scene = (function () {
         }
 
         geo.computeBoundingBox();
-        const localBox = geo.boundingBox.clone();
-        const weights  = computeDeformWeights(origPos, n);
 
         _srcMeshData.push({
           origPos,
-          weights,
-          localBox,
-          indexAttr: geo.index ? geo.index.clone() : null,
-          normalAttr: geo.attributes.normal ? geo.attributes.normal.clone() : null,
+          weights:  computeDeformWeights(origPos, n),
+          localBox: geo.boundingBox.clone(),
         });
       });
 
@@ -161,13 +162,15 @@ window.Scene = (function () {
       scene.add(playerInst.model);
 
       if (_pTraits) applyTraitsToInstance(playerInst, _pTraits, _pTint, '_p');
-      else paintVertexColors(playerInst, _pTint);
+      else          paintVertexColors(playerInst, _pTint);
 
     }, undefined, (err) => console.warn('GLB load failed:', err));
   }
 
   // --------------------------------------------------------
-  // BUILD INSTANCE — fresh meshes from source data
+  // BUILD INSTANCE — fresh meshes cloned from source root
+  // Using geometry.clone() ensures all GL attributes are
+  // preserved exactly as Three.js expects them.
   // --------------------------------------------------------
   function buildInstance() {
     const meta  = _srcModelMeta;
@@ -182,25 +185,26 @@ window.Scene = (function () {
     model.userData.muscleAmp   = 0.04;
 
     const materials = [], meshes = [];
+    let idx = 0;
 
-    _srcMeshData.forEach((src) => {
-      const geo  = new THREE.BufferGeometry();
-      const n    = src.origPos.length / 3;
+    _srcDragonRoot.traverse((child) => {
+      if (!child.isMesh) return;
+      const src = _srcMeshData[idx++];
+      if (!src) return;
 
-      // Position buffer (writable copy)
-      const posBuf = new Float32Array(src.origPos);
-      geo.setAttribute('position', new THREE.BufferAttribute(posBuf, 3));
+      // Clone the geometry — this preserves ALL attributes (position, normal,
+      // index, uvs…) and is the same technique the working code used.
+      const geo = child.geometry.clone();
 
-      // Normal buffer
-      if (src.normalAttr) geo.setAttribute('normal', src.normalAttr.clone());
+      // Reset positions to clean originals (in case source was deformed)
+      const posAttr = geo.attributes.position;
+      for (let i = 0; i < posAttr.count; i++) {
+        posAttr.setXYZ(i, src.origPos[i*3], src.origPos[i*3+1], src.origPos[i*3+2]);
+      }
+      posAttr.needsUpdate = true;
 
-      // Index
-      if (src.indexAttr) geo.setIndex(src.indexAttr.clone());
-
-      // Colour buffer (will be painted later)
-      geo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(n * 3), 3));
-
-      geo.computeBoundingBox();
+      // Vertex colour buffer (starts zeroed; painted by paintVertexColors)
+      geo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(posAttr.count * 3), 3));
 
       const mat = new THREE.MeshToonMaterial({
         vertexColors: true,
@@ -211,7 +215,7 @@ window.Scene = (function () {
       mesh.castShadow    = true;
       mesh.receiveShadow = true;
 
-      mesh.userData.origPos  = src.origPos;     // shared read-only reference
+      mesh.userData.origPos  = src.origPos;   // read-only ref for deformation
       mesh.userData.weights  = src.weights;
       mesh.userData.localBox = src.localBox;
 
@@ -220,9 +224,7 @@ window.Scene = (function () {
       meshes.push(mesh);
     });
 
-    // Add eye spheres
     addEyes(model);
-
     return { model, materials, meshes };
   }
 
