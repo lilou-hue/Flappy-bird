@@ -2,7 +2,7 @@
    Shared Shop Module — Premium Bundles + Redeem Codes
    Supports Lemonsqueezy checkout overlay + manual code redemption
    Usage: Shop.init({ gameId, bundles, codes, onUnlock, buttonTarget })
-
+   v2 — admin passcode: RANDOISKING
    Bundle format:
      { id, name, desc, price, checkoutUrl, items: [...] }
      checkoutUrl = Lemonsqueezy product URL (opens overlay checkout)
