@@ -586,6 +586,54 @@ input[type="range"]::-moz-range-thumb {
 .dragon-name-input::placeholder { color: #3a3a56; font-weight: 400; font-size: 13px; }
 .dragon-name-input:focus { border-bottom-color: #5a5aaa; }
 
+.color-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 0 2px;
+  flex-wrap: wrap;
+}
+.color-swatch {
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  box-sizing: border-box;
+  transition: border-color 0.14s, transform 0.12s;
+  flex-shrink: 0;
+}
+.color-swatch:hover  { transform: scale(1.22); }
+.color-swatch.active { border-color: #e8eaf0; }
+.color-custom-label {
+  position: relative;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  border: 2px dashed #4a4a6a;
+  box-sizing: border-box;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6a6a8a;
+  font-size: 12px;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: border-color 0.14s;
+}
+.color-custom-label:hover { border-color: #e8eaf0; color: #e8eaf0; }
+.color-custom-label input[type="color"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+}
+
 /* ---- CHALLENGES PANEL ---- */
 .challenge-progress-label {
   font-size: 11px;

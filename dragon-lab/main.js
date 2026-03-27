@@ -61,6 +61,9 @@ window.App = (function() {
     // Wire dragon name input
     wireDragonName();
 
+    // Wire colour picker
+    wireColorPicker();
+
     // Run initial simulation
     runSimulation();
 
@@ -78,14 +81,20 @@ window.App = (function() {
   // TINT COLOR
   // --------------------------------------------------------
   function getTintColor() {
-    // Check if current dragon matches a preset
-    for (const key of Object.keys(window.DragonData.PRESETS)) {
-      const preset = window.DragonData.PRESETS[key];
-      if (JSON.stringify(currentDragon.traits) === JSON.stringify(preset.traits)) {
-        return preset.tintColor;
-      }
-    }
-    return '#3a6e5a'; // default tint
+    return currentDragon.tintColor || '#3a6e5a';
+  }
+
+  function setTintColor(hex) {
+    currentDragon.tintColor = hex;
+    // Sync the native color picker value
+    const picker = document.getElementById('dragon-color-input');
+    if (picker) picker.value = hex;
+    // Update active swatch highlight
+    document.querySelectorAll('#color-row .color-swatch').forEach(sw => {
+      sw.classList.toggle('active', sw.dataset.color === hex);
+    });
+    window.Scene.updateDragon(currentDragon.traits, hex);
+    autoSave();
   }
 
   // --------------------------------------------------------
@@ -181,9 +190,14 @@ window.App = (function() {
   // --------------------------------------------------------
   function onPresetSelect(presetKey) {
     currentDragon = window.Dragon.fromPreset(presetKey);
+    // Carry preset tint onto the dragon object so getTintColor picks it up
+    const presetTint = window.DragonData.PRESETS[presetKey].tintColor;
+    if (presetTint) currentDragon.tintColor = presetTint;
+
     const nameInput = document.getElementById('dragon-name-input');
     if (nameInput) nameInput.value = currentDragon.name || '';
     window.UI.updateSliders(currentDragon.traits);
+    syncColorUI(getTintColor());
 
     // Rebuild fire design panel by re-rendering sliders
     window.UI.renderSliders(
@@ -303,6 +317,29 @@ window.App = (function() {
       currentDragon.name = input.value;
       autoSave();
     });
+  }
+
+  // Sync colour UI (swatches + picker) to a given hex without triggering a redraw
+  function syncColorUI(hex) {
+    const picker = document.getElementById('dragon-color-input');
+    if (picker) picker.value = hex;
+    document.querySelectorAll('#color-row .color-swatch').forEach(sw => {
+      sw.classList.toggle('active', sw.dataset.color === hex);
+    });
+  }
+
+  function wireColorPicker() {
+    // Swatch clicks
+    document.querySelectorAll('#color-row .color-swatch').forEach(sw => {
+      sw.addEventListener('click', () => setTintColor(sw.dataset.color));
+    });
+    // Native color input (fires on every change while picker is open)
+    const picker = document.getElementById('dragon-color-input');
+    if (picker) {
+      picker.addEventListener('input', () => setTintColor(picker.value));
+    }
+    // Initialise UI to current tint
+    syncColorUI(getTintColor());
   }
 
   function wireBattleSummaryButtons() {
