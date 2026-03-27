@@ -94,7 +94,20 @@ window.Scene = (function () {
   // --------------------------------------------------------
   // LOAD 3D DRAGON MODEL
   // --------------------------------------------------------
+  function dbg(msg) {
+    let el = document.getElementById('_dbg');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = '_dbg';
+      el.style.cssText = 'position:fixed;bottom:8px;left:8px;background:rgba(0,0,0,0.8);color:#0f0;font:12px monospace;padding:6px 10px;z-index:9999;border-radius:4px;max-width:90vw;white-space:pre-wrap';
+      document.body.appendChild(el);
+    }
+    el.textContent = msg;
+  }
+
   function loadDragonModel() {
+    if (!THREE.GLTFLoader) { dbg('ERR: GLTFLoader missing'); return; }
+    dbg('Loading dragon.glb...');
     const loader = new THREE.GLTFLoader();
     loader.load(
       'assets/dragon.glb',
@@ -142,12 +155,17 @@ window.Scene = (function () {
         dragonModel.userData.floorY = dragonModel.position.y;
         dragonLoaded = true;
 
+        dbg(`OK: dragon loaded\npos y=${dragonModel.position.y.toFixed(2)} sc=${dragonModel.scale.x.toFixed(2)}\nmeshes=${dragonMaterials.length}`);
+
         // Hide 2D canvas — 3D model takes over
         if (overlay) overlay.style.display = 'none';
       },
       undefined,
+      (xhr) => {
+        if (xhr.total) dbg(`Loading: ${Math.round(xhr.loaded/xhr.total*100)}%`);
+      },
       (err) => {
-        console.warn('Dragon GLB load failed:', err);
+        dbg(`ERR loading GLB:\n${err.message || err}`);
         // Fallback: keep showing 2D canvas dragon
         if (overlay) overlay.style.display = 'block';
       }
