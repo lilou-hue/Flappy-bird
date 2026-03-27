@@ -239,6 +239,7 @@ body {
    LEFT PANEL
    ================================================================ */
 .lab-panel--left {
+  min-height: 0;
   overflow-y: auto;
   background: var(--panel);
   border-right: 1px solid var(--b-subtle);
@@ -601,6 +602,7 @@ body {
    DRAGON POD — CENTER COLUMN
    ================================================================ */
 .lab-pod {
+  min-height: 0;
   display: flex;
   flex-direction: column;
   background: var(--deep);
@@ -782,6 +784,7 @@ body {
    RIGHT PANEL
    ================================================================ */
 .lab-panel--right {
+  min-height: 0;
   overflow-y: auto;
   background: var(--panel);
   border-left: 1px solid var(--b-subtle);
