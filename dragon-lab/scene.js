@@ -1,8 +1,8 @@
 // ============================================================
 // Dragon Engineering Lab — Three.js Scene
-// Three.js renders the lab environment (floor, lighting, fog).
-// The dragon itself is drawn on an HTML5 canvas overlay element
-// that sits on top of the WebGL canvas — no texture pipeline.
+// Lab environment (floor, lighting) rendered in WebGL.
+// Dragon is a GLB model with MeshToonMaterial (cel shading).
+// Canvas overlay is kept for battle mode only.
 // ============================================================
 
 window.Scene = (function () {
@@ -10,21 +10,38 @@ window.Scene = (function () {
   let currentMode = 'lab';
   let labObjects = [];
 
-  // HTML overlay canvas — dragon lives here
+  // Canvas overlay — used for battle mode only
   let overlay, _container;
 
   // Dragon state
   let _pTraits = null, _pTint = '#3a6e5a';
   let _eTraits = null, _eTint = '#3a6e5a';
 
-  // Fake group positions for particle effects
+  // 3D dragon model
+  let dragonModel = null;
+  let dragonMaterials = [];
+  let dragonLoaded = false;
+  let gradientMap = null;
+
+  // Battle particle positions
   let pPos = new THREE.Vector3(-3, 1.5, 0);
   let ePos = new THREE.Vector3( 3, 1.5, 0);
 
-  // Battle animation effects (Three.js particles)
   let lungeAnims    = [];
   let fireParticles = [];
   let impactFlashes = [];
+
+  // --------------------------------------------------------
+  // TOON GRADIENT MAP — 3-band: shadow / mid / highlight
+  // --------------------------------------------------------
+  function buildGradientMap() {
+    const data = new Uint8Array([80, 160, 255]);
+    const tex  = new THREE.DataTexture(data, 3, 1, THREE.RedFormat);
+    tex.minFilter = THREE.NearestFilter;
+    tex.magFilter = THREE.NearestFilter;
+    tex.needsUpdate = true;
+    return tex;
+  }
 
   // --------------------------------------------------------
   // INIT
@@ -33,50 +50,46 @@ window.Scene = (function () {
     _container = container;
     clock = new THREE.Clock();
 
-    // WebGL renderer — lab background only
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.15;
 
-    // Container must be position:relative so overlay sits on top
     container.style.position = 'relative';
     container.appendChild(renderer.domElement);
 
-    // Scene
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x06060f);
-    scene.fog = new THREE.Fog(0x06060f, 16, 36);
+    scene.fog = new THREE.FogExp2(0x06060f, 0.045);
 
-    // Camera — looks straight at the empty lab floor
     camera = new THREE.PerspectiveCamera(44, container.clientWidth / container.clientHeight, 0.1, 100);
-    camera.position.set(0, 1.2, 7);
+    camera.position.set(0, 2.2, 7.5);
 
-    // Controls (orbit) — still active so user can rotate the scene
     controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.target.set(0, 0.4, 0);
+    controls.target.set(0, 1.2, 0);
     controls.enableDamping = true;
     controls.dampingFactor = 0.08;
     controls.maxPolarAngle = Math.PI * 0.82;
-    controls.minDistance = 3;
+    controls.minDistance = 2;
     controls.maxDistance = 22;
     controls.update();
 
-    // Lab environment
+    gradientMap = buildGradientMap();
+
     setupLabLighting();
     setupLabFloor();
+    loadDragonModel();
 
-    // ---- HTML canvas overlay (dragon drawing) ----
+    // Canvas overlay — battle mode only
     overlay = document.createElement('canvas');
-    overlay.style.position = 'absolute';
-    overlay.style.top      = '0';
-    overlay.style.left     = '0';
-    overlay.style.width    = '100%';
-    overlay.style.height   = '100%';
-    overlay.style.pointerEvents = 'none'; // let OrbitControls receive mouse events
+    overlay.style.position    = 'absolute';
+    overlay.style.top         = '0';
+    overlay.style.left        = '0';
+    overlay.style.width       = '100%';
+    overlay.style.height      = '100%';
+    overlay.style.pointerEvents = 'none';
+    overlay.style.display     = 'none'; // hidden until battle
     container.appendChild(overlay);
     resizeOverlay();
 
@@ -91,33 +104,113 @@ window.Scene = (function () {
   }
 
   // --------------------------------------------------------
-  // LIGHTING
+  // LOAD 3D DRAGON MODEL
+  // --------------------------------------------------------
+  function loadDragonModel() {
+    const loader = new THREE.GLTFLoader();
+    loader.load(
+      'assets/dragon.glb',
+      (gltf) => {
+        dragonModel = gltf.scene;
+
+        // Auto-fit: centre on bounding box, sit on floor
+        const box = new THREE.Box3().setFromObject(dragonModel);
+        const size   = new THREE.Vector3();
+        const centre = new THREE.Vector3();
+        box.getSize(size);
+        box.getCenter(centre);
+
+        // Scale so dragon is ~2.8 units tall
+        const targetH = 2.8;
+        const sc = targetH / size.y;
+        dragonModel.scale.setScalar(sc);
+
+        // Sit on floor (y=0)
+        dragonModel.position.set(
+          -centre.x * sc,
+          -box.min.y * sc,
+          -centre.z * sc
+        );
+
+        // Face slightly toward camera
+        dragonModel.rotation.y = Math.PI * 0.1;
+
+        // Apply toon material to every mesh
+        dragonMaterials = [];
+        dragonModel.traverse((child) => {
+          if (!child.isMesh) return;
+
+          const toonMat = new THREE.MeshToonMaterial({
+            color: new THREE.Color(_pTint),
+            gradientMap,
+          });
+          child.material = toonMat;
+          child.castShadow = true;
+          dragonMaterials.push(toonMat);
+
+          // Outline via inverted-hull technique
+          const outlineMat = new THREE.MeshBasicMaterial({
+            color: 0x000000,
+            side: THREE.BackSide,
+          });
+          const outlineMesh = new THREE.Mesh(child.geometry, outlineMat);
+          outlineMesh.scale.setScalar(1.035);
+          child.add(outlineMesh);
+        });
+
+        scene.add(dragonModel);
+        dragonModel.userData.floorY = dragonModel.position.y;
+        dragonLoaded = true;
+      },
+      undefined,
+      (err) => console.warn('Dragon GLB load failed:', err)
+    );
+  }
+
+  // --------------------------------------------------------
+  // TINT COLOR
+  // --------------------------------------------------------
+  function applyToonColor(hex) {
+    if (!dragonLoaded) return;
+    const col = new THREE.Color(hex);
+    for (const mat of dragonMaterials) {
+      mat.color.set(col);
+      mat.needsUpdate = true;
+    }
+  }
+
+  // --------------------------------------------------------
+  // LIGHTING — tuned for toon material (fewer, harder lights)
   // --------------------------------------------------------
   function setupLabLighting() {
     scene.children.filter(c => c.isLight).forEach(l => scene.remove(l));
 
-    scene.add(new THREE.HemisphereLight(0x335588, 0x112233, 0.50));
+    // Ambient fill — subtle, keeps shadows from going pure black
+    scene.add(new THREE.HemisphereLight(0x334466, 0x112233, 0.6));
 
-    const key = new THREE.DirectionalLight(0xddeeff, 1.4);
-    key.position.set(2, 10, 6);
+    // Key light — main toon shadow split
+    const key = new THREE.DirectionalLight(0xddeeff, 1.6);
+    key.position.set(3, 8, 5);
     key.castShadow = true;
-    key.shadow.mapSize.set(512, 512);
-    key.shadow.camera.near = 0.5;
-    key.shadow.camera.far  = 28;
-    key.shadow.camera.left = key.shadow.camera.bottom = -8;
-    key.shadow.camera.right = key.shadow.camera.top = 8;
+    key.shadow.mapSize.set(1024, 1024);
+    key.shadow.camera.near   = 0.5;
+    key.shadow.camera.far    = 24;
+    key.shadow.camera.left   = key.shadow.camera.bottom = -6;
+    key.shadow.camera.right  = key.shadow.camera.top   =  6;
     scene.add(key);
     labObjects.push(key);
 
-    const floor = new THREE.PointLight(0x00ccaa, 0.55, 10);
-    floor.position.set(0, -0.2, 0);
-    scene.add(floor);
-    labObjects.push(floor);
-
-    const rim = new THREE.PointLight(0x2244cc, 0.48, 18);
-    rim.position.set(-4, 5, -5);
+    // Rim light — teal, makes the silhouette pop
+    const rim = new THREE.DirectionalLight(0x00ffcc, 0.45);
+    rim.position.set(-5, 3, -4);
     scene.add(rim);
     labObjects.push(rim);
+
+    // Floor bounce
+    const bounce = new THREE.PointLight(0x1144aa, 0.4, 12);
+    bounce.position.set(0, -0.2, 0);
+    scene.add(bounce);
+    labObjects.push(bounce);
   }
 
   // --------------------------------------------------------
@@ -130,7 +223,7 @@ window.Scene = (function () {
 
     const ground = new THREE.Mesh(
       new THREE.PlaneGeometry(24, 24),
-      new THREE.MeshStandardMaterial({ color: 0x06060e, roughness: 0.92, metalness: 0.1 })
+      new THREE.MeshStandardMaterial({ color: 0x06060e, roughness: 0.95, metalness: 0.05 })
     );
     ground.rotation.x = -Math.PI / 2;
     ground.position.y = -0.01;
@@ -140,20 +233,22 @@ window.Scene = (function () {
   }
 
   // --------------------------------------------------------
-  // BUILD / UPDATE DRAGON (just save state — drawn in animate)
+  // DRAGON API
   // --------------------------------------------------------
   function buildPlayerDragon(traits, tintColor) {
     _pTraits = traits;
     _pTint   = tintColor || '#3a6e5a';
+    applyToonColor(_pTint);
   }
 
   function updateDragon(traits, tintColor) {
     _pTraits = traits;
-    _pTint   = tintColor || '#3a6e5a';
+    _pTint   = tintColor || _pTint;
+    applyToonColor(_pTint);
   }
 
   // --------------------------------------------------------
-  // ANIMATION LOOP
+  // ANIMATE
   // --------------------------------------------------------
   function animate() {
     requestAnimationFrame(animate);
@@ -162,29 +257,31 @@ window.Scene = (function () {
 
     controls.update();
 
-    // Draw dragon on overlay canvas
-    if (overlay && _pTraits) {
-      if (currentMode === 'lab') {
-        DragonCanvas.draw(overlay, _pTraits, _pTint, time);
-      } else if (currentMode === 'battle' && _eTraits) {
-        DragonCanvas.drawBattle(overlay, _pTraits, _pTint, _eTraits, _eTint, time);
-      }
+    // Idle animation — gentle breathing bob + slow sway
+    if (dragonLoaded && dragonModel && currentMode === 'lab') {
+      dragonModel.position.y += (Math.sin(time * 0.9) * 0.035)
+        - (dragonModel.position.y - dragonModel.userData.floorY || 0) * 0;
+      // Recalculate absolute floor Y to avoid drift
+      dragonModel.position.y = (dragonModel.userData.floorY || 0)
+        + Math.sin(time * 0.9) * 0.04;
+      dragonModel.rotation.y = Math.PI * 0.1 + Math.sin(time * 0.18) * 0.18;
     }
 
-    // Three.js particle effects (fire, impact)
-    updateParticles(delta);
+    // Battle canvas overlay
+    if (overlay && currentMode === 'battle' && _eTraits && _pTraits) {
+      DragonCanvas.drawBattle(overlay, _pTraits, _pTint, _eTraits, _eTint, time);
+    }
 
+    updateParticles(delta);
     renderer.render(scene, camera);
   }
 
   function updateParticles(delta) {
-    // Lunge (just conceptual position for particle origin)
     lungeAnims = lungeAnims.filter(la => {
       la.phase += delta / la.duration;
       return la.phase < 1;
     });
 
-    // Fire particles
     fireParticles = fireParticles.filter(fp => {
       fp.progress += delta * fp.speed;
       if (fp.progress < 0) return true;
@@ -201,7 +298,6 @@ window.Scene = (function () {
       return true;
     });
 
-    // Impact flashes
     impactFlashes = impactFlashes.filter(fl => {
       fl.life -= delta * 4;
       if (fl.life <= 0) {
@@ -226,12 +322,16 @@ window.Scene = (function () {
     _eTraits = enemyTraits;
     _eTint   = enemyTint   || '#6e3a3a';
 
+    // Hide 3D model, show canvas overlay for battle
+    if (dragonModel) dragonModel.visible = false;
+    if (overlay) overlay.style.display = 'block';
+
     camera.position.set(0, 2, 10);
     controls.target.set(0, 0.5, 0);
 
     const arenaColors = {
       mountains: 0x2a3a2e, tundra: 0x2a3a4a,
-      volcanic: 0x3a1a1a, forest: 0x1a2a1a, plains: 0x3a3a2a
+      volcanic:  0x3a1a1a, forest: 0x1a2a1a, plains: 0x3a3a2a
     };
     scene.background = new THREE.Color(arenaColors[arenaKey] || 0x06060f);
   }
@@ -239,24 +339,26 @@ window.Scene = (function () {
   function returnToLab() {
     currentMode = 'lab';
     _eTraits = null;
-    camera.position.set(0, 1.2, 7);
-    controls.target.set(0, 0.4, 0);
+
+    // Show 3D model, hide canvas overlay
+    if (dragonModel) dragonModel.visible = true;
+    if (overlay) overlay.style.display = 'none';
+
+    camera.position.set(0, 2.2, 7.5);
+    controls.target.set(0, 1.2, 0);
     scene.background = new THREE.Color(0x06060f);
-    scene.fog = new THREE.Fog(0x06060f, 16, 36);
+    scene.fog = new THREE.FogExp2(0x06060f, 0.045);
   }
 
   // --------------------------------------------------------
-  // BATTLE TICK EFFECTS
+  // BATTLE EFFECTS
   // --------------------------------------------------------
   function animateBattleTick(tickRecord) {
     if (!tickRecord) return;
-    const pAction = tickRecord.playerAction;
-    const eAction = tickRecord.enemyAction;
-
-    if (['fireBurst', 'sustainedFire'].includes(pAction)) playFireEffect(pPos, ePos);
-    if (['fireBurst', 'sustainedFire'].includes(eAction)) playFireEffect(ePos, pPos);
+    if (['fireBurst', 'sustainedFire'].includes(tickRecord.playerAction)) playFireEffect(pPos, ePos);
+    if (['fireBurst', 'sustainedFire'].includes(tickRecord.enemyAction))  playFireEffect(ePos, pPos);
     if (tickRecord.playerDamageDealt > 5) playImpactEffect(ePos.clone().add(new THREE.Vector3(0, 0.5, 0)));
-    if (tickRecord.enemyDamageDealt > 5)  playImpactEffect(pPos.clone().add(new THREE.Vector3(0, 0.5, 0)));
+    if (tickRecord.enemyDamageDealt  > 5) playImpactEffect(pPos.clone().add(new THREE.Vector3(0, 0.5, 0)));
   }
 
   function playFireEffect(start, end) {
@@ -291,12 +393,11 @@ window.Scene = (function () {
       volcanic:  { bg: 0x2a1010 }, forest: { bg: 0x0a1a0a },
       plains:    { bg: 0x1a1a10 }
     };
-    scene.background = new THREE.Color((ec[habitatKey] || {bg: 0x06060f}).bg);
+    scene.background = new THREE.Color((ec[habitatKey] || { bg: 0x06060f }).bg);
   }
 
   function resetEnvironment() {
     scene.background = new THREE.Color(0x06060f);
-    scene.fog = new THREE.Fog(0x06060f, 16, 36);
   }
 
   // --------------------------------------------------------
