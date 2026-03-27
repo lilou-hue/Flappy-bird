@@ -1065,57 +1065,230 @@ window.DragonCanvas = (function () {
     }
 
     // ============================================================
-    // LAYER 9 — NECK TUBE (filled tapered shape, covers joint)
+    // LAYER 9 — NECK  (evolved: 3-sample tube, throat plates, dorsal crest)
     // ============================================================
     {
+      // Evaluate neck cubic bezier at u
+      const bezN = (u) => {
+        const om = 1 - u;
+        return {
+          x: om*om*om*nbx + 3*om*om*u*nc1x + 3*om*u*u*nc2x + u*u*u*nex,
+          y: om*om*om*nby + 3*om*om*u*nc1y + 3*om*u*u*nc2y + u*u*u*ney
+        };
+      };
+
+      // 3 sample points
+      const ns0 = { x: nbx, y: nby };
+      const ns1 = bezN(0.44);
+      const ns2 = { x: nex, y: ney };
+
+      // Radii (base breathes with br)
+      const nr0 = nrBase * (1.0 + musF * 0.10 + br * 0.12);
+      const nr1 = nrBase * 0.74;
+      const nr2 = nrEnd;
+
+      // Local tangent-based perp normals at each sample
+      const nsA = bezN(0.40), nsB = bezN(0.48);       // straddle mid for tangent
+      const pn0 = perp(nbx,   nby,   nc1x,  nc1y,  nr0);
+      const pn1 = perp(nsA.x, nsA.y, nsB.x, nsB.y, nr1);
+      const pn2 = perp(nc2x,  nc2y,  nex,   ney,   nr2);
+
       ctx.save();
-      const g = ctx.createLinearGradient(nbx, nby, nex, ney);
-      g.addColorStop(0.00, rc(skin));
-      g.addColorStop(1.00, rc(top_));
-      ctx.fillStyle = g;
-      ctx.strokeStyle = rc(dark, 0.45);
-      ctx.lineWidth = 1.0;
+
+      // ---- Main tube ----
+      const ng = ctx.createLinearGradient(nbx, nby, nex, ney);
+      ng.addColorStop(0.00, rc(lerp(skin, dark, 0.20)));
+      ng.addColorStop(0.26, rc(skin));
+      ng.addColorStop(0.64, rc(lerp(skin, top_, 0.58)));
+      ng.addColorStop(1.00, rc(top_));
+      ctx.fillStyle   = ng;
+      ctx.strokeStyle = rc(dark, 0.36);
+      ctx.lineWidth   = 1.0;
 
       ctx.beginPath();
-      ctx.moveTo(nbx + pb.x, nby + pb.y);
-      ctx.bezierCurveTo(
-        nc1x + pb.x * 0.70, nc1y + pb.y * 0.70,
-        nc2x + pe.x * 0.85, nc2y + pe.y * 0.85,
-        nex + pe.x, ney + pe.y
+      ctx.moveTo(ns0.x + pn0.x, ns0.y + pn0.y);
+      ctx.quadraticCurveTo(
+        (ns0.x + pn0.x + ns1.x + pn1.x) * 0.5, (ns0.y + pn0.y + ns1.y + pn1.y) * 0.5,
+        ns1.x + pn1.x, ns1.y + pn1.y
       );
-      // Cap at head end
-      ctx.bezierCurveTo(nex + pe.x * 0.5, ney + pe.y * 0.5, nex - pe.x * 0.5, ney - pe.y * 0.5, nex - pe.x, ney - pe.y);
-      // Down the other side
-      ctx.bezierCurveTo(
-        nc2x - pe.x * 0.85, nc2y - pe.y * 0.85,
-        nc1x - pb.x * 0.70, nc1y - pb.y * 0.70,
-        nbx - pb.x, nby - pb.y
+      ctx.quadraticCurveTo(
+        (ns1.x + pn1.x + ns2.x + pn2.x) * 0.5, (ns1.y + pn1.y + ns2.y + pn2.y) * 0.5,
+        ns2.x + pn2.x, ns2.y + pn2.y
+      );
+      // Head-end cap
+      ctx.quadraticCurveTo(ns2.x, ns2.y, ns2.x - pn2.x, ns2.y - pn2.y);
+      // Other side back to base
+      ctx.quadraticCurveTo(
+        (ns2.x - pn2.x + ns1.x - pn1.x) * 0.5, (ns2.y - pn2.y + ns1.y - pn1.y) * 0.5,
+        ns1.x - pn1.x, ns1.y - pn1.y
+      );
+      ctx.quadraticCurveTo(
+        (ns1.x - pn1.x + ns0.x - pn0.x) * 0.5, (ns1.y - pn1.y + ns0.y - pn0.y) * 0.5,
+        ns0.x - pn0.x, ns0.y - pn0.y
       );
       ctx.closePath();
       ctx.fill();
       ctx.stroke();
 
-      // Neck belly stripe (lighter, forward-facing side)
-      const pg = ctx.createLinearGradient(nbx, nby, nex, ney);
-      pg.addColorStop(0.00, rc(belly, 0.0));
-      pg.addColorStop(0.40, rc(belly, 0.52));
-      pg.addColorStop(1.00, rc(belly, 0.30));
-      ctx.fillStyle = pg;
-      ctx.beginPath();
-      ctx.moveTo(nbx - pb.x * 0.22, nby - pb.y * 0.22);
-      ctx.bezierCurveTo(
-        nc1x - pb.x * 0.16, nc1y - pb.y * 0.16,
-        nc2x - pe.x * 0.22, nc2y - pe.y * 0.22,
-        nex  - pe.x * 0.20, ney  - pe.y * 0.20
-      );
-      ctx.quadraticCurveTo(nex, ney, nex + pe.x * 0.20, ney + pe.y * 0.20);
-      ctx.bezierCurveTo(
-        nc2x + pe.x * 0.22, nc2y + pe.y * 0.22,
-        nc1x + pb.x * 0.16, nc1y + pb.y * 0.16,
-        nbx + pb.x * 0.22, nby + pb.y * 0.22
-      );
-      ctx.closePath();
-      ctx.fill();
+      // ---- Dorsal rim highlight (spine edge = -pn side, upper) ----
+      {
+        const dhg = ctx.createLinearGradient(nbx, nby, nex, ney);
+        dhg.addColorStop(0.00, rc(top_, 0.0));
+        dhg.addColorStop(0.28, rc(lerp(top_, {r:255,g:255,b:255}, 0.26), 0.42));
+        dhg.addColorStop(0.70, rc(top_, 0.18));
+        dhg.addColorStop(1.00, rc(top_, 0.0));
+        ctx.strokeStyle = dhg;
+        ctx.lineWidth   = nr0 * 0.28;
+        ctx.lineCap     = 'round';
+        ctx.beginPath();
+        ctx.moveTo(ns0.x - pn0.x * 0.52, ns0.y - pn0.y * 0.52);
+        ctx.quadraticCurveTo(
+          (ns0.x - pn0.x*0.50 + ns1.x - pn1.x*0.50) * 0.5,
+          (ns0.y - pn0.y*0.50 + ns1.y - pn1.y*0.50) * 0.5,
+          ns1.x - pn1.x * 0.50, ns1.y - pn1.y * 0.50
+        );
+        ctx.quadraticCurveTo(
+          (ns1.x - pn1.x*0.50 + ns2.x - pn2.x*0.46) * 0.5,
+          (ns1.y - pn1.y*0.50 + ns2.y - pn2.y*0.46) * 0.5,
+          ns2.x - pn2.x * 0.46, ns2.y - pn2.y * 0.46
+        );
+        ctx.stroke();
+      }
+
+      // ---- Ventral throat plate band + scale arcs ----
+      // Centered band 22% of radius on each side of the -pn axis (same convention as original)
+      {
+        const f = 0.22;
+        const vg = ctx.createLinearGradient(nbx, nby, nex, ney);
+        vg.addColorStop(0.00, rc(belly, 0.0));
+        vg.addColorStop(0.20, rc(belly, 0.68));
+        vg.addColorStop(0.72, rc(belly, 0.50));
+        vg.addColorStop(1.00, rc(belly, 0.18));
+        ctx.fillStyle = vg;
+        ctx.beginPath();
+        ctx.moveTo(ns0.x - pn0.x * f, ns0.y - pn0.y * f);
+        ctx.quadraticCurveTo(
+          (ns0.x - pn0.x*f + ns1.x - pn1.x*f) * 0.5,
+          (ns0.y - pn0.y*f + ns1.y - pn1.y*f) * 0.5,
+          ns1.x - pn1.x * f, ns1.y - pn1.y * f
+        );
+        ctx.quadraticCurveTo(
+          (ns1.x - pn1.x*f + ns2.x - pn2.x*f) * 0.5,
+          (ns1.y - pn1.y*f + ns2.y - pn2.y*f) * 0.5,
+          ns2.x - pn2.x * f, ns2.y - pn2.y * f
+        );
+        ctx.quadraticCurveTo(ns2.x, ns2.y, ns2.x + pn2.x * f, ns2.y + pn2.y * f);
+        ctx.quadraticCurveTo(
+          (ns2.x + pn2.x*f + ns1.x + pn1.x*f) * 0.5,
+          (ns2.y + pn2.y*f + ns1.y + pn1.y*f) * 0.5,
+          ns1.x + pn1.x * f, ns1.y + pn1.y * f
+        );
+        ctx.quadraticCurveTo(
+          (ns1.x + pn1.x*f + ns0.x + pn0.x*f) * 0.5,
+          (ns1.y + pn1.y*f + ns0.y + pn0.y*f) * 0.5,
+          ns0.x + pn0.x * f, ns0.y + pn0.y * f
+        );
+        ctx.closePath();
+        ctx.fill();
+
+        // Throat scale arcs along band (scaleThickness-driven)
+        if (n.scaleThickness > 0.15) {
+          const nPl  = 3 + Math.floor(n.scaleThickness * 4);
+          const plOp = (n.scaleThickness - 0.15) * 0.32;
+          ctx.strokeStyle = rc(lerp(belly, {r:255,g:255,b:255}, 0.18), plOp);
+          ctx.lineWidth   = 0.65;
+          for (let pi = 0; pi < nPl; pi++) {
+            const pu  = 0.10 + pi / (nPl - 0.5) * 0.76;
+            const pp  = bezN(pu);
+            const pu2 = Math.min(pu + 0.05, 1);
+            const ppn = perp(pp.x, pp.y, bezN(pu2).x, bezN(pu2).y, 1);
+            const ppnL = Math.hypot(ppn.x, ppn.y) || 1;
+            const pnx  = ppn.x / ppnL, pny = ppn.y / ppnL;
+            const rr   = nr0 * (1 - pu * 0.44) * 0.38;
+            const baseAng = Math.atan2(pny, pnx);
+            ctx.beginPath();
+            ctx.arc(pp.x - pnx * rr * 0.10, pp.y - pny * rr * 0.10,
+              rr, baseAng + Math.PI * 0.58, baseAng - Math.PI * 0.58 + Math.PI * 2);
+            ctx.stroke();
+          }
+        }
+      }
+
+      // ---- Dorsal neck crest fins (spine side = -pn, upward) ----
+      {
+        const nFinN = 3 + Math.floor(n.scaleThickness * 3);
+        for (let fi = 0; fi < nFinN; fi++) {
+          const fu  = 0.08 + fi / (nFinN - 0.1) * 0.84;
+          const fp  = bezN(fu);
+          const fp2 = bezN(Math.min(fu + 0.07, 1));
+          // Local +perp then flip to dorsal (-pn direction)
+          const fnRaw = perp(fp.x, fp.y, fp2.x, fp2.y, 1);
+          const fnL   = Math.hypot(fnRaw.x, fnRaw.y) || 1;
+          const fnx   = -fnRaw.x / fnL;   // flip to dorsal (upward)
+          const fny   = -fnRaw.y / fnL;
+          const fbt   = -fny, fbty = fnx; // tangent along neck
+
+          const rAtU = nr0 * (1 - fu * 0.55);
+          const fH   = rAtU * (0.52 + n.boneDensity * 0.88) *
+                       Math.sin((fi + 0.5) / nFinN * Math.PI);
+          const fW   = rAtU * 0.30;
+          const tipX = fp.x + fnx * fH;
+          const tipY = fp.y + fny * fH;
+
+          const ffg = ctx.createLinearGradient(fp.x, fp.y, tipX, tipY);
+          ffg.addColorStop(0.0, rc(dark, 0.82));
+          ffg.addColorStop(0.6, rc(lerp(top_, bone, 0.48), 0.72));
+          ffg.addColorStop(1.0, rc(bone, 0.54));
+
+          ctx.fillStyle   = ffg;
+          ctx.strokeStyle = rc(dark, 0.22);
+          ctx.lineWidth   = 0.65;
+          ctx.beginPath();
+          ctx.moveTo(fp.x - fbt * fW, fp.y - fbty * fW);
+          ctx.quadraticCurveTo(
+            fp.x + fnx * fH * 0.40 - fbt * fW * 0.18,
+            fp.y + fny * fH * 0.40 - fbty * fW * 0.18,
+            tipX, tipY
+          );
+          ctx.quadraticCurveTo(
+            fp.x + fnx * fH * 0.40 + fbt * fW * 0.18,
+            fp.y + fny * fH * 0.40 + fbty * fW * 0.18,
+            fp.x + fbt * fW, fp.y + fbty * fW
+          );
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+        }
+      }
+
+      // ---- Neck muscle ridge lines (musclePower-driven) ----
+      if (n.musclePower > 0.22) {
+        const mOp = (n.musclePower - 0.22) * 0.26;
+        ctx.strokeStyle = rc(lerp(skin, {r:255,g:255,b:255}, 0.12), mOp);
+        ctx.lineWidth   = 0.65;
+        ctx.lineCap     = 'round';
+        for (const side of [0.44, -0.44]) {
+          const sp0 = bezN(0.08), sp1 = bezN(0.45), sp2 = bezN(0.88);
+          const sn0 = perp(nbx,   nby,   nc1x,  nc1y,  nr0 * side);
+          const sn1 = perp(nsA.x, nsA.y, nsB.x, nsB.y, nr1 * side);
+          const snA = bezN(0.84), snB = bezN(0.92);
+          const sn2 = perp(snA.x, snA.y, snB.x, snB.y, nr2 * side);
+          ctx.beginPath();
+          ctx.moveTo(sp0.x + sn0.x, sp0.y + sn0.y);
+          ctx.quadraticCurveTo(
+            (sp0.x + sn0.x + sp1.x + sn1.x) * 0.5,
+            (sp0.y + sn0.y + sp1.y + sn1.y) * 0.5,
+            sp1.x + sn1.x, sp1.y + sn1.y
+          );
+          ctx.quadraticCurveTo(
+            (sp1.x + sn1.x + sp2.x + sn2.x) * 0.5,
+            (sp1.y + sn1.y + sp2.y + sn2.y) * 0.5,
+            sp2.x + sn2.x, sp2.y + sn2.y
+          );
+          ctx.stroke();
+        }
+      }
+
       ctx.restore();
     }
 
