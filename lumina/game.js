@@ -756,7 +756,17 @@
   ctrlPulse.addEventListener("pointerdown", (e) => { e.preventDefault(); initAudio(); resumeAudio(); if (state===STATE.MENU||state===STATE.GAMEOVER) handleAction(); else if (state===STATE.PLAYING) doPulse(); });
 
   restartBtn.addEventListener("click", () => { initAudio(); resumeAudio(); resetGame(); state = STATE.PLAYING; startAmbient(); });
-  document.addEventListener('arcade-restart', () => { initAudio(); resumeAudio(); resetGame(); state = STATE.PLAYING; startAmbient(); });
+  document.addEventListener('arcade-restart', () => {
+    if (state === STATE.DYING) {
+      const prevBest = bestScore;
+      if (score > bestScore) { bestScore = score; saveBest(bestScore); bestEl.textContent = bestScore; }
+      if (typeof Arcade !== 'undefined') {
+        Arcade.onGameOver('lumina', score);
+        document.body.appendChild(Arcade.createScoreCard('lumina', score, prevBest));
+      }
+    }
+    initAudio(); resumeAudio(); resetGame(); state = STATE.PLAYING; startAmbient();
+  });
   muteBtn.addEventListener("click", () => { muted = !muted; muteBtn.textContent = muted ? "\u{1F507}" : "\u{1F50A}"; if (masterGain) masterGain.gain.value = muted ? 0 : 0.35; saveMute(muted); });
 
   // Colorblind toggle

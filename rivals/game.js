@@ -360,7 +360,7 @@ function handleModeTouch(pos) {
 function startMatch() {
   currentMap = MAPS[Math.floor(Math.random() * MAPS.length)];
   bgMapName = ''; // force bg recache
-  roundNum = 0; p1Score = 0; p2Score = 0; matchKills = 0;
+  roundNum = 0; p1Score = 0; p2Score = 0; matchKills = 0; scoreEl.textContent = '0';
   p1 = createPlayer(1, 60, true);
   p2 = createPlayer(2, 280, false);
   setupTouchControls();
@@ -463,6 +463,8 @@ function endMatch() {
 function startMenu() {
   state = 'menu'; menuSel = 0;
   p1 = null; p2 = null;
+  const oldCard = document.querySelector('.arc-scorecard');
+  if (oldCard) oldCard.remove();
 }
 
 /* ── Kill Feed ─────────────────────────────────────────────────── */

@@ -282,6 +282,8 @@ let time = 0;
 document.getElementById('bestScore').textContent = bestScore;
 
 function resetGame() {
+  const oldCard = document.querySelector('.arc-scorecard');
+  if (oldCard) oldCard.remove();
   stack = [];
   fallingPieces = [];
   particles = [];
@@ -393,6 +395,7 @@ function dropBlock() {
 }
 
 function endGame() {
+  if (gameOver) return;
   gameOver = true;
   moving = null;
   Audio.playGameOver();

@@ -1683,6 +1683,7 @@ function updateWaveSystem(dt) {
    GAME OVER
    ══════════════════════════════════════════════════════════════════ */
 function gameOver() {
+  if (game.state === 'gameover') return;
   game.state = 'gameover';
   const isNewBest = game.score > game.best;
   const prevBest = game.best;
@@ -1707,6 +1708,8 @@ function gameOver() {
    RESET / START
    ══════════════════════════════════════════════════════════════════ */
 function resetGame() {
+  const oldCard = document.querySelector('.arc-scorecard');
+  if (oldCard) oldCard.remove();
   game.score = 0;
   game.wave = 1;
   game.lives = 3;

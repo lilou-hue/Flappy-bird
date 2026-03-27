@@ -376,6 +376,8 @@ function getSpeedMultiplier() {
 }
 
 function resetGame() {
+  const oldCard = document.querySelector('.arc-scorecard');
+  if (oldCard) oldCard.remove();
   applyDifficulty();
   notes = [];
   score = 0;

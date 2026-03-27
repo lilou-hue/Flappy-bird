@@ -407,12 +407,14 @@
     var currentSP = Math.floor(state.lifetimeSP);
     var lastReported = parseInt(localStorage.getItem(UC_LAST_REPORTED_KEY) || '0', 10);
     if (currentSP <= lastReported) return; // no progress since last report
+    var prevBest = lastReported;
     localStorage.setItem(UC_LAST_REPORTED_KEY, String(currentSP));
     if (typeof Leaderboard !== 'undefined' && currentSP > 0 && Leaderboard.getNickname()) {
       Leaderboard.submitScore('unicorn-clicker', currentSP);
     }
     if (typeof Arcade !== 'undefined') {
       Arcade.onGameOver('unicorn-clicker', currentSP);
+      document.body.appendChild(Arcade.createScoreCard('unicorn-clicker', currentSP, prevBest));
     }
   }
 
@@ -448,6 +450,8 @@
   }
 
   function resetGame() {
+    ucAchQueue = [];
+    ucAchTimer = 0;
     state = defaultState();
     frenzyTimer = 60;
     frenzyActive = false;

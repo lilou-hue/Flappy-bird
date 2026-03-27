@@ -1398,13 +1398,13 @@ const update = (deltaSeconds) => {
       fbAchStats.gamesPlayed++;
       checkFbAch(); showFbAchPopup(); saveFbAch();
     }
-    if (!gameState._lbSubmitted && gameState.score > 0) {
+    if (!gameState._lbSubmitted) {
       gameState._lbSubmitted = true;
-      if (typeof Leaderboard !== 'undefined') {
+      if (gameState.score > 0 && typeof Leaderboard !== 'undefined') {
         Leaderboard.submitScore('flappy-bird', gameState.score).then(() => Leaderboard.refresh('flappy-bird'));
       }
       if (typeof Arcade !== 'undefined') {
-        const arcResult = Arcade.onGameOver('flappy-bird', gameState.score);
+        Arcade.onGameOver('flappy-bird', gameState.score);
         document.body.appendChild(Arcade.createScoreCard('flappy-bird', gameState.score, prevBest));
       }
     }

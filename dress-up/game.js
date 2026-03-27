@@ -7320,6 +7320,7 @@ function startChallenge() {
 function endChallenge() {
   if (!challengeActive) return;
   clearInterval(challengeInterval);
+  challengeInterval = null;
   challengeActive = false;
   Audio.challengeEnd();
 
@@ -7368,6 +7369,7 @@ function endChallenge() {
   }
   if (typeof Arcade !== 'undefined') {
     Arcade.onGameOver('dress-up', score);
+    document.body.appendChild(Arcade.createScoreCard('dress-up', score, prevBest));
   }
 }
 
