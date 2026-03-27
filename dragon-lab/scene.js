@@ -21,7 +21,6 @@ window.Scene = (function () {
   let dragonModel = null;
   let dragonMaterials = [];
   let dragonLoaded = false;
-  let gradientMap = null;
 
   // Battle particle positions
   let pPos = new THREE.Vector3(-3, 1.5, 0);
@@ -31,22 +30,8 @@ window.Scene = (function () {
   let fireParticles = [];
   let impactFlashes = [];
 
-  // --------------------------------------------------------
-  // TOON GRADIENT MAP — 3-band via canvas (r135 compatible)
-  // --------------------------------------------------------
-  function buildGradientMap() {
-    const c = document.createElement('canvas');
-    c.width = 3; c.height = 1;
-    const ctx = c.getContext('2d');
-    // shadow | mid | highlight
-    ctx.fillStyle = 'rgb(80,80,80)';   ctx.fillRect(0, 0, 1, 1);
-    ctx.fillStyle = 'rgb(160,160,160)'; ctx.fillRect(1, 0, 1, 1);
-    ctx.fillStyle = 'rgb(255,255,255)'; ctx.fillRect(2, 0, 1, 1);
-    const tex = new THREE.CanvasTexture(c);
-    tex.minFilter = THREE.NearestFilter;
-    tex.magFilter = THREE.NearestFilter;
-    return tex;
-  }
+  // gradient map built on demand if needed
+  function buildGradientMap() { return null; }
 
   // --------------------------------------------------------
   // INIT
@@ -79,8 +64,6 @@ window.Scene = (function () {
     controls.minDistance = 2;
     controls.maxDistance = 22;
     controls.update();
-
-    gradientMap = buildGradientMap();
 
     setupLabLighting();
     setupLabFloor();
@@ -147,20 +130,12 @@ window.Scene = (function () {
 
           const toonMat = new THREE.MeshToonMaterial({
             color: new THREE.Color(_pTint),
-            gradientMap,
+            side: THREE.DoubleSide,  // fixes inverted-normal meshes from AI generators
           });
           child.material = toonMat;
           child.castShadow = true;
+          child.receiveShadow = true;
           dragonMaterials.push(toonMat);
-
-          // Outline via inverted-hull technique
-          const outlineMat = new THREE.MeshBasicMaterial({
-            color: 0x000000,
-            side: THREE.BackSide,
-          });
-          const outlineMesh = new THREE.Mesh(child.geometry, outlineMat);
-          outlineMesh.scale.setScalar(1.035);
-          child.add(outlineMesh);
         });
 
         scene.add(dragonModel);
