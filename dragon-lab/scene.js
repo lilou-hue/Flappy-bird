@@ -32,14 +32,19 @@ window.Scene = (function () {
   let impactFlashes = [];
 
   // --------------------------------------------------------
-  // TOON GRADIENT MAP — 3-band: shadow / mid / highlight
+  // TOON GRADIENT MAP — 3-band via canvas (r135 compatible)
   // --------------------------------------------------------
   function buildGradientMap() {
-    const data = new Uint8Array([80, 160, 255]);
-    const tex  = new THREE.DataTexture(data, 3, 1, THREE.RedFormat);
+    const c = document.createElement('canvas');
+    c.width = 3; c.height = 1;
+    const ctx = c.getContext('2d');
+    // shadow | mid | highlight
+    ctx.fillStyle = 'rgb(80,80,80)';   ctx.fillRect(0, 0, 1, 1);
+    ctx.fillStyle = 'rgb(160,160,160)'; ctx.fillRect(1, 0, 1, 1);
+    ctx.fillStyle = 'rgb(255,255,255)'; ctx.fillRect(2, 0, 1, 1);
+    const tex = new THREE.CanvasTexture(c);
     tex.minFilter = THREE.NearestFilter;
     tex.magFilter = THREE.NearestFilter;
-    tex.needsUpdate = true;
     return tex;
   }
 
@@ -81,7 +86,7 @@ window.Scene = (function () {
     setupLabFloor();
     loadDragonModel();
 
-    // Canvas overlay — battle mode only
+    // Canvas overlay — visible until 3D model loads, then battle only
     overlay = document.createElement('canvas');
     overlay.style.position    = 'absolute';
     overlay.style.top         = '0';
@@ -89,7 +94,7 @@ window.Scene = (function () {
     overlay.style.width       = '100%';
     overlay.style.height      = '100%';
     overlay.style.pointerEvents = 'none';
-    overlay.style.display     = 'none'; // hidden until battle
+    overlay.style.display     = 'block'; // shown until GLB ready
     container.appendChild(overlay);
     resizeOverlay();
 
@@ -161,9 +166,16 @@ window.Scene = (function () {
         scene.add(dragonModel);
         dragonModel.userData.floorY = dragonModel.position.y;
         dragonLoaded = true;
+
+        // Hide 2D canvas — 3D model takes over
+        if (overlay) overlay.style.display = 'none';
       },
       undefined,
-      (err) => console.warn('Dragon GLB load failed:', err)
+      (err) => {
+        console.warn('Dragon GLB load failed:', err);
+        // Fallback: keep showing 2D canvas dragon
+        if (overlay) overlay.style.display = 'block';
+      }
     );
   }
 
@@ -267,9 +279,13 @@ window.Scene = (function () {
       dragonModel.rotation.y = Math.PI * 0.1 + Math.sin(time * 0.18) * 0.18;
     }
 
-    // Battle canvas overlay
-    if (overlay && currentMode === 'battle' && _eTraits && _pTraits) {
-      DragonCanvas.drawBattle(overlay, _pTraits, _pTint, _eTraits, _eTint, time);
+    // Canvas overlay: 2D dragon while loading, battle mode when fighting
+    if (overlay && overlay.style.display !== 'none' && _pTraits) {
+      if (currentMode === 'battle' && _eTraits) {
+        DragonCanvas.drawBattle(overlay, _pTraits, _pTint, _eTraits, _eTint, time);
+      } else if (!dragonLoaded) {
+        DragonCanvas.draw(overlay, _pTraits, _pTint, time);
+      }
     }
 
     updateParticles(delta);
