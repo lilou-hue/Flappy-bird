@@ -1,13 +1,31 @@
-# GitHub Pages is set to build_type=legacy (deploys automatically from main branch).
-# This workflow is intentionally disabled to avoid racing the built-in deployment.
-# To re-enable Actions-based deployment, change Pages source to "GitHub Actions" in repo settings.
-name: Deploy to GitHub Pages (disabled)
+name: Deploy to GitHub Pages
 
 on:
-  workflow_dispatch:  # manual trigger only — not on push
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
 jobs:
   deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Pages deploys automatically from main via legacy mode. This workflow is a no-op."
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
