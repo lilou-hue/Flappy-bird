@@ -50,22 +50,14 @@
     </div>
 
     <div class="arc-shop-grid" id="shopGrid"></div>
-
-    <!-- Dev admin toggle — visible at bottom of page -->
-    <div class="arc-shop-admin-bar" id="adminBar">
-      <button class="arc-shop-admin-bar__btn" id="adminToggleBtn">
-        <span id="adminBtnIcon">🔑</span> <span id="adminBtnLabel">Enable Admin Mode</span>
-      </button>
-      <div class="arc-shop-admin-bar__hint">or visit <code>?admin=slay2024</code></div>
-    </div>
   </div>
 
   <script>
     (function () {
-      Arcade.injectNavHUD();
-
       var currentCat = 'badge';
       var RARITY_LABELS = { common: 'Common', uncommon: 'Uncommon', rare: 'Rare', epic: 'Epic', legendary: 'Legendary' };
+
+      Arcade.injectNavHUD();
 
       function renderActivePowers() {
         var bar = document.getElementById('activePowers');
@@ -74,11 +66,8 @@
         if (status.coinx2) parts.push('💰 2× Coins — ' + status.coinx2 + 'm left');
         if (status.magnet) parts.push('🧲 Magnet — ' + status.magnet + 'm left');
         if (status.lucky)  parts.push('🌟 Lucky Star — next game');
-        /* streak shield */
-        var items = Arcade.getShopItems();
-        var shield = items.find(function(i) { return i.id === 'streak_shield'; });
+        var shield = Arcade.getShopItems().find(function(i) { return i.id === 'streak_shield'; });
         if (shield && shield.powerActive) parts.push('🛡️ Streak Shield — ready');
-
         if (parts.length) {
           bar.style.display = '';
           bar.innerHTML = '<div class="arc-active-powers__label">Active Powers:</div>' +
@@ -106,36 +95,38 @@
 
       function renderShop() {
         var grid = document.getElementById('shopGrid');
-        var items = Arcade.getShopItems().filter(function (i) { return i.cat === currentCat; });
+        var allItems = Arcade.getShopItems();
+        var items = allItems.filter(function (i) { return i.cat === currentCat; });
         var coins = Arcade.getCoins();
         var admin = Arcade.isAdminMode();
+
+        if (!items.length) {
+          grid.innerHTML = '<div style="color:rgba(255,255,255,0.4);padding:2rem;text-align:center">No items found.</div>';
+          return;
+        }
 
         grid.innerHTML = items.map(function (item) {
           var rarityClass = item.rarity ? ' arc-shop-item--' + item.rarity : '';
           var btnClass = 'arc-shop-btn';
           var btnText = '';
-          var disabled = '';
+          var btnDisabled = '';
           var isPower = item.cat === 'power';
 
           if (isPower) {
-            /* Powers: always show activate button, status shows if active */
             if (item.powerActive) {
               btnClass += ' arc-shop-btn--active';
               btnText = '✅ ' + item.powerActive;
-              /* Allow re-buy even when active */
             }
             if (admin) {
               btnText = btnText || 'Activate Free';
             } else {
-              if (!btnText) btnText = '⚡ Activate · ' + item.cost + ' coins';
-              if (coins < item.cost && !item.powerActive) disabled = ' disabled';
+              if (!btnText) btnText = '⚡ ' + item.cost + ' coins';
+              if (coins < item.cost && !item.powerActive) btnDisabled = ' disabled';
             }
-            /* If active, allow re-buy by not disabling */
-            if (item.powerActive && coins < item.cost && !admin) disabled = ' disabled';
           } else if (item.requireAch) {
             btnClass += ' arc-shop-btn--locked';
             btnText = '🔒 Achievement only';
-            disabled = ' disabled';
+            btnDisabled = ' disabled';
           } else if (item.equipped) {
             btnClass += ' arc-shop-btn--equipped';
             btnText = '✓ Equipped';
@@ -143,46 +134,47 @@
             btnClass += ' arc-shop-btn--owned';
             btnText = item.cat === 'title' ? 'Equip Title' : 'Equip';
           } else {
-            btnText = (admin ? 'Unlock Free' : item.cost + ' coins');
-            if (!admin && coins < item.cost) disabled = ' disabled';
+            btnText = admin ? 'Unlock Free' : item.cost + ' coins';
+            if (!admin && coins < item.cost) btnDisabled = ' disabled';
           }
 
           return '<div class="arc-shop-item' + rarityClass + '" data-id="' + item.id + '">' +
             (item.rarity ? '<div class="arc-shop-item__rarity">' + (RARITY_LABELS[item.rarity] || item.rarity) + '</div>' : '') +
             '<div class="arc-shop-item__icon arc-shop-item__icon--' + (item.rarity || 'common') + '">' + item.icon + '</div>' +
-            '<div class="arc-shop-item__name">' + item.name + '</div>' +
+            '<div class="arc-shop-item__name">' + (item.name || item.displayName || item.id) + '</div>' +
             (item.label ? '<div class="arc-shop-item__label">"' + item.label + '"</div>' : '') +
             (item.desc ? '<div class="arc-shop-item__desc">' + item.desc + '</div>' : '') +
             '<div class="arc-shop-item__cost">' +
               (item.requireAch ? '🔒 Achievement' : (item.cost === 0 ? 'Free' : '&#x1FA99; ' + item.cost)) +
             '</div>' +
-            '<button class="' + btnClass + '"' + disabled + '>' + btnText + '</button>' +
+            '<button class="' + btnClass + '"' + btnDisabled + '>' + btnText + '</button>' +
           '</div>';
         }).join('');
 
-        grid.querySelectorAll('.arc-shop-item').forEach(function (el) {
-          el.querySelector('button').addEventListener('click', function () {
-            var id = el.dataset.id;
+        grid.querySelectorAll('.arc-shop-item').forEach(function (card) {
+          card.querySelector('button').addEventListener('click', function () {
+            var id = card.dataset.id;
             var item = Arcade.getShopItems().find(function (i) { return i.id === id; });
             if (!item) return;
 
             if (item.cat === 'power') {
-              var result = Arcade.purchaseItem(id);
-              if (!result.success) { showShopToast('❌ ' + (result.reason || 'Cannot activate')); return; }
+              var r = Arcade.purchaseItem(id);
+              if (!r.success) { showToast('❌ ' + (r.reason || 'Cannot activate')); return; }
               var msgs = {
-                'coinx2_1h': '💰 Coin Rush activated! 2× coins for 1 hour.',
-                'lucky_next': '🌟 Lucky Star ready! Your next game will drop loot.',
-                'magnet_24h': '🧲 Coin Magnet on! +10 bonus coins per game for 24h.',
-                'streak_shield': '🛡️ Streak Shield equipped! Your streak is protected.',
+                coinx2_1h:    '💰 Coin Rush activated! 2× coins for 1 hour.',
+                lucky_next:   '🌟 Lucky Star ready! Guaranteed drop next game.',
+                magnet_24h:   '🧲 Coin Magnet on! +10 coins per game for 24h.',
+                streak_shield:'🛡️ Streak Shield equipped!'
               };
-              showShopToast(msgs[item.effect] || '⚡ Power activated!');
+              showToast(msgs[item.effect] || '⚡ Power activated!');
             } else if (item.purchased) {
               Arcade.equipItem(id);
+              showToast('✓ ' + (item.name || item.displayName) + ' equipped!');
             } else {
-              var result = Arcade.purchaseItem(id);
-              if (!result.success) { showShopToast('❌ ' + (result.reason || 'Cannot buy')); return; }
+              var r = Arcade.purchaseItem(id);
+              if (!r.success) { showToast('❌ ' + (r.reason || 'Cannot buy')); return; }
               Arcade.equipItem(id);
-              showShopToast('✅ ' + item.name + ' unlocked & equipped!');
+              showToast('✅ ' + (item.name || item.displayName) + ' unlocked & equipped!');
             }
             renderShop();
             renderEquipped();
@@ -191,7 +183,7 @@
         });
       }
 
-      function showShopToast(msg) {
+      function showToast(msg) {
         var t = document.createElement('div');
         t.className = 'arc-shop-toast';
         t.textContent = msg;
@@ -211,29 +203,9 @@
         renderShop();
       });
 
-      function updateAdminButton() {
-        var on = Arcade.isAdminMode();
-        document.getElementById('adminBtnIcon').textContent = on ? '🔓' : '🔑';
-        document.getElementById('adminBtnLabel').textContent = on ? 'Admin Mode ON — click to disable' : 'Enable Admin Mode';
-        document.getElementById('adminToggleBtn').className = 'arc-shop-admin-bar__btn' + (on ? ' arc-shop-admin-bar__btn--on' : '');
-      }
-
-      document.getElementById('adminToggleBtn').addEventListener('click', function() {
-        if (Arcade.isAdminMode()) {
-          Arcade.deactivateAdminMode();
-        } else {
-          Arcade.activateAdminMode();
-        }
-        updateAdminButton();
-        renderShop();
-        renderEquipped();
-        renderActivePowers();
-      });
-
       renderEquipped();
       renderShop();
       renderActivePowers();
-      updateAdminButton();
     })();
   </script>
 </body>

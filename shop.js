@@ -109,19 +109,6 @@ function buildModal(cfg) {
   var title = document.createElement('div');
   title.className = 'sp-shop-title';
   title.innerHTML = '&#x1F6CD; ' + _t('shopTitle', 'Shop') + ' &mdash; ' + _t('shopPremiumBundles', 'Premium Bundles');
-  title.addEventListener('click', function (e) {
-    if (e.detail === 3) {
-      e.preventDefault();
-      if (window.Arcade && Arcade.activateAdminMode) {
-        Arcade.activateAdminMode();
-      } else {
-        try { localStorage.setItem('arc_admin', '1'); } catch(e2) {}
-      }
-      if (adminBtn) adminBtn.style.display = '';
-      status.textContent = '🔑 Admin mode on — click Unlock All below.';
-      status.className = 'sp-shop-status success';
-    }
-  });
   modal.appendChild(title);
 
   // Bundles grid
@@ -260,7 +247,7 @@ function redeem(code) {
   if (!upper) return;
 
   /* Secret admin activation code — works from any game page */
-  if (upper === 'SLAY2024ADMIN') {
+  if (upper === 'RANDOISKING') {
     if (window.Arcade && Arcade.activateAdminMode) {
       Arcade.activateAdminMode();
     } else {
