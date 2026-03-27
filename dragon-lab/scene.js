@@ -1,8 +1,8 @@
 // ============================================================
 // Dragon Engineering Lab — Three.js Scene
-// Lab environment (floor, lighting) rendered in WebGL.
+// Lab environment rendered in WebGL.
 // Dragon is a GLB model with MeshToonMaterial (cel shading).
-// Canvas overlay is kept for battle mode only.
+// Canvas overlay kept for battle mode only.
 // ============================================================
 
 window.Scene = (function () {
@@ -10,7 +10,7 @@ window.Scene = (function () {
   let currentMode = 'lab';
   let labObjects = [];
 
-  // Canvas overlay — used for battle mode only
+  // Canvas overlay — battle mode only
   let overlay, _container;
 
   // Dragon state
@@ -18,20 +18,32 @@ window.Scene = (function () {
   let _eTraits = null, _eTint = '#3a6e5a';
 
   // 3D dragon model
-  let dragonModel = null;
+  let dragonModel    = null;
   let dragonMaterials = [];
-  let dragonLoaded = false;
+  let dragonLoaded   = false;
 
-  // Battle particle positions
+  // Dynamic lights driven by traits
+  let rimLight  = null;
+  let fireLight = null;
+
+  // Battle particles
   let pPos = new THREE.Vector3(-3, 1.5, 0);
   let ePos = new THREE.Vector3( 3, 1.5, 0);
-
   let lungeAnims    = [];
   let fireParticles = [];
   let impactFlashes = [];
 
-  // gradient map built on demand if needed
-  function buildGradientMap() { return null; }
+  // --------------------------------------------------------
+  // TRAIT NORMALISATION  (0 → 1)
+  // --------------------------------------------------------
+  function norm(traits) {
+    const n = {};
+    if (!window.DragonData) return n;
+    DragonData.TRAITS.forEach(tr => {
+      n[tr.id] = Math.max(0, Math.min(1, (traits[tr.id] - tr.min) / (tr.max - tr.min)));
+    });
+    return n;
+  }
 
   // --------------------------------------------------------
   // INIT
@@ -69,15 +81,10 @@ window.Scene = (function () {
     setupLabFloor();
     loadDragonModel();
 
-    // Canvas overlay — visible until 3D model loads, then battle only
+    // Canvas overlay — visible while GLB loads, then battle only
     overlay = document.createElement('canvas');
-    overlay.style.position    = 'absolute';
-    overlay.style.top         = '0';
-    overlay.style.left        = '0';
-    overlay.style.width       = '100%';
-    overlay.style.height      = '100%';
-    overlay.style.pointerEvents = 'none';
-    overlay.style.display     = 'block'; // shown until GLB ready
+    overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none';
+    overlay.style.display = 'block';
     container.appendChild(overlay);
     resizeOverlay();
 
@@ -94,128 +101,176 @@ window.Scene = (function () {
   // --------------------------------------------------------
   // LOAD 3D DRAGON MODEL
   // --------------------------------------------------------
-  function dbg(msg) {
-    let el = document.getElementById('_dbg');
-    if (!el) {
-      el = document.createElement('div');
-      el.id = '_dbg';
-      el.style.cssText = 'position:fixed;top:60px;left:8px;background:rgba(0,0,0,0.9);color:#0f0;font:14px monospace;padding:8px 12px;z-index:99999;border-radius:4px;max-width:90vw;white-space:pre-wrap;pointer-events:none';
-      document.body.appendChild(el);
-    }
-    el.textContent = msg;
-  }
-
   function loadDragonModel() {
-    if (!THREE.GLTFLoader) { dbg('ERR: GLTFLoader missing'); return; }
-    dbg('Loading dragon.glb...');
+    if (!THREE.GLTFLoader) return;
     const loader = new THREE.GLTFLoader();
     loader.load(
       'assets/dragon.glb',
       (gltf) => {
         dragonModel = gltf.scene;
 
-        // Auto-fit: centre on bounding box, sit on floor
-        const box = new THREE.Box3().setFromObject(dragonModel);
-        const size   = new THREE.Vector3();
-        const centre = new THREE.Vector3();
+        // Auto-fit: centre + sit on floor
+        const box  = new THREE.Box3().setFromObject(dragonModel);
+        const size = new THREE.Vector3();
         box.getSize(size);
-        box.getCenter(centre);
 
-        // Scale so dragon is ~2.8 units tall
         const targetH = 2.8;
         const sc = targetH / size.y;
         dragonModel.scale.setScalar(sc);
 
-        // Sit on floor (y=0)
-        dragonModel.position.set(
-          -centre.x * sc,
-          -box.min.y * sc,
-          -centre.z * sc
-        );
+        // Store for trait-driven rescaling
+        dragonModel.userData.baseScale  = sc;
+        dragonModel.userData.meshMinY   = box.min.y;   // local-space bottom (negative)
+        dragonModel.userData.meshCentreX = (box.min.x + box.max.x) / 2;
+        dragonModel.userData.meshCentreZ = (box.min.z + box.max.z) / 2;
 
-        // Face slightly toward camera
-        dragonModel.rotation.y = Math.PI * 0.1;
+        dragonModel.position.set(
+          -dragonModel.userData.meshCentreX * sc,
+          -dragonModel.userData.meshMinY    * sc,
+          -dragonModel.userData.meshCentreZ * sc
+        );
+        dragonModel.userData.baseRotY = Math.PI * 0.1;
+        dragonModel.rotation.y = dragonModel.userData.baseRotY;
 
         // Apply toon material to every mesh
         dragonMaterials = [];
         dragonModel.traverse((child) => {
           if (!child.isMesh) return;
-
-          const toonMat = new THREE.MeshToonMaterial({
+          child.material = new THREE.MeshToonMaterial({
             color: new THREE.Color(_pTint),
-            side: THREE.DoubleSide,  // fixes inverted-normal meshes from AI generators
+            side: THREE.DoubleSide,
           });
-          child.material = toonMat;
-          child.castShadow = true;
+          child.castShadow    = true;
           child.receiveShadow = true;
-          dragonMaterials.push(toonMat);
+          dragonMaterials.push(child.material);
         });
 
         scene.add(dragonModel);
-        dragonModel.userData.floorY = dragonModel.position.y;
         dragonLoaded = true;
 
-        dbg(`OK: dragon loaded\npos y=${dragonModel.position.y.toFixed(2)} sc=${dragonModel.scale.x.toFixed(2)}\nmeshes=${dragonMaterials.length}`);
+        // Apply current trait state immediately
+        if (_pTraits) applyTraits(_pTraits, _pTint);
 
-        // Hide 2D canvas — 3D model takes over
+        // Swap to 3D; hide canvas fallback
         if (overlay) overlay.style.display = 'none';
       },
       undefined,
-      (xhr) => {
-        if (xhr.total) dbg(`Loading: ${Math.round(xhr.loaded/xhr.total*100)}%`);
-      },
       (err) => {
-        dbg(`ERR loading GLB:\n${err.message || err}`);
-        // Fallback: keep showing 2D canvas dragon
+        console.warn('Dragon GLB load failed:', err);
         if (overlay) overlay.style.display = 'block';
       }
     );
   }
 
   // --------------------------------------------------------
-  // TINT COLOR
+  // APPLY TRAITS → 3D MODEL
   // --------------------------------------------------------
-  function applyToonColor(hex) {
-    if (!dragonLoaded) return;
-    const col = new THREE.Color(hex);
+  function applyTraits(traits, tintHex) {
+    if (!dragonLoaded || !dragonModel) return;
+
+    const n   = norm(traits);
+    const base = dragonModel.userData.baseScale;
+
+    // ---- SCALE ----
+    // bodyMass: overall size 0.75–1.25
+    // wingspan: widens the dragon (x) 0.80–1.40
+    // musclePower: deepens the body (z) 0.85–1.20
+    // boneDensity: adds height (y) 0.90–1.15
+    const scMass   = 0.75 + (n.bodyMass    || 0.5) * 0.50;
+    const scWing   = 0.80 + (n.wingspan    || 0.5) * 0.60;
+    const scMuscle = 0.85 + (n.musclePower || 0.5) * 0.35;
+    const scBone   = 0.90 + (n.boneDensity || 0.5) * 0.25;
+
+    const sx = base * scMass * scWing;
+    const sy = base * scMass * scBone;
+    const sz = base * scMass * scMuscle;
+    dragonModel.scale.set(sx, sy, sz);
+
+    // Recalculate floor Y so bottom always touches ground
+    dragonModel.position.y = -dragonModel.userData.meshMinY * sy;
+
+    // ---- COLOUR ----
+    const col = new THREE.Color(tintHex);
+
+    // scaleThickness: darken slightly (thicker = more saturated armour)
+    const darken = 1.0 - (n.scaleThickness || 0.4) * 0.18;
+    const finalCol = col.clone().multiplyScalar(darken);
+
+    // ---- FIRE GLOW emission ----
+    // Both fuelGlandSize AND ignitionEfficiency must be high for a real glow
+    const nFuel = n.fuelGlandSize  || 0;
+    const nIgn  = n.ignitionEfficiency || 0;
+    const glowAmt = nFuel * 0.5 + nFuel * nIgn * 0.5;          // 0–1
+    const fireCol = new THREE.Color(1.0, 0.3 + nIgn * 0.2, 0); // orange–yellow
+
     for (const mat of dragonMaterials) {
-      mat.color.set(col);
+      mat.color.copy(finalCol);
+      mat.emissive.copy(fireCol).multiplyScalar(glowAmt * 0.45);
       mat.needsUpdate = true;
     }
+
+    // ---- RIM LIGHT — tinted to dragon colour ----
+    if (rimLight) {
+      rimLight.color.copy(col);
+      rimLight.intensity = 0.28 + (n.scaleThickness || 0.4) * 0.18;
+    }
+
+    // ---- FIRE BELLY LIGHT ----
+    if (fireLight) {
+      fireLight.color.set(0xff5500);
+      fireLight.intensity = glowAmt * 1.2;
+      // Position under the dragon's belly
+      const bellyCentreY = dragonModel.position.y + sy * 0.35;
+      fireLight.position.set(
+        dragonModel.position.x,
+        bellyCentreY,
+        dragonModel.position.z + sz * 0.2
+      );
+    }
+
+    // ---- IDLE ANIM PARAMS (stored for animate loop) ----
+    dragonModel.userData.metabRate = 0.65 + (n.metabolism || 0.5) * 0.70;
+    dragonModel.userData.muscleAmp = 0.025 + (n.musclePower || 0.5) * 0.04;
   }
 
   // --------------------------------------------------------
-  // LIGHTING — tuned for toon material (fewer, harder lights)
+  // LIGHTING — tuned for toon cel shading
   // --------------------------------------------------------
   function setupLabLighting() {
     scene.children.filter(c => c.isLight).forEach(l => scene.remove(l));
 
-    // Ambient fill — subtle, keeps shadows from going pure black
-    scene.add(new THREE.HemisphereLight(0x334466, 0x112233, 0.6));
+    // Soft ambient — keeps shadow side from going pure black
+    scene.add(new THREE.HemisphereLight(0x334466, 0x112233, 0.55));
 
-    // Key light — main toon shadow split
-    const key = new THREE.DirectionalLight(0xddeeff, 1.6);
+    // Key light — main toon shadow split, slightly warm
+    const key = new THREE.DirectionalLight(0xeef4ff, 1.8);
     key.position.set(3, 8, 5);
     key.castShadow = true;
     key.shadow.mapSize.set(1024, 1024);
-    key.shadow.camera.near   = 0.5;
-    key.shadow.camera.far    = 24;
-    key.shadow.camera.left   = key.shadow.camera.bottom = -6;
-    key.shadow.camera.right  = key.shadow.camera.top   =  6;
+    key.shadow.camera.near  = 0.5;
+    key.shadow.camera.far   = 24;
+    key.shadow.camera.left  = key.shadow.camera.bottom = -6;
+    key.shadow.camera.right = key.shadow.camera.top   =  6;
     scene.add(key);
     labObjects.push(key);
 
-    // Rim light — teal, makes the silhouette pop
-    const rim = new THREE.DirectionalLight(0x00ffcc, 0.45);
-    rim.position.set(-5, 3, -4);
-    scene.add(rim);
-    labObjects.push(rim);
+    // Rim — colour updated dynamically from tint
+    rimLight = new THREE.DirectionalLight(0x44ffbb, 0.35);
+    rimLight.position.set(-5, 3, -4);
+    scene.add(rimLight);
+    labObjects.push(rimLight);
 
-    // Floor bounce
-    const bounce = new THREE.PointLight(0x1144aa, 0.4, 12);
+    // Floor bounce — cool blue
+    const bounce = new THREE.PointLight(0x1144aa, 0.4, 14);
     bounce.position.set(0, -0.2, 0);
     scene.add(bounce);
     labObjects.push(bounce);
+
+    // Fire belly light — intensity driven by fuelGlandSize
+    fireLight = new THREE.PointLight(0xff5500, 0, 5);
+    fireLight.position.set(0, 0.5, 0.3);
+    scene.add(fireLight);
+    labObjects.push(fireLight);
   }
 
   // --------------------------------------------------------
@@ -243,13 +298,13 @@ window.Scene = (function () {
   function buildPlayerDragon(traits, tintColor) {
     _pTraits = traits;
     _pTint   = tintColor || '#3a6e5a';
-    applyToonColor(_pTint);
+    applyTraits(_pTraits, _pTint);
   }
 
   function updateDragon(traits, tintColor) {
     _pTraits = traits;
     _pTint   = tintColor || _pTint;
-    applyToonColor(_pTint);
+    applyTraits(_pTraits, _pTint);
   }
 
   // --------------------------------------------------------
@@ -262,17 +317,17 @@ window.Scene = (function () {
 
     controls.update();
 
-    // Idle animation — gentle breathing bob + slow sway
+    // Idle animation
     if (dragonLoaded && dragonModel && currentMode === 'lab') {
-      dragonModel.position.y += (Math.sin(time * 0.9) * 0.035)
-        - (dragonModel.position.y - dragonModel.userData.floorY || 0) * 0;
-      // Recalculate absolute floor Y to avoid drift
-      dragonModel.position.y = (dragonModel.userData.floorY || 0)
-        + Math.sin(time * 0.9) * 0.04;
-      dragonModel.rotation.y = Math.PI * 0.1 + Math.sin(time * 0.18) * 0.18;
+      const rate = dragonModel.userData.metabRate || 0.9;
+      const amp  = dragonModel.userData.muscleAmp || 0.04;
+      const floorY = -dragonModel.userData.meshMinY * dragonModel.scale.y;
+      dragonModel.position.y  = floorY + Math.sin(time * rate) * amp;
+      dragonModel.rotation.y  = (dragonModel.userData.baseRotY || 0)
+                                + Math.sin(time * 0.18) * 0.18;
     }
 
-    // Canvas overlay: 2D dragon while loading, battle mode when fighting
+    // Canvas: draw 2D dragon while loading, or during battle
     if (overlay && overlay.style.display !== 'none' && _pTraits) {
       if (currentMode === 'battle' && _eTraits) {
         DragonCanvas.drawBattle(overlay, _pTraits, _pTint, _eTraits, _eTint, time);
@@ -286,20 +341,12 @@ window.Scene = (function () {
   }
 
   function updateParticles(delta) {
-    lungeAnims = lungeAnims.filter(la => {
-      la.phase += delta / la.duration;
-      return la.phase < 1;
-    });
+    lungeAnims = lungeAnims.filter(la => { la.phase += delta / la.duration; return la.phase < 1; });
 
     fireParticles = fireParticles.filter(fp => {
       fp.progress += delta * fp.speed;
       if (fp.progress < 0) return true;
-      if (fp.progress >= 1) {
-        scene.remove(fp.mesh);
-        fp.mesh.geometry.dispose();
-        fp.mesh.material.dispose();
-        return false;
-      }
+      if (fp.progress >= 1) { scene.remove(fp.mesh); fp.mesh.geometry.dispose(); fp.mesh.material.dispose(); return false; }
       fp.mesh.position.lerpVectors(fp.start, fp.end, fp.progress);
       fp.mesh.position.y += Math.sin(fp.progress * Math.PI) * 0.4;
       fp.mesh.material.opacity = 1 - fp.progress * 0.8;
@@ -309,12 +356,7 @@ window.Scene = (function () {
 
     impactFlashes = impactFlashes.filter(fl => {
       fl.life -= delta * 4;
-      if (fl.life <= 0) {
-        scene.remove(fl.mesh);
-        fl.mesh.geometry.dispose();
-        fl.mesh.material.dispose();
-        return false;
-      }
+      if (fl.life <= 0) { scene.remove(fl.mesh); fl.mesh.geometry.dispose(); fl.mesh.material.dispose(); return false; }
       fl.mesh.material.opacity = fl.life;
       fl.mesh.scale.setScalar(1 + (1 - fl.life) * 2);
       return true;
@@ -331,7 +373,6 @@ window.Scene = (function () {
     _eTraits = enemyTraits;
     _eTint   = enemyTint   || '#6e3a3a';
 
-    // Hide 3D model, show canvas overlay for battle
     if (dragonModel) dragonModel.visible = false;
     if (overlay) overlay.style.display = 'block';
 
@@ -348,11 +389,8 @@ window.Scene = (function () {
   function returnToLab() {
     currentMode = 'lab';
     _eTraits = null;
-
-    // Show 3D model, hide canvas overlay
     if (dragonModel) dragonModel.visible = true;
     if (overlay) overlay.style.display = 'none';
-
     camera.position.set(0, 2.2, 7.5);
     controls.target.set(0, 1.2, 0);
     scene.background = new THREE.Color(0x06060f);
