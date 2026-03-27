@@ -215,7 +215,8 @@
       nearMiss: false,
       nearMissText: '',
       percentileText: '',
-      energyGained: 0
+      energyGained: 0,
+      shareBtnRect: null
     };
 
     // If chaos micro-choice, trigger a random chaos immediately
@@ -951,11 +952,34 @@
       ctx.shadowBlur = 0;
     }
 
+    // Share button
+    var btnW = 148, btnH = 30;
+    var btnX = PW / 2 - btnW / 2;
+    var btnY = PH * 0.84;
+    g.shareBtnRect = { x: btnX, y: btnY, w: btnW, h: btnH };
+
+    ctx.save();
+    ctx.globalAlpha = 0.18;
+    ctx.fillStyle = '#ff6b9d';
+    ctx.beginPath();
+    ctx.roundRect(btnX, btnY, btnW, btnH, 15);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = 'rgba(255,107,157,0.7)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(btnX, btnY, btnW, btnH, 15);
+    ctx.stroke();
+    ctx.font = '600 13px Nunito, sans-serif';
+    ctx.fillStyle = '#ffb3d0';
+    ctx.fillText('\uD83D\uDCE4 Share Score', PW / 2, btnY + 20);
+    ctx.restore();
+
     // Tap to retry
     var blink = Math.sin(Date.now() * 0.005) * 0.3 + 0.7;
     ctx.font = '600 15px Nunito, sans-serif';
     ctx.fillStyle = 'rgba(255,255,255,' + blink + ')';
-    ctx.fillText('Tap to play again', PW / 2, PH * 0.90);
+    ctx.fillText('Tap to play again', PW / 2, PH * 0.95);
   }
 
   /* ── Micro-choice screen ── */
@@ -1085,6 +1109,25 @@
     }
 
     if (g.showingDeath && g.deathTimer <= 0) {
+      // Check share button first
+      if (g.shareBtnRect) {
+        var rect2 = canvas.getBoundingClientRect();
+        var scaleX2 = PW / rect2.width, scaleY2 = PH / rect2.height;
+        var clickX, clickY;
+        if (e.touches) {
+          clickX = (e.touches[0].clientX - rect2.left) * scaleX2;
+          clickY = (e.touches[0].clientY - rect2.top) * scaleY2;
+        } else if (e.clientX !== undefined) {
+          clickX = (e.clientX - rect2.left) * scaleX2;
+          clickY = (e.clientY - rect2.top) * scaleY2;
+        }
+        var sb = g.shareBtnRect;
+        if (clickX !== undefined && clickX >= sb.x && clickX <= sb.x + sb.w &&
+            clickY >= sb.y && clickY <= sb.y + sb.h) {
+          shareScore();
+          return;
+        }
+      }
       // Show micro-choice
       g.showingDeath = false;
       g.dead = false;
@@ -1103,6 +1146,174 @@
       mouseY = (e.touches[0].clientY - rect.top) * scaleY;
     } else {
       mouseY = (e.clientY - rect.top) * scaleY;
+    }
+  }
+
+  /* ════════════════════════════════════════════════════════════
+     SHARE CARD
+     ════════════════════════════════════════════════════════════ */
+  function generateShareCard() {
+    var W = 600, H = 340;
+    var sc = document.createElement('canvas');
+    sc.width = W; sc.height = H;
+    var c = sc.getContext('2d');
+
+    // Background gradient
+    var bg = c.createLinearGradient(0, 0, W, H);
+    bg.addColorStop(0, '#0d0515');
+    bg.addColorStop(0.6, '#1a0730');
+    bg.addColorStop(1, '#2a0d1a');
+    c.fillStyle = bg;
+    c.fillRect(0, 0, W, H);
+
+    // Subtle grid lines
+    c.strokeStyle = 'rgba(179,136,255,0.07)';
+    c.lineWidth = 1;
+    for (var xi = 0; xi < W; xi += 40) {
+      c.beginPath(); c.moveTo(xi, 0); c.lineTo(xi, H); c.stroke();
+    }
+    for (var yi = 0; yi < H; yi += 40) {
+      c.beginPath(); c.moveTo(0, yi); c.lineTo(W, yi); c.stroke();
+    }
+
+    // Pink top accent bar
+    var accentGrad = c.createLinearGradient(0, 0, W, 0);
+    accentGrad.addColorStop(0, 'rgba(255,107,157,0)');
+    accentGrad.addColorStop(0.3, 'rgba(255,107,157,0.9)');
+    accentGrad.addColorStop(0.7, 'rgba(179,136,255,0.9)');
+    accentGrad.addColorStop(1, 'rgba(179,136,255,0)');
+    c.fillStyle = accentGrad;
+    c.fillRect(0, 0, W, 3);
+
+    // Decorative hearts (background)
+    c.fillStyle = 'rgba(255,107,157,0.06)';
+    var heartPositions = [[60,60,40],[W-70,50,30],[W-50,H-60,35],[80,H-50,25],[W/2+150,H/2,20]];
+    heartPositions.forEach(function(hp) {
+      drawHeart(c, hp[0], hp[1] - hp[2]*0.4, hp[2]);
+    });
+
+    // LEFT: Combo block
+    var combo = g.maxCombo;
+    var comboLabel = combo === 1 ? 'combo' : 'combos';
+    c.textAlign = 'center';
+    c.font = '800 96px Nunito, sans-serif';
+    c.fillStyle = '#ff6b9d';
+    c.shadowColor = 'rgba(255,107,157,0.6)';
+    c.shadowBlur = 30;
+    c.fillText('x' + combo, W * 0.28, H * 0.52);
+    c.shadowBlur = 0;
+
+    c.font = '600 16px Nunito, sans-serif';
+    c.fillStyle = 'rgba(255,255,255,0.45)';
+    c.fillText(comboLabel + ' survived', W * 0.28, H * 0.63);
+
+    // Divider line
+    c.strokeStyle = 'rgba(255,107,157,0.25)';
+    c.lineWidth = 1;
+    c.beginPath();
+    c.moveTo(W * 0.5, H * 0.18);
+    c.lineTo(W * 0.5, H * 0.82);
+    c.stroke();
+
+    // RIGHT: Message + branding
+    c.textAlign = 'left';
+    var rx = W * 0.55;
+
+    // Game name
+    c.font = '800 13px Nunito, sans-serif';
+    c.fillStyle = '#b388ff';
+    c.fillText('HEARTSERVE ARCADE', rx, H * 0.28);
+
+    // Death message (personality)
+    var msg = g.deathMsg || 'Can you beat it?';
+    // Wrap long messages
+    c.font = '700 22px Nunito, sans-serif';
+    c.fillStyle = '#ffffff';
+    var maxW = W * 0.42;
+    var words = msg.split(' ');
+    var line = '';
+    var lineY = H * 0.42;
+    words.forEach(function(word) {
+      var test = line ? line + ' ' + word : word;
+      if (c.measureText(test).width > maxW && line) {
+        c.fillText(line, rx, lineY);
+        line = word;
+        lineY += 28;
+      } else { line = test; }
+    });
+    if (line) c.fillText(line, rx, lineY);
+
+    // Near miss / top 10 badge
+    if (g.nearMissText) {
+      c.font = '600 13px Nunito, sans-serif';
+      c.fillStyle = g.nearMiss ? '#00e676' : '#ffeb3b';
+      c.fillText(g.nearMissText, rx, H * 0.64);
+    }
+
+    // Energy
+    c.font = '600 13px Nunito, sans-serif';
+    c.fillStyle = '#b388ff';
+    c.fillText('+' + g.energyGained + ' \u2665 Energy', rx, H * 0.73);
+
+    // CTA bottom
+    c.textAlign = 'center';
+    c.font = '700 15px Nunito, sans-serif';
+    c.fillStyle = 'rgba(255,255,255,0.55)';
+    c.fillText('Can you beat it?', W * 0.73, H * 0.87);
+
+    // URL
+    c.font = '600 13px Nunito, sans-serif';
+    c.fillStyle = 'rgba(255,107,157,0.8)';
+    c.fillText('slayplay.com/heart-serve', W * 0.73, H * 0.94);
+
+    // SlayPlay logo mark (top-right)
+    c.textAlign = 'right';
+    c.font = '700 12px Nunito, sans-serif';
+    c.fillStyle = 'rgba(255,255,255,0.2)';
+    c.fillText('SlayPlay', W - 18, 22);
+
+    return sc;
+  }
+
+  function shareScore() {
+    var sc = generateShareCard();
+    var combo = g.maxCombo;
+    var shareText = 'I survived x' + combo + ' combos in HeartServe Arcade Mode \uD83D\uDC94 can you beat it?';
+    var shareUrl = 'https://slayplay.com/heart-serve/';
+
+    sc.toBlob(function(blob) {
+      if (!blob) { fallbackDownload(sc, shareText, shareUrl); return; }
+      var file = new File([blob], 'heartserve-x' + combo + '.png', { type: 'image/png' });
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({
+          title: 'HeartServe Arcade — x' + combo,
+          text: shareText,
+          url: shareUrl,
+          files: [file]
+        }).catch(function() {
+          // User cancelled or error — try URL-only share
+          if (navigator.share) {
+            navigator.share({ title: 'HeartServe Arcade', text: shareText, url: shareUrl }).catch(function() {});
+          }
+        });
+      } else if (navigator.share) {
+        navigator.share({ title: 'HeartServe Arcade', text: shareText, url: shareUrl }).catch(function() {});
+      } else {
+        fallbackDownload(sc, shareText, shareUrl);
+      }
+    }, 'image/png');
+  }
+
+  function fallbackDownload(sc, shareText, shareUrl) {
+    // Copy text to clipboard and download image
+    var dataUrl = sc.toDataURL('image/png');
+    var a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = 'heartserve-score.png';
+    a.click();
+    // Also try clipboard
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(shareText + ' ' + shareUrl).catch(function() {});
     }
   }
 
