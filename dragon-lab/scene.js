@@ -18,9 +18,11 @@ window.Scene = (function () {
   let _eTraits = null, _eTint = '#3a6e5a';
 
   // 3D dragon model
-  let dragonModel    = null;
+  let dragonModel     = null;
   let dragonMaterials = [];
-  let dragonLoaded   = false;
+  let dragonMeshes    = [];
+  let dragonLoaded    = false;
+  let _lastTint       = null;
 
   // Dynamic lights driven by traits
   let rimLight  = null;
@@ -132,18 +134,25 @@ window.Scene = (function () {
         dragonModel.userData.baseRotY = Math.PI * 0.1;
         dragonModel.rotation.y = dragonModel.userData.baseRotY;
 
-        // Apply toon material to every mesh
+        // Apply toon material + vertex colors to every mesh
         dragonMaterials = [];
+        dragonMeshes    = [];
         dragonModel.traverse((child) => {
           if (!child.isMesh) return;
+          // Pre-compute per-mesh local bbox for vertex colour mapping
+          child.geometry.computeBoundingBox();
+          child.userData.localBox = child.geometry.boundingBox.clone();
+
           child.material = new THREE.MeshToonMaterial({
-            color: new THREE.Color(_pTint),
+            vertexColors: true,
             side: THREE.DoubleSide,
           });
           child.castShadow    = true;
           child.receiveShadow = true;
           dragonMaterials.push(child.material);
+          dragonMeshes.push(child);
         });
+        paintVertexColors(_pTint);
 
         scene.add(dragonModel);
         dragonLoaded = true;
@@ -160,6 +169,67 @@ window.Scene = (function () {
         if (overlay) overlay.style.display = 'block';
       }
     );
+  }
+
+  // --------------------------------------------------------
+  // VERTEX COLOURS — paint body regions from tint
+  // belly lighter/cream, dorsal main tint, wings brighter
+  // --------------------------------------------------------
+  function paintVertexColors(tintHex) {
+    if (!dragonMeshes.length) return;
+    _lastTint = tintHex;
+
+    const tint = new THREE.Color(tintHex);
+
+    // Derive palette
+    const belly  = tint.clone().lerp(new THREE.Color(0.95, 0.88, 0.75), 0.50).multiplyScalar(1.12);
+    const dorsal = tint.clone().multiplyScalar(0.82);
+    const wing   = tint.clone().lerp(new THREE.Color(1, 1, 1), 0.30).multiplyScalar(1.08);
+    const leg    = tint.clone().multiplyScalar(0.72);
+
+    dragonMeshes.forEach((child) => {
+      const geo = child.geometry;
+      const pos = geo.attributes.position;
+      const lb  = child.userData.localBox;
+      const cnt = pos.count;
+
+      const spanY  = lb.max.y - lb.min.y || 1;
+      const spanX  = lb.max.x - lb.min.x || 1;
+      const centX  = (lb.min.x + lb.max.x) / 2;
+      const halfX  = spanX / 2;
+
+      const buf = new Float32Array(cnt * 3);
+
+      for (let i = 0; i < cnt; i++) {
+        const lx = pos.getX(i);
+        const ly = pos.getY(i);
+
+        // ty: 0 = very bottom (belly), 1 = very top (dorsal)
+        const ty = (ly - lb.min.y) / spanY;
+        // tx: 0 = body centre, 1 = wing tip
+        const tx = Math.abs(lx - centX) / halfX;
+
+        // belly ↔ dorsal blend by height
+        const c = new THREE.Color().lerpColors(belly, dorsal, Math.pow(ty, 0.7));
+
+        // wings blend in at outer extremes
+        if (tx > 0.60) {
+          c.lerp(wing, Math.pow((tx - 0.60) / 0.40, 1.2) * 0.75);
+        }
+
+        // lower legs — slightly darker
+        if (ty < 0.22 && tx < 0.55) {
+          c.lerp(leg, (0.22 - ty) / 0.22 * 0.5);
+        }
+
+        buf[i * 3]     = c.r;
+        buf[i * 3 + 1] = c.g;
+        buf[i * 3 + 2] = c.b;
+      }
+
+      geo.setAttribute('color', new THREE.BufferAttribute(buf, 3));
+      geo.attributes.color.needsUpdate = true;
+    });
   }
 
   // --------------------------------------------------------
@@ -189,29 +259,23 @@ window.Scene = (function () {
     // Recalculate floor Y so bottom always touches ground
     dragonModel.position.y = -dragonModel.userData.meshMinY * sy;
 
-    // ---- COLOUR ----
-    const col = new THREE.Color(tintHex);
-
-    // scaleThickness: darken slightly (thicker = more saturated armour)
-    const darken = 1.0 - (n.scaleThickness || 0.4) * 0.18;
-    const finalCol = col.clone().multiplyScalar(darken);
+    // ---- VERTEX COLOURS — repaint only when tint changes ----
+    if (tintHex !== _lastTint) paintVertexColors(tintHex);
 
     // ---- FIRE GLOW emission ----
-    // Both fuelGlandSize AND ignitionEfficiency must be high for a real glow
-    const nFuel = n.fuelGlandSize  || 0;
-    const nIgn  = n.ignitionEfficiency || 0;
-    const glowAmt = nFuel * 0.5 + nFuel * nIgn * 0.5;          // 0–1
-    const fireCol = new THREE.Color(1.0, 0.3 + nIgn * 0.2, 0); // orange–yellow
+    const nFuel   = n.fuelGlandSize       || 0;
+    const nIgn    = n.ignitionEfficiency  || 0;
+    const glowAmt = nFuel * 0.5 + nFuel * nIgn * 0.5;
+    const fireCol = new THREE.Color(1.0, 0.3 + nIgn * 0.2, 0);
 
     for (const mat of dragonMaterials) {
-      mat.color.copy(finalCol);
       mat.emissive.copy(fireCol).multiplyScalar(glowAmt * 0.45);
       mat.needsUpdate = true;
     }
 
     // ---- RIM LIGHT — tinted to dragon colour ----
     if (rimLight) {
-      rimLight.color.copy(col);
+      rimLight.color.set(tintHex);
       rimLight.intensity = 0.28 + (n.scaleThickness || 0.4) * 0.18;
     }
 
