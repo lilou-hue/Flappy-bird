@@ -2779,6 +2779,33 @@
         let t = 0;
         let ballX = W/2, ballY = H/2, bvx = 1.8, bvy = 1.2;
 
+        function drawChibi(cx, cy, skin, hair, eye, s) {
+          const bob = Math.sin(t*2)*3; cy += bob;
+          const bGrad = x.createRadialGradient(cx,cy+8,2,cx,cy+8,18*s);
+          bGrad.addColorStop(0,'#fce4ec'); bGrad.addColorStop(1,'#f8bbd0');
+          x.fillStyle = bGrad; x.beginPath(); x.ellipse(cx,cy+25*s,12*s,22*s,0,0,Math.PI*2); x.fill();
+          const dGrad = x.createLinearGradient(cx,cy+10*s,cx,cy+45*s);
+          dGrad.addColorStop(0,'#e84393'); dGrad.addColorStop(1,'#a855f7');
+          x.fillStyle = dGrad; x.beginPath(); x.ellipse(cx,cy+30*s,14*s,18*s,0,0,Math.PI*2); x.fill();
+          const hGrad = x.createRadialGradient(cx-2*s,cy-8*s,2,cx,cy-4*s,18*s);
+          hGrad.addColorStop(0,'#fff5f7'); hGrad.addColorStop(0.5,skin); hGrad.addColorStop(1,'#f0b0c8');
+          x.fillStyle = hGrad; x.beginPath(); x.arc(cx,cy-6*s,16*s,0,Math.PI*2); x.fill();
+          x.fillStyle = hair;
+          x.beginPath(); x.arc(cx,cy-12*s,14*s,Math.PI+0.3,Math.PI*2-0.3); x.fill();
+          x.beginPath(); x.ellipse(cx-8*s,cy-8*s,5*s,12*s,-0.2,0,Math.PI*2); x.fill();
+          x.beginPath(); x.ellipse(cx+8*s,cy-8*s,5*s,12*s,0.2,0,Math.PI*2); x.fill();
+          for(let side=-1;side<=1;side+=2){
+            const ex=cx+5*s*side, ey=cy-6*s;
+            x.fillStyle='#fff'; x.beginPath(); x.ellipse(ex,ey,4.5*s,5.5*s,0,0,Math.PI*2); x.fill();
+            x.fillStyle=eye; x.beginPath(); x.arc(ex,ey+0.5*s,3*s,0,Math.PI*2); x.fill();
+            x.fillStyle='#111'; x.beginPath(); x.arc(ex,ey+1*s,1.8*s,0,Math.PI*2); x.fill();
+            x.fillStyle='#fff'; x.beginPath(); x.arc(ex+1.2*s*side,ey-1.5*s,1.2*s,0,Math.PI*2); x.fill();
+          }
+          x.strokeStyle='#c06080'; x.lineWidth=1.2; x.lineCap='round';
+          x.beginPath(); x.moveTo(cx-2*s,cy+3*s); x.quadraticCurveTo(cx,cy+5*s,cx+2*s,cy+3*s); x.stroke();
+          x.lineCap='butt';
+        }
+
         function draw() {
           if (c._rafPaused) { c._rafRestart = draw; return; }
           t += 0.016;
@@ -2888,6 +2915,33 @@
         const notes = [];
         for (let i = 0; i < 8; i++) {
           notes.push({ lane: Math.floor(Math.random()*4), y: -i*35 - Math.random()*20 });
+        }
+
+        function drawChibi(cx, cy, skin, hair, eye, s) {
+          const bob = Math.sin(t*2)*3; cy += bob;
+          const bGrad = x.createRadialGradient(cx,cy+8,2,cx,cy+8,18*s);
+          bGrad.addColorStop(0,'#fce4ec'); bGrad.addColorStop(1,'#f8bbd0');
+          x.fillStyle = bGrad; x.beginPath(); x.ellipse(cx,cy+25*s,12*s,22*s,0,0,Math.PI*2); x.fill();
+          const dGrad = x.createLinearGradient(cx,cy+10*s,cx,cy+45*s);
+          dGrad.addColorStop(0,'#e84393'); dGrad.addColorStop(1,'#a855f7');
+          x.fillStyle = dGrad; x.beginPath(); x.ellipse(cx,cy+30*s,14*s,18*s,0,0,Math.PI*2); x.fill();
+          const hGrad = x.createRadialGradient(cx-2*s,cy-8*s,2,cx,cy-4*s,18*s);
+          hGrad.addColorStop(0,'#fff5f7'); hGrad.addColorStop(0.5,skin); hGrad.addColorStop(1,'#f0b0c8');
+          x.fillStyle = hGrad; x.beginPath(); x.arc(cx,cy-6*s,16*s,0,Math.PI*2); x.fill();
+          x.fillStyle = hair;
+          x.beginPath(); x.arc(cx,cy-12*s,14*s,Math.PI+0.3,Math.PI*2-0.3); x.fill();
+          x.beginPath(); x.ellipse(cx-8*s,cy-8*s,5*s,12*s,-0.2,0,Math.PI*2); x.fill();
+          x.beginPath(); x.ellipse(cx+8*s,cy-8*s,5*s,12*s,0.2,0,Math.PI*2); x.fill();
+          for(let side=-1;side<=1;side+=2){
+            const ex=cx+5*s*side, ey=cy-6*s;
+            x.fillStyle='#fff'; x.beginPath(); x.ellipse(ex,ey,4.5*s,5.5*s,0,0,Math.PI*2); x.fill();
+            x.fillStyle=eye; x.beginPath(); x.arc(ex,ey+0.5*s,3*s,0,Math.PI*2); x.fill();
+            x.fillStyle='#111'; x.beginPath(); x.arc(ex,ey+1*s,1.8*s,0,Math.PI*2); x.fill();
+            x.fillStyle='#fff'; x.beginPath(); x.arc(ex+1.2*s*side,ey-1.5*s,1.2*s,0,Math.PI*2); x.fill();
+          }
+          x.strokeStyle='#c06080'; x.lineWidth=1.2; x.lineCap='round';
+          x.beginPath(); x.moveTo(cx-2*s,cy+3*s); x.quadraticCurveTo(cx,cy+5*s,cx+2*s,cy+3*s); x.stroke();
+          x.lineCap='butt';
         }
 
         function draw() {
