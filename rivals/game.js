@@ -441,6 +441,7 @@ function endMatch() {
   }
   achStats.matchesPlayed++;
   if (winner === 1) achStats.matchesWon++;
+  const prevBest = bestKills;
   if (matchKills > bestKills) {
     bestKills = matchKills;
     localStorage.setItem('rivalsBest', bestKills);
@@ -450,7 +451,7 @@ function endMatch() {
   if (typeof Leaderboard !== 'undefined') Leaderboard.submitScore('rivals', matchKills);
   if (typeof Arcade !== 'undefined') {
     Arcade.onGameOver('rivals', matchKills);
-    document.body.appendChild(Arcade.createScoreCard('rivals', matchKills, bestKills));
+    document.body.appendChild(Arcade.createScoreCard('rivals', matchKills, prevBest));
   }
   // Check comeback: p1 won match while p2 had 4 rounds
   if (p1Score >= ROUNDS_TO_WIN && p2Score === 4) achStats.comebacks++;

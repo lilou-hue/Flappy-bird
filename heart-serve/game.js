@@ -1921,6 +1921,7 @@
     }
   }
   var _particleInterval = setInterval(updateParticles, 1000 / 30);
+  var _advanceDayTimer = null;
 
   /* ════════════════════════════════════════════════════════════
      AFFECTION SYSTEM
@@ -3316,7 +3317,7 @@
         reactionEl.style.display = '';
         btnContainer.innerHTML = '';
         // Auto-advance after showing reaction (no extra button needed)
-        setTimeout(function() { advanceDay(); }, 2000);
+        _advanceDayTimer = setTimeout(function() { _advanceDayTimer = null; advanceDay(); }, 2000);
       });
       choiceBtn.setAttribute('role', 'button');
       btnContainer.appendChild(choiceBtn);
@@ -3506,6 +3507,9 @@
 
   // Arcade restart support
   document.addEventListener('arcade-restart', function() {
+    if (pongRAF) { cancelAnimationFrame(pongRAF); pongRAF = null; }
+    pong = null;
+    if (_advanceDayTimer) { clearTimeout(_advanceDayTimer); _advanceDayTimer = null; }
     clearInterval(_particleInterval);
     _particleInterval = setInterval(updateParticles, 1000 / 30);
     localStorage.removeItem(getSaveKey());

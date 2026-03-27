@@ -1140,6 +1140,7 @@ function finishCrash() {
   world.timeScale = 1;
   world.timeScaleTarget = 1;
   restartBtn.hidden = false;
+  const prevBest = world.best;
   const isNew = saveBestScore();
 
   if (typeof Leaderboard !== 'undefined' && world.score > 0) {
@@ -1147,7 +1148,7 @@ function finishCrash() {
   }
   if (typeof Arcade !== 'undefined') {
     Arcade.onGameOver('methane-drift', world.score);
-    document.body.appendChild(Arcade.createScoreCard('methane-drift', world.score, world.best));
+    document.body.appendChild(Arcade.createScoreCard('methane-drift', world.score, prevBest));
   }
 
   /* Stop music */

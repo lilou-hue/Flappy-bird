@@ -405,6 +405,7 @@ function endGame() {
   if (hadComeback) achData.stats.comeback = true;
   checkAch();
 
+  const prevBest = bestScore;
   if (score > bestScore) {
     bestScore = score;
     localStorage.setItem('stackTowerBest', bestScore);
@@ -415,7 +416,7 @@ function endGame() {
   try { initLB(); Leaderboard.submitScore('stack-tower', score); } catch (e) {}
   if (typeof Arcade !== 'undefined') {
     Arcade.onGameOver('stack-tower', score);
-    document.body.appendChild(Arcade.createScoreCard('stack-tower', score, bestScore));
+    document.body.appendChild(Arcade.createScoreCard('stack-tower', score, prevBest));
   }
 }
 

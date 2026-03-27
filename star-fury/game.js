@@ -1685,6 +1685,7 @@ function updateWaveSystem(dt) {
 function gameOver() {
   game.state = 'gameover';
   const isNewBest = game.score > game.best;
+  const prevBest = game.best;
   saveBestScore();
   achStats.gamesPlayed++;
   if (game.score > achStats.bestScore) achStats.bestScore = game.score;
@@ -1698,7 +1699,7 @@ function gameOver() {
   if (typeof Leaderboard !== 'undefined') Leaderboard.submitScore('star-fury', game.score);
   if (typeof Arcade !== 'undefined') {
     Arcade.onGameOver('star-fury', game.score);
-    document.body.appendChild(Arcade.createScoreCard('star-fury', game.score, game.best));
+    document.body.appendChild(Arcade.createScoreCard('star-fury', game.score, prevBest));
   }
 }
 

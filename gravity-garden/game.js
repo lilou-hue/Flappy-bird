@@ -521,6 +521,7 @@ function endGame() {
   if (sessionLongestLife > achData.stats.longestPlanetLife) achData.stats.longestPlanetLife = sessionLongestLife;
   checkAch();
 
+  const prevBest = bestScore;
   if (finalScore > bestScore) {
     bestScore = finalScore;
     localStorage.setItem('gravityGardenBest', bestScore);
@@ -531,7 +532,7 @@ function endGame() {
   try { initLB(); Leaderboard.submitScore('gravity-garden', finalScore); } catch (e) {}
   if (typeof Arcade !== 'undefined') {
     Arcade.onGameOver('gravity-garden', finalScore);
-    document.body.appendChild(Arcade.createScoreCard('gravity-garden', finalScore, bestScore));
+    document.body.appendChild(Arcade.createScoreCard('gravity-garden', finalScore, prevBest));
   }
 }
 

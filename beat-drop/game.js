@@ -506,6 +506,7 @@ function endGame() {
     checkAch();
   }
 
+  const prevBest = bestScore;
   if (score > bestScore) {
     bestScore = score;
     localStorage.setItem('beatDropBest', bestScore);
@@ -516,7 +517,7 @@ function endGame() {
     try { initLB(); Leaderboard.submitScore('beat-drop', score); } catch (e) {}
     if (typeof Arcade !== 'undefined') {
       Arcade.onGameOver('beat-drop', score);
-      document.body.appendChild(Arcade.createScoreCard('beat-drop', score, bestScore));
+      document.body.appendChild(Arcade.createScoreCard('beat-drop', score, prevBest));
     }
   }
 }
