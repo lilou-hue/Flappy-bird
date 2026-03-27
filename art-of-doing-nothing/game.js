@@ -1148,6 +1148,7 @@
     // Completionist check (13 total endings: 3+4+5+4+3)
     if (window._.endingsDiscovered.length >= 13) GameState.unlockAchievement('completionist');
 
+    var prevBest = GameState.getBest();
     var score = GameState.completeChapter(ch);
     updateScoreDisplay();
 
@@ -1202,7 +1203,7 @@
     if (ch === 5) {
       if (typeof Arcade !== 'undefined') {
         Arcade.onGameOver('art-of-doing-nothing', score);
-        document.body.appendChild(Arcade.createScoreCard('art-of-doing-nothing', score, GameState.getBest()));
+        document.body.appendChild(Arcade.createScoreCard('art-of-doing-nothing', score, prevBest));
       }
       if (typeof Leaderboard !== 'undefined' && score > 0) {
         Leaderboard.submitScore('art-of-doing-nothing', score).then(function () {
