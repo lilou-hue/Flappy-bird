@@ -228,15 +228,43 @@ window.Scene = (function () {
   // MeshToonMaterial with emissive glow.  Body triangles stay at
   // materialIndex = 0 and continue to use vertex colours.
   // ============================================================
-  function separateEyeGroups(geo, origPos, n) {
+  function separateEyeGroups(geo, origPos, n, localBox) {
     if (!geo.index) return 0;
 
+    // Compute geometry bounds from origPos if localBox not supplied
+    let bMin, bMax;
+    if (localBox) {
+      bMin = localBox.min;
+      bMax = localBox.max;
+    } else {
+      bMin = { x: Infinity, y: Infinity, z: Infinity };
+      bMax = { x: -Infinity, y: -Infinity, z: -Infinity };
+      for (let i = 0; i < n; i++) {
+        const x = origPos[i*3], y = origPos[i*3+1], z = origPos[i*3+2];
+        if (x < bMin.x) bMin.x = x; if (x > bMax.x) bMax.x = x;
+        if (y < bMin.y) bMin.y = y; if (y > bMax.y) bMax.y = y;
+        if (z < bMin.z) bMin.z = z; if (z > bMax.z) bMax.z = z;
+      }
+    }
+    const szX = bMax.x - bMin.x || 1;
+    const szY = bMax.y - bMin.y || 1;
+    const szZ = bMax.z - bMin.z || 1;
+    // Centre-X offset so |nx| is measured from the model's centre
+    const midX = (bMin.x + bMax.x) / 2;
+
     // 1. Tag each vertex: 1 = eye, 0 = body
+    // Eye zone in normalized [0,1] space (confirmed by GLB binary inspection):
+    //   |normalised x from centre| ∈ [0.08, 0.22]
+    //   normalised y              ∈ [0.42, 0.58]
+    //   normalised z              ∈ [0.70, 0.90]
     const eyeTag = new Uint8Array(n);
     for (let i = 0; i < n; i++) {
       const x = origPos[i*3], y = origPos[i*3+1], z = origPos[i*3+2];
-      const ax = Math.abs(x);
-      if (y >= 0.42 && y <= 0.58 && z >= 0.70 && z <= 0.90 && ax >= 0.08 && ax <= 0.22) {
+      const nx = (x - midX) / szX;   // signed, centred
+      const ny = (y - bMin.y) / szY; // 0 = bottom, 1 = top
+      const nz = (z - bMin.z) / szZ; // 0 = back,   1 = front
+      const ax = Math.abs(nx);
+      if (ny >= 0.42 && ny <= 0.62 && nz >= 0.68 && nz <= 0.92 && ax >= 0.06 && ax <= 0.24) {
         eyeTag[i] = 1;
       }
     }
@@ -324,7 +352,7 @@ window.Scene = (function () {
       });
 
       // Partition triangles into body / eye groups
-      const eyeTriCount = separateEyeGroups(geo, src.origPos, posAttr.count);
+      const eyeTriCount = separateEyeGroups(geo, src.origPos, posAttr.count, src.localBox);
 
       let mesh;
       if (eyeTriCount > 0) {
