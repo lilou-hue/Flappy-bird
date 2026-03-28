@@ -743,7 +743,7 @@ window.Scene = (function () {
       );
     }
 
-    inst.model.userData.metabRate = 0.65 + (n.metabolism   || 0.5) * 0.70;
+    inst.model.userData.metabRate = 0.65 + (n.metabolism   ?? 0.5) * 0.70;
     inst.model.userData.muscleAmp = 0.025 + (n.musclePower ?? 0.5) * 0.04;
   }
 
