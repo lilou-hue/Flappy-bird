@@ -27,6 +27,9 @@ window.Scene = (function () {
   let ePos = new THREE.Vector3( 2.5, 1.5, 0);
   let lungeAnims = [], fireParticles = [], impactFlashes = [];
 
+  let _glowRing   = null;
+  let _emberTimer = 0;
+
   // ── raw source data kept for cloning ─────────────────────
   let _srcDragonRoot = null; // original gltf.scene (untouched, used for cloning)
   let _srcMeshData   = [];   // [{origPos, weights, localBox}] — one per mesh in traversal order
@@ -515,6 +518,7 @@ window.Scene = (function () {
     });
 
     updateEyeColor(inst.model, tintHex);
+    if (_glowRing) _glowRing.material.color.set(tintHex);
   }
 
   // --------------------------------------------------------
@@ -528,7 +532,9 @@ window.Scene = (function () {
 
     // Overall scale from bodyMass
     const scMass = 0.78 + (n.bodyMass || 0.5) * 0.44;
-    inst.model.scale.setScalar(sc * scMass);
+    const scFinal = sc * scMass;
+    inst.model.scale.setScalar(scFinal);
+    inst.model.userData._baseSc = scFinal; // used by breathing animation
 
     // Recalculate floor Y
     const offX = inst.model.userData.worldOffsetX || 0;
@@ -630,6 +636,17 @@ window.Scene = (function () {
     ground.position.y = -0.01;
     ground.receiveShadow = true;
     scene.add(ground);
+
+    // Tinted glow pool under the dragon — colour follows the dragon's tint
+    const ringGeo = new THREE.CircleGeometry(1.2, 48);
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: 0x3a6e5a, transparent: true, opacity: 0.10,
+      side: THREE.DoubleSide, depthWrite: false
+    });
+    _glowRing = new THREE.Mesh(ringGeo, ringMat);
+    _glowRing.rotation.x = -Math.PI / 2;
+    _glowRing.position.y = 0.003;
+    scene.add(_glowRing);
   }
 
   // --------------------------------------------------------
@@ -656,22 +673,76 @@ window.Scene = (function () {
     const time  = clock.getElapsedTime();
     controls.update();
 
-    // Idle bob for visible instances
+    // Idle animation for visible instances
     [playerInst, enemyInst].forEach((inst) => {
       if (!inst || !inst.model.visible) return;
-      const rate   = inst.model.userData.metabRate || 0.9;
-      const amp    = inst.model.userData.muscleAmp || 0.04;
-      const scY    = inst.model.scale.y;
-      const floorY = -_srcModelMeta.meshMinY * scY;
-      const offZ   = inst.model.userData.worldOffsetZ || 0;
+      const rate     = inst.model.userData.metabRate || 0.9;
+      const amp      = inst.model.userData.muscleAmp || 0.04;
+      const baseSc   = inst.model.userData._baseSc;
       const baseRotY = inst.model.userData.baseRotY || 0;
 
+      // Breathing: chest expands at ~half metabolic rate
+      if (baseSc) {
+        const breath = 1 + Math.sin(time * rate * 0.52) * 0.013;
+        inst.model.scale.set(baseSc, baseSc * breath, baseSc);
+      }
+
+      const scY    = inst.model.scale.y;
+      const floorY = -_srcModelMeta.meshMinY * scY;
+
+      // Vertical bob
       inst.model.position.y = floorY + Math.sin(time * rate) * amp;
+      // Slow Y look-around
       inst.model.rotation.y = baseRotY + Math.sin(time * 0.18) * (currentMode === 'lab' ? 0.18 : 0.04);
+      // Weight-shift lean — subtle Z tilt so the dragon feels alive
+      if (currentMode === 'lab') {
+        inst.model.rotation.z = Math.sin(time * 0.27) * 0.016;
+      }
     });
+
+    // Glow ring: pulse opacity and follow player
+    if (_glowRing && playerInst) {
+      _glowRing.material.opacity = 0.07 + Math.sin(time * 0.65) * 0.035;
+      _glowRing.position.x = playerInst.model.position.x;
+      _glowRing.position.z = playerInst.model.position.z;
+    }
+
+    // Ambient embers from snout when fire traits are high
+    if (currentMode === 'lab' && playerInst && _pTraits) {
+      const pn = normTraits(_pTraits);
+      const fireStr = (pn.fuelGlandSize || 0) * 0.6 + (pn.ignitionEfficiency || 0) * 0.4;
+      _emberTimer -= delta;
+      if (fireStr > 0.25 && _emberTimer <= 0) {
+        _emberTimer = 0.18 / fireStr;
+        spawnAmberEmber();
+      }
+    }
 
     updateParticles(delta);
     renderer.render(scene, camera);
+  }
+
+  function spawnAmberEmber() {
+    if (!playerInst || !_srcModelMeta.meshMinY) return;
+    const sc = playerInst.model.scale.y;
+    const px = playerInst.model.position.x + (Math.random() - 0.5) * 0.18;
+    const py = playerInst.model.position.y + sc * 0.55 + (Math.random() - 0.5) * 0.15;
+    const pz = playerInst.model.position.z + sc * 0.30;
+    const start = new THREE.Vector3(px, py, pz);
+    const end   = start.clone().add(new THREE.Vector3(
+      (Math.random() - 0.5) * 0.55,
+      0.55 + Math.random() * 0.65,
+      (Math.random() - 0.5) * 0.18
+    ));
+    const geo = new THREE.SphereGeometry(0.012 + Math.random() * 0.014, 4, 3);
+    const mat = new THREE.MeshBasicMaterial({
+      color: new THREE.Color().setHSL(0.04 + Math.random() * 0.06, 1.0, 0.55 + Math.random() * 0.28),
+      transparent: true, opacity: 0.9
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.copy(start);
+    scene.add(mesh);
+    fireParticles.push({ mesh, start, end, progress: 0, speed: 0.22 + Math.random() * 0.18 });
   }
 
   function updateParticles(delta) {

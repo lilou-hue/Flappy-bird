@@ -815,6 +815,14 @@ window.DragonData = {
       waitFor: null
     },
     {
+      id: 'modes',
+      title: 'Basic vs Advanced Mode',
+      text: 'The Basic | Advanced toggle controls how much detail you see. Basic groups all traits into 6 broad categories — perfect for getting started. Advanced unlocks every individual trait for precise control. You can switch anytime.',
+      target: '.mode-toggle-group',
+      tab: 'build',
+      waitFor: null
+    },
+    {
       id: 'try_slider',
       title: 'Try It — Move a Slider',
       text: 'Drag any slider and watch the dragon change in real time. Each trait affects multiple systems — heavier body improves durability but makes flight harder.',

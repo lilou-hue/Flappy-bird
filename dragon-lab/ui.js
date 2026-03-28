@@ -174,7 +174,8 @@ window.UI = (function() {
       div.querySelector('input[type="range"]').value = val;
       div.querySelector('.trait-value').textContent = val;
       div.querySelector('.trait-descriptor').textContent = window.Dragon.getDescriptor(tc.id, val);
-      div.querySelector('.trait-impact').textContent = window.Explanations.traitImpact(tc.id, val);
+      const impactEl = div.querySelector('.trait-impact');
+      if (impactEl) impactEl.textContent = window.Explanations.traitImpact(tc.id, val);
     });
   }
 
