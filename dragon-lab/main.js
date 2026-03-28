@@ -44,6 +44,11 @@ window.App = (function() {
     // Init UI tabs
     window.UI.initTabs();
 
+    // Restore saved mode before rendering sliders
+    if (window.UI.loadSavedMode()) {
+      window.UI.setAdvancedMode(true);
+    }
+
     // Render sliders
     window.UI.renderSliders(
       currentDragon.traits,

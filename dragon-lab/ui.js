@@ -798,8 +798,11 @@ window.UI = (function() {
     }
   }
 
+  const MODE_KEY = 'dragonlab_advanced_mode';
+
   function setAdvancedMode(val) {
     advancedMode = val;
+    try { localStorage.setItem(MODE_KEY, val ? '1' : '0'); } catch(e) {}
     document.body.classList.toggle('advanced-mode', advancedMode);
     const basicBtn = document.getElementById('btn-mode-basic');
     const advBtn   = document.getElementById('btn-mode-advanced');
@@ -809,12 +812,16 @@ window.UI = (function() {
 
   function isAdvancedMode() { return advancedMode; }
 
+  function loadSavedMode() {
+    try { return localStorage.getItem(MODE_KEY) === '1'; } catch(e) { return false; }
+  }
+
   return {
     initTabs, switchTab, renderSliders, updateSliders, updateFireCompat,
     renderResults, renderHabitatSelector, renderHabitatResults,
     renderBattleSetup, renderBattleInProgress, renderBattleSummary,
     renderScienceNotes, renderPresets, showNotification, highlightElement,
-    setAdvancedMode, isAdvancedMode,
+    setAdvancedMode, isAdvancedMode, loadSavedMode,
     renderChallenges, renderBattleRecord, renderSkipButton, checkPersonalBests
   };
 })();

@@ -833,16 +833,16 @@ window.Scene = (function () {
       const baseRotY = inst.model.userData.baseRotY || 0;
 
       // ── Organic breathing (multi-harmonic irregular rhythm) ──
+      // X/Z scale only so Y (height) stays constant and floorY doesn't shift
       if (baseSc) {
         const t1 = Math.sin(time * rate * 0.52);
         const t2 = Math.sin(time * rate * 1.35) * 0.28;   // secondary harmonic
         const t3 = Math.sin(time * rate * 0.19) * 0.15;   // slow deep breath
-        const breath = 1 + (t1 + t2 + t3) * 0.011;
-        inst.model.scale.set(baseSc, baseSc * breath, baseSc);
+        const breathXZ = 1 + (t1 + t2 + t3) * 0.018;
+        inst.model.scale.set(baseSc * breathXZ, baseSc, baseSc * breathXZ);
       }
 
-      const scY    = inst.model.scale.y;
-      const floorY = -_srcModelMeta.meshMinY * scY;
+      const floorY = -_srcModelMeta.meshMinY * (baseSc || inst.model.scale.y);
 
       // Vertical bob
       inst.model.position.y = floorY + Math.sin(time * rate) * amp;
