@@ -48,18 +48,38 @@
       <!-- Dragon name -->
       <div class="dragon-name-wrap">
         <input type="text" id="dragon-name-input" class="dragon-name-input" placeholder="Name your dragon..." maxlength="32" autocomplete="off">
-        <div class="color-row" id="color-row">
-          <div class="color-swatch active" data-color="#3a6e5a" style="background:#3a6e5a" title="Forest"></div>
-          <div class="color-swatch" data-color="#7a2828" style="background:#7a2828" title="Crimson"></div>
-          <div class="color-swatch" data-color="#1a3a8e" style="background:#1a3a8e" title="Sapphire"></div>
-          <div class="color-swatch" data-color="#6a1a8e" style="background:#6a1a8e" title="Amethyst"></div>
-          <div class="color-swatch" data-color="#8e6a1a" style="background:#8e6a1a" title="Gold"></div>
-          <div class="color-swatch" data-color="#1a6e8e" style="background:#1a6e8e" title="Ocean"></div>
-          <div class="color-swatch" data-color="#1e1e2e" style="background:#1e1e2e" title="Obsidian"></div>
-          <label class="color-custom-label" title="Custom colour">
-            <input type="color" id="dragon-color-input" value="#3a6e5a">
-            <span>+</span>
-          </label>
+        <!-- Multi-zone colour system -->
+        <div class="color-zones-wrap">
+          <div class="color-zone-row">
+            <label class="color-zone" title="Body colour">
+              <span class="color-zone-lbl">Body</span>
+              <span class="color-zone-dot" id="preview-body" style="background:#3a6e5a"></span>
+              <input type="color" id="color-body" value="#3a6e5a">
+            </label>
+            <label class="color-zone" title="Wing membrane colour">
+              <span class="color-zone-lbl">Wings</span>
+              <span class="color-zone-dot" id="preview-wings" style="background:#b05010"></span>
+              <input type="color" id="color-wings" value="#b05010">
+            </label>
+            <label class="color-zone" title="Eye colour (glowing)">
+              <span class="color-zone-lbl">Eye</span>
+              <span class="color-zone-dot" id="preview-eye" style="background:#44ff88"></span>
+              <input type="color" id="color-eye" value="#44ff88">
+            </label>
+            <label class="color-zone" title="Accent / dorsal spikes">
+              <span class="color-zone-lbl">Accent</span>
+              <span class="color-zone-dot" id="preview-accent" style="background:#1a1a2a"></span>
+              <input type="color" id="color-accent" value="#1a1a2a">
+            </label>
+          </div>
+          <!-- Theme presets -->
+          <div class="theme-row" id="theme-row">
+            <button class="theme-btn active" data-theme="forest"  style="background:linear-gradient(135deg,#3a6e5a,#1a2e1a)" title="Forest"></button>
+            <button class="theme-btn"        data-theme="inferno" style="background:linear-gradient(135deg,#8a2010,#cc5500)" title="Inferno"></button>
+            <button class="theme-btn"        data-theme="frost"   style="background:linear-gradient(135deg,#3a7aaa,#88ccee)" title="Frost"></button>
+            <button class="theme-btn"        data-theme="toxic"   style="background:linear-gradient(135deg,#1a2a0a,#44cc00)" title="Toxic"></button>
+            <button class="theme-btn"        data-theme="royal"   style="background:linear-gradient(135deg,#4a1a6a,#c8a020)" title="Royal"></button>
+          </div>
         </div>
       </div>
       <div class="action-bar">
@@ -135,10 +155,10 @@
   <script src="simulation.js?v=6"></script>
   <script src="explanations.js?v=6"></script>
   <script src="dragon-canvas.js?v=9"></script>
-  <script src="scene.js?v=15"></script>
+  <script src="scene.js?v=16"></script>
   <script src="battle.js?v=9"></script>
   <script src="ui.js?v=11"></script>
   <script src="tutorial.js?v=10"></script>
-  <script src="main.js?v=10"></script>
+  <script src="main.js?v=11"></script>
 </body>
 </html>

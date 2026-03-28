@@ -157,6 +157,82 @@ body {
 }
 .btn-icon:hover { background: #1a1a2a; color: #889; }
 
+/* ---- MULTI-ZONE COLOUR SYSTEM ---- */
+.color-zones-wrap { display: flex; flex-direction: column; gap: 5px; }
+
+.color-zone-row { display: flex; gap: 5px; }
+
+.color-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+  flex: 1;
+  position: relative;
+}
+
+.color-zone-lbl {
+  font-size: 8px;
+  font-weight: 600;
+  color: #445;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  pointer-events: none;
+}
+
+.color-zone-dot {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid #1e1e30;
+  transition: border-color 0.15s, transform 0.12s, box-shadow 0.15s;
+  display: block;
+  pointer-events: none;
+}
+
+.color-zone:hover .color-zone-dot {
+  border-color: #4af0c0;
+  transform: scale(1.10);
+  box-shadow: 0 0 8px rgba(74, 240, 192, 0.30);
+}
+
+.color-zone input[type="color"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+}
+
+.theme-row {
+  display: flex;
+  gap: 3px;
+}
+
+.theme-btn {
+  flex: 1;
+  height: 11px;
+  border-radius: 3px;
+  border: 1px solid #1e1e30;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.12s;
+  padding: 0;
+}
+
+.theme-btn:hover {
+  border-color: #4af0c0;
+  transform: scaleY(1.4);
+}
+
+.theme-btn.active {
+  border-color: #4af0c0;
+  box-shadow: 0 0 4px rgba(74, 240, 192, 0.4);
+}
+
 /* ---- PRESETS ---- */
 .presets-section { }
 .section-label { font-size: 10px; color: #445; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }

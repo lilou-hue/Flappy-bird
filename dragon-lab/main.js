@@ -17,6 +17,15 @@ window.App = (function() {
   const DEBOUNCE_MS = 50;
   const RECORD_KEY = 'dragonlab_record';
 
+  // ── Colour themes ─────────────────────────────────────────
+  const COLOR_THEMES = {
+    forest:  { body: '#3a6e5a', wings: '#7a4a10', accent: '#1a2e1a', eye: '#44ff88' },
+    inferno: { body: '#8a2010', wings: '#cc5500', accent: '#3a1005', eye: '#ffcc00' },
+    frost:   { body: '#3a7aaa', wings: '#88ccee', accent: '#1a3a5a', eye: '#ddf8ff' },
+    toxic:   { body: '#1a2a0a', wings: '#44cc00', accent: '#0a1a00', eye: '#88ff00' },
+    royal:   { body: '#4a1a6a', wings: '#c8a020', accent: '#1a0830', eye: '#ffffff' },
+  };
+
   // --------------------------------------------------------
   // INITIALIZATION
   // --------------------------------------------------------
@@ -29,7 +38,7 @@ window.App = (function() {
     const canvasContainer = document.getElementById('canvas-container');
     if (canvasContainer) {
       window.Scene.init(canvasContainer);
-      window.Scene.buildPlayerDragon(currentDragon.traits, getTintColor());
+      window.Scene.buildPlayerDragon(currentDragon.traits, getDragonColors());
     }
 
     // Init UI tabs
@@ -61,8 +70,8 @@ window.App = (function() {
     // Wire dragon name input
     wireDragonName();
 
-    // Wire colour picker
-    wireColorPicker();
+    // Wire colour UI (multi-zone pickers + theme buttons)
+    wireColorUI();
 
     // Run initial simulation
     runSimulation();
@@ -78,23 +87,29 @@ window.App = (function() {
   }
 
   // --------------------------------------------------------
-  // TINT COLOR
+  // COLOUR SYSTEM (multi-zone)
   // --------------------------------------------------------
+  function getDragonColors() {
+    if (currentDragon.dragonColors) return currentDragon.dragonColors;
+    // Backward-compat: construct from legacy tintColor
+    return { body: currentDragon.tintColor || '#3a6e5a', wings: null, accent: null, eye: null };
+  }
+
+  // Keep legacy getTintColor for anything that still needs it
   function getTintColor() {
-    return currentDragon.tintColor || '#3a6e5a';
+    return getDragonColors().body;
+  }
+
+  function setDragonColors(colors) {
+    currentDragon.dragonColors = colors;
+    currentDragon.tintColor    = colors.body;  // keep in sync
+    syncColorUI(colors);
+    window.Scene.updateDragon(currentDragon.traits, colors);
+    autoSave();
   }
 
   function setTintColor(hex) {
-    currentDragon.tintColor = hex;
-    // Sync the native color picker value
-    const picker = document.getElementById('dragon-color-input');
-    if (picker) picker.value = hex;
-    // Update active swatch highlight
-    document.querySelectorAll('#color-row .color-swatch').forEach(sw => {
-      sw.classList.toggle('active', sw.dataset.color === hex);
-    });
-    window.Scene.updateDragon(currentDragon.traits, hex);
-    autoSave();
+    setDragonColors({ ...getDragonColors(), body: hex });
   }
 
   // --------------------------------------------------------
@@ -104,7 +119,7 @@ window.App = (function() {
     currentDragon.traits[traitId] = value;
 
     // Immediate visual update (cheap)
-    window.Scene.updateDragon(currentDragon.traits, getTintColor());
+    window.Scene.updateDragon(currentDragon.traits, getDragonColors());
 
     // Debounced simulation (expensive)
     clearTimeout(updateTimer);
@@ -192,12 +207,15 @@ window.App = (function() {
     currentDragon = window.Dragon.fromPreset(presetKey);
     // Carry preset tint onto the dragon object so getTintColor picks it up
     const presetTint = window.DragonData.PRESETS[presetKey].tintColor;
-    if (presetTint) currentDragon.tintColor = presetTint;
+    if (presetTint) {
+      currentDragon.tintColor    = presetTint;
+      currentDragon.dragonColors = { body: presetTint, wings: null, accent: null, eye: null };
+    }
 
     const nameInput = document.getElementById('dragon-name-input');
     if (nameInput) nameInput.value = currentDragon.name || '';
     window.UI.updateSliders(currentDragon.traits);
-    syncColorUI(getTintColor());
+    syncColorUI(getDragonColors());
 
     // Rebuild fire design panel by re-rendering sliders
     window.UI.renderSliders(
@@ -207,7 +225,7 @@ window.App = (function() {
       onFireDesignChange
     );
 
-    window.Scene.updateDragon(currentDragon.traits, getTintColor());
+    window.Scene.updateDragon(currentDragon.traits, getDragonColors());
     runSimulation();
     autoSave();
     window.UI.showNotification('Loaded preset: ' + window.DragonData.PRESETS[presetKey].label, 'info');
@@ -238,7 +256,7 @@ window.App = (function() {
     // Switch to battle view
     window.Scene.initBattleArena(
       arenaKey,
-      currentDragon.traits, getTintColor(),
+      currentDragon.traits, getDragonColors(),
       archetype.traits, archetype.tintColor
     );
 
@@ -319,27 +337,50 @@ window.App = (function() {
     });
   }
 
-  // Sync colour UI (swatches + picker) to a given hex without triggering a redraw
-  function syncColorUI(hex) {
-    const picker = document.getElementById('dragon-color-input');
-    if (picker) picker.value = hex;
-    document.querySelectorAll('#color-row .color-swatch').forEach(sw => {
-      sw.classList.toggle('active', sw.dataset.color === hex);
+  // Sync colour UI zone pickers to current color state
+  function syncColorUI(colors) {
+    const c = window.Scene ? window.Scene.normalizeColors(colors) : colors;
+    const zones = ['body', 'wings', 'accent', 'eye'];
+    zones.forEach(zone => {
+      const val = c[zone];
+      const picker  = document.getElementById('color-' + zone);
+      const preview = document.getElementById('preview-' + zone);
+      if (picker  && val) picker.value         = val;
+      if (preview && val) preview.style.background = val;
+    });
+    // Highlight active theme button if matches
+    document.querySelectorAll('.theme-btn').forEach(btn => {
+      const theme = COLOR_THEMES[btn.dataset.theme];
+      const match = theme && theme.body === c.body && theme.wings === c.wings;
+      btn.classList.toggle('active', !!match);
     });
   }
 
-  function wireColorPicker() {
-    // Swatch clicks
-    document.querySelectorAll('#color-row .color-swatch').forEach(sw => {
-      sw.addEventListener('click', () => setTintColor(sw.dataset.color));
+  function wireColorUI() {
+    // Zone colour pickers
+    ['body', 'wings', 'accent', 'eye'].forEach(zone => {
+      const picker = document.getElementById('color-' + zone);
+      if (!picker) return;
+      picker.addEventListener('input', () => {
+        const preview = document.getElementById('preview-' + zone);
+        if (preview) preview.style.background = picker.value;
+        setDragonColors({ ...getDragonColors(), [zone]: picker.value });
+      });
     });
-    // Native color input (fires on every change while picker is open)
-    const picker = document.getElementById('dragon-color-input');
-    if (picker) {
-      picker.addEventListener('input', () => setTintColor(picker.value));
-    }
-    // Initialise UI to current tint
-    syncColorUI(getTintColor());
+
+    // Preset theme buttons
+    document.querySelectorAll('.theme-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const theme = COLOR_THEMES[btn.dataset.theme];
+        if (!theme) return;
+        setDragonColors({ ...theme });
+        document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+
+    // Initialise UI to current dragon colours
+    syncColorUI(getDragonColors());
   }
 
   function wireBattleSummaryButtons() {
@@ -361,7 +402,7 @@ window.App = (function() {
       returnBtn.addEventListener('click', function() {
         if (battlePlaybackTimer) { clearInterval(battlePlaybackTimer); battlePlaybackTimer = null; }
         window.Scene.returnToLab();
-        window.Scene.updateDragon(currentDragon.traits, getTintColor());
+        window.Scene.updateDragon(currentDragon.traits, getDragonColors());
         window.UI.switchTab('build');
         const setup = document.getElementById('battle-setup');
         const display = document.getElementById('battle-display');
@@ -393,7 +434,7 @@ window.App = (function() {
         const nameInput = document.getElementById('dragon-name-input');
         if (nameInput) nameInput.value = currentDragon.name || '';
         window.UI.renderSliders(currentDragon.traits, currentDragon.fireDesign, onTraitChange, onFireDesignChange);
-        window.Scene.updateDragon(currentDragon.traits, getTintColor());
+        window.Scene.updateDragon(currentDragon.traits, getDragonColors());
         runSimulation();
         autoSave();
         window.UI.showNotification('Random dragon generated', 'info');
@@ -408,7 +449,7 @@ window.App = (function() {
         const nameInput = document.getElementById('dragon-name-input');
         if (nameInput) nameInput.value = '';
         window.UI.renderSliders(currentDragon.traits, currentDragon.fireDesign, onTraitChange, onFireDesignChange);
-        window.Scene.updateDragon(currentDragon.traits, getTintColor());
+        window.Scene.updateDragon(currentDragon.traits, getDragonColors());
         runSimulation();
         autoSave();
         window.UI.showNotification('Reset to defaults', 'info');
