@@ -34,6 +34,9 @@ window.Scene = (function () {
   // ── Reward feedback ──────────────────────────────────────
   let _rewardTimer = 0;
   let _rewardColor = new THREE.Color(0x4af0c0);
+  // Scale-pulse on trait change: brief scale bump that springs back
+  let _rewardScaleTimer = 0;
+  const REWARD_SCALE_DURATION = 0.22;
 
   // ── Personality / blink state ─────────────────────────────
   // Blink dims the eye emissive to 0 and restores it — no geometry changes.
@@ -228,43 +231,20 @@ window.Scene = (function () {
   // MeshToonMaterial with emissive glow.  Body triangles stay at
   // materialIndex = 0 and continue to use vertex colours.
   // ============================================================
-  function separateEyeGroups(geo, origPos, n, localBox) {
+  function separateEyeGroups(geo, origPos, n) {
     if (!geo.index) return 0;
 
-    // Compute geometry bounds from origPos if localBox not supplied
-    let bMin, bMax;
-    if (localBox) {
-      bMin = localBox.min;
-      bMax = localBox.max;
-    } else {
-      bMin = { x: Infinity, y: Infinity, z: Infinity };
-      bMax = { x: -Infinity, y: -Infinity, z: -Infinity };
-      for (let i = 0; i < n; i++) {
-        const x = origPos[i*3], y = origPos[i*3+1], z = origPos[i*3+2];
-        if (x < bMin.x) bMin.x = x; if (x > bMax.x) bMax.x = x;
-        if (y < bMin.y) bMin.y = y; if (y > bMax.y) bMax.y = y;
-        if (z < bMin.z) bMin.z = z; if (z > bMax.z) bMax.z = z;
-      }
-    }
-    const szX = bMax.x - bMin.x || 1;
-    const szY = bMax.y - bMin.y || 1;
-    const szZ = bMax.z - bMin.z || 1;
-    // Centre-X offset so |nx| is measured from the model's centre
-    const midX = (bMin.x + bMax.x) / 2;
-
-    // 1. Tag each vertex: 1 = eye, 0 = body
-    // Eye zone in normalized [0,1] space (confirmed by GLB binary inspection):
-    //   |normalised x from centre| ∈ [0.08, 0.22]
-    //   normalised y              ∈ [0.42, 0.58]
-    //   normalised z              ∈ [0.70, 0.90]
+    // Tag eye vertices using RAW model-space coordinates.
+    // The deformation weight code confirms the coordinate system:
+    //   neck:     z ≈ 0.24–0.52   → head is at z > 0.62 (beyond neck tip)
+    //   wing:     |x| ≈ 0.26–0.42 → eyes bilateral at smaller |x|
+    //   body top: y ≈ 0.40–0.52   → eye apex near y_max
+    // GLB binary parse confirmed eye centroids at (±0.17, 0.50, 0.79).
     const eyeTag = new Uint8Array(n);
     for (let i = 0; i < n; i++) {
       const x = origPos[i*3], y = origPos[i*3+1], z = origPos[i*3+2];
-      const nx = (x - midX) / szX;   // signed, centred
-      const ny = (y - bMin.y) / szY; // 0 = bottom, 1 = top
-      const nz = (z - bMin.z) / szZ; // 0 = back,   1 = front
-      const ax = Math.abs(nx);
-      if (ny >= 0.42 && ny <= 0.62 && nz >= 0.68 && nz <= 0.92 && ax >= 0.06 && ax <= 0.24) {
+      const ax = Math.abs(x);
+      if (y >= 0.36 && y <= 0.56 && z >= 0.62 && z <= 0.90 && ax >= 0.07 && ax <= 0.27) {
         eyeTag[i] = 1;
       }
     }
@@ -352,7 +332,7 @@ window.Scene = (function () {
       });
 
       // Partition triangles into body / eye groups
-      const eyeTriCount = separateEyeGroups(geo, src.origPos, posAttr.count, src.localBox);
+      const eyeTriCount = separateEyeGroups(geo, src.origPos, posAttr.count);
 
       let mesh;
       if (eyeTriCount > 0) {
@@ -547,10 +527,13 @@ window.Scene = (function () {
   let _gradientMap = null;
   function getGradientMap() {
     if (_gradientMap) return _gradientMap;
+    // 8-step ramp: deep shadow → bright highlight. Wider steps give toon
+    // banding; finer steps in the mid-range keep the body readable.
+    const steps = [40, 72, 105, 140, 172, 200, 228, 255];
     const c = document.createElement('canvas');
-    c.width = 4; c.height = 1;
+    c.width = steps.length; c.height = 1;
     const ctx = c.getContext('2d');
-    [72, 136, 200, 255].forEach((v, i) => {
+    steps.forEach((v, i) => {
       ctx.fillStyle = `rgb(${v},${v},${v})`;
       ctx.fillRect(i, 0, 1, 1);
     });
@@ -567,44 +550,66 @@ window.Scene = (function () {
     const hsl = {};
     bodyTint.getHSL(hsl);
 
-    // Body palette
+    // ── Body palette ─────────────────────────────────────────────
+    // Belly: pale, slightly warm — like a reptile's underbelly
     const belly = new THREE.Color().setHSL(
-      (hsl.h + 0.07) % 1, Math.min(0.40, hsl.s * 0.50), 0.88
+      (hsl.h + 0.05) % 1,
+      Math.min(0.30, hsl.s * 0.35),
+      Math.min(0.92, Math.max(0.72, hsl.l * 1.55))
     );
+    // Body mid: true colour, slightly boosted saturation
     const body = new THREE.Color().setHSL(
-      hsl.h, Math.min(1, hsl.s * 1.08), Math.min(0.64, Math.max(0.38, hsl.l * 1.12))
+      hsl.h,
+      Math.min(1, hsl.s * 1.10),
+      Math.min(0.62, Math.max(0.36, hsl.l * 1.08))
     );
+    // Dorsal ridge: darker, more saturated, shifted hue slightly cool
     const dorsal = new THREE.Color().setHSL(
-      (hsl.h - 0.08 + 1) % 1, Math.min(1, hsl.s * 1.25), Math.max(0.16, hsl.l * 0.50)
+      (hsl.h - 0.06 + 1) % 1,
+      Math.min(1, hsl.s * 1.30),
+      Math.max(0.14, hsl.l * 0.44)
     );
-    const seam = dorsal.clone().multiplyScalar(0.68);
+    const seam = dorsal.clone().multiplyScalar(0.58);
 
-    // Wing palette
-    let wingMem;
+    // Belly-to-body transition midpoint — slightly warm, natural blend
+    const bellyMid = belly.clone().lerp(body, 0.55);
+    bellyMid.r = Math.min(1, bellyMid.r * 1.04);
+
+    // ── Wing palette ─────────────────────────────────────────────
+    let wingMem, wingEdge;
     if (colors.wings) {
       const wh = {};
       new THREE.Color(colors.wings).getHSL(wh);
-      wingMem = new THREE.Color().setHSL(wh.h, Math.min(1, wh.s * 1.1), Math.min(0.75, Math.max(0.38, wh.l)));
+      wingMem  = new THREE.Color().setHSL(wh.h, Math.min(1, wh.s * 1.05),
+                   Math.min(0.72, Math.max(0.36, wh.l)));
+      wingEdge = new THREE.Color().setHSL(wh.h, Math.min(1, wh.s * 1.20),
+                   Math.max(0.10, wh.l * 0.38));
     } else {
-      wingMem = new THREE.Color().setHSL(0.07, 0.78, 0.68).lerp(bodyTint, 0.30);
+      wingMem  = new THREE.Color().setHSL((hsl.h + 0.06) % 1, Math.min(1, hsl.s * 0.90), 0.55)
+                   .lerp(bodyTint, 0.18);
+      wingEdge = dorsal.clone().multiplyScalar(0.55);
     }
+    // Membrane highlight (slightly lighter centre — like backlit membrane)
+    const wingHighlight = wingMem.clone().lerp(new THREE.Color(1,1,1), 0.12);
 
-    // Accent palette
+    // ── Accent palette ───────────────────────────────────────────
     let accentCol;
     if (colors.accent) {
       accentCol = new THREE.Color(colors.accent);
     } else {
-      accentCol = dorsal.clone().lerp(new THREE.Color(0.05, 0.05, 0.06), 0.28);
+      accentCol = new THREE.Color().setHSL(
+        (hsl.h - 0.04 + 1) % 1, Math.min(1, hsl.s * 0.80), Math.max(0.08, hsl.l * 0.28)
+      );
     }
 
-    // Claws
-    const clawDark  = new THREE.Color().setHSL((hsl.h + 0.04) % 1, 0.22, 0.08);
-    const clawLight = new THREE.Color().setHSL((hsl.h + 0.04) % 1, 0.18, 0.72);
+    // ── Claws ────────────────────────────────────────────────────
+    const clawDark  = new THREE.Color().setHSL((hsl.h + 0.04) % 1, 0.18, 0.06);
+    const clawLight = new THREE.Color().setHSL((hsl.h + 0.04) % 1, 0.14, 0.78);
 
     // Apply toon gradient map to body materials
     const gm = getGradientMap();
     inst.materials.forEach(mat => {
-      if (!mat.gradientMap) { mat.gradientMap = gm; mat.needsUpdate = true; }
+      if (mat.gradientMap !== gm) { mat.gradientMap = gm; mat.needsUpdate = true; }
     });
 
     inst.meshes.forEach((mesh) => {
@@ -617,53 +622,71 @@ window.Scene = (function () {
       const spanY = lb.max.y - lb.min.y || 1;
       const halfX = (lb.max.x - lb.min.x) / 2 || 1;
       const centX = (lb.min.x + lb.max.x) / 2;
+      const spanZ = lb.max.z - lb.min.z || 1;
 
       const buf = new Float32Array(cnt * 3);
 
       for (let i = 0; i < cnt; i++) {
         const x = orig[i*3], y = orig[i*3+1], z = orig[i*3+2];
-        const ty = (y - lb.min.y) / spanY;
-        const tx = Math.abs(x - centX) / halfX;
+        const ty = (y - lb.min.y) / spanY;          // 0=feet, 1=head
+        const tz = (z - lb.min.z) / spanZ;          // 0=tail, 1=snout
+        const tx = Math.abs(x - centX) / halfX;     // 0=centre, 1=wing tip
+        const isWing = tx > 0.42 && y > -0.22;
 
         let col;
 
-        if (ty < 0.055 && tx < 0.55) {
+        if (ty < 0.055 && tx < 0.52) {
           // Claws
           const clawT = 1 - ty / 0.055;
           col = clawLight.clone().lerp(clawDark, clawT * clawT);
 
-        } else if (tx > 0.45 && y > -0.20) {
-          // Wings
-          const spread = ss(0.45, 0.88, tx);
-          const yBlend = ss(-0.18, 0.22, y);
-          col = body.clone().lerp(wingMem, (1 - yBlend) * 0.85);
-          col.lerp(wingMem, spread * 0.45);
-          if (colors.wings) col.lerp(new THREE.Color(colors.wings), spread * 0.55);
+        } else if (isWing) {
+          // Wing membrane — gradient from body root to translucent edge
+          const spread  = ss(0.42, 0.92, tx);
+          const yFactor = ss(-0.20, 0.18, y);      // upper wing vs lower
+          // Membrane centre slightly lighter (backlit effect)
+          const memCol  = wingMem.clone().lerp(wingHighlight, ss(0.50, 0.72, tx));
+          col = body.clone().lerp(memCol, spread * 0.80 + (1 - yFactor) * 0.15);
+          // Darken edges for silhouette readability
+          col.lerp(wingEdge, ss(0.78, 0.96, tx) * 0.55);
 
         } else {
-          // Body gradient
-          if (ty < 0.36) {
-            col = belly.clone().lerp(body, ty / 0.36);
+          // ── Body gradient ──────────────────────────────────────
+          // Three-zone blend: belly → body → dorsal
+          if (ty < 0.28) {
+            // Underside: belly transitions smoothly upward
+            col = belly.clone().lerp(bellyMid, ss(0, 0.14, ty));
+            col.lerp(body, ss(0.12, 0.28, ty));
           } else {
-            col = body.clone().lerp(dorsal, ss(0.36, 0.82, ty));
+            col = body.clone().lerp(dorsal, ss(0.28, 0.80, ty));
           }
+
+          // Side darkening — flanks slightly cooler/darker than mid-belly
+          const flankFactor = ss(0.30, 0.55, tx) * ss(0.10, 0.38, ty);
+          col.lerp(body.clone().multiplyScalar(0.82), flankFactor * 0.30);
 
           // Scale micro-texture
           const sv    = scaleDetail(x, y, z);
-          const depth = 0.30 + ty * 0.20;
-          col.lerp(seam, (1 - sv) * depth * 0.55);
-          col.lerp(new THREE.Color(1, 1, 1), sv * depth * 0.14);
+          const depth = 0.22 + ty * 0.24;
+          col.lerp(seam, (1 - sv) * depth * 0.50);
+          col.lerp(new THREE.Color(1, 1, 1), sv * depth * 0.10);
 
-          // Accent on dorsal ridge
-          if (ty > 0.74) {
-            const accentT = ss(0.74, 0.92, ty) * (colors.accent ? 0.65 : 0.20);
+          // Neck/snout desaturation — face is slightly paler
+          if (tz > 0.78 && ty > 0.50) {
+            const faceBlend = ss(0.78, 0.96, tz) * ss(0.50, 0.80, ty) * 0.30;
+            col.lerp(belly, faceBlend);
+          }
+
+          // Accent on dorsal ridge and spines
+          if (ty > 0.70) {
+            const accentT = ss(0.70, 0.90, ty) * (colors.accent ? 0.70 : 0.22);
             col.lerp(accentCol, accentT);
           }
         }
 
-        buf[i*3]   = Math.min(1, col.r);
-        buf[i*3+1] = Math.min(1, col.g);
-        buf[i*3+2] = Math.min(1, col.b);
+        buf[i*3]   = Math.min(1, Math.max(0, col.r));
+        buf[i*3+1] = Math.min(1, Math.max(0, col.g));
+        buf[i*3+2] = Math.min(1, Math.max(0, col.b));
       }
 
       geo.setAttribute('color', new THREE.BufferAttribute(buf, 3));
@@ -707,6 +730,7 @@ window.Scene = (function () {
       inst.meshes.forEach(mesh => applyDeformation(mesh, n));
       if (cacheKey === '_p') {
         _rewardTimer = 0.30;
+        _rewardScaleTimer = REWARD_SCALE_DURATION;
         _rewardColor.setHex(0x4af0c0);
       }
     }
@@ -753,25 +777,35 @@ window.Scene = (function () {
   function setupLabLighting() {
     scene.children.filter(c => c.isLight).forEach(l => scene.remove(l));
 
-    scene.add(new THREE.HemisphereLight(0x334466, 0x112233, 0.55));
+    // Hemisphere: warm sky, cool ground — prevents flat ambient
+    scene.add(new THREE.HemisphereLight(0x3a4466, 0x0d1a22, 0.50));
 
-    const key = new THREE.DirectionalLight(0xeef4ff, 1.8);
-    key.position.set(3, 8, 5);
+    // Key light: slightly off-centre from above — main shadows
+    const key = new THREE.DirectionalLight(0xf0f4ff, 1.85);
+    key.position.set(3.5, 9, 5);
     key.castShadow = true;
     key.shadow.mapSize.set(1024, 1024);
-    key.shadow.camera.near  = 0.5;   key.shadow.camera.far   = 24;
+    key.shadow.camera.near  = 0.5;  key.shadow.camera.far   = 24;
     key.shadow.camera.left  = key.shadow.camera.bottom = -6;
     key.shadow.camera.right = key.shadow.camera.top   =  6;
     scene.add(key);
     labObjects.push(key);
 
-    rimLight = new THREE.DirectionalLight(0x44ffbb, 0.35);
-    rimLight.position.set(-5, 3, -4);
+    // Rim light: strong cool backlight — separates dragon from background
+    rimLight = new THREE.DirectionalLight(0x3a9fff, 0.55);
+    rimLight.position.set(-5, 2.5, -5);
     scene.add(rimLight);
     labObjects.push(rimLight);
 
-    const bounce = new THREE.PointLight(0x1144aa, 0.4, 14);
-    bounce.position.set(0, -0.2, 0);
+    // Fill light: soft warm front-low — illuminates belly, removes harsh shadow
+    const fill = new THREE.DirectionalLight(0xffcc88, 0.28);
+    fill.position.set(1, -2, 6);
+    scene.add(fill);
+    labObjects.push(fill);
+
+    // Bounce: cool blue from below — subtle underside colour fill
+    const bounce = new THREE.PointLight(0x0a2255, 0.55, 18);
+    bounce.position.set(0, -0.5, 0);
     scene.add(bounce);
     labObjects.push(bounce);
 
@@ -859,9 +893,18 @@ window.Scene = (function () {
 
     // Reward feedback flash
     const rewardGlow = _rewardTimer > 0
-      ? (Math.sin(_rewardTimer * Math.PI * 14) * 0.5 + 0.5) * (_rewardTimer / 0.30) * 0.40
+      ? (Math.sin(_rewardTimer * Math.PI * 14) * 0.5 + 0.5) * (_rewardTimer / 0.30) * 0.45
       : 0;
     if (_rewardTimer > 0) _rewardTimer = Math.max(0, _rewardTimer - delta);
+
+    // Reward scale pulse — brief pop-and-spring
+    let rewardScaleBoost = 1;
+    if (_rewardScaleTimer > 0) {
+      _rewardScaleTimer = Math.max(0, _rewardScaleTimer - delta);
+      const t = 1 - _rewardScaleTimer / REWARD_SCALE_DURATION;
+      // Arc: rises to peak at t=0.35, springs back by t=1
+      rewardScaleBoost = 1 + Math.sin(t * Math.PI) * 0.045;
+    }
 
     // Per-instance animation
     const pairs = [
@@ -877,13 +920,14 @@ window.Scene = (function () {
       const baseSc   = inst.model.userData._baseSc;
       const baseRotY = inst.model.userData.baseRotY || 0;
 
-      // Organic multi-harmonic breathing
+      // Organic multi-harmonic breathing + reward pulse
       if (baseSc) {
         const t1 = Math.sin(time * rate * 0.52);
         const t2 = Math.sin(time * rate * 1.35) * 0.28;
         const t3 = Math.sin(time * rate * 0.19) * 0.15;
         const breath = 1 + (t1 + t2 + t3) * 0.011;
-        inst.model.scale.set(baseSc, baseSc * breath, baseSc);
+        const scalePulse = isPlayer ? rewardScaleBoost : 1;
+        inst.model.scale.set(baseSc * scalePulse, baseSc * breath * scalePulse, baseSc * scalePulse);
       }
 
       const scY    = inst.model.scale.y;
