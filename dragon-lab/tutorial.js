@@ -161,10 +161,10 @@ window.Tutorial = (function() {
       case 'slider_change': {
         const handler = () => {
           clearWait();
-          // Show brief feedback then advance
           setTimeout(() => advance(), 600);
         };
-        document.querySelectorAll('.trait-slider input[type="range"]').forEach(s => {
+        // Cover both basic mode (.basic-range) and advanced mode (.trait-slider input)
+        document.querySelectorAll('#sliders-container input[type="range"]').forEach(s => {
           s.addEventListener('input', handler, { once: true });
           eventCleanups.push(() => s.removeEventListener('input', handler));
         });

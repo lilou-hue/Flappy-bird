@@ -816,9 +816,9 @@ window.DragonData = {
     },
     {
       id: 'try_slider',
-      title: 'Try It — Adjust Body Mass',
-      text: 'Drag the Body Mass slider and watch the dragon change in real time. Notice how the body grows — but remember, more mass means more weight for the wings to lift.',
-      target: '[data-trait="bodyMass"]',
+      title: 'Try It — Move a Slider',
+      text: 'Drag any slider and watch the dragon change in real time. Each trait affects multiple systems — heavier body improves durability but makes flight harder.',
+      target: '#sliders-container',
       tab: 'build',
       waitFor: 'slider_change'
     },
@@ -834,7 +834,7 @@ window.DragonData = {
       id: 'results',
       title: 'Reading the Results',
       text: 'Each system gets a score and explanation. Look for warnings — they reveal which traits are hurting your design. The classification at the top summarizes your dragon\'s overall profile.',
-      target: '#results-panel',
+      target: '#results-content-sim',
       tab: 'simulate',
       waitFor: null
     },

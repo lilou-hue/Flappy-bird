@@ -33,7 +33,10 @@
       <button class="tab-btn" data-tab="science">Science</button>
     </nav>
     <div class="header-right">
-      <button class="mode-toggle" id="btn-mode" title="Switch Basic / Advanced">Basic</button>
+      <div class="mode-toggle-group" title="Switch between simplified and full trait controls">
+        <button class="mode-btn mode-btn--active" id="btn-mode-basic">Basic</button>
+        <button class="mode-btn" id="btn-mode-advanced">Advanced</button>
+      </div>
       <button class="btn-icon" id="btn-tutorial" title="Replay Tutorial">?</button>
     </div>
   </header>
@@ -126,7 +129,7 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.135.0/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.135.0/examples/js/controls/OrbitControls.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.135.0/examples/js/loaders/GLTFLoader.js"></script>
-  <script src="data.js?v=6"></script>
+  <script src="data.js?v=10"></script>
   <script src="challenges.js?v=6"></script>
   <script src="dragon.js?v=6"></script>
   <script src="simulation.js?v=6"></script>
@@ -134,8 +137,8 @@
   <script src="dragon-canvas.js?v=9"></script>
   <script src="scene.js?v=13"></script>
   <script src="battle.js?v=9"></script>
-  <script src="ui.js?v=9"></script>
-  <script src="tutorial.js?v=9"></script>
-  <script src="main.js?v=9"></script>
+  <script src="ui.js?v=10"></script>
+  <script src="tutorial.js?v=10"></script>
+  <script src="main.js?v=10"></script>
 </body>
 </html>

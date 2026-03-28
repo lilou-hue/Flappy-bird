@@ -87,20 +87,35 @@ body {
   border-bottom: 1px solid #161628;
 }
 
-/* ---- MODE TOGGLE ---- */
-.mode-toggle {
-  background: #141420;
+/* ---- MODE TOGGLE GROUP ---- */
+.mode-toggle-group {
+  display: flex;
+  background: #0e0e1a;
   border: 1px solid #2a2a3a;
-  color: #778;
-  padding: 4px 10px;
+  border-radius: 5px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.mode-btn {
+  background: transparent;
+  border: none;
+  color: #445;
+  padding: 5px 11px;
   font-size: 10px;
   font-weight: 600;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s;
   letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: all 0.18s;
+  font-family: inherit;
+  white-space: nowrap;
 }
-.mode-toggle:hover { color: #aab; border-color: #3a3a4a; }
+.mode-btn:hover { color: #889; background: rgba(255,255,255,0.03); }
+.mode-btn--active {
+  background: #4af0c0;
+  color: #07120e;
+  cursor: default;
+}
+.mode-btn--active:hover { background: #4af0c0; color: #07120e; }
 
 /* ---- BUTTONS ---- */
 .action-bar { display: flex; gap: 4px; }

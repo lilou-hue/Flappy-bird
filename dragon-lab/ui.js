@@ -799,9 +799,11 @@ window.UI = (function() {
 
   function setAdvancedMode(val) {
     advancedMode = val;
-    const btn = document.getElementById('btn-mode');
-    if (btn) btn.textContent = advancedMode ? 'Advanced' : 'Basic';
     document.body.classList.toggle('advanced-mode', advancedMode);
+    const basicBtn = document.getElementById('btn-mode-basic');
+    const advBtn   = document.getElementById('btn-mode-advanced');
+    if (basicBtn) basicBtn.classList.toggle('mode-btn--active', !advancedMode);
+    if (advBtn)   advBtn.classList.toggle('mode-btn--active',  advancedMode);
   }
 
   function isAdvancedMode() { return advancedMode; }
