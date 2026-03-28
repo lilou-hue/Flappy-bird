@@ -316,17 +316,21 @@ window.Scene = (function () {
       // Vertex colour buffer (body material reads this; eye material ignores it)
       geo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(posAttr.count * 3), 3));
 
-      // Body material — driven by per-vertex colours + toon gradient
-      const bodyMat = new THREE.MeshToonMaterial({
+      // Body material — PBR with per-vertex colours
+      const bodyMat = new THREE.MeshStandardMaterial({
         vertexColors: true,
-        side: THREE.DoubleSide,
+        roughness:    0.72,
+        metalness:    0.04,
+        side:         THREE.DoubleSide,
       });
 
-      // Eye material — flat colour + emissive glow, independent of vertex colours
-      const eyeMat = new THREE.MeshToonMaterial({
+      // Eye material — glassy wet-eye look
+      const eyeMat = new THREE.MeshStandardMaterial({
         color:             new THREE.Color(0x3a8e5a),
         emissive:          new THREE.Color(0x1a5a30),
         emissiveIntensity: 0.60,
+        roughness:         0.08,
+        metalness:         0.0,
         vertexColors:      false,
         side:              THREE.FrontSide,
       });
@@ -524,25 +528,6 @@ window.Scene = (function () {
   // material and are unaffected even though the colour buffer
   // covers all vertices.
   // ============================================================
-  let _gradientMap = null;
-  function getGradientMap() {
-    if (_gradientMap) return _gradientMap;
-    // 8-step ramp: deep shadow → bright highlight. Wider steps give toon
-    // banding; finer steps in the mid-range keep the body readable.
-    const steps = [40, 72, 105, 140, 172, 200, 228, 255];
-    const c = document.createElement('canvas');
-    c.width = steps.length; c.height = 1;
-    const ctx = c.getContext('2d');
-    steps.forEach((v, i) => {
-      ctx.fillStyle = `rgb(${v},${v},${v})`;
-      ctx.fillRect(i, 0, 1, 1);
-    });
-    _gradientMap = new THREE.CanvasTexture(c);
-    _gradientMap.minFilter = THREE.NearestFilter;
-    _gradientMap.magFilter = THREE.NearestFilter;
-    _gradientMap.generateMipmaps = false;
-    return _gradientMap;
-  }
 
   function paintVertexColors(inst, colorsInput) {
     const colors   = normalizeColors(colorsInput);
@@ -550,26 +535,26 @@ window.Scene = (function () {
     const hsl = {};
     bodyTint.getHSL(hsl);
 
-    // ── Body palette ─────────────────────────────────────────────
-    // Belly: pale, slightly warm — like a reptile's underbelly
+    // ── Body palette (PBR albedo) ─────────────────────────────────
+    // Belly: warm cream — organic subsurface scattering feel on thin skin
     const belly = new THREE.Color().setHSL(
-      (hsl.h + 0.05) % 1,
-      Math.min(0.30, hsl.s * 0.35),
-      Math.min(0.92, Math.max(0.72, hsl.l * 1.55))
+      (hsl.h + 0.04) % 1,
+      Math.min(0.22, hsl.s * 0.28),
+      Math.min(0.88, Math.max(0.68, hsl.l * 1.50))
     );
-    // Body mid: true colour, slightly boosted saturation
+    // Body mid: rich, saturated — PBR lighting will handle highlights/shadows
     const body = new THREE.Color().setHSL(
       hsl.h,
-      Math.min(1, hsl.s * 1.10),
-      Math.min(0.62, Math.max(0.36, hsl.l * 1.08))
+      Math.min(1, hsl.s * 1.20),
+      Math.min(0.58, Math.max(0.30, hsl.l * 1.05))
     );
-    // Dorsal ridge: darker, more saturated, shifted hue slightly cool
+    // Dorsal: deep, slightly cool — maximum colour contrast with belly
     const dorsal = new THREE.Color().setHSL(
-      (hsl.h - 0.06 + 1) % 1,
-      Math.min(1, hsl.s * 1.30),
-      Math.max(0.14, hsl.l * 0.44)
+      (hsl.h - 0.05 + 1) % 1,
+      Math.min(1, hsl.s * 1.40),
+      Math.max(0.10, hsl.l * 0.38)
     );
-    const seam = dorsal.clone().multiplyScalar(0.58);
+    const seam = dorsal.clone().multiplyScalar(0.55);
 
     // Belly-to-body transition midpoint — slightly warm, natural blend
     const bellyMid = belly.clone().lerp(body, 0.55);
@@ -605,12 +590,6 @@ window.Scene = (function () {
     // ── Claws ────────────────────────────────────────────────────
     const clawDark  = new THREE.Color().setHSL((hsl.h + 0.04) % 1, 0.18, 0.06);
     const clawLight = new THREE.Color().setHSL((hsl.h + 0.04) % 1, 0.14, 0.78);
-
-    // Apply toon gradient map to body materials
-    const gm = getGradientMap();
-    inst.materials.forEach(mat => {
-      if (mat.gradientMap !== gm) { mat.gradientMap = gm; mat.needsUpdate = true; }
-    });
 
     inst.meshes.forEach((mesh) => {
       const geo  = mesh.geometry;
@@ -777,11 +756,11 @@ window.Scene = (function () {
   function setupLabLighting() {
     scene.children.filter(c => c.isLight).forEach(l => scene.remove(l));
 
-    // Hemisphere: warm sky, cool ground — prevents flat ambient
-    scene.add(new THREE.HemisphereLight(0x3a4466, 0x0d1a22, 0.50));
+    // Hemisphere: warm sky top, deep cool ground — gives ambient colour separation
+    scene.add(new THREE.HemisphereLight(0x4a5577, 0x0d1218, 0.70));
 
-    // Key light: slightly off-centre from above — main shadows
-    const key = new THREE.DirectionalLight(0xf0f4ff, 1.85);
+    // Key light: three-quarter from above-right — main form-defining shadows
+    const key = new THREE.DirectionalLight(0xf4f0ff, 1.40);
     key.position.set(3.5, 9, 5);
     key.castShadow = true;
     key.shadow.mapSize.set(1024, 1024);
@@ -791,20 +770,20 @@ window.Scene = (function () {
     scene.add(key);
     labObjects.push(key);
 
-    // Rim light: strong cool backlight — separates dragon from background
-    rimLight = new THREE.DirectionalLight(0x3a9fff, 0.55);
+    // Rim light: cool blue-purple backlight — silhouette separation
+    rimLight = new THREE.DirectionalLight(0x5588ff, 0.80);
     rimLight.position.set(-5, 2.5, -5);
     scene.add(rimLight);
     labObjects.push(rimLight);
 
-    // Fill light: soft warm front-low — illuminates belly, removes harsh shadow
-    const fill = new THREE.DirectionalLight(0xffcc88, 0.28);
+    // Fill light: warm amber front-low — illuminates belly and underside
+    const fill = new THREE.DirectionalLight(0xffaa55, 0.45);
     fill.position.set(1, -2, 6);
     scene.add(fill);
     labObjects.push(fill);
 
-    // Bounce: cool blue from below — subtle underside colour fill
-    const bounce = new THREE.PointLight(0x0a2255, 0.55, 18);
+    // Bounce: cool teal from directly below — rim on underside for depth
+    const bounce = new THREE.PointLight(0x0a1a33, 0.60, 18);
     bounce.position.set(0, -0.5, 0);
     scene.add(bounce);
     labObjects.push(bounce);
@@ -920,18 +899,17 @@ window.Scene = (function () {
       const baseSc   = inst.model.userData._baseSc;
       const baseRotY = inst.model.userData.baseRotY || 0;
 
-      // Organic multi-harmonic breathing + reward pulse
+      // Organic multi-harmonic breathing — X/Z only so Y stays constant and floor doesn't shift
       if (baseSc) {
         const t1 = Math.sin(time * rate * 0.52);
         const t2 = Math.sin(time * rate * 1.35) * 0.28;
         const t3 = Math.sin(time * rate * 0.19) * 0.15;
-        const breath = 1 + (t1 + t2 + t3) * 0.011;
+        const breathXZ = 1 + (t1 + t2 + t3) * 0.018;
         const scalePulse = isPlayer ? rewardScaleBoost : 1;
-        inst.model.scale.set(baseSc * scalePulse, baseSc * breath * scalePulse, baseSc * scalePulse);
+        inst.model.scale.set(baseSc * breathXZ * scalePulse, baseSc * scalePulse, baseSc * breathXZ * scalePulse);
       }
 
-      const scY    = inst.model.scale.y;
-      const floorY = -_srcModelMeta.meshMinY * scY;
+      const floorY = -_srcModelMeta.meshMinY * inst.model.scale.y;
       inst.model.position.y = floorY + Math.sin(time * rate) * amp;
 
       // Head micro-sway
