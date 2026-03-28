@@ -458,14 +458,14 @@ window.Scene = (function () {
     const attr  = mesh.geometry.attributes.position;
     const count = attr.count;
 
-    const wingW   = 0.45 + (n.wingspan   || 0.5) * 1.10;
-    const wingA   = 0.55 + (n.wingArea   || 0.5) * 0.90;
-    const neckL   = 0.50 + (n.neckLength || 0.5) * 1.00;
-    const tailS   = 0.40 + (n.tailSize   || 0.5) * 1.20;
-    const legH    = 0.65 + (n.musclePower|| 0.5) * 0.70;
-    const bulkX   = 0.72 + (n.bodyMass   || 0.5) * 0.56;
-    const bulkZ   = 0.78 + (n.musclePower|| 0.5) * 0.44;
-    const bulkY   = 0.82 + (n.boneDensity|| 0.5) * 0.36;
+    const wingW   = 0.45 + (n.wingspan   ?? 0.5) * 1.10;
+    const wingA   = 0.55 + (n.wingArea   ?? 0.5) * 0.90;
+    const neckL   = 0.50 + (n.neckLength ?? 0.5) * 1.00;
+    const tailS   = 0.40 + (n.tailSize   ?? 0.5) * 1.20;
+    const legH    = 0.65 + (n.musclePower?? 0.5) * 0.70;
+    const bulkX   = 0.72 + (n.bodyMass   ?? 0.5) * 0.56;
+    const bulkZ   = 0.78 + (n.musclePower?? 0.5) * 0.44;
+    const bulkY   = 0.82 + (n.boneDensity?? 0.5) * 0.36;
 
     const WING_ROOT = 0.26, NECK_BASE = 0.24, TAIL_ROOT = -0.38, LEG_HIP_Y = -0.16;
 
@@ -658,7 +658,7 @@ window.Scene = (function () {
     const sc   = meta.baseScale;
     const c    = normalizeColors(colors);
 
-    const scMass  = 0.78 + (n.bodyMass || 0.5) * 0.44;
+    const scMass  = 0.78 + (n.bodyMass ?? 0.5) * 0.44;
     const scFinal = sc * scMass;
     inst.model.scale.setScalar(scFinal);
     inst.model.userData._baseSc = scFinal;
@@ -704,7 +704,7 @@ window.Scene = (function () {
 
     if (cacheKey === '_p' && rimLight) {
       rimLight.color.set(c.body);
-      rimLight.intensity = 0.28 + (n.scaleThickness || 0.4) * 0.20;
+      rimLight.intensity = 0.28 + (n.scaleThickness ?? 0.4) * 0.20;
     }
     if (cacheKey === '_p' && fireLight) {
       fireLight.intensity = glowAmt * 1.2;
@@ -716,7 +716,7 @@ window.Scene = (function () {
     }
 
     inst.model.userData.metabRate = 0.65 + (n.metabolism   || 0.5) * 0.70;
-    inst.model.userData.muscleAmp = 0.025 + (n.musclePower || 0.5) * 0.04;
+    inst.model.userData.muscleAmp = 0.025 + (n.musclePower ?? 0.5) * 0.04;
   }
 
   // ============================================================
