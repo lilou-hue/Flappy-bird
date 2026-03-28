@@ -1,7 +1,8 @@
 // ============================================================
-// Dragon Engineering Lab — Three.js Scene (v3)
-// Multi-zone colour system, personality, smooth transitions,
-// reward feedback, and emissive eye glow.
+// Dragon Engineering Lab — Three.js Scene (v4)
+// Multi-zone colour system.  Eye material applies directly to
+// the model's own eye geometry (identified by vertex position),
+// with emissive glow.  No fake/added eye objects.
 // ============================================================
 
 window.Scene = (function () {
@@ -12,16 +13,15 @@ window.Scene = (function () {
   let labObjects   = [];
   let overlay, _container;
 
-  // Each "instance" = { model, materials, meshes }
+  // Each "instance" = { model, materials, meshes, eyeMats }
   let playerInst = null;
   let enemyInst  = null;
   let glbLoaded  = false;
 
   // ── Multi-zone colour state ──────────────────────────────
-  // Colors object shape: { body, wings, accent, eye }
   let _pColorTarget  = { body: '#3a6e5a', wings: null, accent: null, eye: null };
   let _pColorCurrent = { body: '#3a6e5a', wings: null, accent: null, eye: null };
-  let _pColorT = 1;     // 1 = at target; 0 = start of transition
+  let _pColorT = 1;
 
   let _eColorTarget  = { body: '#7a2828', wings: null, accent: null, eye: null };
 
@@ -32,10 +32,11 @@ window.Scene = (function () {
   let rimLight = null, fireLight = null;
 
   // ── Reward feedback ──────────────────────────────────────
-  let _rewardTimer = 0;   // counts down from 0.28s on trait change
+  let _rewardTimer = 0;
   let _rewardColor = new THREE.Color(0x4af0c0);
 
   // ── Personality / blink state ─────────────────────────────
+  // Blink dims the eye emissive to 0 and restores it — no geometry changes.
   let _pBlink = { timer: 3.5 + Math.random() * 4, phase: 0, opening: false, closing: false };
   let _eBlink = { timer: 2.0 + Math.random() * 3, phase: 0, opening: false, closing: false };
 
@@ -66,7 +67,6 @@ window.Scene = (function () {
     };
   }
 
-  // Lerp between two color zone objects.  t=0 → a, t=1 → b.
   function lerpColors(a, b, t) {
     const lerp1 = (ca, cb) => {
       const c1 = new THREE.Color(ca || a.body || '#3a6e5a');
@@ -158,7 +158,7 @@ window.Scene = (function () {
   }
 
   // ============================================================
-  // LOAD GLB — builds player instance, stores source data
+  // LOAD GLB
   // ============================================================
   function loadDragonGLB() {
     if (!THREE.GLTFLoader) return;
@@ -216,11 +216,68 @@ window.Scene = (function () {
   }
 
   // ============================================================
+  // EYE GEOMETRY SEPARATION
+  //
+  // The dragon is a single mesh.  Eye vertices are identified by
+  // their original position in the head zone:
+  //   |x| ∈ [0.08, 0.22], y ∈ [0.42, 0.58], z ∈ [0.70, 0.90]
+  // (Confirmed by GLB inspection: ~218 + 149 triangles in those zones.)
+  //
+  // Triangles whose ALL three vertices sit in that zone are moved
+  // to index group 1 (materialIndex = 1) which gets a dedicated
+  // MeshToonMaterial with emissive glow.  Body triangles stay at
+  // materialIndex = 0 and continue to use vertex colours.
+  // ============================================================
+  function separateEyeGroups(geo, origPos, n) {
+    if (!geo.index) return 0;
+
+    // 1. Tag each vertex: 1 = eye, 0 = body
+    const eyeTag = new Uint8Array(n);
+    for (let i = 0; i < n; i++) {
+      const x = origPos[i*3], y = origPos[i*3+1], z = origPos[i*3+2];
+      const ax = Math.abs(x);
+      if (y >= 0.42 && y <= 0.58 && z >= 0.70 && z <= 0.90 && ax >= 0.08 && ax <= 0.22) {
+        eyeTag[i] = 1;
+      }
+    }
+
+    // 2. Partition index array: body first, then eye
+    const src      = geo.index.array;
+    const total    = src.length;
+    const bodyIdx  = [];
+    const eyeIdx   = [];
+
+    for (let t = 0; t < total; t += 3) {
+      const a = src[t], b = src[t+1], c = src[t+2];
+      if (eyeTag[a] === 1 && eyeTag[b] === 1 && eyeTag[c] === 1) {
+        eyeIdx.push(a, b, c);
+      } else {
+        bodyIdx.push(a, b, c);
+      }
+    }
+
+    if (eyeIdx.length === 0) return 0;
+
+    // 3. Write new merged index buffer and define groups
+    const newIdx = new Uint32Array(bodyIdx.length + eyeIdx.length);
+    newIdx.set(bodyIdx, 0);
+    newIdx.set(eyeIdx, bodyIdx.length);
+
+    geo.setIndex(new THREE.BufferAttribute(newIdx, 1));
+    geo.clearGroups();
+    geo.addGroup(0,              bodyIdx.length, 0);   // materialIndex 0 — body
+    geo.addGroup(bodyIdx.length, eyeIdx.length,  1);   // materialIndex 1 — eye
+
+    return eyeIdx.length / 3;
+  }
+
+  // ============================================================
   // BUILD INSTANCE
   // ============================================================
   function buildInstance() {
-    const meta  = _srcModelMeta;
-    const model = new THREE.Group();
+    const meta    = _srcModelMeta;
+    const model   = new THREE.Group();
+    const eyeMats = [];
 
     model.userData.baseScale   = meta.baseScale;
     model.userData.meshMinY    = meta.meshMinY;
@@ -241,20 +298,43 @@ window.Scene = (function () {
 
       const geo = child.geometry.clone();
 
+      // Reset to clean original positions
       const posAttr = geo.attributes.position;
       for (let i = 0; i < posAttr.count; i++) {
         posAttr.setXYZ(i, src.origPos[i*3], src.origPos[i*3+1], src.origPos[i*3+2]);
       }
       posAttr.needsUpdate = true;
 
+      // Vertex colour buffer (body material reads this; eye material ignores it)
       geo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(posAttr.count * 3), 3));
 
-      const mat = new THREE.MeshToonMaterial({
+      // Body material — driven by per-vertex colours + toon gradient
+      const bodyMat = new THREE.MeshToonMaterial({
         vertexColors: true,
         side: THREE.DoubleSide,
       });
 
-      const mesh = new THREE.Mesh(geo, mat);
+      // Eye material — flat colour + emissive glow, independent of vertex colours
+      const eyeMat = new THREE.MeshToonMaterial({
+        color:             new THREE.Color(0x3a8e5a),
+        emissive:          new THREE.Color(0x1a5a30),
+        emissiveIntensity: 0.60,
+        vertexColors:      false,
+        side:              THREE.FrontSide,
+      });
+
+      // Partition triangles into body / eye groups
+      const eyeTriCount = separateEyeGroups(geo, src.origPos, posAttr.count);
+
+      let mesh;
+      if (eyeTriCount > 0) {
+        // Multi-material mesh: index 0 = body, index 1 = eye
+        mesh = new THREE.Mesh(geo, [bodyMat, eyeMat]);
+        eyeMats.push(eyeMat);
+      } else {
+        mesh = new THREE.Mesh(geo, bodyMat);
+      }
+
       mesh.castShadow    = true;
       mesh.receiveShadow = true;
       mesh.userData.origPos  = src.origPos;
@@ -262,12 +342,12 @@ window.Scene = (function () {
       mesh.userData.localBox = src.localBox;
 
       model.add(mesh);
-      materials.push(mat);
+      materials.push(bodyMat);   // only body mats tracked for gradient / emissive
       meshes.push(mesh);
     });
 
-    addEyes(model);
-    return { model, materials, meshes };
+    model.userData.eyeMats = eyeMats;
+    return { model, materials, meshes, eyeMats };
   }
 
   function positionInstance(inst, x, y, z, rotY) {
@@ -286,79 +366,38 @@ window.Scene = (function () {
   }
 
   // ============================================================
-  // EYE SPHERES — emissive glow iris, blink-ready groups
+  // EYE COLOUR — drives the dedicated eye material on the mesh
   // ============================================================
-  function addEyes(model) {
-    const eyePositions = [
-      [-0.13,  0.50,  0.80],
-      [ 0.13,  0.50,  0.80],
-    ];
+  function updateEyeColor(inst, eyeHex) {
+    const eyeMats = inst.eyeMats || [];
+    if (!eyeMats.length) return;
 
-    const eyes = [];
-    eyePositions.forEach(([ex, ey, ez]) => {
-      const group = new THREE.Group();
-      group.position.set(ex, ey, ez);
-
-      // Sclera — white sphere
-      const sclera = new THREE.Mesh(
-        new THREE.SphereGeometry(0.072, 12, 10),
-        new THREE.MeshToonMaterial({ color: 0xffffff })
-      );
-
-      // Iris — emissive so it glows visibly
-      const iris = new THREE.Mesh(
-        new THREE.SphereGeometry(0.054, 12, 10),
-        new THREE.MeshToonMaterial({
-          color:             new THREE.Color(0x3a6e5a),
-          emissive:          new THREE.Color(0x1a4a30),
-          emissiveIntensity: 0.6,
-        })
-      );
-      iris.position.z = 0.030;
-
-      // Pupil — dark slit
-      const pupil = new THREE.Mesh(
-        new THREE.SphereGeometry(0.028, 8, 6),
-        new THREE.MeshToonMaterial({ color: 0x040406 })
-      );
-      pupil.position.z = 0.054;
-
-      group.add(sclera, iris, pupil);
-      model.add(group);
-      eyes.push({ group, iris, sclera, pupil });
-    });
-
-    model.userData.eyes = eyes;
-  }
-
-  function updateEyeColor(model, eyeHex) {
-    const eyes = model.userData.eyes;
-    if (!eyes) return;
     const tint = new THREE.Color(eyeHex);
     const hsl  = {};
     tint.getHSL(hsl);
 
-    // Iris: vibrant, saturated
     const irisCol = new THREE.Color().setHSL(
       hsl.h,
       Math.min(1, hsl.s * 1.30),
       Math.min(0.72, Math.max(0.36, hsl.l * 1.18))
     );
-    // Emissive: bright, saturated glow
     const emissiveCol = new THREE.Color().setHSL(hsl.h, 0.95, 0.52);
 
-    eyes.forEach(({ iris }) => {
-      iris.material.color.copy(irisCol);
-      iris.material.emissive.copy(emissiveCol);
-      iris.material.emissiveIntensity = 0.60;
-      iris.material.needsUpdate = true;
+    eyeMats.forEach(mat => {
+      mat.color.copy(irisCol);
+      mat.emissive.copy(emissiveCol);
+      mat.emissiveIntensity = 0.60;
+      mat.userData.baseEmissiveIntensity = 0.60;
+      mat.needsUpdate = true;
     });
   }
 
   // ============================================================
-  // BLINK ANIMATION — eye groups scale Y to simulate lid closure
+  // BLINK ANIMATION
+  // Dims the eye emissive to ~0 on close, restores on open.
+  // Pure material animation — no geometry modifications.
   // ============================================================
-  function updateBlink(blink, model, delta) {
+  function updateBlink(blink, inst, delta) {
     if (!blink.closing && !blink.opening) {
       blink.timer -= delta;
       if (blink.timer <= 0) {
@@ -368,10 +407,7 @@ window.Scene = (function () {
     }
     if (blink.closing) {
       blink.phase = Math.min(1, blink.phase + delta / 0.065);
-      if (blink.phase >= 1) {
-        blink.closing = false;
-        blink.opening = true;
-      }
+      if (blink.phase >= 1) { blink.closing = false; blink.opening = true; }
     }
     if (blink.opening) {
       blink.phase = Math.max(0, blink.phase - delta / 0.110);
@@ -381,11 +417,12 @@ window.Scene = (function () {
       }
     }
 
-    const eyes = model && model.userData.eyes;
-    if (eyes) {
-      const lidClose = blink.phase * blink.phase;  // ease-in closure
-      eyes.forEach(({ group }) => {
-        group.scale.y = Math.max(0.05, 1 - lidClose * 0.93);
+    const eyeMats = inst.eyeMats || [];
+    if (eyeMats.length) {
+      const lidClose = blink.phase * blink.phase;
+      eyeMats.forEach(mat => {
+        const base = mat.userData.baseEmissiveIntensity || 0.60;
+        mat.emissiveIntensity = base * (1 - lidClose * 0.95);
       });
     }
   }
@@ -474,7 +511,10 @@ window.Scene = (function () {
   }
 
   // ============================================================
-  // VERTEX COLOURS — multi-zone: body / wings / accent / eye
+  // VERTEX COLOURS
+  // Paints the body material only.  Eye triangles use their own
+  // material and are unaffected even though the colour buffer
+  // covers all vertices.
   // ============================================================
   let _gradientMap = null;
   function getGradientMap() {
@@ -499,57 +539,41 @@ window.Scene = (function () {
     const hsl = {};
     bodyTint.getHSL(hsl);
 
-    // ── Body palette ─────────────────────────────────────────
-    // Belly: warm cream, very light
+    // Body palette
     const belly = new THREE.Color().setHSL(
-      (hsl.h + 0.07) % 1,
-      Math.min(0.40, hsl.s * 0.50),
-      0.88
+      (hsl.h + 0.07) % 1, Math.min(0.40, hsl.s * 0.50), 0.88
     );
-    // Torso: vibrant main colour
     const body = new THREE.Color().setHSL(
-      hsl.h,
-      Math.min(1, hsl.s * 1.08),
-      Math.min(0.64, Math.max(0.38, hsl.l * 1.12))
+      hsl.h, Math.min(1, hsl.s * 1.08), Math.min(0.64, Math.max(0.38, hsl.l * 1.12))
     );
-    // Dorsal: darker, cool-shifted
     const dorsal = new THREE.Color().setHSL(
-      (hsl.h - 0.08 + 1) % 1,
-      Math.min(1, hsl.s * 1.25),
-      Math.max(0.16, hsl.l * 0.50)
+      (hsl.h - 0.08 + 1) % 1, Math.min(1, hsl.s * 1.25), Math.max(0.16, hsl.l * 0.50)
     );
-    // Scale seam (adds depth at seam boundaries)
     const seam = dorsal.clone().multiplyScalar(0.68);
 
-    // ── Wing palette ──────────────────────────────────────────
+    // Wing palette
     let wingMem;
     if (colors.wings) {
       const wh = {};
       new THREE.Color(colors.wings).getHSL(wh);
-      wingMem = new THREE.Color().setHSL(
-        wh.h,
-        Math.min(1, wh.s * 1.1),
-        Math.min(0.75, Math.max(0.38, wh.l))
-      );
+      wingMem = new THREE.Color().setHSL(wh.h, Math.min(1, wh.s * 1.1), Math.min(0.75, Math.max(0.38, wh.l)));
     } else {
-      // Warm amber backlit membrane — default
       wingMem = new THREE.Color().setHSL(0.07, 0.78, 0.68).lerp(bodyTint, 0.30);
     }
 
-    // ── Accent palette ────────────────────────────────────────
+    // Accent palette
     let accentCol;
     if (colors.accent) {
       accentCol = new THREE.Color(colors.accent);
     } else {
-      // Slightly different dorsal (darker, less saturated)
       accentCol = dorsal.clone().lerp(new THREE.Color(0.05, 0.05, 0.06), 0.28);
     }
 
-    // ── Claw palette ──────────────────────────────────────────
+    // Claws
     const clawDark  = new THREE.Color().setHSL((hsl.h + 0.04) % 1, 0.22, 0.08);
     const clawLight = new THREE.Color().setHSL((hsl.h + 0.04) % 1, 0.18, 0.72);
 
-    // Apply toon gradient map once per material
+    // Apply toon gradient map to body materials
     const gm = getGradientMap();
     inst.materials.forEach(mat => {
       if (!mat.gradientMap) { mat.gradientMap = gm; mat.needsUpdate = true; }
@@ -570,29 +594,26 @@ window.Scene = (function () {
 
       for (let i = 0; i < cnt; i++) {
         const x = orig[i*3], y = orig[i*3+1], z = orig[i*3+2];
-        const ty = (y - lb.min.y) / spanY;        // 0 = feet,  1 = spine top
-        const tx = Math.abs(x - centX) / halfX;   // 0 = spine, 1 = wing tip
+        const ty = (y - lb.min.y) / spanY;
+        const tx = Math.abs(x - centX) / halfX;
 
         let col;
 
-        // ── Claws ────────────────────────────────────────────
         if (ty < 0.055 && tx < 0.55) {
+          // Claws
           const clawT = 1 - ty / 0.055;
           col = clawLight.clone().lerp(clawDark, clawT * clawT);
 
-        // ── Wings ─────────────────────────────────────────────
         } else if (tx > 0.45 && y > -0.20) {
+          // Wings
           const spread = ss(0.45, 0.88, tx);
           const yBlend = ss(-0.18, 0.22, y);
           col = body.clone().lerp(wingMem, (1 - yBlend) * 0.85);
           col.lerp(wingMem, spread * 0.45);
-          // Custom wing colour: blend more strongly toward tips
-          if (colors.wings) {
-            col.lerp(new THREE.Color(colors.wings), spread * 0.55);
-          }
+          if (colors.wings) col.lerp(new THREE.Color(colors.wings), spread * 0.55);
 
-        // ── Body ──────────────────────────────────────────────
         } else {
+          // Body gradient
           if (ty < 0.36) {
             col = belly.clone().lerp(body, ty / 0.36);
           } else {
@@ -605,7 +626,7 @@ window.Scene = (function () {
           col.lerp(seam, (1 - sv) * depth * 0.55);
           col.lerp(new THREE.Color(1, 1, 1), sv * depth * 0.14);
 
-          // Accent: applied to dorsal ridge / spike region
+          // Accent on dorsal ridge
           if (ty > 0.74) {
             const accentT = ss(0.74, 0.92, ty) * (colors.accent ? 0.65 : 0.20);
             col.lerp(accentCol, accentT);
@@ -621,8 +642,8 @@ window.Scene = (function () {
       geo.attributes.color.needsUpdate = true;
     });
 
-    // Eye colour (independent zone, or fall back to body tint)
-    updateEyeColor(inst.model, colors.eye || colors.body);
+    // Update eye material (separate from vertex colours)
+    updateEyeColor(inst, colors.eye || colors.body);
 
     if (_glowRing) _glowRing.material.color.set(colors.body);
   }
@@ -637,7 +658,6 @@ window.Scene = (function () {
     const sc   = meta.baseScale;
     const c    = normalizeColors(colors);
 
-    // Overall scale from bodyMass
     const scMass  = 0.78 + (n.bodyMass || 0.5) * 0.44;
     const scFinal = sc * scMass;
     inst.model.scale.setScalar(scFinal);
@@ -651,20 +671,19 @@ window.Scene = (function () {
       offZ + -meta.meshCentreZ * sc * scMass
     );
 
-    // Vertex deformation — only when traits actually changed
+    // Deformation — only when traits changed
     const hash    = traitHash(traits);
     const hashKey = cacheKey + 'hash';
     if (hash !== inst.model.userData[hashKey]) {
       inst.model.userData[hashKey] = hash;
       inst.meshes.forEach(mesh => applyDeformation(mesh, n));
-      // Trigger reward flash on player trait change
       if (cacheKey === '_p') {
         _rewardTimer = 0.30;
         _rewardColor.setHex(0x4af0c0);
       }
     }
 
-    // Vertex colours — skip if mid-transition (animate loop handles it then)
+    // Colours — skip body if mid-transition (animate loop handles it)
     const colorKey = c.body + '|' + (c.wings||'') + '|' + (c.accent||'') + '|' + (c.eye||'');
     const tintKey  = cacheKey + 'tint';
     if (colorKey !== inst.model.userData[tintKey]) {
@@ -674,7 +693,7 @@ window.Scene = (function () {
       }
     }
 
-    // Fire emission — stored on model; animate loop applies it each frame
+    // Fire glow stored on model; animate loop applies it per-frame
     const nFuel   = n.fuelGlandSize      || 0;
     const nIgn    = n.ignitionEfficiency || 0;
     const glowAmt = nFuel * 0.5 + nFuel * nIgn * 0.5;
@@ -683,7 +702,6 @@ window.Scene = (function () {
       amt:   glowAmt * 0.42,
     };
 
-    // Rim light tracks player tint
     if (cacheKey === '_p' && rimLight) {
       rimLight.color.set(c.body);
       rimLight.intensity = 0.28 + (n.scaleThickness || 0.4) * 0.20;
@@ -777,14 +795,13 @@ window.Scene = (function () {
     _pTraits = traits;
     const c = normalizeColors(colors);
 
-    // Check if any colour zone changed → start smooth transition
-    const bodyChanged  = c.body   !== _pColorTarget.body;
-    const wingsChanged = c.wings  !== _pColorTarget.wings;
-    const eyeChanged   = c.eye    !== _pColorTarget.eye;
-    const accChanged   = c.accent !== _pColorTarget.accent;
+    const anyColorChange =
+      c.body   !== _pColorTarget.body   ||
+      c.wings  !== _pColorTarget.wings  ||
+      c.eye    !== _pColorTarget.eye    ||
+      c.accent !== _pColorTarget.accent;
 
-    if (bodyChanged || wingsChanged || eyeChanged || accChanged) {
-      // Snapshot the current blended state as the new 'from'
+    if (anyColorChange) {
       _pColorCurrent = (_pColorT < 1)
         ? lerpColors(_pColorCurrent, _pColorTarget, easeInOut(_pColorT))
         : { ..._pColorTarget };
@@ -804,21 +821,21 @@ window.Scene = (function () {
     const time  = clock.getElapsedTime();
     controls.update();
 
-    // ── Smooth colour transition ──────────────────────────────
+    // Smooth colour transition
     if (_pColorT < 1 && playerInst) {
-      _pColorT = Math.min(1, _pColorT + delta / 0.32);   // 320ms
+      _pColorT = Math.min(1, _pColorT + delta / 0.32);
       const blended = lerpColors(_pColorCurrent, _pColorTarget, easeInOut(_pColorT));
       paintVertexColors(playerInst, blended);
       if (_pColorT >= 1) _pColorCurrent = { ..._pColorTarget };
     }
 
-    // ── Reward feedback (emissive flash on trait change) ──────
+    // Reward feedback flash
     const rewardGlow = _rewardTimer > 0
       ? (Math.sin(_rewardTimer * Math.PI * 14) * 0.5 + 0.5) * (_rewardTimer / 0.30) * 0.40
       : 0;
     if (_rewardTimer > 0) _rewardTimer = Math.max(0, _rewardTimer - delta);
 
-    // ── Per-instance animation ────────────────────────────────
+    // Per-instance animation
     const pairs = [
       { inst: playerInst, blink: _pBlink, isPlayer: true  },
       { inst: enemyInst,  blink: _eBlink, isPlayer: false },
@@ -832,22 +849,20 @@ window.Scene = (function () {
       const baseSc   = inst.model.userData._baseSc;
       const baseRotY = inst.model.userData.baseRotY || 0;
 
-      // ── Organic breathing (multi-harmonic irregular rhythm) ──
-      // X/Z scale only so Y (height) stays constant and floorY doesn't shift
+      // Organic multi-harmonic breathing
       if (baseSc) {
         const t1 = Math.sin(time * rate * 0.52);
-        const t2 = Math.sin(time * rate * 1.35) * 0.28;   // secondary harmonic
-        const t3 = Math.sin(time * rate * 0.19) * 0.15;   // slow deep breath
-        const breathXZ = 1 + (t1 + t2 + t3) * 0.018;
-        inst.model.scale.set(baseSc * breathXZ, baseSc, baseSc * breathXZ);
+        const t2 = Math.sin(time * rate * 1.35) * 0.28;
+        const t3 = Math.sin(time * rate * 0.19) * 0.15;
+        const breath = 1 + (t1 + t2 + t3) * 0.011;
+        inst.model.scale.set(baseSc, baseSc * breath, baseSc);
       }
 
-      const floorY = -_srcModelMeta.meshMinY * (baseSc || inst.model.scale.y);
-
-      // Vertical bob
+      const scY    = inst.model.scale.y;
+      const floorY = -_srcModelMeta.meshMinY * scY;
       inst.model.position.y = floorY + Math.sin(time * rate) * amp;
 
-      // Head micro-sway: two frequencies for organic feel
+      // Head micro-sway
       const sway1 = Math.sin(time * 0.20) * 0.14;
       const sway2 = Math.sin(time * 0.47) * 0.05;
       const extraSway = currentMode === 'lab' ? (sway1 + sway2) : 0;
@@ -857,13 +872,13 @@ window.Scene = (function () {
 
       if (currentMode === 'lab') {
         inst.model.rotation.z = Math.sin(time * 0.27) * 0.016;
-        inst.model.rotation.x = Math.sin(time * 0.38) * 0.007;  // subtle pitch
+        inst.model.rotation.x = Math.sin(time * 0.38) * 0.007;
       }
 
-      // ── Blinking ──────────────────────────────────────────────
-      updateBlink(blink, inst.model, delta);
+      // Blink — dims eye emissive via material, no geometry touch
+      updateBlink(blink, inst, delta);
 
-      // ── Fire + reward emissive (combined each frame) ──────────
+      // Fire + reward emissive on body materials only
       const fg    = inst.model.userData._fireGlow;
       const rGlow = isPlayer ? rewardGlow : 0;
 
@@ -878,14 +893,14 @@ window.Scene = (function () {
       });
     });
 
-    // ── Glow ring ─────────────────────────────────────────────
+    // Glow ring
     if (_glowRing && playerInst) {
       _glowRing.material.opacity = 0.07 + Math.sin(time * 0.65) * 0.035;
       _glowRing.position.x = playerInst.model.position.x;
       _glowRing.position.z = playerInst.model.position.z;
     }
 
-    // ── Ambient embers from snout when fire traits are high ───
+    // Ambient embers
     if (currentMode === 'lab' && playerInst && _pTraits) {
       const pn = normTraits(_pTraits);
       const fireStr = (pn.fuelGlandSize || 0) * 0.6 + (pn.ignitionEfficiency || 0) * 0.4;
@@ -908,9 +923,7 @@ window.Scene = (function () {
     const pz = playerInst.model.position.z + sc * 0.30;
     const start = new THREE.Vector3(px, py, pz);
     const end   = start.clone().add(new THREE.Vector3(
-      (Math.random() - 0.5) * 0.55,
-      0.55 + Math.random() * 0.65,
-      (Math.random() - 0.5) * 0.18
+      (Math.random() - 0.5) * 0.55, 0.55 + Math.random() * 0.65, (Math.random() - 0.5) * 0.18
     ));
     const geo = new THREE.SphereGeometry(0.012 + Math.random() * 0.014, 4, 3);
     const mat = new THREE.MeshBasicMaterial({
@@ -967,7 +980,6 @@ window.Scene = (function () {
     const pC = normalizeColors(playerColors);
     const eC = normalizeColors(enemyColors);
 
-    // Freeze transitions for battle clarity
     _pColorTarget = { ...pC }; _pColorCurrent = { ...pC }; _pColorT = 1;
     _eColorTarget = { ...eC };
 
