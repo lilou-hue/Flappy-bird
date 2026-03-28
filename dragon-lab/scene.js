@@ -374,38 +374,120 @@ window.Scene = (function () {
   }
 
   // --------------------------------------------------------
-  // VERTEX COLOURS
-  // Independent regions: belly, dorsal, wings, legs, dorsal
-  // spikes, neck/head, underbelly highlight.
-  // Computed from ORIGINAL positions (pre-deformation).
-  // Eyes handled separately as spheres (always white/iris/pupil).
+  // VERTEX COLOURS — game-character palette
+  // Uses HSL hue-shifting for warm belly / cool dorsal contrast.
+  // Bakes faux top-light, belly bounce, and rim glow into the
+  // albedo so it reads well under any toon step.
   // --------------------------------------------------------
-  function paintVertexColors(inst, tintHex) {
-    const tint   = new THREE.Color(tintHex);
 
-    // ── PALETTE derived from tint ──────────────────────────
-    const belly       = tint.clone().lerp(new THREE.Color(0.96, 0.88, 0.74), 0.55).multiplyScalar(1.14);
-    const bellyDeep   = tint.clone().lerp(new THREE.Color(0.90, 0.78, 0.60), 0.40).multiplyScalar(1.05);
-    const dorsal      = tint.clone().multiplyScalar(0.78);
-    const wingUpper   = tint.clone().lerp(new THREE.Color(1,1,1), 0.32).multiplyScalar(1.12);
-    const wingUnder   = tint.clone().lerp(new THREE.Color(0.95, 0.85, 0.70), 0.50).multiplyScalar(1.06);
-    const legUpper    = tint.clone().multiplyScalar(0.82);
-    const legLower    = tint.clone().lerp(new THREE.Color(0.15, 0.10, 0.08), 0.30).multiplyScalar(0.70);
-    const spikeColor  = tint.clone().lerp(new THREE.Color(1,1,1), 0.45).multiplyScalar(0.95); // pale tinted spikes
-    const neckColor   = tint.clone().lerp(new THREE.Color(1,1,1), 0.12).multiplyScalar(0.92);
-    const headColor   = tint.clone().lerp(new THREE.Color(1,1,1), 0.20).multiplyScalar(0.96);
+  // One-time 4-step toon gradient: shadow / mid-shadow / lit / bright.
+  // Never fully black — prevents the "3D printed grey figure" look.
+  let _gradientMap = null;
+  function getGradientMap() {
+    if (_gradientMap) return _gradientMap;
+    const c = document.createElement('canvas');
+    c.width = 4; c.height = 1;
+    const ctx = c.getContext('2d');
+    // Four equal steps: 28% / 52% / 78% / 100%
+    [70, 133, 200, 255].forEach((v, i) => {
+      ctx.fillStyle = `rgb(${v},${v},${v})`;
+      ctx.fillRect(i, 0, 1, 1);
+    });
+    _gradientMap = new THREE.CanvasTexture(c);
+    _gradientMap.minFilter = THREE.NearestFilter;
+    _gradientMap.magFilter = THREE.NearestFilter;
+    _gradientMap.generateMipmaps = false;
+    return _gradientMap;
+  }
+
+  function paintVertexColors(inst, tintHex) {
+    const tint = new THREE.Color(tintHex);
+    const hsl  = {};
+    tint.getHSL(hsl);
+
+    // ── PALETTE  (all HSL-derived from tint) ─────────────
+    // belly: warm cream, strongly desaturated, high lightness
+    const belly = new THREE.Color().setHSL(
+      (hsl.h + 0.06) % 1,
+      Math.min(0.38, hsl.s * 0.45),
+      0.87
+    );
+    // belly-centre: slightly warmer/peachy at the navel
+    const bellyWarm = new THREE.Color().setHSL(
+      (hsl.h + 0.10) % 1,
+      Math.min(0.55, hsl.s * 0.65),
+      0.76
+    );
+    // body (torso sides): full tint, vibrant
+    const body = new THREE.Color().setHSL(
+      hsl.h,
+      Math.min(1, hsl.s * 1.05),
+      Math.min(0.62, Math.max(0.35, hsl.l * 1.10))
+    );
+    // dorsal (top ridge): darker + cool hue-shift (blue-green tint)
+    const dorsal = new THREE.Color().setHSL(
+      (hsl.h - 0.07 + 1) % 1,
+      Math.min(1, hsl.s * 1.20),
+      Math.max(0.18, hsl.l * 0.52)
+    );
+    // dorsal ridge line: even darker at the very spine
+    const ridge = new THREE.Color().setHSL(
+      (hsl.h - 0.10 + 1) % 1,
+      Math.min(1, hsl.s * 1.35),
+      Math.max(0.10, hsl.l * 0.32)
+    );
+    // wing upper surface: lighter, more saturated tint
+    const wingTop = new THREE.Color().setHSL(
+      hsl.h,
+      Math.min(1, hsl.s * 1.10),
+      Math.min(0.72, hsl.l * 1.35)
+    );
+    // wing under surface: warm amber backlit glow (SSS imitation)
+    const wingGlow = new THREE.Color().setHSL(
+      0.07, 0.82, 0.68          // warm amber
+    ).lerp(tint, 0.25);
+    // spikes / horns: near-white bone, slight tint at base
+    const hornBase = new THREE.Color().setHSL(hsl.h, 0.25, 0.72);
+    const hornTip  = new THREE.Color().setHSL((hsl.h + 0.5) % 1, 0.08, 0.93);
+    // upper leg (muscular)
+    const legHigh = new THREE.Color().setHSL(
+      (hsl.h - 0.03 + 1) % 1,
+      Math.min(0.65, hsl.s * 0.80),
+      Math.max(0.22, hsl.l * 0.68)
+    );
+    // lower leg / foot (armored, very dark)
+    const legLow = new THREE.Color().setHSL(
+      (hsl.h - 0.05 + 1) % 1,
+      0.28,
+      0.11
+    );
+    // head: body hue but slightly lifted, more saturated
+    const head = new THREE.Color().setHSL(
+      hsl.h,
+      Math.min(1, hsl.s * 1.15),
+      Math.min(0.68, hsl.l * 1.12)
+    );
+
+    // Shared light colours for faux shading
+    const keyLight  = new THREE.Color(0.94, 0.98, 1.00);  // cool blue-white key
+    const bounceCol = new THREE.Color(0.98, 0.88, 0.72);  // warm amber bounce
+
+    // Apply gradient map to all materials (once)
+    const gm = getGradientMap();
+    inst.materials.forEach(mat => {
+      if (!mat.gradientMap) { mat.gradientMap = gm; mat.needsUpdate = true; }
+    });
 
     inst.meshes.forEach((mesh) => {
       const geo  = mesh.geometry;
       const orig = mesh.userData.origPos;
       if (!orig) return;
 
-      const cnt  = orig.length / 3;
-      const lb   = mesh.userData.localBox;
+      const cnt   = orig.length / 3;
+      const lb    = mesh.userData.localBox;
       const spanY = lb.max.y - lb.min.y || 1;
-      const spanX = lb.max.x - lb.min.x || 1;
+      const halfX = (lb.max.x - lb.min.x) / 2 || 1;
       const centX = (lb.min.x + lb.max.x) / 2;
-      const halfX = spanX / 2;
       const spanZ = lb.max.z - lb.min.z || 1;
 
       const buf = new Float32Array(cnt * 3);
@@ -413,58 +495,86 @@ window.Scene = (function () {
       for (let i = 0; i < cnt; i++) {
         const x = orig[i*3], y = orig[i*3+1], z = orig[i*3+2];
 
-        // Normalised position 0→1
-        const ty  = (y - lb.min.y) / spanY;          // 0=feet, 1=top
-        const tx  = Math.abs(x - centX) / halfX;     // 0=centre, 1=wing tip
-        const tz  = (z - lb.min.z) / spanZ;           // 0=tail, 1=head
+        const ty = (y - lb.min.y) / spanY;       // 0 = feet,   1 = spine top
+        const tx = Math.abs(x - centX) / halfX;  // 0 = spine,  1 = wing tip
+        const tz = (z - lb.min.z) / spanZ;       // 0 = tail,   1 = snout
 
-        const isWing      = tx > 0.52 && y > -0.15;
-        const isNeckHead  = tz > 0.68 && ty > 0.35;
-        const isSpike     = ty > 0.82 && tx < 0.35;
-        const isLeg       = ty < 0.30 && tx < 0.60;
+        // ── Region flags ──────────────────────────────────
+        const isWing     = tx > 0.46 && y > -0.22;
+        const isHead     = tz > 0.68 && ty > 0.28;
+        const isSpike    = ty > 0.76 && tx < 0.28;
+        const isLeg      = ty < 0.34 && tx < 0.52;
+
+        // ── Faux lighting factors (baked into albedo) ─────
+        // Top-key factor: how much the key light (from above-front) hits this vert
+        const keyFactor  = ss(0.58, 0.82, ty) * (1.0 - tx * 0.4);
+        // Bounce factor: underside catches warm bounce from floor
+        const bnsFactor  = ss(0.30, 0.05, ty) * (1.0 - tx * 0.3);
+        // Rim factor: outer-facing verts get a side-light pop
+        const rimFactor  = ss(0.50, 0.78, tx) * ss(0.55, 0.25, ty);
 
         let c;
 
         if (isSpike) {
-          // Dorsal spikes — pale tinted, independent from body
-          c = spikeColor.clone();
+          // Horn / spine spike: dark tinted base → bright bone tip
+          c = hornBase.clone().lerp(hornTip, ss(0.76, 0.97, ty));
+          // Key light catches the tip
+          c.lerp(keyLight, keyFactor * 0.30);
 
-        } else if (isNeckHead) {
-          // Neck and head region
-          const headBlend = ss(0.68, 0.88, tz);
-          c = neckColor.clone().lerp(headColor, headBlend);
-          // Lower jaw / chin slightly darker
-          if (ty < 0.52) c.multiplyScalar(0.88);
+        } else if (isHead) {
+          const headT = ss(0.68, 0.90, tz);
+          c = body.clone().lerp(head, headT);
+          // Chin & jaw underside
+          if (ty < 0.44) c.lerp(bellyWarm, 0.45);
+          // Forehead top catches key
+          c.lerp(keyLight, ss(0.70, 0.88, ty) * headT * 0.22);
 
         } else if (isWing) {
-          // Wing membrane — upper bright, lower warm
-          const wingBlend = ss(0.52, 0.82, tx);
-          if (y > 0) {
-            c = wingUpper.clone().multiplyScalar(0.9 + 0.1 * wingBlend);
-          } else {
-            c = wingUnder.clone();
-          }
+          const spread = ss(0.46, 0.88, tx);   // 0 = wing root, 1 = tip
+          // Upper / under blend: y > 0 = upper surface
+          const yBlend = ss(-0.15, 0.25, y);
+          c = wingTop.clone().lerp(wingGlow, (1 - yBlend) * 0.80);
+          // Membrane thins toward tip → more backlit warmth
+          c.lerp(wingGlow, spread * 0.40);
+          // Wing-root attaches to body colour
+          c.lerp(body, (1 - spread) * 0.55);
+          // Rim brightens the leading edge
+          c.lerp(keyLight, rimFactor * 0.28);
 
         } else if (isLeg) {
-          // Legs — upper muscular, lower dark feet
-          const legBlend = 1 - ty / 0.30;
-          c = legUpper.clone().lerp(legLower, legBlend * 0.7);
+          const legT = 1 - Math.min(1, ty / 0.34);  // 0 = thigh, 1 = foot
+          c = legHigh.clone().lerp(legLow, legT * legT);
+          // Knee/ankle highlight
+          const kneeGlow = Math.sin(legT * Math.PI) * 0.18;
+          c.lerp(body, kneeGlow);
 
         } else {
-          // Body — belly↔dorsal gradient by Y
-          if (ty < 0.42) {
-            // Underbelly
-            const bellyBlend = 1 - ty / 0.42;
-            c = bellyDeep.clone().lerp(belly, bellyBlend * 0.6);
+          // ── Main body ───────────────────────────────────
+          if (ty < 0.38) {
+            // Underbelly: warm cream → peach
+            const t = 1 - ty / 0.38;
+            c = bellyWarm.clone().lerp(belly, t * 0.65);
+            c.lerp(body, (1 - t) * 0.60);           // blend into body sides
           } else {
-            // Mid-body to dorsal
-            c = belly.clone().lerp(dorsal, ss(0.42, 0.78, ty));
+            // Mid-body → dorsal gradient
+            const t = ss(0.38, 0.80, ty);
+            c = body.clone().lerp(dorsal, t);
+            // Very top of spine → ridge line
+            c.lerp(ridge, ss(0.80, 0.98, ty));
           }
+
+          // ── Baked faux lighting ──────────────────────────
+          // Key light (top-front, cool white) lifts dorsal faces
+          c.lerp(keyLight, keyFactor * 0.20);
+          // Bounce (warm) lifts belly underside
+          c.lerp(bounceCol, bnsFactor * 0.22);
+          // Rim side-light pops the silhouette
+          c.lerp(keyLight, rimFactor * 0.14);
         }
 
-        buf[i*3]   = c.r;
-        buf[i*3+1] = c.g;
-        buf[i*3+2] = c.b;
+        buf[i*3]   = Math.min(1, c.r);
+        buf[i*3+1] = Math.min(1, c.g);
+        buf[i*3+2] = Math.min(1, c.b);
       }
 
       geo.setAttribute('color', new THREE.BufferAttribute(buf, 3));
