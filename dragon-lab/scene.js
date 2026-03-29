@@ -535,61 +535,59 @@ window.Scene = (function () {
     const hsl = {};
     bodyTint.getHSL(hsl);
 
-    // ── Body palette (PBR albedo) ─────────────────────────────────
-    // Belly: warm cream — organic subsurface scattering feel on thin skin
+    // ── Body palette — Dragonita-inspired: bold contrast ─────────
+    // Belly: near-white, barely tinted — crisp underside like the reference
     const belly = new THREE.Color().setHSL(
       (hsl.h + 0.04) % 1,
-      Math.min(0.22, hsl.s * 0.28),
-      Math.min(0.88, Math.max(0.68, hsl.l * 1.50))
+      Math.min(0.12, hsl.s * 0.14),
+      Math.min(0.92, Math.max(0.80, hsl.l * 1.85))
     );
-    // Body mid: rich, saturated — PBR lighting will handle highlights/shadows
+    // Body: vivid, punchy — pushed saturation so the tint really reads
     const body = new THREE.Color().setHSL(
       hsl.h,
-      Math.min(1, hsl.s * 1.20),
-      Math.min(0.58, Math.max(0.30, hsl.l * 1.05))
+      Math.min(1, hsl.s * 1.35),
+      Math.min(0.54, Math.max(0.26, hsl.l * 0.95))
     );
-    // Dorsal: deep, slightly cool — maximum colour contrast with belly
+    // Dorsal: near-black — maximum contrast for ridge definition
     const dorsal = new THREE.Color().setHSL(
-      (hsl.h - 0.05 + 1) % 1,
-      Math.min(1, hsl.s * 1.40),
-      Math.max(0.10, hsl.l * 0.38)
+      (hsl.h - 0.04 + 1) % 1,
+      Math.min(1, hsl.s * 1.50),
+      Math.max(0.06, hsl.l * 0.25)
     );
-    const seam = dorsal.clone().multiplyScalar(0.55);
+    const seam = dorsal.clone().multiplyScalar(0.50);
 
-    // Belly-to-body transition midpoint — slightly warm, natural blend
-    const bellyMid = belly.clone().lerp(body, 0.55);
-    bellyMid.r = Math.min(1, bellyMid.r * 1.04);
-
-    // ── Wing palette ─────────────────────────────────────────────
+    // ── Wing palette — warm amber default for cool-bodied dragons ─
     let wingMem, wingEdge;
     if (colors.wings) {
       const wh = {};
       new THREE.Color(colors.wings).getHSL(wh);
-      wingMem  = new THREE.Color().setHSL(wh.h, Math.min(1, wh.s * 1.05),
-                   Math.min(0.72, Math.max(0.36, wh.l)));
-      wingEdge = new THREE.Color().setHSL(wh.h, Math.min(1, wh.s * 1.20),
-                   Math.max(0.10, wh.l * 0.38));
+      wingMem  = new THREE.Color().setHSL(wh.h, Math.min(1, wh.s * 1.10),
+                   Math.min(0.72, Math.max(0.42, wh.l * 1.05)));
+      wingEdge = new THREE.Color().setHSL(wh.h, Math.min(1, wh.s * 1.30),
+                   Math.max(0.06, wh.l * 0.28));
     } else {
-      wingMem  = new THREE.Color().setHSL((hsl.h + 0.06) % 1, Math.min(1, hsl.s * 0.90), 0.55)
-                   .lerp(bodyTint, 0.18);
-      wingEdge = dorsal.clone().multiplyScalar(0.55);
+      // If body is warm (red/orange/yellow), go complementary; otherwise go amber
+      const isWarm = hsl.h < 0.18 || hsl.h > 0.85;
+      const wingH  = isWarm ? (hsl.h + 0.30) % 1 : 0.10;
+      wingMem  = new THREE.Color().setHSL(wingH, 0.88, 0.58);
+      wingEdge = new THREE.Color().setHSL(wingH, 0.72, 0.12);
     }
-    // Membrane highlight (slightly lighter centre — like backlit membrane)
-    const wingHighlight = wingMem.clone().lerp(new THREE.Color(1,1,1), 0.12);
+    // Membrane highlight — brighter centre like backlit skin
+    const wingHighlight = wingMem.clone().lerp(new THREE.Color(1,1,1), 0.18);
 
-    // ── Accent palette ───────────────────────────────────────────
+    // ── Accent — dark version of tint for dorsal spines ──────────
     let accentCol;
     if (colors.accent) {
       accentCol = new THREE.Color(colors.accent);
     } else {
       accentCol = new THREE.Color().setHSL(
-        (hsl.h - 0.04 + 1) % 1, Math.min(1, hsl.s * 0.80), Math.max(0.08, hsl.l * 0.28)
+        (hsl.h - 0.03 + 1) % 1, Math.min(1, hsl.s * 1.20), Math.max(0.05, hsl.l * 0.22)
       );
     }
 
     // ── Claws ────────────────────────────────────────────────────
-    const clawDark  = new THREE.Color().setHSL((hsl.h + 0.04) % 1, 0.18, 0.06);
-    const clawLight = new THREE.Color().setHSL((hsl.h + 0.04) % 1, 0.14, 0.78);
+    const clawDark  = new THREE.Color().setHSL((hsl.h + 0.04) % 1, 0.15, 0.05);
+    const clawLight = new THREE.Color().setHSL((hsl.h + 0.04) % 1, 0.10, 0.82);
 
     inst.meshes.forEach((mesh) => {
       const geo  = mesh.geometry;
@@ -620,45 +618,49 @@ window.Scene = (function () {
           col = clawLight.clone().lerp(clawDark, clawT * clawT);
 
         } else if (isWing) {
-          // Wing membrane — gradient from body root to translucent edge
-          const spread  = ss(0.42, 0.92, tx);
-          const yFactor = ss(-0.20, 0.18, y);      // upper wing vs lower
-          // Membrane centre slightly lighter (backlit effect)
-          const memCol  = wingMem.clone().lerp(wingHighlight, ss(0.50, 0.72, tx));
-          col = body.clone().lerp(memCol, spread * 0.80 + (1 - yFactor) * 0.15);
-          // Darken edges for silhouette readability
-          col.lerp(wingEdge, ss(0.78, 0.96, tx) * 0.55);
+          // Wing membrane — body colour at root, warm membrane in middle, dark crisp edge
+          const spread  = ss(0.40, 0.88, tx);
+          const memCol  = wingMem.clone().lerp(wingHighlight, ss(0.46, 0.68, tx));
+          col = body.clone().lerp(memCol, ss(0.36, 0.72, tx));
+          // Strong dark edge — Dragonita silhouette crispness
+          col.lerp(wingEdge, ss(0.70, 0.92, tx) * 0.80);
 
         } else {
-          // ── Body gradient ──────────────────────────────────────
-          // Three-zone blend: belly → body → dorsal
-          if (ty < 0.28) {
-            // Underside: belly transitions smoothly upward
-            col = belly.clone().lerp(bellyMid, ss(0, 0.14, ty));
-            col.lerp(body, ss(0.12, 0.28, ty));
+          // ── Body gradient: belly → body → dorsal ───────────────
+          if (ty < 0.24) {
+            // Belly: stays pale until sharper boundary with body
+            col = belly.clone();
+            col.lerp(body, ss(0.14, 0.24, ty));
           } else {
-            col = body.clone().lerp(dorsal, ss(0.28, 0.80, ty));
+            col = body.clone().lerp(dorsal, ss(0.24, 0.82, ty));
           }
 
-          // Side darkening — flanks slightly cooler/darker than mid-belly
-          const flankFactor = ss(0.30, 0.55, tx) * ss(0.10, 0.38, ty);
-          col.lerp(body.clone().multiplyScalar(0.82), flankFactor * 0.30);
+          // Side darkening — flanks darker, belly stays central and light
+          const flankFactor = ss(0.28, 0.52, tx) * ss(0.08, 0.30, ty);
+          col.lerp(body.clone().multiplyScalar(0.78), flankFactor * 0.35);
 
-          // Scale micro-texture
+          // Ventral plate segmentation — Dragonita-style belly bands
+          if (ty < 0.22) {
+            const plateBand = Math.sin(tz * Math.PI * 9) * 0.5 + 0.5;
+            const plateMask = ss(0, 0.18, ty) * (1 - ss(0.28, 0.46, tx));
+            col.lerp(belly.clone().multiplyScalar(0.84), plateBand * plateMask * 0.18);
+          }
+
+          // Scale micro-texture — stronger on body, minimal on pale belly
           const sv    = scaleDetail(x, y, z);
-          const depth = 0.22 + ty * 0.24;
-          col.lerp(seam, (1 - sv) * depth * 0.50);
-          col.lerp(new THREE.Color(1, 1, 1), sv * depth * 0.10);
+          const depth = (0.14 + ty * 0.28) * ss(0.12, 0.28, ty);
+          col.lerp(seam, (1 - sv) * depth * 0.55);
+          col.lerp(new THREE.Color(1, 1, 1), sv * depth * 0.08);
 
-          // Neck/snout desaturation — face is slightly paler
-          if (tz > 0.78 && ty > 0.50) {
-            const faceBlend = ss(0.78, 0.96, tz) * ss(0.50, 0.80, ty) * 0.30;
+          // Neck/snout — slightly paler toward face
+          if (tz > 0.80 && ty > 0.52) {
+            const faceBlend = ss(0.80, 0.96, tz) * ss(0.52, 0.78, ty) * 0.25;
             col.lerp(belly, faceBlend);
           }
 
-          // Accent on dorsal ridge and spines
-          if (ty > 0.70) {
-            const accentT = ss(0.70, 0.90, ty) * (colors.accent ? 0.70 : 0.22);
+          // Dorsal accent — deep colour on ridge and spines
+          if (ty > 0.72) {
+            const accentT = ss(0.72, 0.92, ty) * (colors.accent ? 0.75 : 0.30);
             col.lerp(accentCol, accentT);
           }
         }
