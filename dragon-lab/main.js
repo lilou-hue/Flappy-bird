@@ -89,6 +89,24 @@ window.App = (function() {
 
     // Init tutorial
     window.Tutorial.init();
+
+    // i18n: apply translations to DOM and add language selector
+    if (typeof I18N !== 'undefined') {
+      // Translate input placeholder
+      const nameInput = document.getElementById('dragon-name-input');
+      if (nameInput) nameInput.placeholder = I18N.t('dlNamePlaceholder');
+      I18N.applyDOM();
+      I18N.createSelector(document.querySelector('.header-right'));
+      // Re-apply on language change
+      window.addEventListener('langchange', () => {
+        if (nameInput) nameInput.placeholder = I18N.t('dlNamePlaceholder');
+        I18N.applyDOM();
+        // Re-render JS-generated UI with new language
+        window.UI.renderSliders(currentDragon.traits, currentDragon.fireDesign, onTraitChange, onFireDesignChange);
+        window.UI.renderBattleSetup(onBattleStart);
+        window.UI.renderChallenges();
+      });
+    }
   }
 
   // --------------------------------------------------------
@@ -159,7 +177,7 @@ window.App = (function() {
     // Personal bests
     const newBests = window.UI.checkPersonalBests(currentResults);
     if (newBests.length > 0) {
-      window.UI.showNotification('New personal best! ' + newBests.join(', '), 'success');
+      window.UI.showNotification((typeof I18N !== 'undefined' ? I18N.t('dlNewPB') : 'New personal best!') + ' ' + newBests.join(', '), 'success');
     }
 
     // Check challenges
@@ -171,7 +189,7 @@ window.App = (function() {
     const { newlyUnlocked } = window.Challenges.evaluate(currentResults, record);
     if (newlyUnlocked.length > 0) {
       newlyUnlocked.forEach(function(c) {
-        window.UI.showNotification('Challenge unlocked: ' + c.icon + ' ' + c.title, 'success');
+        window.UI.showNotification((typeof I18N !== 'undefined' ? I18N.t('dlChallengeUnlocked') : 'Challenge unlocked:') + ' ' + c.icon + ' ' + c.title, 'success');
       });
     }
     window.UI.renderChallenges();
@@ -233,7 +251,7 @@ window.App = (function() {
     window.Scene.updateDragon(currentDragon.traits, getDragonColors());
     runSimulation();
     autoSave();
-    window.UI.showNotification('Loaded preset: ' + window.DragonData.PRESETS[presetKey].label, 'info');
+    window.UI.showNotification((typeof I18N !== 'undefined' ? I18N.t('dlLoadedPreset') : 'Loaded preset:') + ' ' + window.DragonData.PRESETS[presetKey].label, 'info');
   }
 
   // --------------------------------------------------------
@@ -323,7 +341,7 @@ window.App = (function() {
     const { newlyUnlocked } = window.Challenges.evaluate(currentResults, rec);
     if (newlyUnlocked.length > 0) {
       newlyUnlocked.forEach(function(c) {
-        window.UI.showNotification('Challenge unlocked: ' + c.icon + ' ' + c.title, 'success');
+        window.UI.showNotification((typeof I18N !== 'undefined' ? I18N.t('dlChallengeUnlocked') : 'Challenge unlocked:') + ' ' + c.icon + ' ' + c.title, 'success');
       });
       window.UI.renderChallenges();
     }
@@ -427,7 +445,7 @@ window.App = (function() {
       simBtn.addEventListener('click', () => {
         runSimulation();
         window.UI.switchTab('simulate');
-        window.UI.showNotification('Simulation complete', 'info');
+        window.UI.showNotification((typeof I18N !== 'undefined' ? I18N.t('dlSimComplete') : 'Simulation complete'), 'info');
       });
     }
 
@@ -442,7 +460,7 @@ window.App = (function() {
         window.Scene.updateDragon(currentDragon.traits, getDragonColors());
         runSimulation();
         autoSave();
-        window.UI.showNotification('Random dragon generated', 'info');
+        window.UI.showNotification((typeof I18N !== 'undefined' ? I18N.t('dlRandGenerated') : 'Random dragon generated'), 'info');
       });
     }
 
@@ -457,7 +475,7 @@ window.App = (function() {
         window.Scene.updateDragon(currentDragon.traits, getDragonColors());
         runSimulation();
         autoSave();
-        window.UI.showNotification('Reset to defaults', 'info');
+        window.UI.showNotification((typeof I18N !== 'undefined' ? I18N.t('dlResetDefaults') : 'Reset to defaults'), 'info');
       });
     }
 
@@ -466,7 +484,7 @@ window.App = (function() {
     if (saveBtn) {
       saveBtn.addEventListener('click', () => {
         window.Dragon.saveToSlot(currentDragon);
-        window.UI.showNotification('Dragon saved: ' + currentDragon.name, 'success');
+        window.UI.showNotification((typeof I18N !== 'undefined' ? I18N.t('dlDragonSaved') : 'Dragon saved:') + ' ' + currentDragon.name, 'success');
       });
     }
 
@@ -483,7 +501,7 @@ window.App = (function() {
       if (window.UI.isAdvancedMode() === adv) return;
       window.UI.setAdvancedMode(adv);
       window.UI.renderSliders(currentDragon.traits, currentDragon.fireDesign, onTraitChange, onFireDesignChange);
-      window.UI.showNotification(adv ? 'Advanced mode — all controls visible' : 'Basic mode — simplified controls', 'info');
+      window.UI.showNotification(typeof I18N !== 'undefined' ? I18N.t(adv ? 'dlAdvMode' : 'dlBasicMode') : (adv ? 'Advanced mode — all controls visible' : 'Basic mode — simplified controls'), 'info');
     }
     const basicBtn = document.getElementById('btn-mode-basic');
     const advBtn   = document.getElementById('btn-mode-advanced');

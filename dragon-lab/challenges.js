@@ -138,8 +138,13 @@ window.Challenges = (function() {
   function getAll() { return DEFINITIONS; }
   function getProgress() { return load(); }
 
-  const TIER_LABELS = { 1: 'Discovery', 2: 'Mastery', 3: 'Combat', 4: 'Legend' };
-  function getTierLabel(tier) { return TIER_LABELS[tier] || ''; }
+  function getTierLabel(tier) {
+    const keys = { 1: 'dlTierDiscovery', 2: 'dlTierMastery', 3: 'dlTierCombat', 4: 'dlTierLegend' };
+    const key = keys[tier];
+    if (key && typeof I18N !== 'undefined') return I18N.t(key);
+    const fallback = { 1: 'Discovery', 2: 'Mastery', 3: 'Combat', 4: 'Legend' };
+    return fallback[tier] || '';
+  }
 
   return { evaluate: evaluate, getAll: getAll, getProgress: getProgress, getTierLabel: getTierLabel };
 })();

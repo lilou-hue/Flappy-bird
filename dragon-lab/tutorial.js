@@ -219,7 +219,7 @@ window.Tutorial = (function() {
     currentStep++;
     if (currentStep >= STEPS.length) {
       skip();
-      window.UI.showNotification('Tutorial complete — experiment freely!', 'success');
+      window.UI.showNotification((typeof I18N !== 'undefined' ? I18N.t('dlTutorialComplete') : 'Tutorial complete — experiment freely!'), 'success');
     } else {
       showStep(currentStep);
     }

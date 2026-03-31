@@ -305,55 +305,55 @@ window.UI = (function() {
         <div class="classification-desc">${c.description}</div>
       </div>
 
-      ${renderSystemSection('Flight', results.flight.flightClass, [
-        { label: 'Takeoff', value: results.flight.takeoff },
-        { label: 'Sustained Flight', value: results.flight.sustained },
-        { label: 'Glide Quality', value: results.flight.glide },
-        { label: 'Maneuverability', value: results.flight.maneuverability }
+      ${renderSystemSection(t('dlSectionFlight'), results.flight.flightClass, [
+        { label: t('dlMetricTakeoff'), value: results.flight.takeoff },
+        { label: t('dlMetricSustained'), value: results.flight.sustained },
+        { label: t('dlMetricGlide'), value: results.flight.glide },
+        { label: t('dlMetricManeuver'), value: results.flight.maneuverability }
       ], window.Explanations.flight(results), previousResults ? previousResults.flight : null)}
 
-      ${renderSystemSection('Fire System', results.fire.fireClass, [
-        { label: 'Fire Output', value: results.fire.fireOutput },
-        { label: 'Stability', value: results.fire.stability },
-        { label: 'Blowback Risk', value: results.fire.blowbackRisk, inverted: true },
-        { label: 'Fuel Efficiency', value: results.fire.fuelEfficiency },
-        { label: 'Compatibility', value: results.fire.overallCompat * 66.7 }
+      ${renderSystemSection(t('dlSectionFire'), results.fire.fireClass, [
+        { label: t('dlMetricFireOutput'), value: results.fire.fireOutput },
+        { label: t('dlMetricStability'), value: results.fire.stability },
+        { label: t('dlMetricBlowback'), value: results.fire.blowbackRisk, inverted: true },
+        { label: t('dlMetricFuelEff'), value: results.fire.fuelEfficiency },
+        { label: t('dlMetricCompat'), value: results.fire.overallCompat * 66.7 }
       ], window.Explanations.fire(results), previousResults ? previousResults.fire : null)}
 
       ${results.fire.failureModes.length > 0 ? `
         <div class="failure-modes">
-          <div class="failure-title">Fire Failure Warnings</div>
+          <div class="failure-title">${t('dlFireFailWarn')}</div>
           ${results.fire.failureModes.map(fm => `
             <div class="failure-item"><span class="failure-icon">⚠</span> <strong>${fm.label}:</strong> ${fm.description}</div>
           `).join('')}
         </div>
       ` : ''}
 
-      ${renderSystemSection('Energy', results.energy.energyClass, [
-        { label: 'Base Cost', value: results.energy.baseCost, inverted: true },
-        { label: 'Flight Cost', value: results.energy.flightCost, inverted: true },
-        { label: 'Fire Cost', value: results.energy.fireCost, inverted: true },
-        { label: 'Total Strain', value: results.energy.totalStrain, inverted: true },
-        { label: 'Sustainability', value: results.energy.sustainability }
+      ${renderSystemSection(t('dlSectionEnergy'), results.energy.energyClass, [
+        { label: t('dlMetricBaseCost'), value: results.energy.baseCost, inverted: true },
+        { label: t('dlMetricFlightCost'), value: results.energy.flightCost, inverted: true },
+        { label: t('dlMetricFireCost'), value: results.energy.fireCost, inverted: true },
+        { label: t('dlMetricTotalStrain'), value: results.energy.totalStrain, inverted: true },
+        { label: t('dlMetricSustainability'), value: results.energy.sustainability }
       ], window.Explanations.energy(results), previousResults ? previousResults.energy : null)}
 
-      ${renderSystemSection('Durability', results.durability.durabilityClass, [
-        { label: 'Structural Integrity', value: results.durability.total }
+      ${renderSystemSection(t('dlSectionDurability'), results.durability.durabilityClass, [
+        { label: t('dlMetricStructural'), value: results.durability.total }
       ], window.Explanations.durability(results), previousResults ? previousResults.durability : null)}
 
-      ${renderSystemSection('Survival', results.survival.survivalClass, [
-        { label: 'Mobility', value: results.survival.mobility },
-        { label: 'Hunting Efficiency', value: results.survival.hunting },
-        { label: 'Overall Rating', value: results.survival.rating }
+      ${renderSystemSection(t('dlSectionSurvival'), results.survival.survivalClass, [
+        { label: t('dlMetricMobility'), value: results.survival.mobility },
+        { label: t('dlMetricHunting'), value: results.survival.hunting },
+        { label: t('dlMetricOverall'), value: results.survival.rating }
       ], window.Explanations.survival(results), previousResults ? previousResults.survival : null)}
 
       <div class="lab-report">
-        <div class="lab-report-title">Lab Report</div>
-        <div class="lab-report-row"><span class="lr-label">Strongest:</span> ${lr.strongestFeature} (${lr.strongestScore})</div>
-        <div class="lab-report-row"><span class="lr-label">Weakest:</span> ${lr.biggestWeakness} (${lr.weakestScore})</div>
-        <div class="lab-report-row"><span class="lr-label">Analysis:</span> ${lr.scientificReason}</div>
-        <div class="lab-report-row"><span class="lr-label">Recommendation:</span> ${lr.suggestedImprovement}</div>
-        ${lr.fireWarnings.length > 0 ? `<div class="lab-report-row lr-warning"><span class="lr-label">Fire Warnings:</span> ${lr.fireWarnings.join(', ')}</div>` : ''}
+        <div class="lab-report-title">${t('dlLabReport')}</div>
+        <div class="lab-report-row"><span class="lr-label">${t('dlLrStrongest')}</span> ${lr.strongestFeature} (${lr.strongestScore})</div>
+        <div class="lab-report-row"><span class="lr-label">${t('dlLrWeakest')}</span> ${lr.biggestWeakness} (${lr.weakestScore})</div>
+        <div class="lab-report-row"><span class="lr-label">${t('dlLrAnalysis')}</span> ${lr.scientificReason}</div>
+        <div class="lab-report-row"><span class="lr-label">${t('dlLrRecommend')}</span> ${lr.suggestedImprovement}</div>
+        ${lr.fireWarnings.length > 0 ? `<div class="lab-report-row lr-warning"><span class="lr-label">${t('dlLrFireWarn')}</span> ${lr.fireWarnings.join(', ')}</div>` : ''}
       </div>
     `;
   }
@@ -419,7 +419,7 @@ window.UI = (function() {
 
     panel.innerHTML = `
       <div class="habitat-viability">
-        <div class="viability-label">Habitat Viability</div>
+        <div class="viability-label">${t('dlHabitatViability')}</div>
         <div class="viability-score">${Math.round(habitatResult.viability)}%</div>
         <div class="meter-bar large"><div class="meter-fill ${habitatResult.viability > 60 ? 'meter-good' : habitatResult.viability > 35 ? 'meter-warning' : 'meter-danger'}" style="width:${habitatResult.viability}%"></div></div>
       </div>
@@ -446,7 +446,7 @@ window.UI = (function() {
     if (!panel) return;
 
     // Enemy selector
-    let enemyHTML = '<div class="battle-section-title">Choose Opponent</div><div class="enemy-grid">';
+    let enemyHTML = `<div class="battle-section-title">${t('dlChooseOpponent')}</div><div class="enemy-grid">`;
     Object.keys(DATA.ENEMY_ARCHETYPES).forEach(key => {
       const e = DATA.ENEMY_ARCHETYPES[key];
       enemyHTML += `
@@ -460,7 +460,7 @@ window.UI = (function() {
     enemyHTML += '</div>';
 
     // Arena selector
-    let arenaHTML = '<div class="battle-section-title">Choose Arena</div><div class="arena-grid">';
+    let arenaHTML = `<div class="battle-section-title">${t('dlChooseArena')}</div><div class="arena-grid">`;
     Object.keys(DATA.BATTLE_CONFIG.arenas).forEach(key => {
       const a = DATA.BATTLE_CONFIG.arenas[key];
       arenaHTML += `<button class="arena-btn" data-arena="${key}">${a.label}</button>`;
@@ -469,15 +469,15 @@ window.UI = (function() {
 
     // Speed control
     const speedHTML = `
-      <div class="battle-section-title">Battle Speed</div>
+      <div class="battle-section-title">${t('dlBattleSpeed')}</div>
       <div class="speed-control">
-        <button class="speed-btn active" data-speed="normal">Normal</button>
-        <button class="speed-btn" data-speed="fast">Fast</button>
+        <button class="speed-btn active" data-speed="normal">${t('dlSpeedNormal')}</button>
+        <button class="speed-btn" data-speed="fast">${t('dlSpeedFast')}</button>
       </div>
     `;
 
     panel.innerHTML = enemyHTML + arenaHTML + speedHTML + `
-      <button class="btn-primary btn-start-battle" id="btn-start-battle" disabled>Start Battle</button>
+      <button class="btn-primary btn-start-battle" id="btn-start-battle" disabled>${t('dlStartBattle')}</button>
     `;
 
     // Wire selections
@@ -528,21 +528,21 @@ window.UI = (function() {
       <div class="battle-hud">
         <div class="combatant-hud player-hud">
           <div class="combatant-name">${p.name}</div>
-          ${renderBar('HP', p.hp, 100, 'hp')}
-          ${renderBar('Stamina', p.stamina, 100, 'stamina')}
-          ${renderBar('Fire System', p.fireSystem, 100, 'fire')}
-          <div class="last-action">Action: ${p.lastAction ? window.Battle.getActionLabel(p.lastAction) : '—'}</div>
+          ${renderBar(t('dlBarHp'), p.hp, 100, 'hp')}
+          ${renderBar(t('dlBarStamina'), p.stamina, 100, 'stamina')}
+          ${renderBar(t('dlBarFireSys'), p.fireSystem, 100, 'fire')}
+          <div class="last-action">${t('dlActionLabel')} ${p.lastAction ? window.Battle.getActionLabel(p.lastAction) : '—'}</div>
         </div>
-        <div class="battle-vs">VS</div>
+        <div class="battle-vs">${t('dlVsLabel')}</div>
         <div class="combatant-hud enemy-hud">
           <div class="combatant-name">${e.name}</div>
-          ${renderBar('HP', e.hp, 100, 'hp')}
-          ${renderBar('Stamina', e.stamina, 100, 'stamina')}
-          ${renderBar('Fire System', e.fireSystem, 100, 'fire')}
-          <div class="last-action">Action: ${e.lastAction ? window.Battle.getActionLabel(e.lastAction) : '—'}</div>
+          ${renderBar(t('dlBarHp'), e.hp, 100, 'hp')}
+          ${renderBar(t('dlBarStamina'), e.stamina, 100, 'stamina')}
+          ${renderBar(t('dlBarFireSys'), e.fireSystem, 100, 'fire')}
+          <div class="last-action">${t('dlActionLabel')} ${e.lastAction ? window.Battle.getActionLabel(e.lastAction) : '—'}</div>
         </div>
       </div>
-      <div class="battle-tick-counter">Round ${state.tick} / ${DATA.BATTLE_CONFIG.maxTicks}</div>
+      <div class="battle-tick-counter">${t('dlRoundLabel')} ${state.tick} / ${DATA.BATTLE_CONFIG.maxTicks}</div>
       <div class="battle-log" id="battle-log">
         ${state.log.slice(Math.max(0, tickIndex - 6), tickIndex + 1).map(tick =>
           `<div class="log-entry"><span class="log-tick">R${tick.tick}</span> ${tick.events.join(' ')}</div>`
@@ -575,16 +575,16 @@ window.UI = (function() {
     panel.innerHTML = `
       <div class="battle-summary">
         <div class="battle-result ${state.winner === 'player' ? 'result-win' : state.winner === 'draw' ? 'result-draw' : 'result-loss'}">
-          ${state.winner === 'player' ? 'VICTORY' : state.winner === 'draw' ? 'DRAW' : 'DEFEAT'}
+          ${state.winner === 'player' ? t('dlVictory') : state.winner === 'draw' ? t('dlDraw') : t('dlDefeat')}
         </div>
         <div class="battle-summary-text">${report.summary}</div>
         ${report.details.map(d => `<p class="battle-detail">${d}</p>`).join('')}
         ${report.recommendations.length > 0 ? `
-          <div class="battle-recs-title">Recommendations</div>
+          <div class="battle-recs-title">${t('dlBattleRecs')}</div>
           ${report.recommendations.map(r => `<p class="battle-rec">${r}</p>`).join('')}
         ` : ''}
-        <button class="btn-primary" id="btn-battle-again">Battle Again</button>
-        <button class="btn-secondary" id="btn-return-lab">Return to Lab</button>
+        <button class="btn-primary" id="btn-battle-again">${t('dlBattleAgain')}</button>
+        <button class="btn-secondary" id="btn-return-lab">${t('dlReturnToLab')}</button>
       </div>
     `;
   }
@@ -737,7 +737,7 @@ window.UI = (function() {
     const btn = document.createElement('button');
     btn.id = 'btn-skip-battle';
     btn.className = 'btn-secondary btn-skip';
-    btn.textContent = 'Skip to Result';
+    btn.textContent = t('dlSkipBattle');
     btn.addEventListener('click', function() { if (onSkip) onSkip(); });
     display.prepend(btn);
   }
