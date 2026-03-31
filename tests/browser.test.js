@@ -56,7 +56,6 @@ const GAMES = [
   { id: 'neon-pong',            bestKey: 'neonPongBest',          score: 500 },
   { id: 'phantom-road',         bestKey: 'phantomRoadBest',       score: 1000 },
   { id: 'rivals',               bestKey: 'rivalsBest',            score: 10 },
-  { id: 'signal-lost',          bestKey: 'signalLostBest',        score: 200 },
   { id: 'snake',                bestKey: 'snakeBest',             score: 50 },
   { id: 'stack-tower',          bestKey: 'stackTowerBest',        score: 20 },
   { id: 'star-fury',            bestKey: 'starFuryBest',          score: 2000 },

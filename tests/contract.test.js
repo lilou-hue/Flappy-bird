@@ -39,7 +39,6 @@ const GAMES = [
   { id: 'neon-pong',            js: 'game.js',   bestKey: 'neonPongBest' },
   { id: 'phantom-road',         js: 'game.js',   bestKey: 'phantomRoadBest' },
   { id: 'rivals',               js: 'game.js',   bestKey: 'rivalsBest' },
-  { id: 'signal-lost',          js: 'game.js',   bestKey: 'signalLostBest' },
   { id: 'snake',                js: 'game.js',   bestKey: 'snakeBest' },
   { id: 'stack-tower',          js: 'game.js',   bestKey: 'stackTowerBest' },
   { id: 'star-fury',            js: 'game.js',   bestKey: 'starFuryBest' },

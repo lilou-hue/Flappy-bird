@@ -116,11 +116,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://slayplay.io/signal-lost/</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://slayplay.io/art-of-doing-nothing/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>

@@ -12,7 +12,7 @@
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SlayPlay | 20+ Free Arcade Games — Play Instantly in Your Browser</title>
-    <meta name="description" content="SlayPlay is a free arcade with 20+ games you can play right now — no downloads, no sign-ups. Flappy Bird, Snake, Tetris, horror, rhythm, dress-up & more.">
+    <meta name="description" content="SlayPlay is a free arcade with 20+ games you can play right now — no downloads, no sign-ups. Flappy Bird, Snake, Tetris, rhythm, dress-up & more.">
     <meta name="keywords" content="SlayPlay, free online games, browser games, arcade games, play games online free, flappy bird online, snake game, tetris, rhythm games, no download games, instant games, web games, free arcade">
     <meta name="author" content="SlayPlay">
     <link rel="canonical" href="https://slayplay.io/">
@@ -21,7 +21,7 @@
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="SlayPlay Arcade">
     <meta property="og:title" content="SlayPlay | 20+ Free Arcade Games — Play Instantly">
-    <meta property="og:description" content="Your free browser arcade. 20+ games — Flappy Bird, Snake, Tetris, rhythm, horror & more. No downloads, no sign-ups. Just play.">
+    <meta property="og:description" content="Your free browser arcade. 20+ games — Flappy Bird, Snake, Tetris, rhythm & more. No downloads, no sign-ups. Just play.">
     <meta property="og:url" content="https://slayplay.io/">
     <meta property="og:image" content="https://slayplay.io/og-image.png">
     <meta property="og:image:width" content="1200">
@@ -47,7 +47,7 @@
       "@type": "WebApplication",
       "name": "SlayPlay Arcade",
       "url": "https://slayplay.io",
-      "description": "Free online arcade with 20+ browser games including Flappy Bird, Snake, Tetris, rhythm games, horror, dress-up and more.",
+      "description": "Free online arcade with 20+ browser games including Flappy Bird, Snake, Tetris, rhythm games, dress-up and more.",
       "applicationCategory": "GameApplication",
       "operatingSystem": "Any",
       "offers": {
@@ -612,7 +612,6 @@
       .life-weeks-preview { background: linear-gradient(180deg, #1a1a2e, #16213e, #0f3460); }
       .art-nothing-preview { background: linear-gradient(180deg, #1a1020, #241530, #1a1020); }
       .heart-serve-preview { background: linear-gradient(180deg, #ffe0ec, #ffc8dd, #ffb3c6); }
-      .signal-lost-preview { background: linear-gradient(180deg, #0a0a0a, #0d1a0d, #0a0a0a); }
       .dragon-lab-preview { background: linear-gradient(180deg, #0a0a1a, #0e1a1a, #0a0a1a); }
 
       .flappy-tag    { background: rgba(123,228,149,0.12); color: #7be495; border: 1px solid rgba(123,228,149,0.2); }
@@ -1097,16 +1096,6 @@
       </a>
 
 
-      <a href="/signal-lost/" class="game-card">
-        <div class="card-preview signal-lost-preview">
-          <canvas id="signalLostCanvas" width="360" height="200"></canvas>
-        </div>
-        <div class="card-body">
-          <h2 data-i18n="slTitle">Signal Lost</h2>
-          <p data-i18n="slDesc">Monitor security cameras. Something is stalking through the facility. Don't let it reach you.</p>
-          <span class="card-tag" style="background:rgba(51,255,51,0.15);color:#33ff33" data-i18n="horror">Horror</span>
-        </div>
-      </a>
 
       <a href="/dragon-lab/" class="game-card">
         <div class="card-preview dragon-lab-preview">
@@ -1154,7 +1143,6 @@
         { href: '/rivals/',             name: 'Rivals',                     desc: 'Round-based tactical shooter. Buy weapons, outsmart opponents, first to 5 wins!' },
         { href: '/star-fury/',          name: 'Star Fury',                  desc: 'Blast through waves of enemies. Chain combos, grab power-ups, defeat bosses!' },
         { href: '/beat-drop/',          name: 'Beat Drop',                  desc: 'Hit notes as they fall to the beat. Procedural music builds with your combo!' },
-        { href: '/signal-lost/',        name: 'Signal Lost',                desc: 'Monitor security cameras. Something is stalking through the facility. Don\'t let it reach you.' },
         { href: '/gravity-garden/',     name: 'Gravity Garden',             desc: 'Plant planets and build a solar system. Newtonian gravity — collisions end it all!' },
         { href: '/astro-miner/',        name: 'Astro Miner',                desc: 'Jump between asteroids, collect crystals, and dodge hazards in deep space.' },
         { href: '/lumina/',             name: 'Lumina',                     desc: 'Descend through a dark crystalline cavern. Your light is all that reveals the way.' },
@@ -3650,63 +3638,6 @@
         draw();
       })();
 
-      /* ─ Signal Lost Preview ─ */
-      (function() {
-        var c = document.getElementById('signalLostCanvas');
-        if (!c) return;
-        var x = c.getContext('2d');
-        var f = 0;
-        function draw() {
-          if (c._rafPaused) { c._rafRestart = draw; return; }
-          f++;
-          // Dark background
-          x.fillStyle = '#0a0a0a';
-          x.fillRect(0, 0, W, H);
-          // Scanlines
-          x.fillStyle = 'rgba(51, 255, 51, 0.02)';
-          for (var i = 0; i < H; i += 4) x.fillRect(0, i, W, 2);
-          // Camera grid lines
-          x.strokeStyle = '#1a1a1a';
-          x.lineWidth = 1;
-          x.beginPath(); x.moveTo(W/2, 0); x.lineTo(W/2, H); x.stroke();
-          x.beginPath(); x.moveTo(0, H/2); x.lineTo(W, H/2); x.stroke();
-          // Static noise
-          for (var n = 0; n < 200; n++) {
-            var nx = Math.random() * W, ny = Math.random() * H;
-            var v = Math.random() * 0.15;
-            x.fillStyle = 'rgba(51,255,51,' + v + ')';
-            x.fillRect(nx, ny, 2, 2);
-          }
-          // Entity eyes (blinking)
-          if (f % 60 < 45) {
-            x.fillStyle = 'rgba(255, 0, 0, 0.6)';
-            var ex = W * 0.3 + Math.sin(f * 0.02) * 10;
-            var ey = H * 0.4;
-            x.beginPath(); x.arc(ex - 4, ey, 2, 0, Math.PI * 2); x.fill();
-            x.beginPath(); x.arc(ex + 4, ey, 2, 0, Math.PI * 2); x.fill();
-          }
-          // REC indicator
-          if (f % 40 < 20) {
-            x.fillStyle = '#ff0000';
-            x.beginPath(); x.arc(W - 20, 15, 3, 0, Math.PI * 2); x.fill();
-          }
-          x.fillStyle = 'rgba(255,255,255,0.4)';
-          x.font = '8px monospace';
-          x.fillText('REC', W - 40, 18);
-          // CAM label
-          x.fillStyle = 'rgba(51,255,51,0.5)';
-          x.font = '10px monospace';
-          x.fillText('CAM 3 — Server Room', 8, 15);
-          // Vignette
-          var g = x.createRadialGradient(W/2, H/2, W*0.2, W/2, H/2, W*0.6);
-          g.addColorStop(0, 'rgba(0,0,0,0)');
-          g.addColorStop(1, 'rgba(0,0,0,0.7)');
-          x.fillStyle = g;
-          x.fillRect(0, 0, W, H);
-          requestAnimationFrame(draw);
-        }
-        draw();
-      })();
 
       /* ─ Dragon Engineering Lab Preview ─ */
       (function() {

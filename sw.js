@@ -107,10 +107,6 @@ const PRECACHE_URLS = [
   '/heart-serve/audio.js',
   '/heart-serve/boys.js',
   '/heart-serve/styles.css',
-  '/signal-lost/',
-  '/signal-lost/game.js',
-  '/signal-lost/audio.js',
-  '/signal-lost/styles.css',
 ];
 
 const NETWORK_FIRST_HOSTS = [
