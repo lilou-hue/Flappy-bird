@@ -54,11 +54,11 @@
   <script src="../i18n.js"></script>
 
   <div class="arc-page__container">
-    <h1 class="arc-page__title">Achievements</h1>
-    <p class="arc-page__subtitle">Track your arcade milestones</p>
+    <h1 class="arc-page__title" data-i18n="arcNavAchievements">Achievements</h1>
+    <p class="arc-page__subtitle" data-i18n="achPageSubtitle">Track your arcade milestones</p>
 
     <div class="arc-progress" id="achProgress">
-      <div class="arc-progress__label"><span id="achCount">0</span> / <span id="achTotal">12</span> unlocked</div>
+      <div class="arc-progress__label"><span id="achCount">0</span> / <span id="achTotal">12</span> <span data-i18n="achUnlocked">unlocked</span></div>
       <div class="arc-progress__bar">
         <div class="arc-progress__fill" id="achFill" style="width:0%"></div>
       </div>
@@ -66,13 +66,24 @@
 
     <div class="arc-ach-grid" id="achGrid"></div>
 
-    <h2 class="arc-section-title">Per-Game Achievements</h2>
+    <h2 class="arc-section-title" data-i18n="achPerGame">Per-Game Achievements</h2>
     <div class="arc-game-ach-grid" id="gameAchGrid"></div>
   </div>
 
   <script>
     (function () {
+      function t(key, fallback) {
+        if (typeof I18N !== 'undefined' && I18N.t) { var v = I18N.t(key); if (v && v !== key) return v; }
+        return fallback || key;
+      }
+
       Arcade.injectNavHUD();
+
+      if (typeof I18N !== 'undefined') {
+        I18N.createSelector(document.querySelector('.arc-page__container'));
+        I18N.applyDOM();
+        window.addEventListener('langchange', function () { I18N.applyDOM(); renderGrid(); });
+      }
 
       var achs = Arcade.getArcadeAchievements();
       var unlocked = achs.filter(function (a) { return a.unlocked; }).length;
@@ -81,18 +92,21 @@
       document.getElementById('achTotal').textContent = achs.length;
       document.getElementById('achFill').style.width = (unlocked / achs.length * 100) + '%';
 
-      var grid = document.getElementById('achGrid');
-      grid.innerHTML = achs.map(function (a) {
-        var cls = a.unlocked ? 'arc-ach-card arc-ach-card--unlocked' : 'arc-ach-card arc-ach-card--locked';
-        return '<div class="' + cls + '">' +
-          '<div class="arc-ach-card__icon">' + a.icon + '</div>' +
-          '<div>' +
-            '<div class="arc-ach-card__name">' + a.name + '</div>' +
-            '<div class="arc-ach-card__desc">' + a.desc + '</div>' +
-            '<div class="arc-ach-card__reward">' + (a.unlocked ? 'Earned' : '+' + a.reward + ' coins') + '</div>' +
-          '</div>' +
-        '</div>';
-      }).join('');
+      function renderGrid() {
+        var grid = document.getElementById('achGrid');
+        grid.innerHTML = achs.map(function (a) {
+          var cls = a.unlocked ? 'arc-ach-card arc-ach-card--unlocked' : 'arc-ach-card arc-ach-card--locked';
+          return '<div class="' + cls + '">' +
+            '<div class="arc-ach-card__icon">' + a.icon + '</div>' +
+            '<div>' +
+              '<div class="arc-ach-card__name">' + a.name + '</div>' +
+              '<div class="arc-ach-card__desc">' + a.desc + '</div>' +
+              '<div class="arc-ach-card__reward">' + (a.unlocked ? t('achEarned', 'Earned') : '+' + a.reward + ' ' + t('arcCoins', 'coins')) + '</div>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+      }
+      renderGrid();
 
       /* Per-game achievement links */
       var gameAchs = [

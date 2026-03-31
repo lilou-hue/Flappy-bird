@@ -515,6 +515,9 @@
   }
 
   // --- i18n support ---
+  if (typeof I18N !== 'undefined') {
+    I18N.createSelector(document.querySelector('#discovery-counter') || document.body);
+  }
   window.addEventListener('langchange', function () {
     titleCard.innerHTML = '<h1>' + I18N.t('theDeepTitle') + '</h1><div class="expedition-subtitle">' + I18N.t('theDeepSubtitle') + '</div><div class="subtitle">' + I18N.t('theDeepScrollDown') + '</div>';
     updateCounter();

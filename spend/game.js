@@ -339,5 +339,6 @@
   // Init
   buildGrid();
   updateAll();
+  I18N.createSelector(document.querySelector('.back-link') ? document.querySelector('.back-link').parentNode : document.body);
   I18N.applyDOM();
 })();

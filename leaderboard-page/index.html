@@ -51,11 +51,11 @@
   <script src="../i18n.js"></script>
 
   <div class="arc-page__container">
-    <h1 class="arc-page__title">Leaderboard</h1>
-    <p class="arc-page__subtitle">See how you stack up</p>
+    <h1 class="arc-page__title" data-i18n="lbPageTitle">Leaderboard</h1>
+    <p class="arc-page__subtitle" data-i18n="lbPageSubtitle">See how you stack up</p>
 
     <div class="arc-tabs" id="lbTabs">
-      <button class="arc-tab arc-tab--active" data-tab="all">Overall Ranking</button>
+      <button class="arc-tab arc-tab--active" data-tab="all" data-i18n="lbOverallRanking">Overall Ranking</button>
       <button class="arc-tab" data-tab="flappy-bird">Flappy Bird</button>
       <button class="arc-tab" data-tab="snake">Snake</button>
       <button class="arc-tab" data-tab="tetris">Tetris</button>
@@ -86,7 +86,18 @@
 
   <script>
     (function () {
+      function t(key, fallback) {
+        if (typeof I18N !== 'undefined' && I18N.t) { var v = I18N.t(key); if (v && v !== key) return v; }
+        return fallback || key;
+      }
+
       Arcade.injectNavHUD();
+
+      if (typeof I18N !== 'undefined') {
+        I18N.createSelector(document.querySelector('.arc-page__container'));
+        I18N.applyDOM();
+        window.addEventListener('langchange', function () { I18N.applyDOM(); render(); });
+      }
 
       var currentTab = 'all';
       var localNickname = localStorage.getItem('arcade_nickname') || '';
@@ -113,9 +124,9 @@
       }
 
       function buildTable(scores) {
-        if (!scores.length) return '<p class="arc-lb-loading">No scores yet.</p>';
+        if (!scores.length) return '<p class="arc-lb-loading">' + t('noScoresYet', 'No scores yet.') + '</p>';
         var html = '<table class="arc-lb-table"><thead><tr>' +
-          '<th class="arc-lb-rank">#</th><th>Player</th><th class="arc-lb-score">Score</th>' +
+          '<th class="arc-lb-rank">#</th><th>' + t('lbPlayer', 'Player') + '</th><th class="arc-lb-score">' + t('score', 'Score') + '</th>' +
           '</tr></thead><tbody>';
         scores.forEach(function (e, i) {
           var isMe = e.nickname === localNickname;
@@ -123,7 +134,7 @@
           var cls = isMe ? ' class="arc-lb-me"' : '';
           html += '<tr' + cls + '>' +
             '<td class="arc-lb-rank">' + rankStr + '</td>' +
-            '<td>' + escapeHtml(e.nickname) + (isMe ? ' (you)' : '') + '</td>' +
+            '<td>' + escapeHtml(e.nickname) + (isMe ? ' ' + t('lbYou', '(you)') : '') + '</td>' +
             '<td class="arc-lb-score">' + e.score.toLocaleString() + '</td>' +
           '</tr>';
         });
@@ -132,10 +143,10 @@
       }
 
       function buildAvgTable(rows) {
-        if (!rows.length) return '<p class="arc-lb-loading">No scores yet. Play some games!</p>';
+        if (!rows.length) return '<p class="arc-lb-loading">' + t('lbNoScoresPlay', 'No scores yet. Play some games!') + '</p>';
         var html = '<table class="arc-lb-table"><thead><tr>' +
-          '<th class="arc-lb-rank">#</th><th>Player</th>' +
-          '<th class="arc-lb-score">Avg Position</th><th class="arc-lb-score">Games</th>' +
+          '<th class="arc-lb-rank">#</th><th>' + t('lbPlayer', 'Player') + '</th>' +
+          '<th class="arc-lb-score">' + t('lbAvgPosition', 'Avg Position') + '</th><th class="arc-lb-score">' + t('lbGamesCount', 'Games') + '</th>' +
           '</tr></thead><tbody>';
         rows.forEach(function (r, i) {
           var isMe = r.nickname === localNickname;
@@ -143,7 +154,7 @@
           var cls = isMe ? ' class="arc-lb-me"' : '';
           html += '<tr' + cls + '>' +
             '<td class="arc-lb-rank">' + rankStr + '</td>' +
-            '<td>' + escapeHtml(r.nickname) + (isMe ? ' (you)' : '') + '</td>' +
+            '<td>' + escapeHtml(r.nickname) + (isMe ? ' ' + t('lbYou', '(you)') : '') + '</td>' +
             '<td class="arc-lb-score">' + r.avg.toFixed(1) + '</td>' +
             '<td class="arc-lb-score">' + r.gamesPlayed + '/' + GAME_IDS.length + '</td>' +
           '</tr>';
@@ -154,17 +165,17 @@
 
       function renderSingleGame(gameId) {
         var content = document.getElementById('lbContent');
-        content.innerHTML = '<p class="arc-lb-loading">Loading scores…</p>';
+        content.innerHTML = '<p class="arc-lb-loading">' + t('loadingScores', 'Loading scores…') + '</p>';
         Leaderboard.getTopScores(gameId).then(function (scores) {
           content.innerHTML = buildTable(scores);
         }).catch(function () {
-          content.innerHTML = '<p class="arc-lb-loading">Could not load leaderboard.</p>';
+          content.innerHTML = '<p class="arc-lb-loading">' + t('lbError', 'Could not load leaderboard.') + '</p>';
         });
       }
 
       function renderAllGames() {
         var content = document.getElementById('lbContent');
-        content.innerHTML = '<p class="arc-lb-loading">Loading scores…</p>';
+        content.innerHTML = '<p class="arc-lb-loading">' + t('loadingScores', 'Loading scores…') + '</p>';
 
         var promises = GAME_IDS.map(function (id) {
           return Leaderboard.getAllScores(id).then(function (scores) {
@@ -223,7 +234,7 @@
 
           content.innerHTML = buildAvgTable(rows);
         }).catch(function () {
-          content.innerHTML = '<p class="arc-lb-loading">Could not load leaderboard.</p>';
+          content.innerHTML = '<p class="arc-lb-loading">' + t('lbError', 'Could not load leaderboard.') + '</p>';
         });
       }
 

@@ -1374,7 +1374,11 @@
 
   function init() {
     // Apply i18n to DOM elements
-    if (typeof I18N !== 'undefined' && I18N.applyDOM) I18N.applyDOM();
+    if (typeof I18N !== 'undefined' && I18N.applyDOM) {
+      I18N.createSelector(document.querySelector('.home-header') || document.body);
+      I18N.applyDOM();
+      window.addEventListener('langchange', function () { I18N.applyDOM(); });
+    }
 
     if (state.endingReached) {
       // Show ending screen directly

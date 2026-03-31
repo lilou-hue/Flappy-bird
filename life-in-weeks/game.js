@@ -404,5 +404,6 @@
     buildGrid();
     setupTooltip();
     goBtn.addEventListener('click', onGoClick);
+    I18N.createSelector(document.querySelector('.header') || document.body);
     I18N.applyDOM();
 })();

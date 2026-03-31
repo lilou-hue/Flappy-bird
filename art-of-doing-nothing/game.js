@@ -1347,6 +1347,7 @@
     if (typeof I18N !== 'undefined') {
       I18N.createSelector(document.querySelector('.game__header'));
       I18N.applyDOM();
+      window.addEventListener('langchange', function () { I18N.applyDOM(); });
     }
 
     GameState.load();

@@ -2159,6 +2159,7 @@ if (typeof I18N !== 'undefined') {
   var header = document.querySelector('.game__header');
   if (header) I18N.createSelector(header);
   I18N.applyDOM();
+  window.addEventListener('langchange', function () { I18N.applyDOM(); });
 }
 
 if (typeof Shop !== 'undefined') {

@@ -1726,6 +1726,11 @@ const I18N = (() => {
 
       // ── Leaderboard ──
       lbError: 'Could not load leaderboard.',
+      lbPageTitle: 'Leaderboard', lbPageSubtitle: 'See how you stack up',
+      lbOverallRanking: 'Overall Ranking', lbAvgPosition: 'Avg Position', lbGamesCount: 'Games',
+      lbYou: '(you)', lbNoScoresPlay: 'No scores yet. Play some games!',
+      achPageSubtitle: 'Track your arcade milestones', achUnlocked: 'unlocked',
+      achEarned: 'Earned', achPerGame: 'Per-Game Achievements',
       // ── Phantom Road — Canvas UI ──
       prKmh: 'km/h',
       prEvaded: 'EVADED!',
@@ -4214,6 +4219,11 @@ const I18N = (() => {
 
       // ── Leaderboard ──
       lbError: '리더보드를 불러올 수 없습니다.',
+      lbPageTitle: '리더보드', lbPageSubtitle: '순위를 확인해보세요',
+      lbOverallRanking: '종합 순위', lbAvgPosition: '평균 순위', lbGamesCount: '게임 수',
+      lbYou: '(나)', lbNoScoresPlay: '아직 점수가 없습니다. 게임을 플레이해보세요!',
+      achPageSubtitle: '아케이드 마일스톤을 추적하세요', achUnlocked: '해금됨',
+      achEarned: '획득', achPerGame: '게임별 업적',
 
       // Tetris — Canvas UI
       tetAchFirstClear: '첨 클리어',
@@ -6458,6 +6468,11 @@ const I18N = (() => {
       shopEquip: '装備', shopEquipTitle: 'タイトルを装備', shopAchOnly: '実績のみ', shopFree: '無料',
       shopActivePowers: 'アクティブパワー:', shopNoItemsFound: 'アイテムが見つかりません。', shopUnlockFree: '無料でアンロック',
       lbError: 'リーダーボードを読み込めませんでした。',
+      lbPageTitle: 'リーダーボード', lbPageSubtitle: '順位を確認しましょう',
+      lbOverallRanking: '総合ランキング', lbAvgPosition: '平均順位', lbGamesCount: 'ゲーム数',
+      lbYou: '(あなた)', lbNoScoresPlay: 'スコアがありません。ゲームをプレイしよう！',
+      achPageSubtitle: 'アーケードのマイルストーンを追跡', achUnlocked: '解放済み',
+      achEarned: '獲得', achPerGame: 'ゲーム別実績',
 
       // Tetris — Canvas UI
       tetAchFirstClear: '初クリア',
@@ -8702,6 +8717,11 @@ const I18N = (() => {
       shopEquip: 'Donat', shopEquipTitle: 'Unvan Donat', shopAchOnly: 'Yalnızca başarım', shopFree: 'Ücretsiz',
       shopActivePowers: 'Aktif Güçler:', shopNoItemsFound: 'Öğe bulunamadı.', shopUnlockFree: 'Ücretsiz Aç',
       lbError: 'Skor tablosu yüklenemedi.',
+      lbPageTitle: 'Skor Tablosu', lbPageSubtitle: 'Sıralamana bak',
+      lbOverallRanking: 'Genel Sıralama', lbAvgPosition: 'Ort. Konum', lbGamesCount: 'Oyunlar',
+      lbYou: '(sen)', lbNoScoresPlay: 'Henüz skor yok. Oyun oyna!',
+      achPageSubtitle: 'Arcade dönüm noktalarını takip et', achUnlocked: 'açıldı',
+      achEarned: 'Kazanıldı', achPerGame: 'Oyun Başı Başarımlar',
 
       // Tetris — Canvas UI
       tetAchFirstClear: 'İlk Temizlik',
@@ -10946,6 +10966,11 @@ const I18N = (() => {
       shopEquip: 'Équiper', shopEquipTitle: 'Équiper le titre', shopAchOnly: 'Succès uniquement', shopFree: 'Gratuit',
       shopActivePowers: 'Pouvoirs actifs :', shopNoItemsFound: 'Aucun article trouvé.', shopUnlockFree: 'Débloquer gratuitement',
       lbError: 'Impossible de charger le classement.',
+      lbPageTitle: 'Classement', lbPageSubtitle: 'Voyez où vous en êtes',
+      lbOverallRanking: 'Classement général', lbAvgPosition: 'Pos. moy.', lbGamesCount: 'Jeux',
+      lbYou: '(vous)', lbNoScoresPlay: 'Aucun score pour l\'instant. Jouez !',
+      achPageSubtitle: 'Suivez vos jalons d\'arcade', achUnlocked: 'débloqué(s)',
+      achEarned: 'Obtenu', achPerGame: 'Succès par jeu',
 
       // Tetris — Canvas UI
       tetAchFirstClear: 'Premier Nettoyage',
@@ -13110,6 +13135,11 @@ const I18N = (() => {
       shopEquip: 'Utrusta', shopEquipTitle: 'Utrusta titel', shopAchOnly: 'Endast prestation', shopFree: 'Gratis',
       shopActivePowers: 'Aktiva krafter:', shopNoItemsFound: 'Inga föremål hittades.', shopUnlockFree: 'Lås upp gratis',
       lbError: 'Kunde inte ladda topplistan.',
+      lbPageTitle: 'Topplista', lbPageSubtitle: 'Se hur du rankar',
+      lbOverallRanking: 'Sammanlagd ranking', lbAvgPosition: 'Snitt position', lbGamesCount: 'Spel',
+      lbYou: '(du)', lbNoScoresPlay: 'Inga poäng än. Spela lite!',
+      achPageSubtitle: 'Följ dina arcade-milstolpar', achUnlocked: 'upplåsta',
+      achEarned: 'Intjänad', achPerGame: 'Prestationer per spel',
 
       // Tetris — Canvas UI
       tetAchFirstClear: 'Första Rensning',
@@ -15354,6 +15384,11 @@ const I18N = (() => {
       shopEquip: '装备', shopEquipTitle: '装备称号', shopAchOnly: '仅限成就', shopFree: '免费',
       shopActivePowers: '激活能力：', shopNoItemsFound: '未找到物品。', shopUnlockFree: '免费解锁',
       lbError: '无法加载排行榜。',
+      lbPageTitle: '排行榜', lbPageSubtitle: '查看你的排名',
+      lbOverallRanking: '总体排名', lbAvgPosition: '平均位置', lbGamesCount: '游戏数',
+      lbYou: '(你)', lbNoScoresPlay: '暂无分数，去玩几局吧！',
+      achPageSubtitle: '跟踪你的街机里程碑', achUnlocked: '已解锁',
+      achEarned: '已获得', achPerGame: '各游戏成就',
 
       // Tetris — Canvas UI
       tetAchFirstClear: '首次消除',

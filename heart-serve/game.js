@@ -3530,7 +3530,9 @@
 
   /* ── i18n DOM init ── */
   if (typeof I18N !== 'undefined') {
+    I18N.createSelector(document.querySelector('.select-header') || document.body);
     I18N.applyDOM();
+    window.addEventListener('langchange', function () { I18N.applyDOM(); });
   }
 
   init();
