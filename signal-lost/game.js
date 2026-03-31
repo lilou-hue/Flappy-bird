@@ -131,6 +131,13 @@ var SignalLost = (function () {
     document.addEventListener('keydown', onKey);
     document.addEventListener('arcade-restart', restartGame);
 
+    // i18n
+    if (typeof I18N !== 'undefined') {
+      I18N.applyDOM();
+      I18N.createSelector(document.querySelector('.game__header'));
+      window.addEventListener('langchange', function () { I18N.applyDOM(); });
+    }
+
     // Draw idle screen
     drawRoom(currentCam, 0);
   }
