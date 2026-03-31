@@ -27,12 +27,12 @@
   <script src="../i18n.js"></script>
 
   <div class="arc-page__container">
-    <h1 class="arc-page__title">Arcade Shop</h1>
-    <p class="arc-page__subtitle">Spend your hard-earned coins on badges, titles, powers, and more</p>
+    <h1 class="arc-page__title" data-i18n="shopArcadeTitle">Arcade Shop</h1>
+    <p class="arc-page__subtitle" data-i18n="shopArcadeSubtitle">Spend your hard-earned coins on badges, titles, powers, and more</p>
 
     <div class="arc-coin-header">
       <div class="arc-coin-header__balance">
-        <span>&#x1FA99;</span> <span class="arc-coin-value">0</span> coins
+        <span>&#x1FA99;</span> <span class="arc-coin-value">0</span> <span data-i18n="arcCoins">coins</span>
       </div>
     </div>
 
@@ -42,11 +42,11 @@
     <div class="arc-active-powers" id="activePowers" style="display:none"></div>
 
     <div class="arc-tabs" id="shopTabs">
-      <button class="arc-tab arc-tab--active" data-cat="badge">Badges</button>
-      <button class="arc-tab" data-cat="theme">Themes</button>
-      <button class="arc-tab" data-cat="frame">Frames</button>
-      <button class="arc-tab" data-cat="title">Titles</button>
-      <button class="arc-tab" data-cat="power">Powers</button>
+      <button class="arc-tab arc-tab--active" data-cat="badge" data-i18n="shopTabBadge">Badges</button>
+      <button class="arc-tab" data-cat="theme" data-i18n="shopTabTheme">Themes</button>
+      <button class="arc-tab" data-cat="frame" data-i18n="shopTabFrame">Frames</button>
+      <button class="arc-tab" data-cat="title" data-i18n="shopTabTitle">Titles</button>
+      <button class="arc-tab" data-cat="power" data-i18n="shopTabPower">Powers</button>
     </div>
 
     <div class="arc-shop-grid" id="shopGrid"></div>
@@ -55,22 +55,48 @@
   <script>
     (function () {
       var currentCat = 'badge';
-      var RARITY_LABELS = { common: 'Common', uncommon: 'Uncommon', rare: 'Rare', epic: 'Epic', legendary: 'Legendary' };
+
+      function t(key, fallback) {
+        if (typeof I18N !== 'undefined' && I18N.t) {
+          var v = I18N.t(key);
+          if (v && v !== key) return v;
+        }
+        return fallback || key;
+      }
+
+      function getRarityLabel(rarity) {
+        var map = {
+          common: 'shopRarityCommon', uncommon: 'shopRarityUncommon',
+          rare: 'shopRarityRare', epic: 'shopRarityEpic', legendary: 'shopRarityLegendary'
+        };
+        var defaults = { common: 'Common', uncommon: 'Uncommon', rare: 'Rare', epic: 'Epic', legendary: 'Legendary' };
+        return t(map[rarity] || rarity, defaults[rarity] || rarity);
+      }
 
       Arcade.injectNavHUD();
+
+      if (typeof I18N !== 'undefined') {
+        I18N.applyDOM();
+        I18N.createSelector(document.querySelector('.arc-coin-header'));
+        window.addEventListener('langchange', function () {
+          I18N.applyDOM();
+          renderActivePowers();
+          renderShop();
+        });
+      }
 
       function renderActivePowers() {
         var bar = document.getElementById('activePowers');
         var status = Arcade.getActiveShopPowerStatus();
         var parts = [];
-        if (status.coinx2) parts.push('💰 2× Coins — ' + status.coinx2 + 'm left');
+        if (status.coinx2) parts.push('💰 2× ' + t('arcCoins', 'Coins') + ' — ' + status.coinx2 + 'm left');
         if (status.magnet) parts.push('🧲 Magnet — ' + status.magnet + 'm left');
         if (status.lucky)  parts.push('🌟 Lucky Star — next game');
         var shield = Arcade.getShopItems().find(function(i) { return i.id === 'streak_shield'; });
         if (shield && shield.powerActive) parts.push('🛡️ Streak Shield — ready');
         if (parts.length) {
           bar.style.display = '';
-          bar.innerHTML = '<div class="arc-active-powers__label">Active Powers:</div>' +
+          bar.innerHTML = '<div class="arc-active-powers__label">' + t('shopActivePowers', 'Active Powers:') + '</div>' +
             parts.map(function(p) { return '<div class="arc-active-powers__pill">' + p + '</div>'; }).join('');
         } else {
           bar.style.display = 'none';
@@ -85,8 +111,9 @@
         el.innerHTML = slots.map(function (cat) {
           var eqId = data['equipped' + cat.charAt(0).toUpperCase() + cat.slice(1)];
           var item = eqId ? items.find(function (i) { return i.id === eqId; }) : null;
+          var catLabel = t('shopTab' + cat.charAt(0).toUpperCase() + cat.slice(1), cat);
           return '<div class="arc-equipped__slot' + (item ? ' arc-equipped__slot--filled' : '') + '">' +
-            '<div class="arc-equipped__label">' + cat + '</div>' +
+            '<div class="arc-equipped__label">' + catLabel + '</div>' +
             '<div class="arc-equipped__icon">' + (item ? item.icon : '-') + '</div>' +
             (item && item.label ? '<div class="arc-equipped__sublabel">' + item.label + '</div>' : '') +
           '</div>';
@@ -101,7 +128,7 @@
         var admin = Arcade.isAdminMode();
 
         if (!items.length) {
-          grid.innerHTML = '<div style="color:rgba(255,255,255,0.4);padding:2rem;text-align:center">No items found.</div>';
+          grid.innerHTML = '<div style="color:rgba(255,255,255,0.4);padding:2rem;text-align:center">' + t('shopNoItemsFound', 'No items found.') + '</div>';
           return;
         }
 
@@ -118,34 +145,34 @@
               btnText = '✅ ' + item.powerActive;
             }
             if (admin) {
-              btnText = btnText || 'Activate Free';
+              btnText = btnText || t('shopUnlockFree', 'Activate Free');
             } else {
-              if (!btnText) btnText = '⚡ ' + item.cost + ' coins';
+              if (!btnText) btnText = '⚡ ' + item.cost + ' ' + t('arcCoins', 'coins');
               if (coins < item.cost && !item.powerActive) btnDisabled = ' disabled';
             }
           } else if (item.requireAch) {
             btnClass += ' arc-shop-btn--locked';
-            btnText = '🔒 Achievement only';
+            btnText = '🔒 ' + t('shopAchOnly', 'Achievement only');
             btnDisabled = ' disabled';
           } else if (item.equipped) {
             btnClass += ' arc-shop-btn--equipped';
-            btnText = '✓ Equipped';
+            btnText = '✓ ' + t('shopEquip', 'Equipped');
           } else if (item.purchased) {
             btnClass += ' arc-shop-btn--owned';
-            btnText = item.cat === 'title' ? 'Equip Title' : 'Equip';
+            btnText = item.cat === 'title' ? t('shopEquipTitle', 'Equip Title') : t('shopEquip', 'Equip');
           } else {
-            btnText = admin ? 'Unlock Free' : item.cost + ' coins';
+            btnText = admin ? t('shopUnlockFree', 'Unlock Free') : item.cost + ' ' + t('arcCoins', 'coins');
             if (!admin && coins < item.cost) btnDisabled = ' disabled';
           }
 
           return '<div class="arc-shop-item' + rarityClass + '" data-id="' + item.id + '">' +
-            (item.rarity ? '<div class="arc-shop-item__rarity">' + (RARITY_LABELS[item.rarity] || item.rarity) + '</div>' : '') +
+            (item.rarity ? '<div class="arc-shop-item__rarity">' + getRarityLabel(item.rarity) + '</div>' : '') +
             '<div class="arc-shop-item__icon arc-shop-item__icon--' + (item.rarity || 'common') + '">' + item.icon + '</div>' +
             '<div class="arc-shop-item__name">' + (item.name || item.displayName || item.id) + '</div>' +
             (item.label ? '<div class="arc-shop-item__label">"' + item.label + '"</div>' : '') +
             (item.desc ? '<div class="arc-shop-item__desc">' + item.desc + '</div>' : '') +
             '<div class="arc-shop-item__cost">' +
-              (item.requireAch ? '🔒 Achievement' : (item.cost === 0 ? 'Free' : '&#x1FA99; ' + item.cost)) +
+              (item.requireAch ? '🔒 ' + t('shopAchOnly', 'Achievement') : (item.cost === 0 ? t('shopFree', 'Free') : '&#x1FA99; ' + item.cost)) +
             '</div>' +
             '<button class="' + btnClass + '"' + btnDisabled + '>' + btnText + '</button>' +
           '</div>';
@@ -169,12 +196,12 @@
               showToast(msgs[item.effect] || '⚡ Power activated!');
             } else if (item.purchased) {
               Arcade.equipItem(id);
-              showToast('✓ ' + (item.name || item.displayName) + ' equipped!');
+              showToast('✓ ' + (item.name || item.displayName) + ' ' + t('shopEquip', 'equipped') + '!');
             } else {
               var r = Arcade.purchaseItem(id);
               if (!r.success) { showToast('❌ ' + (r.reason || 'Cannot buy')); return; }
               Arcade.equipItem(id);
-              showToast('✅ ' + (item.name || item.displayName) + ' unlocked & equipped!');
+              showToast('✅ ' + (item.name || item.displayName) + ' ' + t('shopItemsUnlocked', 'unlocked') + '!');
             }
             renderShop();
             renderEquipped();
@@ -198,7 +225,7 @@
       document.getElementById('shopTabs').addEventListener('click', function (e) {
         if (!e.target.dataset.cat) return;
         currentCat = e.target.dataset.cat;
-        document.querySelectorAll('.arc-tab').forEach(function (t) { t.classList.remove('arc-tab--active'); });
+        document.querySelectorAll('.arc-tab').forEach(function (tab) { tab.classList.remove('arc-tab--active'); });
         e.target.classList.add('arc-tab--active');
         renderShop();
       });

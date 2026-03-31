@@ -17,25 +17,26 @@
   <meta property="og:description" content="Design a biologically plausible dragon. Test flight, fire, and survival under real scientific constraints.">
   <meta property="og:type" content="website">
   <link rel="stylesheet" href="style.css">
+  <script src="../i18n.js"></script>
 </head>
 <body>
   <!-- HEADER -->
   <header class="app-header">
     <div class="header-left">
-      <h1 class="app-title">Dragon Engineering Lab</h1>
+      <h1 class="app-title" data-i18n="dlTitle">Dragon Engineering Lab</h1>
     </div>
     <nav class="tab-bar">
-      <button class="tab-btn active" data-tab="build">Build</button>
-      <button class="tab-btn" data-tab="simulate">Simulate</button>
-      <button class="tab-btn" data-tab="habitat">Habitat</button>
-      <button class="tab-btn" data-tab="battle">Battle</button>
-      <button class="tab-btn" data-tab="challenges">Challenges</button>
-      <button class="tab-btn" data-tab="science">Science</button>
+      <button class="tab-btn active" data-tab="build" data-i18n="dlTabBuild">Build</button>
+      <button class="tab-btn" data-tab="simulate" data-i18n="dlTabSimulate">Simulate</button>
+      <button class="tab-btn" data-tab="habitat" data-i18n="dlTabHabitat">Habitat</button>
+      <button class="tab-btn" data-tab="battle" data-i18n="dlTabBattle">Battle</button>
+      <button class="tab-btn" data-tab="challenges" data-i18n="dlTabChallenges">Challenges</button>
+      <button class="tab-btn" data-tab="science" data-i18n="dlTabScience">Science</button>
     </nav>
     <div class="header-right">
       <div class="mode-toggle-group" title="Switch between simplified and full trait controls">
-        <button class="mode-btn mode-btn--active" id="btn-mode-basic">Basic</button>
-        <button class="mode-btn" id="btn-mode-advanced">Advanced</button>
+        <button class="mode-btn mode-btn--active" id="btn-mode-basic" data-i18n="dlModeBasic">Basic</button>
+        <button class="mode-btn" id="btn-mode-advanced" data-i18n="dlModeAdvanced">Advanced</button>
       </div>
       <button class="btn-icon" id="btn-tutorial" title="Replay Tutorial">?</button>
     </div>
@@ -47,27 +48,27 @@
     <aside class="panel panel-left" id="controls-panel">
       <!-- Dragon name -->
       <div class="dragon-name-wrap">
-        <input type="text" id="dragon-name-input" class="dragon-name-input" placeholder="Name your dragon..." maxlength="32" autocomplete="off">
+        <input type="text" id="dragon-name-input" class="dragon-name-input" data-i18n-placeholder="dlNamePlaceholder" placeholder="Name your dragon..." maxlength="32" autocomplete="off">
         <!-- Multi-zone colour system -->
         <div class="color-zones-wrap">
           <div class="color-zone-row">
             <label class="color-zone" title="Body colour">
-              <span class="color-zone-lbl">Body</span>
+              <span class="color-zone-lbl" data-i18n="dlColorBody">Body</span>
               <span class="color-zone-dot" id="preview-body" style="background:#3a6e5a"></span>
               <input type="color" id="color-body" value="#3a6e5a">
             </label>
             <label class="color-zone" title="Wing membrane colour">
-              <span class="color-zone-lbl">Wings</span>
+              <span class="color-zone-lbl" data-i18n="dlColorWings">Wings</span>
               <span class="color-zone-dot" id="preview-wings" style="background:#b05010"></span>
               <input type="color" id="color-wings" value="#b05010">
             </label>
             <label class="color-zone" title="Eye colour (glowing)">
-              <span class="color-zone-lbl">Eye</span>
+              <span class="color-zone-lbl" data-i18n="dlColorEye">Eye</span>
               <span class="color-zone-dot" id="preview-eye" style="background:#44ff88"></span>
               <input type="color" id="color-eye" value="#44ff88">
             </label>
             <label class="color-zone" title="Accent / dorsal spikes">
-              <span class="color-zone-lbl">Accent</span>
+              <span class="color-zone-lbl" data-i18n="dlColorAccent">Accent</span>
               <span class="color-zone-dot" id="preview-accent" style="background:#1a1a2a"></span>
               <input type="color" id="color-accent" value="#1a1a2a">
             </label>
@@ -83,17 +84,17 @@
         </div>
       </div>
       <div class="action-bar">
-        <button class="btn-primary" id="btn-simulate">Run Simulation</button>
+        <button class="btn-primary" id="btn-simulate" data-i18n="dlRunSim">Run Simulation</button>
       </div>
       <div class="action-bar-secondary">
-        <button class="btn-secondary" id="btn-randomize">Randomize</button>
-        <button class="btn-secondary" id="btn-reset">Reset</button>
-        <button class="btn-secondary" id="btn-save">Save</button>
+        <button class="btn-secondary" id="btn-randomize" data-i18n="dlRandomize">Randomize</button>
+        <button class="btn-secondary" id="btn-reset" data-i18n="dlReset">Reset</button>
+        <button class="btn-secondary" id="btn-save" data-i18n="dlSave">Save</button>
       </div>
 
       <!-- Presets -->
       <div class="presets-section">
-        <div class="section-label">Presets</div>
+        <div class="section-label" data-i18n="dlPresets">Presets</div>
         <div id="presets-container" class="presets-row"></div>
       </div>
 
@@ -109,37 +110,37 @@
     <!-- RIGHT PANEL: Results / Context -->
     <aside class="panel panel-right">
       <div class="tab-content active" id="tab-build">
-        <div class="panel-title">Quick Preview</div>
+        <div class="panel-title" data-i18n="dlQuickPreview">Quick Preview</div>
         <div id="results-content" class="results-content">
-          <p class="placeholder-text">Adjust traits and run a simulation to see results.</p>
+          <p class="placeholder-text" data-i18n="dlAdjustTraits">Adjust traits and run a simulation to see results.</p>
         </div>
       </div>
 
       <div class="tab-content" id="tab-simulate">
-        <div class="panel-title">Simulation Results</div>
+        <div class="panel-title" data-i18n="dlSimResults">Simulation Results</div>
         <div id="results-content-sim" class="results-content"></div>
       </div>
 
       <div class="tab-content" id="tab-habitat">
-        <div class="panel-title">Habitat Testing</div>
+        <div class="panel-title" data-i18n="dlHabitatTesting">Habitat Testing</div>
         <div id="habitat-selector" class="habitat-selector"></div>
         <div id="habitat-results" class="habitat-results"></div>
-        <button class="btn-secondary" id="btn-hab-return" style="margin-top:12px">Reset Environment</button>
+        <button class="btn-secondary" id="btn-hab-return" style="margin-top:12px" data-i18n="dlResetEnv">Reset Environment</button>
       </div>
 
       <div class="tab-content" id="tab-battle">
-        <div class="panel-title" id="battle-panel">Battle Arena</div>
+        <div class="panel-title" id="battle-panel" data-i18n="dlBattleArena">Battle Arena</div>
         <div id="battle-setup" class="battle-setup"></div>
         <div id="battle-display" class="battle-display" style="display:none"></div>
       </div>
 
       <div class="tab-content" id="tab-challenges">
-        <div class="panel-title">Challenges <span id="challenge-progress-label" class="challenge-progress-label"></span></div>
+        <div class="panel-title"><span data-i18n="dlChallengesPanel">Challenges</span> <span id="challenge-progress-label" class="challenge-progress-label"></span></div>
         <div id="challenges-content" class="challenges-content"></div>
       </div>
 
       <div class="tab-content" id="tab-science">
-        <div class="panel-title">Research Database</div>
+        <div class="panel-title" data-i18n="dlResearchDB">Research Database</div>
         <div id="science-notes-content" class="science-notes-content"></div>
       </div>
     </aside>

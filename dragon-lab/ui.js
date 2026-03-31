@@ -7,25 +7,29 @@
 window.UI = (function() {
   const DATA = window.DragonData;
 
+  // i18n helper — falls back to key if I18N not loaded
+  function t(key) { return (typeof I18N !== 'undefined') ? I18N.t(key) : key; }
+
   let activeTab = 'build';
   let advancedMode = false;
   let onTraitChange = null;
   let onFireDesignChange = null;
 
   // Basic mode groups: each maps to multiple traits with averaging
+  // BASIC_GROUPS uses getters so labels update when language changes
   const BASIC_GROUPS = [
-    { id: 'body', label: 'Body', icon: '🦴', traits: ['bodyMass', 'musclePower', 'stomachCapacity'],
-      desc: 'Size, strength, and digestive capacity' },
-    { id: 'wings', label: 'Wings', icon: '🦅', traits: ['wingspan', 'wingArea'],
-      desc: 'Wing size and lift surface' },
-    { id: 'defense', label: 'Defense', icon: '🛡️', traits: ['boneDensity', 'scaleThickness', 'insulation'],
-      desc: 'Armor, structure, and thermal protection' },
-    { id: 'mind', label: 'Intelligence', icon: '🧠', traits: ['intelligence'],
-      desc: 'Neural complexity and tactical ability' },
-    { id: 'fire', label: 'Fire Power', icon: '🔥', traits: ['fuelGlandSize', 'ignitionEfficiency', 'metabolism'],
-      desc: 'Fuel production, ignition, and metabolic support' },
-    { id: 'agility', label: 'Agility', icon: '💨', traits: ['tailSize', 'neckLength'],
-      desc: 'Balance, maneuverability, and reach' },
+    { id: 'body', get label() { return t('dlGrpBody'); }, icon: '🦴', traits: ['bodyMass', 'musclePower', 'stomachCapacity'],
+      get desc() { return t('dlGrpBodyDesc'); } },
+    { id: 'wings', get label() { return t('dlGrpWings'); }, icon: '🦅', traits: ['wingspan', 'wingArea'],
+      get desc() { return t('dlGrpWingsDesc'); } },
+    { id: 'defense', get label() { return t('dlGrpDefense'); }, icon: '🛡️', traits: ['boneDensity', 'scaleThickness', 'insulation'],
+      get desc() { return t('dlGrpDefenseDesc'); } },
+    { id: 'mind', get label() { return t('dlGrpMind'); }, icon: '🧠', traits: ['intelligence'],
+      get desc() { return t('dlGrpMindDesc'); } },
+    { id: 'fire', get label() { return t('dlGrpFirePower'); }, icon: '🔥', traits: ['fuelGlandSize', 'ignitionEfficiency', 'metabolism'],
+      get desc() { return t('dlGrpFirePowerDesc'); } },
+    { id: 'agility', get label() { return t('dlGrpAgility'); }, icon: '💨', traits: ['tailSize', 'neckLength'],
+      get desc() { return t('dlGrpAgilityDesc'); } },
   ];
 
   // --------------------------------------------------------
@@ -107,9 +111,9 @@ window.UI = (function() {
     DATA.TRAITS.forEach(t => { (groups[t.group] || groups.physical).push(t); });
 
     const groupLabels = {
-      physical: 'Physical Traits', flight: 'Flight Systems',
-      fire: 'Fire Organs', energy: 'Energy Systems',
-      structure: 'Structural', survival: 'Survival'
+      physical: t('dlAdvGrpPhysical'), flight: t('dlAdvGrpFlight'),
+      fire: t('dlAdvGrpFireOrgans'), energy: t('dlAdvGrpEnergy'),
+      structure: t('dlAdvGrpStructural'), survival: t('dlAdvGrpSurvival')
     };
 
     Object.keys(groups).forEach(groupKey => {
@@ -194,9 +198,9 @@ window.UI = (function() {
     const dCompatClass = deliveryCompat >= 1.2 ? 'compat-good' : deliveryCompat >= 0.9 ? 'compat-ok' : 'compat-bad';
 
     panel.innerHTML = `
-      <div class="slider-group-label">Fire Design Lab</div>
+      <div class="slider-group-label">${t('dlFireDesignLab')}</div>
       <div class="fire-section">
-        <label class="fire-label">Fuel Chemistry
+        <label class="fire-label">${t('dlFuelChemistry')}
           <button class="info-btn" data-tooltip="fuelChemistry" title="The chemical composition of the fire gland's output.">i</button>
         </label>
         <div class="fire-select-group" id="fuel-select">
@@ -209,7 +213,7 @@ window.UI = (function() {
         </div>
       </div>
       <div class="fire-section">
-        <label class="fire-label">Ignition Method
+        <label class="fire-label">${t('dlIgnitionMethod')}
           <button class="info-btn" data-tooltip="ignitionOrgan" title="The biological mechanism that initiates combustion.">i</button>
         </label>
         <div class="fire-select-group" id="ignition-select">
@@ -221,7 +225,7 @@ window.UI = (function() {
         </div>
       </div>
       <div class="fire-section">
-        <label class="fire-label">Breath Delivery
+        <label class="fire-label">${t('dlBreathDelivery')}
           <button class="info-btn" data-tooltip="deliveryType" title="The physical mechanism for expelling fire.">i</button>
         </label>
         <div class="fire-select-group" id="delivery-select">
@@ -235,11 +239,11 @@ window.UI = (function() {
       </div>
       <div class="fire-compat-display">
         <div class="compat-row">
-          <span>Fuel-Ignition:</span>
+          <span>${t('dlFuelIgnitionLabel')}</span>
           <span class="compat-badge ${compatClass}">${(compat * 100).toFixed(0)}%</span>
         </div>
         <div class="compat-row">
-          <span>Fuel-Delivery:</span>
+          <span>${t('dlFuelDeliveryLabel')}</span>
           <span class="compat-badge ${dCompatClass}">${(deliveryCompat * 100).toFixed(0)}%</span>
         </div>
       </div>
