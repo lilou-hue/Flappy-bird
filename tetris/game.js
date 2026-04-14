@@ -2119,6 +2119,7 @@
 
   if (typeof Leaderboard !== 'undefined') {
     const lbPanel = document.getElementById('leaderboardPanel');
+    if (!lbPanel) return;
     lbPanel.appendChild(Leaderboard.createPanel('tetris'));
     const lbToggleBtn = document.getElementById('leaderboardToggle');
     if (lbToggleBtn) {

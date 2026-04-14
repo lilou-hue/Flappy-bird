@@ -1861,6 +1861,7 @@ requestAnimationFrame(loop);
 
 if (typeof Leaderboard !== 'undefined') {
   const lbPanel = document.getElementById('leaderboardPanel');
+  if (!lbPanel) return;
   lbPanel.appendChild(Leaderboard.createPanel('flappy-bird'));
   const lbToggleBtn = document.getElementById('leaderboardToggle');
   if (lbToggleBtn) {

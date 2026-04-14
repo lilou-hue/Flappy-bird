@@ -3970,6 +3970,7 @@ requestAnimationFrame(gameLoop);
 
 if (typeof Leaderboard !== 'undefined') {
   const lbPanel = document.getElementById('leaderboardPanel');
+  if (!lbPanel) return;
   lbPanel.appendChild(Leaderboard.createPanel('methane-drift'));
   const lbToggleBtn = document.getElementById('leaderboardToggle');
   if (lbToggleBtn) {
