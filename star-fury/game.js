@@ -1708,6 +1708,7 @@ function gameOver() {
    RESET / START
    ══════════════════════════════════════════════════════════════════ */
 function resetGame() {
+  for (const k in keys) keys[k] = false;
   const oldCard = document.querySelector('.arc-scorecard');
   if (oldCard) oldCard.remove();
   game.score = 0;

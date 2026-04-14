@@ -583,6 +583,7 @@
   }
 
   function resetGame() {
+    for (const k in keys) keys[k] = false;
     score = 0; depth = 0;
     player = { x: CFG.W / 2, y: CFG.H * 0.35, vx: 0, vy: 0 };
     lightRadius = CFG.LIGHT_MAX; pulseCooldown = 0; pulseAnim = 0;

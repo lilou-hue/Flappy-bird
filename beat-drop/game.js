@@ -296,7 +296,7 @@ const ACH = [
   { id: 'bdFullCombo50',   icon: '\u{1F48E}', title: () => I18N.t('achBdFullCombo50')   || 'Full Combo 50',  desc: () => I18N.t('achBdFullCombo50Desc')   || '50 notes no miss',       check: s => s.bestCombo >= 50 },
 ];
 
-let achData = JSON.parse(localStorage.getItem('beatDropAch') || '{"unlocked":[],"stats":{"bestScore":0,"bestCombo":0,"bestPerfectStreak":0,"totalHits":0,"maxBPM":0}}');
+let achData; try { achData = JSON.parse(localStorage.getItem('beatDropAch') || 'null'); } catch(e) {} achData = achData || {"unlocked":[],"stats":{"bestScore":0,"bestCombo":0,"bestPerfectStreak":0,"totalHits":0,"maxBPM":0}};
 let achQueue = [];
 
 function saveAch() { localStorage.setItem('beatDropAch', JSON.stringify(achData)); }

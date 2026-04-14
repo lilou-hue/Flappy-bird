@@ -358,6 +358,7 @@ function handleModeTouch(pos) {
 
 /* ── Match / Round Management ──────────────────────────────────── */
 function startMatch() {
+  for (const k in keys) keys[k] = false;
   currentMap = MAPS[Math.floor(Math.random() * MAPS.length)];
   bgMapName = ''; // force bg recache
   roundNum = 0; p1Score = 0; p2Score = 0; matchKills = 0; scoreEl.textContent = '0';

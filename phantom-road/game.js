@@ -363,6 +363,7 @@ let state;
 
 var _prGeneration = 0;
 function initState() {
+  for (const k in keys) keys[k] = false;
   _prGeneration++;
   state = {
     generation: _prGeneration,

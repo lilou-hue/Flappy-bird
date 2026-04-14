@@ -1815,11 +1815,6 @@
 
   requestAnimationFrame(gameLoop);
 
-  // ── Arcade integration ──
-  document.addEventListener('arcade-restart', function () {
-    startGame();
-  });
-
   // ── Ko-fi Shop ──
   if (typeof Shop !== 'undefined') {
     Shop.init({

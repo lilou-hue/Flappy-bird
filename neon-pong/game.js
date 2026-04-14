@@ -360,7 +360,7 @@ const ACH = [
   { id: 'npPongVeteran',   icon: '\u{1F3AE}', title: () => I18N.t('achNpPongVeteran')   || 'Pong Veteran',    desc: () => I18N.t('achNpPongVeteranDesc')   || 'Play 30 games',              check: s => s.gamesPlayed >= 30 },
 ];
 
-let achData = JSON.parse(localStorage.getItem('neonPongAch') || '{"unlocked":[],"stats":{"wins":0,"gamesPlayed":0,"flawless":false,"comeback5":false,"powerupsCollected":0,"frozenScores":0,"maxBalls":0,"hardWin":false}}');
+let achData; try { achData = JSON.parse(localStorage.getItem('neonPongAch') || 'null'); } catch(e) {} achData = achData || {"unlocked":[],"stats":{"wins":0,"gamesPlayed":0,"flawless":false,"comeback5":false,"powerupsCollected":0,"frozenScores":0,"maxBalls":0,"hardWin":false}};
 let achQueue = [];
 
 function saveAch() { localStorage.setItem('neonPongAch', JSON.stringify(achData)); }

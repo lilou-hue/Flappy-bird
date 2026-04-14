@@ -235,6 +235,7 @@
   function updateCards() {
     items.forEach(function (item, i) {
       var card = gridEl.querySelector('[data-index="' + i + '"]');
+      if (!card) return;
       var qtyEl = card.querySelector('[data-qty="' + i + '"]');
       var buyBtn = card.querySelector('[data-buy="' + i + '"]');
       var sellBtn = card.querySelector('[data-sell="' + i + '"]');

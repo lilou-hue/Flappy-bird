@@ -375,6 +375,7 @@ function playerOnAsteroid(p, a) {
 
 /* --- Game Reset --- */
 function resetGame() {
+  for (const k in keys) keys[k] = false;
   resetPlayer();
   initAsteroids();
   hazards = [];

@@ -182,7 +182,7 @@ const ACH = [
   { id: 'stAddicted',       icon: '\u{1F525}', title: () => I18N.t('achStAddicted')       || 'Addicted',        desc: () => I18N.t('achStAddictedDesc')       || 'Play 20 games',            check: s => s.gamesPlayed >= 20 },
 ];
 
-let achData = JSON.parse(localStorage.getItem('stackTowerAch') || '{"unlocked":[],"stats":{"bestScore":0,"gamesPlayed":0,"totalPerfects":0,"bestPerfectStreak":0,"comeback":false}}');
+let achData; try { achData = JSON.parse(localStorage.getItem('stackTowerAch') || 'null'); } catch(e) {} achData = achData || {"unlocked":[],"stats":{"bestScore":0,"gamesPlayed":0,"totalPerfects":0,"bestPerfectStreak":0,"comeback":false}};
 let achQueue = [];
 
 function saveAch() { localStorage.setItem('stackTowerAch', JSON.stringify(achData)); }

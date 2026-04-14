@@ -224,7 +224,7 @@ const ACH = [
   { id: 'ggStargazer',      icon: '\u{1F52D}', title: () => I18N.t('achGgStargazer')      || 'Stargazer',       desc: () => I18N.t('achGgStargazerDesc')      || 'Play 20 games',                  check: s => s.gamesPlayed >= 20 },
 ];
 
-let achData = JSON.parse(localStorage.getItem('gravityGardenAch') || '{"unlocked":[],"stats":{"bestScore":0,"gamesPlayed":0,"totalPlanetsPlanted":0,"maxAlivePlanets":0,"longestPlanetLife":0}}');
+let achData; try { achData = JSON.parse(localStorage.getItem('gravityGardenAch') || 'null'); } catch(e) {} achData = achData || {"unlocked":[],"stats":{"bestScore":0,"gamesPlayed":0,"totalPlanetsPlanted":0,"maxAlivePlanets":0,"longestPlanetLife":0}};
 let achQueue = [];
 
 function saveAch() { localStorage.setItem('gravityGardenAch', JSON.stringify(achData)); }
