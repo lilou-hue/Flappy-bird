@@ -145,41 +145,88 @@ body:has(.arc-nav) {
   padding-top: 3rem;
 }
 
-/* ── Score Card Overlay ── */
+/* ── Score Card Bar (slim slide-up) ── */
 .arc-scorecard {
   position: fixed;
-  inset: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
   z-index: 9995;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0,0,0,0.7);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
   font-family: "Space Grotesk", system-ui, sans-serif;
 }
 
 .arc-scorecard--show {
-  opacity: 1;
+  transform: translateY(0);
 }
 
-.arc-scorecard__card {
-  background: linear-gradient(145deg, #1a1a2e, #16162a);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 24px;
-  padding: 2rem 1.8rem;
-  max-width: 360px;
-  width: 90%;
-  text-align: center;
-  transform: scale(0.9) translateY(20px);
-  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: 0 25px 60px rgba(0,0,0,0.5), 0 0 80px rgba(192,132,252,0.08);
+.arc-scorecard__bar {
+  background: linear-gradient(90deg, #13131f, #1a1a2e);
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding: 0.75rem 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  justify-content: space-between;
+  box-shadow: 0 -4px 24px rgba(0,0,0,0.5);
 }
 
-.arc-scorecard--show .arc-scorecard__card {
-  transform: scale(1) translateY(0);
+.arc-scorecard__bar-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.arc-scorecard__bar-over {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #71717a;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.arc-scorecard__bar-scores {
+  font-size: 0.9rem;
+  color: #a1a1aa;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.arc-scorecard__bar-scores strong {
+  color: #fafafa;
+  font-size: 1.1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.arc-scorecard__bar-newbest {
+  background: linear-gradient(135deg, #facc15, #fb923c);
+  color: #09090b;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.arc-scorecard__bar-percentile {
+  background: linear-gradient(135deg, #c084fc, #f472b6);
+  color: #09090b;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  white-space: nowrap;
 }
 
 .arc-scorecard__title {
@@ -349,9 +396,10 @@ body:has(.arc-nav) {
 
 .arc-scorecard__actions {
   display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
+  flex-direction: row;
+  gap: 0.5rem;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .arc-scorecard__actions-secondary {

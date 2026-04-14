@@ -1380,8 +1380,6 @@
 
     var overlay = document.createElement('div');
     overlay.className = 'arc-scorecard';
-    var equippedFrame = getShop().equipped.frame;
-    if (equippedFrame) overlay.dataset.frame = equippedFrame;
 
     var isNewBest = opts.isNewBest != null ? opts.isNewBest :
       (_lastGameResult ? _lastGameResult.isNewBest : (score > (best || 0) && score > 0));
@@ -1427,78 +1425,25 @@
     var streakAtRisk = streak.streak >= 3 && streak.lastDate !== today();
 
     var html =
-      '<div class="arc-scorecard__card">' +
-        (activeEvent ? '<div class="arc-scorecard__event">' + activeEvent.label + '</div>' : '') +
-        '<div class="arc-scorecard__dramatic">' + dramatic.title + '</div>' +
-        (dramatic.sub ? '<div class="arc-scorecard__dramatic-sub">' + dramatic.sub + '</div>' : '') +
-        '<div class="arc-scorecard__gamename">' + game.name + '</div>' +
-        (function() { var eq = getShop().equipped.title; var ti = eq ? SHOP_ITEMS.find(function(i){return i.id===eq;}) : null; return ti ? '<div class="arc-scorecard__title arc-scorecard__title--' + (ti.rarity || 'common') + '">' + ti.icon + ' ' + ti.label + '</div>' : ''; })() +
-        (isNewBest ? '<div class="arc-scorecard__newbest">' + t('arcNewBest', 'New Best!') + '</div>' : '') +
-        (percentile ? '<div class="arc-scorecard__percentile">' + percentile + '</div>' : '') +
-        (nearMissText && !percentile ? '<div class="arc-scorecard__nearmiss">' + nearMissText + '</div>' : '') +
-        (lossProgress ? '<div class="arc-scorecard__progress">' + lossProgress.icon + ' ' + lossProgress.text + '</div>' : '') +
-        '<div class="arc-scorecard__scores">' +
-          '<div class="arc-scorecard__score">' +
-            '<div class="arc-scorecard__score-label">' + t('score', 'Score') + '</div>' +
-            '<div class="arc-scorecard__score-value">' + score + '</div>' +
-          '</div>' +
-          '<div class="arc-scorecard__score">' +
-            '<div class="arc-scorecard__score-label">' + t('best', 'Best') + '</div>' +
-            '<div class="arc-scorecard__score-value">' + Math.max(score, best || 0) + '</div>' +
-          '</div>' +
+      '<div class="arc-scorecard__bar">' +
+        '<div class="arc-scorecard__bar-info">' +
+          '<span class="arc-scorecard__bar-over">' + dramatic.title + '</span>' +
+          '<span class="arc-scorecard__bar-scores">' +
+            t('score', 'Score') + ' <strong>' + score + '</strong>' +
+            '&nbsp;&middot;&nbsp;' +
+            t('best', 'Best') + ' <strong>' + Math.max(score, best || 0) + '</strong>' +
+            (isNewBest ? '&nbsp;<span class="arc-scorecard__bar-newbest">\u2605 ' + t('arcNewBest', 'New Best!') + '</span>' : '') +
+            (percentile ? '&nbsp;<span class="arc-scorecard__bar-percentile">' + percentile + '</span>' : '') +
+          '</span>' +
         '</div>' +
-        '<div class="arc-scorecard__coins">' +
-          '<div class="arc-scorecard__coins-row"><span>' + t('arcCompletion', 'Completion') + '</span><span>+' + coinsBase + '</span></div>' +
-          (coinsNewBest ? '<div class="arc-scorecard__coins-row arc-scorecard__coins-row--bonus"><span>' + t('arcNewBest', 'New Best!') + '</span><span>+' + coinsNewBest + '</span></div>' : '') +
-          (thresholdBonus ? '<div class="arc-scorecard__coins-row arc-scorecard__coins-row--bonus"><span>' + t('arcScoreBonus', 'Score Bonus') + '</span><span>+' + thresholdBonus + '</span></div>' : '') +
-          (activeEvent ? '<div class="arc-scorecard__coins-row arc-scorecard__coins-row--event"><span>' + activeEvent.label + '</span><span>×' + activeEvent.multiplier + '</span></div>' : '') +
-          '<div class="arc-scorecard__coins-total"><span>' + t('arcTotal', 'Total') + '</span><span>+' + totalCoins + ' ' + t('arcCoins', 'coins') + '</span></div>' +
-        '</div>' +
-        /* Daily challenges section */
-        (pendingChallenges.length > 0 ? (
-          '<div class="arc-scorecard__challenges">' +
-            '<div class="arc-scorecard__challenges-title">' + t('arcDailyChallenges', 'Daily Challenges') + '</div>' +
-            challenges.map(function(c) {
-              return '<div class="arc-scorecard__challenge ' + (c.completed ? 'arc-scorecard__challenge--done' : '') + '">' +
-                '<span>' + (c.completed ? '✅' : '⬜') + ' ' + c.desc + '</span>' +
-                '<span class="arc-scorecard__challenge-reward">+' + c.reward + '</span>' +
-              '</div>';
-            }).join('') +
-          '</div>'
-        ) : '') +
-        /* Streak display */
-        (streak.streak > 0 ? (
-          '<div class="arc-scorecard__streak">' +
-            '<span>🔥 ' + streak.streak + '-day streak</span>' +
-            (streakAtRisk ? '<span class="arc-scorecard__streak-warning">⚠️ Play tomorrow or lose it!</span>' : '') +
-          '</div>'
-        ) : '') +
-        (returnTrigger ? '<div class="arc-scorecard__return-trigger">💡 ' + returnTrigger + '</div>' : '') +
         '<div class="arc-scorecard__actions">' +
           '<button class="arc-scorecard__btn arc-scorecard__btn--again" autofocus>' + t('arcPlayAgain', 'Play Again') + ' &#x25B6;</button>' +
-          '<div class="arc-scorecard__actions-secondary">' +
-            '<button class="arc-scorecard__btn arc-scorecard__btn--challenge" title="Challenge a friend">\u2694\uFE0F ' + t('arcChallenge', 'Challenge Friend') + '</button>' +
-            '<button class="arc-scorecard__btn arc-scorecard__btn--share" title="Copy viral share">' + t('arcShare', 'Share') + '</button>' +
-            '<a href="/" class="arc-scorecard__btn arc-scorecard__btn--home">' + t('arcHome', 'Home') + '</a>' +
-          '</div>' +
+          '<button class="arc-scorecard__btn arc-scorecard__btn--share" title="Copy share link">' + t('arcShare', 'Share') + '</button>' +
+          '<a href="/" class="arc-scorecard__btn arc-scorecard__btn--home">' + t('arcHome', 'Home') + '</a>' +
         '</div>' +
       '</div>';
 
     overlay.innerHTML = html;
-
-    /* Challenge friend button — copies deep link */
-    overlay.querySelector('.arc-scorecard__btn--challenge').addEventListener('click', function () {
-      var nickname = (typeof Leaderboard !== 'undefined' && Leaderboard.getNickname) ? Leaderboard.getNickname() : 'Someone';
-      var text = nickname + ' scored ' + score + ' on ' + game.name + '. Beat them! ' + challengeLink;
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(text).then(function () {
-          this.textContent = '\u2705 ' + t('arcCopied', 'Copied!');
-          setTimeout(function () { this.textContent = '\u2694\uFE0F ' + t('arcChallenge', 'Challenge Friend'); }.bind(this), 2000);
-        }.bind(this)).catch(function () {
-          this.textContent = '\u2694\uFE0F ' + t('arcChallenge', 'Challenge Friend');
-        }.bind(this));
-      }
-    });
 
     /* Share button — viral hook text */
     overlay.querySelector('.arc-scorecard__btn--share').addEventListener('click', function () {
