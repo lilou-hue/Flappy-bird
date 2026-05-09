@@ -492,6 +492,66 @@ body:has(.arc-nav) {
   margin-bottom: 0.5rem;
 }
 
+/* ── Dismissable popup close button (×) ──
+   Sits in the top-right corner of any toast/overlay element. */
+.arc-toast-close {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.35rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 999px;
+  color: rgba(255,255,255,0.7);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, transform 0.15s;
+  z-index: 1;
+}
+.arc-toast-close:hover {
+  background: rgba(255,255,255,0.18);
+  color: #fff;
+  transform: scale(1.1);
+}
+.arc-toast-close:focus-visible {
+  outline: 2px solid #c084fc;
+  outline-offset: 2px;
+}
+/* Holy moment overlay parent uses pointer-events: none until --show; ensure
+   the close button is always clickable when the toast is rendered. */
+.arc-holy-moment .arc-toast-close { pointer-events: auto; }
+
+/* Score card dismiss × — matches the slim bar */
+.arc-scorecard__close {
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  margin-left: 0.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 999px;
+  color: rgba(255,255,255,0.6);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  font-family: "Space Grotesk", system-ui, sans-serif;
+}
+.arc-scorecard__close:hover {
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  border-color: rgba(255,255,255,0.3);
+}
+
 /* ── Achievement Popup Toast ── */
 .arc-ach-toast {
   position: fixed;
@@ -1638,6 +1698,8 @@ body:has(.arc-nav) {
 }
 .arc-holy-moment--show {
   background: rgba(0,0,0,0.6);
+  pointer-events: auto;
+  cursor: pointer;
 }
 .arc-holy-moment__content {
   text-align: center;

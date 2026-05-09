@@ -267,6 +267,38 @@
     }, 3000);
   }
 
+  /* ── Dismissable popup helper ─────────────────────────────
+     Adds a × close button and registers the element for Esc-key
+     dismissal. Stack is LIFO so Esc closes the topmost popup. */
+  var _dismissStack = [];
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    while (_dismissStack.length) {
+      var top = _dismissStack[_dismissStack.length - 1];
+      if (top && top.isConnected) {
+        e.preventDefault();
+        if (top.parentNode) top.parentNode.removeChild(top);
+        _dismissStack.pop();
+        return;
+      }
+      _dismissStack.pop();
+    }
+  });
+
+  function makeDismissable(el) {
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'arc-toast-close';
+    btn.setAttribute('aria-label', 'Dismiss');
+    btn.textContent = '×';
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (el.parentNode) el.parentNode.removeChild(el);
+    });
+    el.appendChild(btn);
+    _dismissStack.push(el);
+  }
+
   /* ── Coin management ── */
   function addCoins(amount) {
     var s = getState();
@@ -664,6 +696,7 @@
         '<div class="arc-streak-toast__text">' + t('arcStreakLostMsg', 'Your {n}-day streak is gone. A Streak Shield could have saved it.').replace('{n}', lostStreak) + '</div>' +
       '</div>';
     document.body.appendChild(toast);
+    makeDismissable(toast);
     requestAnimationFrame(function () { toast.classList.add('arc-streak-toast--show'); });
     setTimeout(function () {
       toast.classList.remove('arc-streak-toast--show');
@@ -681,6 +714,7 @@
         '<div class="arc-streak-toast__text">' + t('arcStreakSavedMsg', 'Your Shield protected your {n}-day streak! Buy another before it happens again.').replace('{n}', currentStreak) + '</div>' +
       '</div>';
     document.body.appendChild(toast);
+    makeDismissable(toast);
     requestAnimationFrame(function () { toast.classList.add('arc-streak-toast--show'); });
     setTimeout(function () {
       toast.classList.remove('arc-streak-toast--show');
@@ -698,6 +732,7 @@
         '<div class="arc-streak-toast__text">' + t('arcStreakMilestone', 'You\'re on fire. Don\'t let it die.') + '</div>' +
       '</div>';
     document.body.appendChild(toast);
+    makeDismissable(toast);
     requestAnimationFrame(function () { toast.classList.add('arc-streak-toast--show'); });
     setTimeout(function () {
       toast.classList.remove('arc-streak-toast--show');
@@ -914,6 +949,7 @@
         '<div class="arc-quest-toast__reward">+' + milestone.reward + ' coins</div>' +
       '</div>';
     document.body.appendChild(toast);
+    makeDismissable(toast);
     requestAnimationFrame(function () { toast.classList.add('arc-quest-toast--show'); });
     setTimeout(function () {
       toast.classList.remove('arc-quest-toast--show');
@@ -1012,6 +1048,7 @@
         '<div class="arc-ach-toast__reward">' + pu.desc + '</div>' +
       '</div>';
     document.body.appendChild(toast);
+    makeDismissable(toast);
     requestAnimationFrame(function () { toast.classList.add('arc-ach-toast--show'); });
     setTimeout(function () {
       toast.classList.remove('arc-ach-toast--show');
@@ -1052,6 +1089,7 @@
         '<div class="arc-lucky-toast__reward">+' + drop.coins + ' coins!</div>' +
       '</div>';
     document.body.appendChild(toast);
+    makeDismissable(toast);
     requestAnimationFrame(function () { toast.classList.add('arc-lucky-toast--show'); });
     var duration = drop.rarity === 'legendary' ? 5000 : 3500;
     setTimeout(function () {
@@ -1093,6 +1131,10 @@
         '<div class="arc-holy-moment__sub">' + moment.sub + '</div>' +
       '</div>';
     document.body.appendChild(overlay);
+    makeDismissable(overlay);
+    overlay.addEventListener('click', function () {
+      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    });
     requestAnimationFrame(function() { overlay.classList.add('arc-holy-moment--show'); });
     setTimeout(function() {
       overlay.classList.remove('arc-holy-moment--show');
@@ -1292,6 +1334,7 @@
         '<div class="arc-ach-toast__reward">+' + ach.reward + ' ' + t('arcCoins', 'coins') + '</div>' +
       '</div>';
     document.body.appendChild(toast);
+    makeDismissable(toast);
     requestAnimationFrame(function () { toast.classList.add('arc-ach-toast--show'); });
     setTimeout(function () {
       toast.classList.remove('arc-ach-toast--show');
@@ -1440,6 +1483,7 @@
           '<button class="arc-scorecard__btn arc-scorecard__btn--again" autofocus>' + t('arcPlayAgain', 'Play Again') + ' &#x25B6;</button>' +
           '<button class="arc-scorecard__btn arc-scorecard__btn--share" title="Copy share link">' + t('arcShare', 'Share') + '</button>' +
           '<a href="/" class="arc-scorecard__btn arc-scorecard__btn--home">' + t('arcHome', 'Home') + '</a>' +
+          '<button class="arc-scorecard__close" type="button" aria-label="Dismiss" title="Dismiss (Esc)">×</button>' +
         '</div>' +
       '</div>';
 
@@ -1460,18 +1504,33 @@
 
     /* Play again button — instant restart, zero friction */
     var againBtn = overlay.querySelector('.arc-scorecard__btn--again');
-    function doRestart() {
-      overlay.remove();
+    function dismissOverlay() {
+      if (overlay.parentNode) overlay.remove();
       document.removeEventListener('keydown', restartOnKey);
+    }
+    function doRestart() {
+      dismissOverlay();
       document.dispatchEvent(new CustomEvent('arcade-restart'));
     }
     againBtn.addEventListener('click', doRestart);
 
-    /* Press Space or Enter to instantly restart — "one more run" loop */
+    /* Close button — dismiss the bar without restarting */
+    var closeBtn = overlay.querySelector('.arc-scorecard__close');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        dismissOverlay();
+      });
+    }
+
+    /* Keyboard: Space/Enter to restart, Esc to dismiss */
     function restartOnKey(e) {
       if (e.code === 'Space' || e.code === 'Enter') {
         e.preventDefault();
         doRestart();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        dismissOverlay();
       }
     }
     setTimeout(function() {
