@@ -360,6 +360,7 @@ if (skinButton) {
 
 // ── State ────────────────────────────────────────────────
 let state;
+const keys = {};
 
 var _prGeneration = 0;
 function initState() {
@@ -539,7 +540,6 @@ function initState() {
 initState();
 
 // ── Input ────────────────────────────────────────────────
-const keys = {};
 window.addEventListener("keydown", (e) => {
   keys[e.key] = true;
   if (e.key === " " || e.key === "ArrowUp" || e.key === "ArrowDown" ||

@@ -2690,12 +2690,13 @@ loadBestScore();
 resetGame();
 if (typeof Leaderboard !== 'undefined') {
   const lbPanel = document.getElementById('leaderboardPanel');
-  if (!lbPanel) return;
-  lbPanel.appendChild(Leaderboard.createPanel('gun-game'));
-  const lbToggleBtn = document.getElementById('leaderboardToggle');
-  if (lbToggleBtn) {
-    lbToggleBtn.addEventListener('click', () => { lbPanel.classList.toggle('lb-visible'); });
-    lbPanel.addEventListener('click', (e) => { if (e.target === lbPanel) lbPanel.classList.remove('lb-visible'); });
+  if (lbPanel) {
+    lbPanel.appendChild(Leaderboard.createPanel('gun-game'));
+    const lbToggleBtn = document.getElementById('leaderboardToggle');
+    if (lbToggleBtn) {
+      lbToggleBtn.addEventListener('click', () => { lbPanel.classList.toggle('lb-visible'); });
+      lbPanel.addEventListener('click', (e) => { if (e.target === lbPanel) lbPanel.classList.remove('lb-visible'); });
+    }
   }
 }
 requestAnimationFrame(loop);
