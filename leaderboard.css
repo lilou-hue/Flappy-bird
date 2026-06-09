@@ -31,7 +31,7 @@
   text-align: left;
   padding: 0.4rem 0.5rem;
   border-bottom: 1px solid #444;
-  color: #888;
+  color: #a3a3b8;
   font-weight: 600;
   font-size: 0.75rem;
   text-transform: uppercase;
@@ -76,14 +76,14 @@
 .lb-empty {
   text-align: center;
   padding: 1.5rem 0.5rem;
-  color: #666;
+  color: #a3a3b8;
   font-style: italic;
 }
 
 .lb-loading {
   text-align: center;
   padding: 1.5rem 0.5rem;
-  color: #888;
+  color: #a3a3b8;
 }
 
 /* ── Nickname overlay ─────────────────────────────────────── */

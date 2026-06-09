@@ -269,21 +269,37 @@
 
   /* ── Dismissable popup helper ─────────────────────────────
      Adds a × close button and registers the element for Esc-key
-     dismissal. Stack is LIFO so Esc closes the topmost popup. */
+     dismissal. Stack is LIFO so Esc closes the most-recent popup.
+     Entries are removed from the stack on close/auto-dismiss (not just
+     lazily on Esc) so the stack can't grow unbounded or get out of order. */
   var _dismissStack = [];
+
+  function _unregisterDismiss(el) {
+    var idx = _dismissStack.indexOf(el);
+    if (idx !== -1) _dismissStack.splice(idx, 1);
+  }
+
+  function _removePopup(el) {
+    _unregisterDismiss(el);
+    if (el && el.parentNode) el.parentNode.removeChild(el);
+  }
+
   document.addEventListener('keydown', function (e) {
     if (e.key !== 'Escape') return;
+    /* Drop any entries whose nodes are already gone, then dismiss the topmost
+       live popup. stopPropagation keeps Esc from also reaching game handlers
+       (e.g. tetris pause) when a popup is actually on screen. */
     while (_dismissStack.length) {
       var top = _dismissStack[_dismissStack.length - 1];
       if (top && top.isConnected) {
         e.preventDefault();
-        if (top.parentNode) top.parentNode.removeChild(top);
-        _dismissStack.pop();
+        e.stopPropagation();
+        _removePopup(top);
         return;
       }
       _dismissStack.pop();
     }
-  });
+  }, true); /* capture phase so we run before game keydown listeners */
 
   function makeDismissable(el) {
     var btn = document.createElement('button');
@@ -293,10 +309,13 @@
     btn.textContent = '×';
     btn.addEventListener('click', function (e) {
       e.stopPropagation();
-      if (el.parentNode) el.parentNode.removeChild(el);
+      _removePopup(el);
     });
     el.appendChild(btn);
+    /* Prune any auto-dismissed (detached) entries before registering this one. */
+    _dismissStack = _dismissStack.filter(function (n) { return n.isConnected; });
     _dismissStack.push(el);
+    return el;
   }
 
   /* ── Coin management ── */
@@ -452,6 +471,7 @@
 
   var _lastGameOverTime = 0;
   var _lastGameResult = null; /* cached for createScoreCard fallback */
+  var _scoreCardKeyHandler = null; /* active scorecard keydown listener, for cleanup */
 
   function onGameOver(gameId, score) {
     _lastGameResult = null; /* clear stale data before computing new result */
@@ -1414,9 +1434,14 @@
     var game = GAMES[gameId] || { name: gameId };
     var result = null;
 
-    /* Find existing score card from the same session */
+    /* Find existing score card from the same session — remove its node AND
+       its document-level keydown listener so handlers don't accumulate. */
     var existing = document.querySelector('.arc-scorecard');
     if (existing) existing.remove();
+    if (_scoreCardKeyHandler) {
+      document.removeEventListener('keydown', _scoreCardKeyHandler);
+      _scoreCardKeyHandler = null;
+    }
 
     /* Check & award OG badge */
     checkOGBadge();
@@ -1507,6 +1532,7 @@
     function dismissOverlay() {
       if (overlay.parentNode) overlay.remove();
       document.removeEventListener('keydown', restartOnKey);
+      if (_scoreCardKeyHandler === restartOnKey) _scoreCardKeyHandler = null;
     }
     function doRestart() {
       dismissOverlay();
@@ -1533,13 +1559,17 @@
         dismissOverlay();
       }
     }
+    _scoreCardKeyHandler = restartOnKey;
     setTimeout(function() {
-      document.addEventListener('keydown', restartOnKey);
+      /* Only attach if this scorecard is still the active one */
+      if (_scoreCardKeyHandler === restartOnKey) {
+        document.addEventListener('keydown', restartOnKey);
+      }
     }, 300); /* small delay so the key that ended the game doesn't trigger restart */
 
     var homeLink = overlay.querySelector('.arc-scorecard__btn--home');
     if (homeLink) {
-      homeLink.addEventListener('click', function() { document.removeEventListener('keydown', restartOnKey); });
+      homeLink.addEventListener('click', dismissOverlay);
     }
 
     requestAnimationFrame(function () {

@@ -2623,7 +2623,7 @@ body:has(.arc-nav) {
 }
 .arc-shop-btn--locked {
   background: rgba(255,255,255,0.06);
-  color: rgba(255,255,255,0.4);
+  color: rgba(255,255,255,0.55);
   cursor: not-allowed;
 }
 
@@ -2719,7 +2719,7 @@ body:has(.arc-nav) {
 }
 .arc-shop-admin-bar__hint {
   font-size: 0.7rem;
-  color: rgba(255,255,255,0.3);
+  color: rgba(255,255,255,0.55);
 }
 .arc-shop-admin-bar__hint code {
   background: rgba(255,255,255,0.06);

@@ -653,7 +653,7 @@
         z-index: 1;
         margin-top: 3rem;
         text-align: center;
-        color: rgba(161,161,170,0.4);
+        color: rgba(161,161,170,0.85);
         font-size: 0.8rem;
       }
 
@@ -3882,7 +3882,7 @@
         /* Render leaderboard preview (top 3 real players across all games) */
         var lbList = document.getElementById('lbPreviewList');
         if (lbList && typeof Leaderboard !== 'undefined') {
-          lbList.innerHTML = '<div style="color:rgba(255,255,255,0.4);padding:0.5rem;font-size:0.85rem;">Loading…</div>';
+          lbList.innerHTML = '<div style="color:rgba(255,255,255,0.7);padding:0.5rem;font-size:0.85rem;">Loading…</div>';
           var gameIds = ['flappy-bird','snake','tetris','lumina','phantom-road','methane-drift','gun-game','astro-miner','star-fury','inkognito','stack-tower','neon-pong','beat-drop','gravity-garden'];
           Promise.all(gameIds.map(function (id) {
             return Leaderboard.getTopScores(id).catch(function () { return []; });
@@ -3901,16 +3901,18 @@
             }).sort(function (a, b) { return b.score - a.score; }).slice(0, 3);
 
             if (!sorted.length) {
-              lbList.innerHTML = '<div style="color:rgba(255,255,255,0.4);padding:0.5rem;font-size:0.85rem;">No scores yet. Play some games!</div>';
+              lbList.innerHTML = '<div style="color:rgba(255,255,255,0.7);padding:0.5rem;font-size:0.85rem;">No scores yet. Play some games!</div>';
               return;
             }
             var rankIcons = ['\uD83E\uDD47', '\uD83E\uDD48', '\uD83E\uDD49'];
             var nick = localStorage.getItem('arcade_nickname') || '';
+            var escEl = document.createElement('div');
+            function escHtml(s) { escEl.textContent = s; return escEl.innerHTML; }
             lbList.innerHTML = sorted.map(function (p, i) {
               var isMe = p.name === nick;
               return '<div class="arc-lb-preview__entry' + (isMe ? ' arc-lb-me' : '') + '">' +
                 '<div class="arc-lb-preview__rank">' + rankIcons[i] + '</div>' +
-                '<div class="arc-lb-preview__name">' + p.name + (isMe ? ' (you)' : '') + '</div>' +
+                '<div class="arc-lb-preview__name">' + escHtml(p.name) + (isMe ? ' (you)' : '') + '</div>' +
                 '<div class="arc-lb-preview__score">' + p.score.toLocaleString() + ' pts</div>' +
               '</div>';
             }).join('');
