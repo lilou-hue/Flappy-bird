@@ -6,137 +6,142 @@
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://slayplay.io/flappy-bird/</loc>
+    <loc>https://slayplay.io/arcade/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://slayplay.io/arcade/flappy-bird/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://slayplay.io/snake/</loc>
+    <loc>https://slayplay.io/arcade/snake/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://slayplay.io/tetris/</loc>
+    <loc>https://slayplay.io/arcade/tetris/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://slayplay.io/methane-drift/</loc>
+    <loc>https://slayplay.io/arcade/methane-drift/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://slayplay.io/lumina/</loc>
+    <loc>https://slayplay.io/arcade/lumina/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://slayplay.io/phantom-road/</loc>
+    <loc>https://slayplay.io/arcade/phantom-road/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://slayplay.io/unicorn-clicker/</loc>
+    <loc>https://slayplay.io/arcade/unicorn-clicker/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://slayplay.io/gun-game/</loc>
+    <loc>https://slayplay.io/arcade/gun-game/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://slayplay.io/astro-miner/</loc>
+    <loc>https://slayplay.io/arcade/astro-miner/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://slayplay.io/star-fury/</loc>
+    <loc>https://slayplay.io/arcade/star-fury/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://slayplay.io/inkognito/</loc>
+    <loc>https://slayplay.io/arcade/inkognito/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://slayplay.io/dress-up/</loc>
+    <loc>https://slayplay.io/arcade/dress-up/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://slayplay.io/stack-tower/</loc>
+    <loc>https://slayplay.io/arcade/stack-tower/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://slayplay.io/neon-pong/</loc>
+    <loc>https://slayplay.io/arcade/neon-pong/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://slayplay.io/beat-drop/</loc>
+    <loc>https://slayplay.io/arcade/beat-drop/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://slayplay.io/rivals/</loc>
+    <loc>https://slayplay.io/arcade/rivals/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://slayplay.io/gravity-garden/</loc>
+    <loc>https://slayplay.io/arcade/gravity-garden/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://slayplay.io/the-deep/</loc>
+    <loc>https://slayplay.io/arcade/the-deep/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://slayplay.io/spend/</loc>
+    <loc>https://slayplay.io/arcade/spend/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://slayplay.io/life-in-weeks/</loc>
+    <loc>https://slayplay.io/arcade/life-in-weeks/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://slayplay.io/last-seen-online/</loc>
+    <loc>https://slayplay.io/arcade/last-seen-online/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://slayplay.io/heart-serve/</loc>
+    <loc>https://slayplay.io/arcade/heart-serve/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://slayplay.io/art-of-doing-nothing/</loc>
+    <loc>https://slayplay.io/arcade/art-of-doing-nothing/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://slayplay.io/achievements/</loc>
+    <loc>https://slayplay.io/arcade/achievements/</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://slayplay.io/leaderboard-page/</loc>
+    <loc>https://slayplay.io/arcade/leaderboard-page/</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://slayplay.io/shop/</loc>
+    <loc>https://slayplay.io/arcade/shop/</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://slayplay.io/profile/</loc>
+    <loc>https://slayplay.io/arcade/profile/</loc>
     <changefreq>weekly</changefreq>
     <priority>0.4</priority>
   </url>

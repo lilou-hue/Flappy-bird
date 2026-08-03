@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-VMLC97VBGN"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-VMLC97VBGN');
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>The Art of Doing Nothing — SlayPlay</title>
+  <meta property="og:site_name" content="SlayPlay">
+  <meta property="og:title" content="The Art of Doing Nothing">
+  <meta property="og:description" content="A narrative game about procrastination and the sloth inside your head.">
+  <meta property="og:type" content="website">
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="../shop.css" />
+    <script src="../i18n.js"></script>
+  </head>
+  <body>
+    <!-- Start overlay -->
+    <div id="startOverlay">
+      <div class="start-title" data-i18n="aodnTitle">The Art of Doing Nothing</div>
+      <div class="start-subtitle" data-i18n="aodnSubtitle">A story about procrastination, fear, and the sloth inside your head.</div>
+      <div class="start-prompt" data-i18n="aodnClickToBegin">Click anywhere to begin</div>
+    </div>
+
+    <!-- Chapter select overlay -->
+    <div id="chapterSelectOverlay" style="display:none">
+      <div class="chapter-select-inner">
+        <div class="chapter-select-title" data-i18n="aodnChapterSelect">Chapter Select</div>
+        <div class="chapter-list"></div>
+        <button class="ch-select-close" data-i18n="aodnBack">Back</button>
+      </div>
+    </div>
+
+    <main class="game" id="gameContainer">
+      <header class="game__header">
+        <a href="/arcade/" class="back-link" data-i18n="backToGames">&larr; Back to Games</a>
+        <h1 data-i18n="aodnTitle">The Art of Doing Nothing</h1>
+        <p>Chapter 1: Just Five More Minutes</p>
+      </header>
+
+      <div id="canvasContainer">
+        <canvas id="gameCanvas" width="540" height="405" aria-label="The Art of Doing Nothing"></canvas>
+      </div>
+
+      <div class="game__hud">
+        <div class="hud__score">
+          <span data-i18n="score">Score</span>
+          <strong id="score">0</strong>
+        </div>
+        <div class="hud__score">
+          <span data-i18n="best">Best</span>
+          <strong id="bestScore">0</strong>
+        </div>
+        <button id="muteButton" class="hud__mute" type="button" aria-label="Toggle sound">🔊</button>
+        <button id="chapterSelectBtn" class="hud__button" type="button" data-i18n="aodnChaptersBtn">Chapters</button>
+        <button id="leaderboardToggle" class="lb-toggle-btn" type="button" aria-label="Toggle leaderboard">🏆</button>
+        <button id="restartButton" class="hud__button" type="button" data-i18n="restart">Restart</button>
+      </div>
+
+      <!-- Dialogue layer -->
+      <div id="dialogueBox">
+        <div id="speakerLabel"></div>
+        <div id="dialogueText"></div>
+        <div id="choiceContainer"></div>
+        <div id="clickPrompt" data-i18n="aodnClickContinue">Click to continue</div>
+      </div>
+
+      <footer class="game__footer">
+        <p data-i18n-html="aodnFooter">Inspired by ncase.me &mdash; "The villain gets a redemption arc."</p>
+      </footer>
+    </main>
+
+    <div id="leaderboardPanel"></div>
+
+    <!-- Script includes -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <link rel="stylesheet" href="../leaderboard.css">
+    <link rel="stylesheet" href="../arcade.css">
+    <script src="../arcade.js"></script>
+    <script src="../leaderboard.js"></script>
+    <script src="state.js"></script>
+    <script src="dialogue-engine.js"></script>
+    <script src="characters.js"></script>
+    <script src="audio.js"></script>
+    <script src="scenes/chapter1.js"></script>
+    <script src="scenes/chapter2.js"></script>
+    <script src="scenes/chapter3.js"></script>
+    <script src="scenes/chapter4.js"></script>
+    <script src="scenes/chapter5.js"></script>
+    <script src="game.js"></script>
+    <script>if(typeof Arcade!=='undefined')Arcade.injectNavHUD();</script>
+  </body>
+</html>

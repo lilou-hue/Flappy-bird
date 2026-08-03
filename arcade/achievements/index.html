@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-VMLC97VBGN"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-VMLC97VBGN');
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Achievements — SlayPlay</title>
+  <meta property="og:site_name" content="SlayPlay">
+  <meta property="og:title" content="Achievements">
+  <meta property="og:description" content="Track your progress across all SlayPlay games. Unlock badges and earn coins.">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../arcade.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+    .arc-section-title {
+      font-size: 1.1rem;
+      color: #fafafa;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+    }
+    .arc-game-ach-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.6rem;
+    }
+    .arc-game-ach-link {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 12px;
+      padding: 0.75rem;
+      text-decoration: none;
+      color: #fafafa;
+      transition: border-color 0.2s;
+    }
+    .arc-game-ach-link:hover { border-color: rgba(192,132,252,0.3); }
+    .arc-game-ach-link__icon { font-size: 1.4rem; }
+    .arc-game-ach-link__name { font-size: 0.85rem; font-weight: 500; }
+    .arc-game-ach-link__count { font-size: 0.75rem; color: #a1a1aa; }
+  </style>
+</head>
+<body class="arc-page">
+  <script src="../arcade.js"></script>
+  <script src="../i18n.js"></script>
+
+  <div class="arc-page__container">
+    <h1 class="arc-page__title" data-i18n="arcNavAchievements">Achievements</h1>
+    <p class="arc-page__subtitle" data-i18n="achPageSubtitle">Track your arcade milestones</p>
+
+    <div class="arc-progress" id="achProgress">
+      <div class="arc-progress__label"><span id="achCount">0</span> / <span id="achTotal">12</span> <span data-i18n="achUnlocked">unlocked</span></div>
+      <div class="arc-progress__bar">
+        <div class="arc-progress__fill" id="achFill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="arc-ach-grid" id="achGrid"></div>
+
+    <h2 class="arc-section-title" data-i18n="achPerGame">Per-Game Achievements</h2>
+    <div class="arc-game-ach-grid" id="gameAchGrid"></div>
+  </div>
+
+  <script>
+    (function () {
+      function t(key, fallback) {
+        if (typeof I18N !== 'undefined' && I18N.t) { var v = I18N.t(key); if (v && v !== key) return v; }
+        return fallback || key;
+      }
+
+      Arcade.injectNavHUD();
+
+      if (typeof I18N !== 'undefined') {
+        I18N.createSelector(document.querySelector('.arc-page__container'));
+        I18N.applyDOM();
+        window.addEventListener('langchange', function () { I18N.applyDOM(); renderGrid(); });
+      }
+
+      var achs = Arcade.getArcadeAchievements();
+      var unlocked = achs.filter(function (a) { return a.unlocked; }).length;
+
+      document.getElementById('achCount').textContent = unlocked;
+      document.getElementById('achTotal').textContent = achs.length;
+      document.getElementById('achFill').style.width = (unlocked / achs.length * 100) + '%';
+
+      function renderGrid() {
+        var grid = document.getElementById('achGrid');
+        grid.innerHTML = achs.map(function (a) {
+          var cls = a.unlocked ? 'arc-ach-card arc-ach-card--unlocked' : 'arc-ach-card arc-ach-card--locked';
+          return '<div class="' + cls + '">' +
+            '<div class="arc-ach-card__icon">' + a.icon + '</div>' +
+            '<div>' +
+              '<div class="arc-ach-card__name">' + a.name + '</div>' +
+              '<div class="arc-ach-card__desc">' + a.desc + '</div>' +
+              '<div class="arc-ach-card__reward">' + (a.unlocked ? t('achEarned', 'Earned') : '+' + a.reward + ' ' + t('arcCoins', 'coins')) + '</div>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+      }
+      renderGrid();
+
+      /* Per-game achievement links */
+      var gameAchs = [
+        { icon: '&#x1F426;', name: 'Flappy Bird', key: 'flappyAch', total: 6, href: '/arcade/flappy-bird/' },
+        { icon: '&#x1F40D;', name: 'Snake', key: 'snakeAch', total: 18, href: '/arcade/snake/' },
+        { icon: '&#x1F9E9;', name: 'Tetris', key: 'tetrisAch', total: 6, href: '/arcade/tetris/' },
+        { icon: '&#x2728;', name: 'Lumina', key: 'luminaAch', total: 6, href: '/arcade/lumina/' },
+        { icon: '&#x1F697;', name: 'Phantom Road', key: 'phantomRoadAch', total: 6, href: '/arcade/phantom-road/' },
+        { icon: '&#x1F680;', name: 'Methane Drift', key: 'methaneDriftProgress', total: 6, href: '/arcade/methane-drift/' },
+        { icon: '&#x1F52B;', name: 'Gun Game', key: 'gunGameAch', total: 8, href: '/arcade/gun-game/' },
+        { icon: '&#x1F984;', name: 'Unicorn Clicker', key: 'unicornAch', total: 9, href: '/arcade/unicorn-clicker/' },
+        { icon: '&#x26CF;', name: 'Astro Miner', key: 'astroMinerAch', total: 9, href: '/arcade/astro-miner/' },
+        { icon: '&#x1F680;', name: 'Star Fury', key: 'starFuryAch', total: 10, href: '/arcade/star-fury/' },
+        { icon: '&#x1F3B5;', name: 'Beat Drop', key: 'beatDropAch', total: 8, href: '/arcade/beat-drop/' },
+        { icon: '&#x1F3D3;', name: 'Neon Pong', key: 'neonPongAch', total: 8, href: '/arcade/neon-pong/' },
+        { icon: '&#x1F50D;', name: 'Inkognito', key: 'inkognitoAch', total: 8, href: '/arcade/inkognito/' },
+        { icon: '&#x1F3D7;', name: 'Stack Tower', key: 'stackTowerAch', total: 8, href: '/arcade/stack-tower/' },
+        { icon: '&#x1F457;', name: 'Dress-Up', key: 'dressUpAchievements', total: 10, href: '/arcade/dress-up/' },
+        { icon: '&#x1F52B;', name: 'Rivals', key: 'rivalsAch', total: 10, href: '/arcade/rivals/' },
+        { icon: '&#x1FA90;', name: 'Gravity Garden', key: 'gravityGardenAch', total: 6, href: '/arcade/gravity-garden/' },
+        { icon: '&#x1F4F1;', name: 'Last Seen Online', key: 'lso_achievements', total: 6, href: '/arcade/last-seen-online/', isList: true },
+      ];
+
+      var gameGrid = document.getElementById('gameAchGrid');
+      gameGrid.innerHTML = gameAchs.map(function (g) {
+        var data = null;
+        try { data = JSON.parse(localStorage.getItem(g.key)); } catch (e) {}
+        var count = 0;
+        if (data) {
+          if (g.key === 'methaneDriftProgress' && data.achievements) {
+            count = Object.values(data.achievements).filter(Boolean).length;
+          } else if (g.isList && Array.isArray(data)) {
+            /* Raw array of unlocked IDs (e.g. last-seen-online) */
+            count = data.length;
+          } else if (Array.isArray(data.unlocked)) {
+            count = data.unlocked.length;
+          } else if (typeof data === 'object' && !Array.isArray(data)) {
+            /* Dress-Up style: plain object { id: true } */
+            count = Object.values(data).filter(Boolean).length;
+          }
+        }
+        return '<a href="' + g.href + '" class="arc-game-ach-link">' +
+          '<span class="arc-game-ach-link__icon">' + g.icon + '</span>' +
+          '<div>' +
+            '<div class="arc-game-ach-link__name">' + g.name + '</div>' +
+            '<div class="arc-game-ach-link__count">' + count + ' / ' + g.total + '</div>' +
+          '</div>' +
+        '</a>';
+      }).join('');
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-VMLC97VBGN"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-VMLC97VBGN');
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Methane Drift — SlayPlay</title>
+  <meta property="og:site_name" content="SlayPlay">
+  <meta property="og:title" content="Methane Drift">
+  <meta property="og:description" content="Drift through an alien methane sky. Dodge hazards and activate symbiosis to survive.">
+  <meta property="og:type" content="website">
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="../shop.css" />
+  </head>
+  <body>
+    <main class="layout">
+      <section class="hud-panel">
+        <a href="/arcade/" class="back-link" data-i18n="backToGames">&larr; Back to Games</a>
+        <h1 data-i18n="methaneDriftTitle">Methane Drift</h1>
+        <p id="mdInstructions">
+          Fly through an alien sky. <strong>Space / Tap</strong> = go up.
+          <strong>Shift</strong> = shield. Fly close to obstacles for <strong>bonus points</strong>.
+          Press <strong>Esc</strong> to pause (shows all controls).
+        </p>
+        <div class="stats">
+          <div><span data-i18n="score">Score</span><strong id="score" aria-live="polite" role="status">0</strong></div>
+          <div><span data-i18n="best">Best</span><strong id="best">0</strong></div>
+          <div><span data-i18n="mdAirType">Air Type</span><strong id="density">Light</strong></div>
+          <div><span data-i18n="mdShield">Shield</span><strong id="symbiosis">Ready</strong></div>
+          <div><span data-i18n="combo">Combo</span><strong id="combo">0</strong></div>
+        </div>
+        <button id="muteBtn" class="mute-btn" type="button" aria-label="Toggle sound" data-i18n="soundOn">Sound: ON</button>
+        <button id="leaderboardToggle" class="lb-toggle-btn" type="button" aria-label="Toggle leaderboard">&#x1F3C6;</button>
+        <button id="fullscreenBtn" class="fullscreen-btn" type="button" aria-label="Toggle fullscreen" data-i18n="mdFullscreen">Fullscreen</button>
+        <button id="restartBtn" class="restart-btn" hidden data-i18n="mdPlayAgain">Play Again</button>
+        <button id="symbiosisBtn" class="symbiosis-action-btn" hidden aria-label="Activate Shield" data-i18n="mdShieldBtnLabel">Shield</button>
+        <button id="ghostToggleButton" class="hud__button" type="button" data-i18n="mdGhostToggle">Ghost</button>
+        <button id="shopBtn" class="hud__button" type="button">Shop</button>
+        <!-- Achievements panel -->
+        <div class="achievements-panel" id="achievementsPanel">
+          <button class="achievements-toggle" id="achievementsToggle" type="button" data-i18n="achievements">Achievements</button>
+          <div class="achievements-list" id="achievementsList"></div>
+        </div>
+      </section>
+      <canvas id="game" class="game-canvas" width="960" height="540" aria-label="Methane Drift game"></canvas>
+    </main>
+    <!-- Achievement popup -->
+    <div class="achievement-popup" id="achievementPopup">
+      <div class="achievement-popup__icon" id="achievementPopupIcon"></div>
+      <div class="achievement-popup__text">
+        <strong id="achievementPopupTitle"></strong>
+        <span id="achievementPopupDesc"></span>
+      </div>
+    </div>
+    <div id="leaderboardPanel"></div>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <link rel="stylesheet" href="../leaderboard.css">
+    <script src="../i18n.js"></script>
+    <link rel="stylesheet" href="../arcade.css">
+    <script src="../arcade.js"></script>
+    <script src="../leaderboard.js"></script>
+    <script src="audio.js"></script>
+    <script src="../shop.js"></script>
+    <script src="game.js"></script>
+    <script>if(typeof Arcade!=='undefined')Arcade.injectNavHUD();</script>
+  </body>
+</html>

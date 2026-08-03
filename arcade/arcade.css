@@ -1,0 +1,2854 @@
+/* ═══════════════════════════════════════════════════════════════
+   arcade.css  –  SlayPlay Arcade Platform Shared Styles
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Nav HUD ── */
+.arc-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9990;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1.2rem;
+  background: rgba(9, 9, 11, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-size: 0.88rem;
+}
+
+.arc-nav__left,
+.arc-nav__right {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.arc-nav__link {
+  color: #a1a1aa;
+  text-decoration: none;
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  transition: color 0.2s, background 0.2s;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.arc-nav__link:hover {
+  color: #fafafa;
+  background: rgba(255,255,255,0.06);
+}
+
+.arc-nav__link--active {
+  color: #c084fc;
+  background: rgba(192,132,252,0.1);
+}
+
+.arc-nav__link--home {
+  font-size: 1.15rem;
+  padding: 0.3rem 0.6rem;
+}
+
+.arc-nav__coins {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: rgba(250,204,21,0.1);
+  border: 1px solid rgba(250,204,21,0.2);
+  color: #facc15;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.arc-coin-icon {
+  font-size: 1rem;
+}
+
+.arc-nav__streak {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  color: #fb923c;
+  font-weight: 600;
+  padding: 0.3rem 0.5rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Streak urgency states ── */
+.arc-nav__streak--atrisk {
+  color: #ef4444;
+  animation: streakPulse 1.2s ease infinite;
+  background: rgba(239,68,68,0.1);
+  border-radius: 999px;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid rgba(239,68,68,0.3);
+}
+.streak-countdown {
+  font-size: 0.72rem;
+  font-weight: 500;
+  opacity: 0.85;
+}
+.arc-nav__streak--hot {
+  color: #f59e0b;
+  text-shadow: 0 0 8px rgba(245,158,11,0.4);
+}
+@keyframes streakPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ── Active event badge in nav ── */
+.arc-nav__event {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  background: linear-gradient(135deg, rgba(250,204,21,0.15), rgba(245,158,11,0.15));
+  border: 1px solid rgba(250,204,21,0.3);
+  color: #facc15;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.72rem;
+  animation: eventGlow 2s ease infinite alternate;
+  white-space: nowrap;
+}
+@keyframes eventGlow {
+  0% { box-shadow: 0 0 4px rgba(250,204,21,0.1); }
+  100% { box-shadow: 0 0 12px rgba(250,204,21,0.3); }
+}
+
+/* ── Daily challenges count in nav ── */
+.arc-nav__challenges {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  color: #a78bfa;
+  font-weight: 600;
+  padding: 0.3rem 0.5rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Compact nav on game pages */
+.arc-nav--compact {
+  padding: 0.4rem 0.8rem;
+  justify-content: space-between;
+}
+
+/* Body padding to account for fixed nav */
+body:has(.arc-nav) {
+  padding-top: 3rem;
+}
+
+/* ── Score Card Bar (slim slide-up) ── */
+.arc-scorecard {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9995;
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-family: "Space Grotesk", system-ui, sans-serif;
+}
+
+.arc-scorecard--show {
+  transform: translateY(0);
+}
+
+.arc-scorecard__bar {
+  background: linear-gradient(90deg, #13131f, #1a1a2e);
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding: 0.75rem 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  justify-content: space-between;
+  box-shadow: 0 -4px 24px rgba(0,0,0,0.5);
+}
+
+.arc-scorecard__bar-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.arc-scorecard__bar-over {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #71717a;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.arc-scorecard__bar-scores {
+  font-size: 0.9rem;
+  color: #a1a1aa;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.arc-scorecard__bar-scores strong {
+  color: #fafafa;
+  font-size: 1.1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.arc-scorecard__bar-newbest {
+  background: linear-gradient(135deg, #facc15, #fb923c);
+  color: #09090b;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.arc-scorecard__bar-percentile {
+  background: linear-gradient(135deg, #c084fc, #f472b6);
+  color: #09090b;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.arc-scorecard__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fafafa;
+  margin-bottom: 0.25rem;
+}
+
+.arc-scorecard__newbest {
+  display: inline-block;
+  background: linear-gradient(135deg, #facc15, #fb923c);
+  color: #09090b;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.2rem 0.8rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
+  animation: arcPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes arcPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.arc-scorecard__scores {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin: 1.2rem 0;
+}
+
+.arc-scorecard__score-label {
+  font-size: 0.72rem;
+  color: #a1a1aa;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.2rem;
+}
+
+.arc-scorecard__score-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #fafafa;
+  font-variant-numeric: tabular-nums;
+}
+
+.arc-scorecard__coins {
+  background: rgba(255,255,255,0.03);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.2rem;
+}
+
+.arc-scorecard__coins-row {
+  display: flex;
+  justify-content: space-between;
+  color: #a1a1aa;
+  font-size: 0.82rem;
+  padding: 0.2rem 0;
+}
+
+.arc-scorecard__coins-row--bonus {
+  color: #facc15;
+}
+
+.arc-scorecard__coins-row--event {
+  color: #f59e0b;
+  font-weight: 600;
+  background: rgba(245,158,11,0.08);
+  border-radius: 4px;
+  padding: 0.2rem 0.4rem;
+}
+
+/* ── Near-miss text on score card ── */
+.arc-scorecard__nearmiss {
+  color: #fb923c;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 0.5rem;
+  animation: nearMissPulse 2s ease infinite;
+}
+@keyframes nearMissPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* ── Event banner on score card ── */
+.arc-scorecard__event {
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #facc15;
+  background: linear-gradient(135deg, rgba(250,204,21,0.12), rgba(245,158,11,0.08));
+  border: 1px solid rgba(250,204,21,0.2);
+  border-radius: 999px;
+  padding: 0.3rem 0.8rem;
+  margin-bottom: 0.6rem;
+  display: inline-block;
+}
+
+/* ── Daily challenges on score card ── */
+.arc-scorecard__challenges {
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding-top: 0.6rem;
+  margin-top: 0.4rem;
+}
+.arc-scorecard__challenges-title {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #a78bfa;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.3rem;
+}
+.arc-scorecard__challenge {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.78rem;
+  color: #71717a;
+  padding: 0.2rem 0;
+}
+.arc-scorecard__challenge--done {
+  color: #4ade80;
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+.arc-scorecard__challenge-reward {
+  color: #facc15;
+  font-weight: 600;
+  font-size: 0.72rem;
+}
+
+/* ── Streak on score card ── */
+.arc-scorecard__streak {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding-top: 0.5rem;
+  margin-top: 0.4rem;
+  font-size: 0.82rem;
+  color: #fb923c;
+  font-weight: 600;
+}
+.arc-scorecard__streak-warning {
+  color: #ef4444;
+  font-size: 0.72rem;
+  animation: streakPulse 1.2s ease infinite;
+}
+
+.arc-scorecard__coins-total {
+  display: flex;
+  justify-content: space-between;
+  color: #facc15;
+  font-weight: 700;
+  font-size: 0.92rem;
+  padding-top: 0.5rem;
+  margin-top: 0.3rem;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.arc-scorecard__actions {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.arc-scorecard__actions-secondary {
+  display: flex;
+  gap: 0.4rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.arc-scorecard__btn {
+  padding: 0.55rem 1.1rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.05);
+  color: #fafafa;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.arc-scorecard__btn:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.2);
+  transform: translateY(-1px);
+}
+
+.arc-scorecard__btn--again {
+  background: linear-gradient(135deg, #c084fc, #a855f7);
+  border-color: transparent;
+  color: #fff;
+  width: 100%;
+  padding: 0.9rem 1.5rem;
+  font-size: 1.1rem;
+  border-radius: 14px;
+  letter-spacing: 0.03em;
+  box-shadow: 0 0 20px rgba(192,132,252,0.3);
+  animation: playAgainPulse 2s ease-in-out infinite;
+}
+
+@keyframes playAgainPulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(192,132,252,0.3); }
+  50% { box-shadow: 0 0 30px rgba(192,132,252,0.5), 0 0 60px rgba(192,132,252,0.15); }
+}
+
+.arc-scorecard__btn--again:hover {
+  background: linear-gradient(135deg, #d8b4fe, #c084fc);
+  transform: translateY(-2px);
+}
+
+.arc-scorecard__btn--again:focus {
+  outline: 2px solid rgba(192,132,252,0.6);
+  outline-offset: 2px;
+}
+
+.arc-scorecard__btn--share {
+  background: rgba(255,255,255,0.05);
+  font-size: 0.78rem;
+}
+
+.arc-scorecard__btn--home {
+  background: rgba(255,255,255,0.05);
+  font-size: 0.78rem;
+}
+
+.arc-scorecard__btn--challenge {
+  font-size: 0.78rem;
+}
+
+/* Dramatic game over message */
+.arc-scorecard__dramatic {
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin-bottom: 0.1rem;
+}
+.arc-scorecard__dramatic-sub {
+  font-size: 0.82rem;
+  color: #a1a1aa;
+  margin-bottom: 0.5rem;
+  font-style: italic;
+}
+.arc-scorecard__gamename {
+  font-size: 0.75rem;
+  color: #71717a;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+}
+
+/* ── Dismissable popup close button (×) ──
+   Sits in the top-right corner of any toast/overlay element. */
+.arc-toast-close {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.35rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 999px;
+  color: rgba(255,255,255,0.7);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, transform 0.15s;
+  z-index: 1;
+}
+.arc-toast-close:hover {
+  background: rgba(255,255,255,0.18);
+  color: #fff;
+  transform: scale(1.1);
+}
+.arc-toast-close:focus-visible {
+  outline: 2px solid #c084fc;
+  outline-offset: 2px;
+}
+/* Holy moment overlay parent uses pointer-events: none until --show; ensure
+   the close button is always clickable when the toast is rendered. */
+.arc-holy-moment .arc-toast-close { pointer-events: auto; }
+
+/* Score card dismiss × — matches the slim bar */
+.arc-scorecard__close {
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  margin-left: 0.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 999px;
+  color: rgba(255,255,255,0.6);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  font-family: "Space Grotesk", system-ui, sans-serif;
+}
+.arc-scorecard__close:hover {
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  border-color: rgba(255,255,255,0.3);
+}
+
+/* ── Achievement Popup Toast ── */
+.arc-ach-toast {
+  position: fixed;
+  top: 4.5rem;
+  right: 1rem;
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: linear-gradient(135deg, #1a1a2e, #1e1b4b);
+  border: 1px solid rgba(192,132,252,0.3);
+  border-radius: 14px;
+  padding: 0.8rem 1.2rem;
+  min-width: 240px;
+  max-width: 340px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 30px rgba(192,132,252,0.1);
+  transform: translateX(120%);
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-family: "Space Grotesk", system-ui, sans-serif;
+}
+
+.arc-ach-toast--show {
+  transform: translateX(0);
+}
+
+.arc-ach-toast__icon {
+  font-size: 1.8rem;
+  flex-shrink: 0;
+}
+
+.arc-ach-toast__title {
+  font-size: 0.68rem;
+  color: #c084fc;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+.arc-ach-toast__name {
+  font-size: 0.95rem;
+  color: #fafafa;
+  font-weight: 600;
+}
+
+.arc-ach-toast__reward {
+  font-size: 0.78rem;
+  color: #facc15;
+  font-weight: 500;
+}
+
+/* ── Daily Challenge Cards ── */
+.arc-challenges {
+  max-width: 760px;
+  width: 100%;
+  margin-bottom: 1.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.arc-challenges__title {
+  font-size: 1rem;
+  color: #fafafa;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.arc-challenges__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.arc-challenge-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px;
+  padding: 0.85rem;
+  backdrop-filter: blur(12px);
+  transition: border-color 0.2s;
+}
+
+.arc-challenge-card--done {
+  border-color: rgba(34,197,94,0.3);
+  background: rgba(34,197,94,0.05);
+}
+
+.arc-challenge-card__desc {
+  font-size: 0.82rem;
+  color: #e4e4e7;
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.arc-challenge-card__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.arc-challenge-card__reward {
+  font-size: 0.78rem;
+  color: #facc15;
+  font-weight: 600;
+}
+
+.arc-challenge-card__status {
+  font-size: 0.82rem;
+}
+
+/* ── Random Game Button ── */
+.arc-random-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.8rem;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #c084fc, #f472b6);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+  animation: arcGlow 2s ease-in-out infinite;
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes arcGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(192,132,252,0.3), 0 4px 15px rgba(0,0,0,0.3); }
+  50% { box-shadow: 0 0 35px rgba(192,132,252,0.5), 0 4px 20px rgba(0,0,0,0.3); }
+}
+
+.arc-random-btn:hover {
+  transform: translateY(-2px) scale(1.03);
+}
+
+.arc-random-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.arc-random-btn__dice {
+  font-size: 1.3rem;
+  animation: arcDiceSpin 3s linear infinite;
+  display: inline-block;
+}
+
+@keyframes arcDiceSpin {
+  0%, 85%, 100% { transform: rotate(0deg); }
+  90% { transform: rotate(360deg); }
+}
+
+/* ── Shop ── */
+.arc-shop-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.arc-shop-item {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 16px;
+  padding: 1.2rem 1rem;
+  text-align: center;
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.arc-shop-item:hover {
+  border-color: rgba(192,132,252,0.2);
+  transform: translateY(-2px);
+}
+
+.arc-shop-item__icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.arc-shop-item__name {
+  font-size: 0.9rem;
+  color: #fafafa;
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+}
+
+.arc-shop-item__cost {
+  font-size: 0.82rem;
+  color: #facc15;
+  margin-bottom: 0.75rem;
+}
+
+.arc-shop-btn {
+  padding: 0.4rem 1.2rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: linear-gradient(135deg, #c084fc, #a855f7);
+  color: #fff;
+  transition: all 0.2s;
+}
+
+.arc-shop-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(192,132,252,0.3);
+}
+
+.arc-shop-btn--owned {
+  background: rgba(34,197,94,0.15);
+  border-color: rgba(34,197,94,0.3);
+  color: #22c55e;
+  cursor: default;
+}
+
+.arc-shop-btn--equipped {
+  background: rgba(250,204,21,0.15);
+  border-color: rgba(250,204,21,0.3);
+  color: #facc15;
+}
+
+.arc-shop-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ── Shop Category Tabs ── */
+.arc-tabs {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 1.5rem;
+  justify-content: center;
+}
+
+.arc-tab {
+  padding: 0.45rem 1.2rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.04);
+  color: #a1a1aa;
+  transition: all 0.2s;
+}
+
+.arc-tab:hover {
+  color: #fafafa;
+  border-color: rgba(255,255,255,0.15);
+}
+
+.arc-tab--active {
+  color: #c084fc;
+  background: rgba(192,132,252,0.1);
+  border-color: rgba(192,132,252,0.3);
+}
+
+/* ── Achievements Grid ── */
+.arc-ach-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+
+.arc-ach-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px;
+  padding: 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  transition: border-color 0.2s;
+}
+
+.arc-ach-card--unlocked {
+  border-color: rgba(192,132,252,0.25);
+  background: rgba(192,132,252,0.04);
+}
+
+.arc-ach-card--locked {
+  opacity: 0.5;
+  filter: grayscale(0.6);
+}
+
+.arc-ach-card__icon {
+  font-size: 1.8rem;
+  flex-shrink: 0;
+}
+
+.arc-ach-card__name {
+  font-size: 0.88rem;
+  color: #fafafa;
+  font-weight: 600;
+  margin-bottom: 0.15rem;
+}
+
+.arc-ach-card__desc {
+  font-size: 0.76rem;
+  color: #a1a1aa;
+  line-height: 1.35;
+}
+
+.arc-ach-card__reward {
+  font-size: 0.72rem;
+  color: #facc15;
+  margin-top: 0.2rem;
+}
+
+/* ── Achievements Progress Bar ── */
+.arc-progress {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto 1.5rem;
+  text-align: center;
+}
+
+.arc-progress__label {
+  font-size: 0.85rem;
+  color: #a1a1aa;
+  margin-bottom: 0.4rem;
+}
+
+.arc-progress__bar {
+  height: 8px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.arc-progress__fill {
+  height: 100%;
+  background: linear-gradient(90deg, #c084fc, #f472b6);
+  border-radius: 999px;
+  transition: width 0.5s ease;
+}
+
+/* ── Leaderboard Page ── */
+.arc-lb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.arc-lb-table th {
+  text-align: left;
+  font-size: 0.72rem;
+  color: #71717a;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.arc-lb-table td {
+  padding: 0.6rem 0.75rem;
+  color: #e4e4e7;
+  font-size: 0.88rem;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+
+.arc-lb-table tr:hover td {
+  background: rgba(255,255,255,0.02);
+}
+
+.arc-lb-table .arc-lb-me td {
+  background: rgba(192,132,252,0.08);
+  color: #c084fc;
+  font-weight: 600;
+}
+
+.arc-lb-table .arc-lb-rank {
+  width: 3rem;
+  text-align: center;
+}
+
+.arc-lb-table .arc-lb-score {
+  text-align: right;
+  font-weight: 600;
+}
+
+/* ── Equipped Items Display ── */
+.arc-equipped {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.arc-equipped__slot {
+  background: rgba(255,255,255,0.04);
+  border: 1px dashed rgba(255,255,255,0.12);
+  border-radius: 14px;
+  padding: 0.75rem 1.2rem;
+  text-align: center;
+  min-width: 100px;
+}
+
+.arc-equipped__slot--filled {
+  border-style: solid;
+  border-color: rgba(192,132,252,0.3);
+}
+
+.arc-equipped__label {
+  font-size: 0.68rem;
+  color: #71717a;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.25rem;
+}
+
+.arc-equipped__icon {
+  font-size: 1.5rem;
+}
+
+/* ── Streak Calendar ── */
+.arc-streak-cal {
+  display: flex;
+  gap: 0.4rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.arc-streak-dot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  border: 2px solid rgba(255,255,255,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  color: #71717a;
+}
+
+.arc-streak-dot--active {
+  background: rgba(192,132,252,0.2);
+  border-color: #c084fc;
+  color: #c084fc;
+}
+
+.arc-streak-dot--today {
+  border-color: #facc15;
+  color: #facc15;
+  box-shadow: 0 0 10px rgba(250,204,21,0.3);
+}
+
+/* ── Shared page layout (shop, achievements, leaderboard pages) ── */
+.arc-page {
+  min-height: 100vh;
+  background: #09090b;
+  color: #fafafa;
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  padding: 1rem;
+}
+
+.arc-page__container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding-top: 3.5rem;
+}
+
+.arc-page__title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, #c084fc, #f472b6, #fb923c);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.arc-page__subtitle {
+  text-align: center;
+  color: #a1a1aa;
+  font-size: 0.9rem;
+  margin-bottom: 2rem;
+}
+
+/* ── Coin Balance Header ── */
+.arc-coin-header {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.arc-coin-header__balance {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(250,204,21,0.08);
+  border: 1px solid rgba(250,204,21,0.2);
+  color: #facc15;
+  padding: 0.6rem 1.4rem;
+  border-radius: 999px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Achievements Preview (homepage) ── */
+.arc-ach-preview {
+  max-width: 760px;
+  width: 100%;
+  margin-bottom: 1.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.arc-ach-preview__title {
+  font-size: 1rem;
+  color: #fafafa;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.arc-ach-preview__link {
+  font-size: 0.82rem;
+  color: #c084fc;
+  text-decoration: none;
+}
+
+.arc-ach-preview__link:hover {
+  text-decoration: underline;
+}
+
+.arc-ach-preview__scroll {
+  display: flex;
+  gap: 0.6rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+
+.arc-ach-preview__scroll::-webkit-scrollbar {
+  height: 4px;
+}
+
+.arc-ach-preview__scroll::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+}
+
+.arc-ach-mini {
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 12px;
+  padding: 0.6rem 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 160px;
+}
+
+.arc-ach-mini--unlocked {
+  border-color: rgba(192,132,252,0.25);
+}
+
+.arc-ach-mini--locked {
+  opacity: 0.45;
+  filter: grayscale(0.5);
+}
+
+.arc-ach-mini__icon {
+  font-size: 1.3rem;
+}
+
+.arc-ach-mini__name {
+  font-size: 0.78rem;
+  color: #fafafa;
+  font-weight: 500;
+}
+
+/* ── Leaderboard Preview (homepage) ── */
+.arc-lb-preview {
+  max-width: 760px;
+  width: 100%;
+  margin-bottom: 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+.arc-lb-preview__title {
+  font-size: 1rem;
+  color: #fafafa;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.arc-lb-preview__link {
+  font-size: 0.82rem;
+  color: #c084fc;
+  text-decoration: none;
+}
+
+.arc-lb-preview__link:hover {
+  text-decoration: underline;
+}
+
+.arc-lb-preview__list {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.arc-lb-preview__entry {
+  flex: 1;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px;
+  padding: 0.85rem;
+  text-align: center;
+}
+
+.arc-lb-preview__rank {
+  font-size: 1.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.arc-lb-preview__name {
+  font-size: 0.85rem;
+  color: #fafafa;
+  font-weight: 600;
+  margin-bottom: 0.15rem;
+}
+
+.arc-lb-preview__score {
+  font-size: 0.78rem;
+  color: #facc15;
+}
+
+/* ── Percentile Badge ── */
+.arc-scorecard__percentile {
+  display: inline-block;
+  background: linear-gradient(135deg, #c084fc, #f472b6);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.2rem 0.8rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.5rem;
+  animation: arcPulse 2s ease-in-out infinite;
+}
+
+/* ── Challenge Friend Button ── */
+.arc-scorecard__btn--challenge {
+  background: linear-gradient(135deg, #fb923c, #f97316);
+  border-color: transparent;
+  color: #fff;
+}
+
+.arc-scorecard__btn--challenge:hover {
+  background: linear-gradient(135deg, #fdba74, #fb923c);
+}
+
+/* ── Challenge Banner (from challenge links) ── */
+.arc-challenge-banner {
+  position: fixed;
+  top: 3.5rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(-120%);
+  z-index: 9997;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  width: 92%;
+  max-width: 480px;
+}
+
+.arc-challenge-banner--show {
+  transform: translateX(-50%) translateY(0);
+}
+
+.arc-challenge-banner__inner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: linear-gradient(135deg, #1a1a2e, #2d1b4e);
+  border: 1px solid rgba(251, 146, 60, 0.4);
+  border-radius: 16px;
+  padding: 0.85rem 1.1rem;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 30px rgba(251,146,60,0.15);
+}
+
+.arc-challenge-banner__icon {
+  font-size: 1.6rem;
+  flex-shrink: 0;
+}
+
+.arc-challenge-banner__text {
+  font-size: 0.85rem;
+  color: #e4e4e7;
+  line-height: 1.45;
+  flex: 1;
+}
+
+.arc-challenge-banner__text strong {
+  color: #fb923c;
+}
+
+.arc-challenge-banner__close {
+  background: none;
+  border: none;
+  color: #71717a;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.3rem;
+  flex-shrink: 0;
+  transition: color 0.2s;
+}
+
+.arc-challenge-banner__close:hover {
+  color: #fafafa;
+}
+
+/* ── OG Badge on Profile ── */
+.arc-og-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: linear-gradient(135deg, rgba(251,146,60,0.15), rgba(250,204,21,0.1));
+  border: 1px solid rgba(251,146,60,0.35);
+  color: #fb923c;
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.arc-og-badge--founding {
+  border-color: rgba(250,204,21,0.5);
+  color: #facc15;
+  box-shadow: 0 0 16px rgba(250,204,21,0.2);
+}
+
+/* ── Skeleton Loading ── */
+.arc-skeleton {
+  background: linear-gradient(90deg,
+    rgba(255,255,255,0.04) 25%,
+    rgba(255,255,255,0.08) 50%,
+    rgba(255,255,255,0.04) 75%);
+  background-size: 200% 100%;
+  animation: arcShimmer 1.5s ease-in-out infinite;
+  border-radius: 12px;
+}
+
+@keyframes arcShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.arc-skeleton--card {
+  height: 200px;
+  border-radius: 16px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PSYCHOLOGY LAYER — Welcome Back, Secret Achievements,
+   Micro-rewards, Return Triggers
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Welcome Back Toast ── */
+.arc-welcome-toast {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  z-index: 9997;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  border: 1px solid rgba(192,132,252,0.25);
+  border-radius: 16px;
+  padding: 1rem 1.4rem;
+  min-width: 300px;
+  max-width: 500px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.6), 0 0 40px rgba(192,132,252,0.1);
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  opacity: 0;
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease;
+}
+.arc-welcome-toast--show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+.arc-welcome-toast__icon {
+  font-size: 1.6rem;
+  flex-shrink: 0;
+}
+.arc-welcome-toast__text {
+  font-size: 0.9rem;
+  color: #e4e4e7;
+  line-height: 1.4;
+  flex: 1;
+}
+.arc-welcome-toast__close {
+  background: none;
+  border: none;
+  color: #71717a;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  line-height: 1;
+  transition: color 0.2s;
+}
+.arc-welcome-toast__close:hover {
+  color: #fafafa;
+}
+
+/* ── Secret Achievement Toast ── */
+.arc-secret-toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.8);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: linear-gradient(135deg, #0a0a1a, #1a0a2e);
+  border: 2px solid rgba(168,85,247,0.5);
+  border-radius: 20px;
+  padding: 1.5rem 2rem;
+  min-width: 320px;
+  max-width: 480px;
+  box-shadow:
+    0 0 60px rgba(168,85,247,0.3),
+    0 0 120px rgba(168,85,247,0.1),
+    inset 0 0 40px rgba(168,85,247,0.05);
+  opacity: 0;
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease;
+  font-family: "Space Grotesk", system-ui, sans-serif;
+}
+.arc-secret-toast--enter {
+  opacity: 0.3;
+  animation: secretGlitch 0.3s steps(3);
+}
+.arc-secret-toast--show {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+}
+.arc-secret-toast--exit {
+  transform: translate(-50%, -50%) scale(0.5);
+  opacity: 0;
+}
+@keyframes secretGlitch {
+  0% { transform: translate(-50%, -50%) scale(0.8) skewX(5deg); }
+  33% { transform: translate(-48%, -52%) scale(0.85) skewX(-3deg); }
+  66% { transform: translate(-52%, -48%) scale(0.9) skewX(2deg); }
+  100% { transform: translate(-50%, -50%) scale(0.95) skewX(0); }
+}
+.arc-secret-toast__glitch {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: #a855f7;
+  font-weight: 800;
+  letter-spacing: 0.3em;
+  animation: glitchText 0.3s steps(2) infinite;
+}
+@keyframes glitchText {
+  0% { opacity: 1; transform: translateX(2px); }
+  50% { opacity: 0.5; transform: translateX(-2px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+.arc-secret-toast__icon {
+  font-size: 2.5rem;
+  flex-shrink: 0;
+  animation: secretIconPulse 1s ease-in-out infinite;
+}
+@keyframes secretIconPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+.arc-secret-toast__label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #a855f7;
+  margin-bottom: 0.2rem;
+}
+.arc-secret-toast__name {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fafafa;
+  margin-bottom: 0.2rem;
+}
+.arc-secret-toast__desc {
+  font-size: 0.78rem;
+  color: #a1a1aa;
+  margin-bottom: 0.3rem;
+}
+.arc-secret-toast__reward {
+  font-size: 0.8rem;
+  color: #facc15;
+  font-weight: 600;
+}
+
+/* ── Scorecard: Loss Progress ── */
+.arc-scorecard__progress {
+  font-size: 0.82rem;
+  color: #22c55e;
+  padding: 0.3rem 0.6rem;
+  background: rgba(34,197,94,0.08);
+  border: 1px solid rgba(34,197,94,0.15);
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+/* ── Scorecard: Return Trigger ── */
+.arc-scorecard__return-trigger {
+  font-size: 0.75rem;
+  color: #a1a1aa;
+  text-align: center;
+  padding: 0.4rem 0.6rem;
+  margin-bottom: 0.5rem;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  padding-top: 0.6rem;
+  font-style: italic;
+}
+
+/* ── Micro-Rewards: Coin Pop Animation ── */
+@keyframes coinPop {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.4); color: #facc15; }
+  60% { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+.arc-coin-pop {
+  animation: coinPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ── Micro-Rewards: Score Value Glow on New Best ── */
+@keyframes scoreGlow {
+  0% { text-shadow: 0 0 0 transparent; transform: scale(1); }
+  50% { text-shadow: 0 0 20px rgba(250,204,21,0.6), 0 0 40px rgba(250,204,21,0.3); transform: scale(1.15); }
+  100% { text-shadow: 0 0 8px rgba(250,204,21,0.2); transform: scale(1); }
+}
+.arc-scorecard__newbest {
+  animation: scoreGlow 0.8s ease-out;
+}
+
+/* ── Micro-Rewards: Lucky Drop Rarity Glow ── */
+.arc-lucky-toast--legendary {
+  border-color: rgba(250,204,21,0.6) !important;
+  box-shadow: 0 0 40px rgba(250,204,21,0.3), 0 0 80px rgba(250,204,21,0.1) !important;
+  animation: legendaryShine 1.5s ease-in-out infinite;
+}
+@keyframes legendaryShine {
+  0%, 100% { border-color: rgba(250,204,21,0.4); }
+  50% { border-color: rgba(250,204,21,0.8); }
+}
+.arc-lucky-toast--rare {
+  border-color: rgba(168,85,247,0.5) !important;
+  box-shadow: 0 0 30px rgba(168,85,247,0.2) !important;
+}
+.arc-lucky-toast--uncommon {
+  border-color: rgba(56,189,248,0.4) !important;
+}
+
+/* ── Quest Rank-Up Toast ── */
+.arc-quest-toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.5);
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: linear-gradient(135deg, #1a1020, #0a0818);
+  border: 2px solid rgba(250,204,21,0.4);
+  border-radius: 20px;
+  padding: 1.5rem 2rem;
+  min-width: 280px;
+  box-shadow: 0 0 60px rgba(250,204,21,0.15);
+  opacity: 0;
+  transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-family: "Space Grotesk", system-ui, sans-serif;
+}
+.arc-quest-toast--show {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+}
+.arc-quest-toast__icon {
+  font-size: 2.5rem;
+  animation: secretIconPulse 1s ease-in-out infinite;
+}
+.arc-quest-toast__title {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #facc15;
+}
+.arc-quest-toast__rank {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #fafafa;
+}
+.arc-quest-toast__reward {
+  font-size: 0.85rem;
+  color: #facc15;
+  font-weight: 600;
+}
+
+/* ── Power-Up Selector Overlay ── */
+.arc-powerup-selector {
+  position: fixed;
+  inset: 0;
+  z-index: 9996;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(8px);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  font-family: "Space Grotesk", system-ui, sans-serif;
+}
+.arc-powerup-selector--show {
+  opacity: 1;
+}
+.arc-powerup-selector__card {
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px;
+  padding: 1.5rem;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+}
+.arc-powerup-selector__title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fafafa;
+  margin-bottom: 0.25rem;
+}
+.arc-powerup-selector__sub {
+  font-size: 0.8rem;
+  color: #71717a;
+  margin-bottom: 1rem;
+}
+.arc-powerup-selector__grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+.arc-powerup-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 0.75rem;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s;
+  font-family: inherit;
+  color: #fafafa;
+}
+.arc-powerup-card:hover:not([disabled]) {
+  border-color: rgba(192,132,252,0.4);
+  background: rgba(192,132,252,0.06);
+}
+.arc-powerup-card--locked {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.arc-powerup-card__icon {
+  font-size: 1.5rem;
+}
+.arc-powerup-card__name {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.arc-powerup-card__desc {
+  font-size: 0.75rem;
+  color: #a1a1aa;
+}
+.arc-powerup-card__cost {
+  margin-left: auto;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #facc15;
+}
+.arc-powerup-selector__skip {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #a1a1aa;
+  font-size: 0.82rem;
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.arc-powerup-selector__skip:hover {
+  color: #fafafa;
+  border-color: rgba(255,255,255,0.2);
+}
+
+/* ── Holy Moment Overlay ── */
+.arc-holy-moment {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0);
+  pointer-events: none;
+  transition: background 0.3s ease;
+}
+.arc-holy-moment--show {
+  background: rgba(0,0,0,0.6);
+  pointer-events: auto;
+  cursor: pointer;
+}
+.arc-holy-moment__content {
+  text-align: center;
+  transform: scale(0.5);
+  opacity: 0;
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.arc-holy-moment--show .arc-holy-moment__content {
+  transform: scale(1);
+  opacity: 1;
+}
+.arc-holy-moment__text {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: #facc15;
+  text-shadow: 0 0 40px rgba(250,204,21,0.5);
+  letter-spacing: 0.05em;
+  font-family: "Space Grotesk", system-ui, sans-serif;
+}
+.arc-holy-moment__sub {
+  font-size: 1rem;
+  color: #e4e4e7;
+  margin-top: 0.5rem;
+  font-family: "Space Grotesk", system-ui, sans-serif;
+}
+
+/* ── Lucky Drop Toast ── */
+.arc-lucky-toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.5);
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: linear-gradient(135deg, #1a1a2e, #1e1b4b);
+  border: 1px solid rgba(192,132,252,0.3);
+  border-radius: 16px;
+  padding: 1rem 1.5rem;
+  min-width: 240px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  opacity: 0;
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-family: "Space Grotesk", system-ui, sans-serif;
+}
+.arc-lucky-toast--show {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+}
+.arc-lucky-toast__icon {
+  font-size: 2rem;
+}
+.arc-lucky-toast__title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fafafa;
+}
+.arc-lucky-toast__reward {
+  font-size: 0.85rem;
+  color: #facc15;
+  font-weight: 600;
+}
+
+/* ── Coin Counter Animate ── */
+@keyframes coinBounce {
+  0% { transform: translateY(0); }
+  40% { transform: translateY(-4px); }
+  100% { transform: translateY(0); }
+}
+.arc-nav__coins.arc-coin-animating {
+  animation: coinBounce 0.3s ease;
+}
+
+@media (max-width: 680px) {
+  .arc-welcome-toast {
+    left: 1rem;
+    right: 1rem;
+    transform: translateX(0) translateY(100px);
+    min-width: auto;
+  }
+  .arc-welcome-toast--show {
+    transform: translateX(0) translateY(0);
+  }
+  .arc-secret-toast {
+    min-width: 280px;
+    padding: 1rem 1.2rem;
+  }
+  .arc-holy-moment__text {
+    font-size: 1.8rem;
+  }
+}
+
+.arc-skeleton--text {
+  height: 1rem;
+  width: 60%;
+  margin-bottom: 0.5rem;
+}
+
+.arc-skeleton--text-short {
+  height: 0.8rem;
+  width: 40%;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   NEW SYSTEMS
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Dramatic Score Card ── */
+.arc-scorecard__dramatic {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #fafafa;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.15rem;
+  animation: dramaticReveal 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes dramaticReveal {
+  0% { transform: scale(0.5); opacity: 0; }
+  60% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.arc-scorecard__dramatic-sub {
+  font-size: 0.82rem;
+  color: #a1a1aa;
+  margin-bottom: 0.5rem;
+  font-style: italic;
+}
+
+.arc-scorecard__gamename {
+  font-size: 0.75rem;
+  color: #71717a;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.5rem;
+}
+
+.arc-scorecard__nearmiss {
+  background: rgba(251,146,60,0.08);
+  border: 1px solid rgba(251,146,60,0.2);
+  color: #fb923c;
+  font-size: 0.78rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  font-weight: 500;
+}
+
+.arc-scorecard__event {
+  display: inline-block;
+  background: linear-gradient(135deg, rgba(250,204,21,0.15), rgba(251,146,60,0.15));
+  border: 1px solid rgba(250,204,21,0.3);
+  color: #facc15;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+  animation: arcPulse 1.5s ease-in-out infinite;
+}
+
+.arc-scorecard__challenges {
+  background: rgba(255,255,255,0.03);
+  border-radius: 10px;
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 0.75rem;
+}
+
+.arc-scorecard__challenges-title {
+  font-size: 0.72rem;
+  color: #71717a;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.4rem;
+  font-weight: 600;
+}
+
+.arc-scorecard__challenge {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.78rem;
+  color: #a1a1aa;
+  padding: 0.15rem 0;
+}
+
+.arc-scorecard__challenge--done { color: #22c55e; }
+
+.arc-scorecard__challenge-reward {
+  color: #facc15;
+  font-weight: 600;
+  font-size: 0.72rem;
+}
+
+.arc-scorecard__streak {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.82rem;
+  color: #fb923c;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.arc-scorecard__streak-warning {
+  font-size: 0.72rem;
+  color: #ef4444;
+  font-weight: 500;
+  animation: arcPulse 1.5s ease-in-out infinite;
+}
+
+/* ── Main Quest Progress ── */
+.arc-quest {
+  max-width: 760px;
+  width: 100%;
+  margin-bottom: 1.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.arc-quest__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.arc-quest__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fafafa;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.arc-quest__rank {
+  font-size: 0.82rem;
+  color: #c084fc;
+  font-weight: 600;
+}
+
+.arc-quest__bar {
+  height: 12px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 0.4rem;
+}
+
+.arc-quest__fill {
+  height: 100%;
+  background: linear-gradient(90deg, #c084fc, #f472b6, #fb923c);
+  border-radius: 999px;
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 12px rgba(192,132,252,0.4);
+}
+
+.arc-quest__info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: #71717a;
+}
+
+.arc-quest__next { color: #a1a1aa; }
+
+/* ── Quest Milestone Toast ── */
+.arc-quest-toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.8);
+  z-index: 10000;
+  background: linear-gradient(145deg, #1a1a2e, #2d1b4e);
+  border: 2px solid rgba(192,132,252,0.5);
+  border-radius: 20px;
+  padding: 1.5rem 2rem;
+  text-align: center;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.7), 0 0 60px rgba(192,132,252,0.2);
+  opacity: 0;
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-family: "Space Grotesk", system-ui, sans-serif;
+}
+
+.arc-quest-toast--show {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.arc-quest-toast__icon {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+  animation: questBounce 0.6s ease-out;
+}
+
+@keyframes questBounce {
+  0% { transform: scale(0); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+
+.arc-quest-toast__title {
+  font-size: 0.7rem;
+  color: #c084fc;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.arc-quest-toast__rank {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #fafafa;
+  margin-bottom: 0.3rem;
+}
+
+.arc-quest-toast__reward {
+  font-size: 0.85rem;
+  color: #facc15;
+  font-weight: 600;
+}
+
+/* ── Power-Up Selector ── */
+.arc-powerup-selector {
+  position: fixed;
+  inset: 0;
+  z-index: 9996;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(8px);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  font-family: "Space Grotesk", system-ui, sans-serif;
+}
+
+.arc-powerup-selector--show { opacity: 1; }
+
+.arc-powerup-selector__card {
+  background: linear-gradient(145deg, #1a1a2e, #16162a);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 24px;
+  padding: 1.8rem 1.5rem;
+  max-width: 420px;
+  width: 92%;
+  text-align: center;
+}
+
+.arc-powerup-selector__title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #fafafa;
+  margin-bottom: 0.3rem;
+}
+
+.arc-powerup-selector__sub {
+  font-size: 0.82rem;
+  color: #71717a;
+  margin-bottom: 1.2rem;
+}
+
+.arc-powerup-selector__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.arc-powerup-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 0.8rem 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  color: inherit;
+}
+
+.arc-powerup-card:hover:not([disabled]) {
+  border-color: rgba(192,132,252,0.4);
+  background: rgba(192,132,252,0.08);
+  transform: translateY(-2px);
+}
+
+.arc-powerup-card--locked {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.arc-powerup-card__icon { font-size: 1.8rem; margin-bottom: 0.3rem; }
+.arc-powerup-card__name { font-size: 0.78rem; font-weight: 600; color: #fafafa; margin-bottom: 0.2rem; }
+.arc-powerup-card__desc { font-size: 0.68rem; color: #a1a1aa; margin-bottom: 0.3rem; line-height: 1.3; }
+.arc-powerup-card__cost { font-size: 0.72rem; color: #facc15; font-weight: 600; }
+
+.arc-powerup-selector__skip {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #a1a1aa;
+  padding: 0.5rem 1.5rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.arc-powerup-selector__skip:hover {
+  color: #fafafa;
+  border-color: rgba(255,255,255,0.2);
+}
+
+/* ── Lucky Drop Toast ── */
+.arc-lucky-toast {
+  position: fixed;
+  top: 4.5rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(-120%);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: 14px;
+  padding: 0.8rem 1.3rem;
+  min-width: 220px;
+  max-width: 360px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-family: "Space Grotesk", system-ui, sans-serif;
+}
+
+.arc-lucky-toast--show { transform: translateX(-50%) translateY(0); }
+
+.arc-lucky-toast--common {
+  background: linear-gradient(135deg, #1a1a2e, #1e1b4b);
+  border: 1px solid rgba(192,132,252,0.3);
+}
+
+.arc-lucky-toast--uncommon {
+  background: linear-gradient(135deg, #1a2e1a, #1b4b1e);
+  border: 1px solid rgba(34,197,94,0.4);
+}
+
+.arc-lucky-toast--rare {
+  background: linear-gradient(135deg, #1a1a2e, #1b2e4b);
+  border: 1px solid rgba(56,189,248,0.5);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 30px rgba(56,189,248,0.15);
+}
+
+.arc-lucky-toast--legendary {
+  background: linear-gradient(135deg, #2e2a1a, #4b3b1b);
+  border: 2px solid rgba(250,204,21,0.6);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 40px rgba(250,204,21,0.2);
+  animation: legendaryPulse 1s ease-in-out infinite;
+}
+
+@keyframes legendaryPulse {
+  0%, 100% { box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 40px rgba(250,204,21,0.2); }
+  50% { box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 60px rgba(250,204,21,0.4); }
+}
+
+.arc-lucky-toast__icon { font-size: 1.8rem; flex-shrink: 0; }
+.arc-lucky-toast__title { font-size: 0.95rem; color: #fafafa; font-weight: 700; }
+.arc-lucky-toast__reward { font-size: 0.82rem; color: #facc15; font-weight: 600; }
+
+/* ── Holy Moment (Full-screen dramatic flash) ── */
+.arc-holy-moment {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.85);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.arc-holy-moment--show { opacity: 1; }
+
+.arc-holy-moment__content {
+  text-align: center;
+  transform: scale(0.5);
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.arc-holy-moment--show .arc-holy-moment__content { transform: scale(1); }
+
+.arc-holy-moment__text {
+  font-size: 3rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  background: linear-gradient(135deg, #facc15, #fb923c, #f472b6, #c084fc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  background-size: 300% 300%;
+  animation: holyShimmer 1s ease-in-out infinite;
+  filter: drop-shadow(0 0 30px rgba(250,204,21,0.3));
+  font-family: "Space Grotesk", system-ui, sans-serif;
+}
+
+@keyframes holyShimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.arc-holy-moment__sub {
+  font-size: 1rem;
+  color: #e4e4e7;
+  margin-top: 0.5rem;
+  font-family: "Space Grotesk", system-ui, sans-serif;
+}
+
+/* ── Social Nudge Banner ── */
+.arc-nudge {
+  max-width: 760px;
+  width: 100%;
+  margin-bottom: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.arc-nudge__inner {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(251,146,60,0.06);
+  border: 1px solid rgba(251,146,60,0.15);
+  border-radius: 12px;
+  padding: 0.6rem 1rem;
+  font-size: 0.82rem;
+  color: #e4e4e7;
+  animation: nudgeFadeIn 0.5s ease;
+}
+
+@keyframes nudgeFadeIn {
+  0% { opacity: 0; transform: translateY(-8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.arc-nudge__icon { font-size: 1.1rem; flex-shrink: 0; }
+
+/* ── Streak Toast ── */
+.arc-streak-toast {
+  position: fixed;
+  top: 4.5rem;
+  right: 1rem;
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: 14px;
+  padding: 0.8rem 1.2rem;
+  min-width: 240px;
+  max-width: 340px;
+  transform: translateX(120%);
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-family: "Space Grotesk", system-ui, sans-serif;
+}
+
+.arc-streak-toast--show { transform: translateX(0); }
+
+.arc-streak-toast--lost {
+  background: linear-gradient(135deg, #2e1a1a, #4b1b1b);
+  border: 1px solid rgba(239,68,68,0.4);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 30px rgba(239,68,68,0.1);
+}
+
+.arc-streak-toast--shield {
+  background: linear-gradient(135deg, #1a1a2e, #1b2e4b);
+  border: 1px solid rgba(56,189,248,0.4);
+}
+
+.arc-streak-toast--milestone {
+  background: linear-gradient(135deg, #2e2a1a, #4b3b1b);
+  border: 1px solid rgba(251,146,60,0.4);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 30px rgba(251,146,60,0.1);
+}
+
+.arc-streak-toast__icon { font-size: 1.8rem; flex-shrink: 0; }
+.arc-streak-toast__title { font-size: 0.9rem; color: #fafafa; font-weight: 700; }
+.arc-streak-toast__text { font-size: 0.78rem; color: #a1a1aa; line-height: 1.35; }
+
+/* ── Arena Lore ── */
+.arena-lore {
+  font-size: 0.78rem;
+  color: rgba(192,132,252,0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.arena-subtitle {
+  font-size: 0.88rem;
+  color: #71717a;
+  margin-bottom: 0.75rem;
+  font-style: italic;
+}
+
+.zone-label {
+  font-size: 0.68rem;
+  color: rgba(192,132,252,0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  padding-left: 0.25rem;
+  max-width: 760px;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Responsive ── */
+@media (max-width: 680px) {
+  .arc-nav:not(.arc-nav--compact) {
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 0.4rem 0.6rem;
+  }
+
+  .arc-nav__left {
+    gap: 0.15rem;
+  }
+
+  .arc-nav__link {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.78rem;
+  }
+
+  body:has(.arc-nav:not(.arc-nav--compact)) {
+    padding-top: 5rem;
+  }
+
+  .arc-challenges__grid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .arc-scorecard__card {
+    padding: 1.5rem 1.2rem;
+  }
+
+  .arc-shop-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .arc-ach-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .arc-lb-preview__list {
+    flex-direction: column;
+  }
+
+  .arc-lb-preview__entry {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-align: left;
+  }
+}
+
+@media (max-width: 400px) {
+  .arc-nav__link {
+    font-size: 0;
+    padding: 0.3rem 0.4rem;
+  }
+
+  /* Show only first emoji/letter on very small screens */
+  .arc-nav__link::before {
+    font-size: 1rem;
+  }
+
+  .arc-nav__link[href="/arcade/"]::before { content: "\\1F3AE"; font-size: 1rem; }
+  .arc-nav__link[href="/arcade/achievements/"]::before { content: "\\1F3C6"; font-size: 1rem; }
+  .arc-nav__link[href="/arcade/shop/"]::before { content: "\\1F6D2"; font-size: 1rem; }
+  .arc-nav__link[href="/arcade/leaderboard-page/"]::before { content: "\\1F4CA"; font-size: 1rem; }
+  .arc-nav__link[href="/arcade/profile/"]::before { content: "\\1F464"; font-size: 1rem; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RETENTION FEATURES — Streak Toasts, Near-Miss, Status Flex
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Streak drama toasts ── */
+.arc-streak-toast {
+  position: fixed;
+  top: 4rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-radius: 16px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  opacity: 0;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  max-width: 420px;
+  width: 90vw;
+  pointer-events: none;
+}
+.arc-streak-toast--show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.arc-streak-toast--lost {
+  background: rgba(239,68,68,0.15);
+  border: 1px solid rgba(239,68,68,0.4);
+  box-shadow: 0 8px 32px rgba(239,68,68,0.2);
+}
+.arc-streak-toast--shield {
+  background: rgba(59,130,246,0.15);
+  border: 1px solid rgba(59,130,246,0.4);
+  box-shadow: 0 8px 32px rgba(59,130,246,0.2);
+}
+.arc-streak-toast--milestone {
+  background: rgba(245,158,11,0.15);
+  border: 1px solid rgba(245,158,11,0.4);
+  box-shadow: 0 8px 32px rgba(245,158,11,0.2);
+}
+.arc-streak-toast__icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+.arc-streak-toast__body {
+  flex: 1;
+}
+.arc-streak-toast__title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fafafa;
+  margin-bottom: 0.15rem;
+}
+.arc-streak-toast--lost .arc-streak-toast__title { color: #fca5a5; }
+.arc-streak-toast--shield .arc-streak-toast__title { color: #93c5fd; }
+.arc-streak-toast--milestone .arc-streak-toast__title { color: #fcd34d; }
+.arc-streak-toast__text {
+  font-size: 0.82rem;
+  color: #a1a1aa;
+  line-height: 1.4;
+}
+
+/* ── Leaderboard near-miss ── */
+.lb-nearmiss {
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #fb923c;
+  background: rgba(251,146,60,0.08);
+  border: 1px solid rgba(251,146,60,0.2);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.5rem;
+  animation: nearMissPulse 2s ease infinite;
+}
+
+/* ── Leaderboard badge/status flex ── */
+.lb-you {
+  font-size: 0.7rem;
+  color: #a78bfa;
+  font-weight: 400;
+}
+.lb-rarity-legendary {
+  background: linear-gradient(135deg, rgba(250,204,21,0.08), rgba(245,158,11,0.04)) !important;
+}
+.lb-rarity-epic {
+  background: linear-gradient(135deg, rgba(168,85,247,0.08), rgba(139,92,246,0.04)) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SHOP REDESIGN — Badges, Titles, Frames, Powers
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Rarity glow system ── */
+@keyframes holoShimmer {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@keyframes lightningBorder {
+  0%, 100% { box-shadow: 0 0 8px #facc15, 0 0 20px #facc15, inset 0 0 4px rgba(250,204,21,0.1); }
+  50%       { box-shadow: 0 0 16px #38bdf8, 0 0 40px #38bdf8, inset 0 0 8px rgba(56,189,248,0.15); }
+}
+@keyframes voidPulse {
+  0%, 100% { box-shadow: 0 0 12px #7c3aed, 0 0 30px rgba(124,58,237,0.3); }
+  50%       { box-shadow: 0 0 20px #a855f7, 0 0 50px rgba(168,85,247,0.4); }
+}
+@keyframes fireBorder {
+  0%, 100% { box-shadow: 0 0 10px #ef4444, 0 0 24px rgba(239,68,68,0.3); }
+  33%       { box-shadow: 0 0 14px #f97316, 0 0 32px rgba(249,115,22,0.4); }
+  66%       { box-shadow: 0 0 10px #eab308, 0 0 20px rgba(234,179,8,0.3); }
+}
+@keyframes legendaryGlow {
+  0%, 100% { filter: drop-shadow(0 0 6px #facc15); }
+  50%       { filter: drop-shadow(0 0 14px #f59e0b); }
+}
+@keyframes epicGlow {
+  0%, 100% { filter: drop-shadow(0 0 4px #a855f7); }
+  50%       { filter: drop-shadow(0 0 10px #c084fc); }
+}
+
+/* ── Shop item cards ── */
+.arc-shop-item {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 16px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.arc-shop-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+}
+.arc-shop-item--legendary {
+  border-color: rgba(250,204,21,0.3);
+  background: linear-gradient(135deg, rgba(250,204,21,0.06), rgba(245,158,11,0.03));
+}
+.arc-shop-item--epic {
+  border-color: rgba(168,85,247,0.3);
+  background: linear-gradient(135deg, rgba(168,85,247,0.06), rgba(139,92,246,0.03));
+}
+.arc-shop-item--rare {
+  border-color: rgba(56,189,248,0.25);
+  background: linear-gradient(135deg, rgba(56,189,248,0.05), rgba(6,182,212,0.03));
+}
+
+.arc-shop-item__rarity {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+.arc-shop-item--legendary .arc-shop-item__rarity { color: #facc15; }
+.arc-shop-item--epic     .arc-shop-item__rarity { color: #c084fc; }
+.arc-shop-item--rare     .arc-shop-item__rarity { color: #38bdf8; }
+.arc-shop-item--uncommon .arc-shop-item__rarity { color: #4ade80; opacity: 0.6; }
+
+.arc-shop-item__icon {
+  font-size: 2.2rem;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.arc-shop-item__icon--legendary { animation: legendaryGlow 2s ease-in-out infinite; }
+.arc-shop-item__icon--epic      { animation: epicGlow 2.5s ease-in-out infinite; }
+
+.arc-shop-item__name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.9);
+}
+.arc-shop-item__label {
+  font-size: 0.75rem;
+  color: #c084fc;
+  font-style: italic;
+}
+.arc-shop-item__desc {
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.45);
+  line-height: 1.4;
+}
+.arc-shop-item__cost {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #facc15;
+  margin-top: 2px;
+}
+
+/* ── Shop buttons ── */
+.arc-shop-btn {
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.75rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.2s, transform 0.1s;
+  margin-top: auto;
+}
+.arc-shop-btn:hover:not(:disabled) { opacity: 0.88; transform: scale(1.02); }
+.arc-shop-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+.arc-shop-btn--equipped {
+  background: linear-gradient(135deg, #059669, #10b981);
+}
+.arc-shop-btn--owned {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+}
+.arc-shop-btn--active {
+  background: linear-gradient(135deg, #059669, #10b981);
+  font-size: 0.7rem;
+}
+.arc-shop-btn--locked {
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.55);
+  cursor: not-allowed;
+}
+
+/* ── Shop grid ── */
+.arc-shop-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+/* ── Active powers bar ── */
+.arc-active-powers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 14px;
+  background: rgba(250,204,21,0.06);
+  border: 1px solid rgba(250,204,21,0.2);
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+.arc-active-powers__label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #facc15;
+}
+.arc-active-powers__pill {
+  font-size: 0.75rem;
+  padding: 3px 10px;
+  background: rgba(250,204,21,0.1);
+  border: 1px solid rgba(250,204,21,0.25);
+  border-radius: 999px;
+  color: rgba(255,255,255,0.85);
+}
+
+/* ── Shop toast ── */
+.arc-shop-toast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #1e1b2e;
+  border: 1px solid rgba(168,85,247,0.3);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s;
+  white-space: nowrap;
+}
+.arc-shop-toast--visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ── Admin bar (dev testing panel at bottom of shop page) ── */
+.arc-shop-admin-bar {
+  margin-top: 40px;
+  padding: 16px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+.arc-shop-admin-bar:hover { opacity: 1; }
+.arc-shop-admin-bar__btn {
+  padding: 10px 20px;
+  border: 1px solid rgba(250,204,21,0.3);
+  border-radius: 10px;
+  background: rgba(250,204,21,0.06);
+  color: #facc15;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.2s, border-color 0.2s;
+}
+.arc-shop-admin-bar__btn:hover { background: rgba(250,204,21,0.12); border-color: rgba(250,204,21,0.5); }
+.arc-shop-admin-bar__btn--on {
+  background: rgba(239,68,68,0.08);
+  border-color: rgba(239,68,68,0.35);
+  color: #f87171;
+}
+.arc-shop-admin-bar__hint {
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.55);
+}
+.arc-shop-admin-bar__hint code {
+  background: rgba(255,255,255,0.06);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  color: rgba(255,255,255,0.45);
+}
+
+/* ── Admin toast ── */
+.arc-admin-toast {
+  position: fixed;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-10px);
+  background: #1e1b2e;
+  border: 1px solid #facc15;
+  color: #facc15;
+  padding: 8px 20px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s;
+}
+.arc-admin-toast--visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ── Nav HUD badge + title ── */
+.arc-nav__badge {
+  font-size: 1.1rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+}
+.arc-nav__badge--legendary { animation: legendaryGlow 2s ease-in-out infinite; }
+.arc-nav__badge--epic      { animation: epicGlow 2.5s ease-in-out infinite; }
+
+.arc-nav__title {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #c084fc;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  background: rgba(168,85,247,0.1);
+  border: 1px solid rgba(168,85,247,0.2);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.arc-nav__admin {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #facc15;
+  background: rgba(250,204,21,0.1);
+  border: 1px solid rgba(250,204,21,0.3);
+  border-radius: 999px;
+  padding: 2px 8px;
+  cursor: pointer;
+  animation: adminPulse 2s ease-in-out infinite;
+}
+@keyframes adminPulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.7; }
+}
+
+/* ── Scorecard title display ── */
+.arc-scorecard__title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 3px 12px;
+  border-radius: 999px;
+  display: inline-block;
+  margin: 4px auto 0;
+}
+.arc-scorecard__title--common    { color: rgba(255,255,255,0.6); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); }
+.arc-scorecard__title--uncommon  { color: #4ade80; background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.2); }
+.arc-scorecard__title--rare      { color: #38bdf8; background: rgba(56,189,248,0.08); border: 1px solid rgba(56,189,248,0.2); }
+.arc-scorecard__title--epic      { color: #c084fc; background: rgba(192,132,252,0.08); border: 1px solid rgba(192,132,252,0.2); animation: epicGlow 2.5s ease-in-out infinite; }
+.arc-scorecard__title--legendary { color: #facc15; background: rgba(250,204,21,0.08); border: 1px solid rgba(250,204,21,0.3); animation: legendaryGlow 2s ease-in-out infinite; }
+
+/* ── Frame effects on scorecard ── */
+.arc-scorecard[data-frame="frame_holo"] .arc-scorecard__card {
+  border-image: linear-gradient(135deg, #ff0080, #ff8c00, #40e0d0, #ff0080) 1;
+  animation: holoShimmer 3s ease infinite;
+  background-size: 200% 200%;
+  box-shadow: 0 0 20px rgba(255,0,128,0.2), 0 0 40px rgba(64,224,208,0.15);
+}
+.arc-scorecard[data-frame="frame_lightning"] .arc-scorecard__card {
+  animation: lightningBorder 1.5s ease-in-out infinite;
+}
+.arc-scorecard[data-frame="frame_void"] .arc-scorecard__card {
+  animation: voidPulse 2s ease-in-out infinite;
+}
+.arc-scorecard[data-frame="frame_fire"] .arc-scorecard__card {
+  animation: fireBorder 2s ease-in-out infinite;
+}
+.arc-scorecard[data-frame="frame_gold"] .arc-scorecard__card {
+  box-shadow: 0 0 16px rgba(250,204,21,0.25), 0 0 40px rgba(250,204,21,0.1);
+  border-color: rgba(250,204,21,0.3);
+}
+
+/* ── Equipped display extra label ── */
+.arc-equipped__sublabel {
+  font-size: 0.65rem;
+  color: #c084fc;
+  font-style: italic;
+  margin-top: 2px;
+}
+
+/* ── Shop.js real-money admin unlock button ── */
+.sp-shop-admin-unlock {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+}
+.sp-shop-admin-unlock:hover {
+  background: linear-gradient(135deg, #6d28d9, #4338ca);
+}

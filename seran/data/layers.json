@@ -1,0 +1,287 @@
+{
+ "name": "Seran",
+ "epoch": "1725 CE",
+ "sea_level_m": -0.20000000298023224,
+ "cell_m": 960.0,
+ "layers": [
+  {
+   "id": "elevation",
+   "label": "Elevation & bathymetry",
+   "kind": "scalar",
+   "unit": "m",
+   "palette": "hypso",
+   "width": 1042,
+   "height": 1146,
+   "file": "elevation.png",
+   "encoding": "rg16",
+   "min": -8318.0263671875,
+   "max": 3851.165283203125
+  },
+  {
+   "id": "slope_deg",
+   "label": "Slope",
+   "kind": "scalar",
+   "unit": "deg",
+   "palette": "heat",
+   "width": 1042,
+   "height": 1146,
+   "file": "slope_deg.png",
+   "encoding": "rg16",
+   "min": 3.989230754086748e-05,
+   "max": 74.14060974121094
+  },
+  {
+   "id": "precip_annual",
+   "label": "Annual precipitation",
+   "kind": "scalar",
+   "unit": "mm/yr",
+   "palette": "rain",
+   "width": 1042,
+   "height": 1146,
+   "file": "precip_annual.png",
+   "encoding": "rg16",
+   "min": 780.0,
+   "max": 7400.0
+  },
+  {
+   "id": "temp_annual",
+   "label": "Mean annual temperature",
+   "kind": "scalar",
+   "unit": "C",
+   "palette": "temp",
+   "width": 1042,
+   "height": 1146,
+   "file": "temp_annual.png",
+   "encoding": "rg16",
+   "min": -0.4143572151660919,
+   "max": 23.400001525878906
+  },
+  {
+   "id": "drainage_area_km2",
+   "label": "Drainage area",
+   "kind": "scalar_log",
+   "unit": "km2",
+   "palette": "water",
+   "width": 1042,
+   "height": 1146,
+   "file": "drainage_area_km2.png",
+   "encoding": "rg16",
+   "min": -0.035457541381055495,
+   "max": 3.4822660735423887
+  },
+  {
+   "id": "discharge_m3s",
+   "label": "River discharge",
+   "kind": "scalar_log",
+   "unit": "m3/s",
+   "palette": "water",
+   "width": 1042,
+   "height": 1146,
+   "file": "discharge_m3s.png",
+   "encoding": "rg16",
+   "min": -1.8716148793114322,
+   "max": 2.322861777410858
+  },
+  {
+   "id": "soil_thickness",
+   "label": "Soil thickness",
+   "kind": "scalar",
+   "unit": "m",
+   "palette": "earth",
+   "width": 1042,
+   "height": 1146,
+   "file": "soil_thickness.png",
+   "encoding": "rg16",
+   "min": 0.0,
+   "max": 24.0
+  },
+  {
+   "id": "snow_probability",
+   "label": "Snow cover (1725)",
+   "kind": "scalar",
+   "unit": "0-1",
+   "palette": "ice",
+   "width": 1042,
+   "height": 1146,
+   "file": "snow_probability.png",
+   "encoding": "rg16",
+   "min": 0.0,
+   "max": 0.9031795859336853
+  },
+  {
+   "id": "wave_energy",
+   "label": "Wave energy",
+   "kind": "scalar",
+   "unit": "0-1",
+   "palette": "water",
+   "width": 1042,
+   "height": 1146,
+   "file": "wave_energy.png",
+   "encoding": "rg16",
+   "min": 0.0,
+   "max": 1.0
+  },
+  {
+   "id": "sea_depth",
+   "label": "Water depth",
+   "kind": "scalar",
+   "unit": "m",
+   "palette": "depth",
+   "width": 1042,
+   "height": 1146,
+   "file": "sea_depth.png",
+   "encoding": "rg16",
+   "min": 0.0,
+   "max": 8317.826171875
+  },
+  {
+   "id": "slab_depth_km",
+   "label": "Depth to subducting slab",
+   "kind": "scalar",
+   "unit": "km",
+   "palette": "slab",
+   "width": 1042,
+   "height": 1146,
+   "file": "slab_depth_km.png",
+   "encoding": "rg16",
+   "min": 0.0,
+   "max": 1362.682373046875
+  },
+  {
+   "id": "plate_age_ma",
+   "label": "Sea-floor age",
+   "kind": "scalar",
+   "unit": "Ma",
+   "palette": "age",
+   "width": 1042,
+   "height": 1146,
+   "file": "plate_age_ma.png",
+   "encoding": "rg16",
+   "min": 20.0,
+   "max": 135.0
+  },
+  {
+   "id": "substrate_age_ka",
+   "label": "Substrate age",
+   "kind": "scalar_log",
+   "unit": "ka",
+   "palette": "age",
+   "width": 1042,
+   "height": 1146,
+   "file": "substrate_age_ka.png",
+   "encoding": "rg16",
+   "min": 0.4913616804737727,
+   "max": 3.6989700043360187
+  },
+  {
+   "id": "lithology",
+   "label": "Lithology",
+   "kind": "class",
+   "unit": "",
+   "palette": "lith",
+   "width": 1042,
+   "height": 1146,
+   "file": "lithology.png",
+   "encoding": "class_r"
+  },
+  {
+   "id": "vegetation",
+   "label": "Vegetation zone",
+   "kind": "class",
+   "unit": "",
+   "palette": "veg",
+   "width": 1042,
+   "height": 1146,
+   "file": "vegetation.png",
+   "encoding": "class_r"
+  },
+  {
+   "id": "ocean_province",
+   "label": "Ocean-floor province",
+   "kind": "class",
+   "unit": "",
+   "palette": "prov",
+   "width": 1042,
+   "height": 1146,
+   "file": "ocean_province.png",
+   "encoding": "class_r"
+  },
+  {
+   "id": "reef_class",
+   "label": "Reef architecture",
+   "kind": "class",
+   "unit": "",
+   "palette": "reef",
+   "width": 1042,
+   "height": 1146,
+   "file": "reef_class.png",
+   "encoding": "class_r"
+  }
+ ],
+ "classes": {
+  "lithology": {
+   "0": "volcaniclastic / regolith",
+   "1": "andesite lava",
+   "2": "welded ignimbrite (Tenkai)",
+   "3": "columnar basalt",
+   "4": "Kaidan Limestone",
+   "5": "SB-1 basement granodiorite",
+   "6": "scoria / tephra",
+   "7": "alluvium",
+   "8": "reef limestone"
+  },
+  "vegetation": {
+   "0": "water",
+   "1": "mangrove/strand",
+   "2": "lowland moist evergreen",
+   "3": "lowland dry woodland/savanna",
+   "4": "montane laurel-oak",
+   "5": "cloud forest",
+   "6": "montane conifer",
+   "7": "krummholz",
+   "8": "alpine tundra",
+   "9": "periglacial barrens",
+   "10": "volcanic primary succession",
+   "11": "blanket bog",
+   "12": "wetland/marsh"
+  },
+  "ocean_province": {
+   "0": "island / shelf",
+   "1": "abyssal plain (incoming plate)",
+   "2": "outer rise",
+   "3": "trench floor",
+   "4": "accretionary prism",
+   "5": "forearc basin",
+   "6": "back-arc basin",
+   "7": "seamount",
+   "8": "Hokai Ridge"
+  },
+  "reef_class": {
+   "0": "none",
+   "1": "fringing",
+   "2": "barrier crest",
+   "3": "lagoon",
+   "4": "atoll rim",
+   "5": "patch",
+   "6": "drowned (gave up)"
+  }
+ },
+ "corners": {
+  "lat": [
+   18.682559967041016,
+   31.920265197753906
+  ],
+  "lon": [
+   128.4107208251953,
+   142.81625366210938
+  ]
+ },
+ "span_km": [
+  1000.32,
+  1100.16
+ ],
+ "fitted": {
+  "block_scale": 0.8093759417533875,
+  "k_scale": 1.2169932126998901
+ }
+}
