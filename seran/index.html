@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seran in 3D — a physically derived archipelago</title>
+<meta name="description" content="Fly a 280,000 km² archipelago built from plate tectonics, orographic rainfall and five million years of simulated erosion. Nothing on it was drawn.">
+<link rel="icon" href="/icon.svg">
+<link rel="stylesheet" href="vendor/maplibre-gl.css">
+<style>
+  :root { --bg:#070b14; --panel:#0d1424e6; --line:#1e2b45; --ink:#dfe7f5;
+          --dim:#8397b8; --accent:#6fd0e8; --warn:#e8b46f; }
+  *{box-sizing:border-box} html,body{height:100%;margin:0}
+  body{background:var(--bg);color:var(--ink);overflow:hidden;
+       font:15px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  #map{position:absolute;inset:0}
+  header{position:absolute;top:0;left:0;right:0;z-index:5;padding:10px 16px;
+         background:linear-gradient(#070b14dd,#070b1400);display:flex;
+         align-items:baseline;gap:14px;pointer-events:none}
+  h1{font-size:17px;margin:0} h1 small{color:var(--dim);font-weight:400;font-size:13px;margin-left:8px}
+  header nav{margin-left:auto;display:flex;gap:14px;font-size:13px;pointer-events:auto}
+  header nav a{color:var(--dim);text-decoration:none} header nav a:hover{color:var(--accent)}
+  aside{position:absolute;z-index:5;top:52px;left:12px;width:228px;max-height:calc(100% - 120px);
+        overflow-y:auto;background:var(--panel);border:1px solid var(--line);
+        border-radius:10px;padding:11px;backdrop-filter:blur(7px)}
+  aside h2{font-size:10.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--dim);margin:2px 0 7px}
+  #layers{display:flex;flex-direction:column;gap:2px;margin-bottom:13px}
+  #layers button,.tool{text-align:left;background:transparent;color:var(--ink);border:1px solid transparent;
+        border-radius:6px;padding:5px 8px;font:inherit;font-size:12.5px;cursor:pointer}
+  #layers button:hover,.tool:hover{background:#16223a}
+  #layers button.on,.tool.on{background:#1b3350;border-color:var(--accent)}
+  .tools{display:flex;gap:5px;margin-bottom:12px}
+  .tool{border-color:var(--line);flex:1;text-align:center}
+  .exag{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .exag input{flex:1} #exagval{font-variant-numeric:tabular-nums;color:var(--dim);min-width:34px}
+  #exagval.warn{color:var(--warn)}
+  aside p{font-size:11.5px;color:var(--dim);margin:0 0 8px}
+  aside a{color:var(--accent)}
+  #readout{position:absolute;z-index:5;left:12px;bottom:12px;background:var(--panel);
+        border:1px solid var(--line);border-radius:8px;padding:7px 11px;font-size:13px;
+        font-variant-numeric:tabular-nums;min-height:20px;pointer-events:none;backdrop-filter:blur(7px)}
+  #readout .ll{display:block;color:var(--dim);font-size:11px}
+  #legend{position:absolute;z-index:5;right:12px;bottom:12px;background:var(--panel);
+        border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:11px;
+        max-width:44vw;display:flex;flex-wrap:wrap;gap:4px 9px;align-items:center;backdrop-filter:blur(7px)}
+  #legend .ramp{display:flex;height:9px;width:170px} #legend .ramp i{flex:1}
+  #legend .lbl{color:var(--dim)}
+  #legend .sw{display:flex;align-items:center;gap:5px;color:var(--dim)}
+  #legend .sw i{width:11px;height:11px;border-radius:2px;display:inline-block}
+  #loading{position:absolute;inset:0;z-index:6;display:flex;align-items:center;
+        justify-content:center;color:var(--dim);background:#05080f}
+  @media(max-width:700px){aside{width:calc(100% - 24px);max-height:184px}}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<header>
+  <h1>Seran <small>≈280,000 km² · derived, not drawn · 1725 CE</small></h1>
+  <nav><a href="/">2D map</a><a href="/arcade/">Arcade</a>
+       <a href="https://github.com/lilou-hue/seran">Source &amp; docs</a></nav>
+</header>
+<aside>
+  <h2>Layers</h2><div id="layers"></div>
+  <h2>View</h2>
+  <div class="tools"><button class="tool" id="top">Top-down</button>
+                     <button class="tool" id="tilt">Tilt</button></div>
+  <div class="exag">
+    <input type="range" id="exag" min="1" max="5" step="0.25" value="1">
+    <span id="exagval">1.0×</span>
+  </div>
+  <p>Vertical scale is <b>true by default</b>. The highest point is 3,902 m on a
+     474 km island — a ratio of 1:119, so real terrain looks flat. Exaggerate to
+     read it, not to believe it.</p>
+  <h2>About</h2>
+  <p>Nothing here was painted. The coastline is where an eroded surface meets
+     the sea; the volcanoes sit where the subducting slab reaches melting depth;
+     the rain shadow falls out of linear orographic theory.</p>
+  <p><a href="https://github.com/lilou-hue/seran">How it was built →</a></p>
+</aside>
+<div id="readout"></div><div id="legend"></div>
+<div id="loading">Loading terrain…</div>
+<script src="vendor/maplibre-gl.js"></script>
+<script src="globe.js"></script>
+</body>
+</html>
