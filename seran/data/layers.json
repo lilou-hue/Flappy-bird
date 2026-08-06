@@ -2,7 +2,7 @@
  "name": "Seran",
  "epoch": "1725 CE",
  "sea_level_m": -0.20000000298023224,
- "cell_m": 960.0,
+ "cell_m": 480.0,
  "layers": [
   {
    "id": "elevation",
@@ -10,12 +10,12 @@
    "kind": "scalar",
    "unit": "m",
    "palette": "hypso",
-   "width": 1042,
-   "height": 1146,
+   "width": 972,
+   "height": 1389,
    "file": "elevation.png",
    "encoding": "rg16",
-   "min": -8318.0263671875,
-   "max": 3851.165283203125
+   "min": -7688.558973524306,
+   "max": 3913.1156412760415
   },
   {
    "id": "slope_deg",
@@ -23,12 +23,12 @@
    "kind": "scalar",
    "unit": "deg",
    "palette": "heat",
-   "width": 1042,
-   "height": 1146,
+   "width": 972,
+   "height": 1389,
    "file": "slope_deg.png",
    "encoding": "rg16",
-   "min": 3.989230754086748e-05,
-   "max": 74.14060974121094
+   "min": 0.0,
+   "max": 73.20512178209093
   },
   {
    "id": "precip_annual",
@@ -36,8 +36,8 @@
    "kind": "scalar",
    "unit": "mm/yr",
    "palette": "rain",
-   "width": 1042,
-   "height": 1146,
+   "width": 972,
+   "height": 1389,
    "file": "precip_annual.png",
    "encoding": "rg16",
    "min": 780.0,
@@ -49,11 +49,11 @@
    "kind": "scalar",
    "unit": "C",
    "palette": "temp",
-   "width": 1042,
-   "height": 1146,
+   "width": 972,
+   "height": 1389,
    "file": "temp_annual.png",
    "encoding": "rg16",
-   "min": -0.4143572151660919,
+   "min": 0.05645388944281472,
    "max": 23.400001525878906
   },
   {
@@ -62,12 +62,12 @@
    "kind": "scalar_log",
    "unit": "km2",
    "palette": "water",
-   "width": 1042,
-   "height": 1146,
+   "width": 972,
+   "height": 1389,
    "file": "drainage_area_km2.png",
    "encoding": "rg16",
-   "min": -0.035457541381055495,
-   "max": 3.4822660735423887
+   "min": -0.6375175327090179,
+   "max": 3.369518645716565
   },
   {
    "id": "discharge_m3s",
@@ -75,12 +75,12 @@
    "kind": "scalar_log",
    "unit": "m3/s",
    "palette": "water",
-   "width": 1042,
-   "height": 1146,
+   "width": 972,
+   "height": 1389,
    "file": "discharge_m3s.png",
    "encoding": "rg16",
-   "min": -1.8716148793114322,
-   "max": 2.322861777410858
+   "min": -2.4736748706393947,
+   "max": 2.0076251548275903
   },
   {
    "id": "soil_thickness",
@@ -88,8 +88,8 @@
    "kind": "scalar",
    "unit": "m",
    "palette": "earth",
-   "width": 1042,
-   "height": 1146,
+   "width": 972,
+   "height": 1389,
    "file": "soil_thickness.png",
    "encoding": "rg16",
    "min": 0.0,
@@ -101,12 +101,12 @@
    "kind": "scalar",
    "unit": "0-1",
    "palette": "ice",
-   "width": 1042,
-   "height": 1146,
+   "width": 972,
+   "height": 1389,
    "file": "snow_probability.png",
    "encoding": "rg16",
    "min": 0.0,
-   "max": 0.9031795859336853
+   "max": 0.9212526745266385
   },
   {
    "id": "wave_energy",
@@ -114,8 +114,8 @@
    "kind": "scalar",
    "unit": "0-1",
    "palette": "water",
-   "width": 1042,
-   "height": 1146,
+   "width": 972,
+   "height": 1389,
    "file": "wave_energy.png",
    "encoding": "rg16",
    "min": 0.0,
@@ -127,12 +127,12 @@
    "kind": "scalar",
    "unit": "m",
    "palette": "depth",
-   "width": 1042,
-   "height": 1146,
+   "width": 972,
+   "height": 1389,
    "file": "sea_depth.png",
    "encoding": "rg16",
    "min": 0.0,
-   "max": 8317.826171875
+   "max": 7688.359103732639
   },
   {
    "id": "slab_depth_km",
@@ -140,12 +140,12 @@
    "kind": "scalar",
    "unit": "km",
    "palette": "slab",
-   "width": 1042,
-   "height": 1146,
+   "width": 972,
+   "height": 1389,
    "file": "slab_depth_km.png",
    "encoding": "rg16",
    "min": 0.0,
-   "max": 1362.682373046875
+   "max": 1266.5971001519097
   },
   {
    "id": "plate_age_ma",
@@ -153,12 +153,12 @@
    "kind": "scalar",
    "unit": "Ma",
    "palette": "age",
-   "width": 1042,
-   "height": 1146,
+   "width": 972,
+   "height": 1389,
    "file": "plate_age_ma.png",
    "encoding": "rg16",
    "min": 20.0,
-   "max": 135.0
+   "max": 134.97047254774304
   },
   {
    "id": "substrate_age_ka",
@@ -166,8 +166,8 @@
    "kind": "scalar_log",
    "unit": "ka",
    "palette": "age",
-   "width": 1042,
-   "height": 1146,
+   "width": 972,
+   "height": 1389,
    "file": "substrate_age_ka.png",
    "encoding": "rg16",
    "min": 0.4913616804737727,
@@ -179,8 +179,8 @@
    "kind": "class",
    "unit": "",
    "palette": "lith",
-   "width": 1042,
-   "height": 1146,
+   "width": 972,
+   "height": 1389,
    "file": "lithology.png",
    "encoding": "class_r"
   },
@@ -190,8 +190,8 @@
    "kind": "class",
    "unit": "",
    "palette": "veg",
-   "width": 1042,
-   "height": 1146,
+   "width": 972,
+   "height": 1389,
    "file": "vegetation.png",
    "encoding": "class_r"
   },
@@ -201,8 +201,8 @@
    "kind": "class",
    "unit": "",
    "palette": "prov",
-   "width": 1042,
-   "height": 1146,
+   "width": 972,
+   "height": 1389,
    "file": "ocean_province.png",
    "encoding": "class_r"
   },
@@ -212,8 +212,8 @@
    "kind": "class",
    "unit": "",
    "palette": "reef",
-   "width": 1042,
-   "height": 1146,
+   "width": 972,
+   "height": 1389,
    "file": "reef_class.png",
    "encoding": "class_r"
   }
@@ -268,20 +268,20 @@
  },
  "corners": {
   "lat": [
-   18.682559967041016,
-   31.920265197753906
+   13.43771743774414,
+   35.36428451538086
   ],
   "lon": [
-   128.4107208251953,
-   142.81625366210938
+   124.91648864746094,
+   147.60891723632812
   ]
  },
  "span_km": [
-  1000.32,
-  1100.16
+  1400.16,
+  2000.16
  ],
  "fitted": {
-  "block_scale": 0.8093759417533875,
-  "k_scale": 1.2169932126998901
+  "block_scale": 0.9796107411384583,
+  "k_scale": 32.1820182800293
  }
 }
