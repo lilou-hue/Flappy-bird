@@ -187,6 +187,106 @@ function buildUI() {
     state.map.easeTo({ pitch: 0, bearing: 0, duration: 900 });
   document.getElementById('tilt').onclick = () =>
     state.map.easeTo({ pitch: 68, bearing: -28, duration: 900 });
+
+  if (state.meta.human) buildHuman();
+}
+
+/* --------------------------------------------------- human geography (V2) */
+/* Towns, forts and shrines are points, not rasters, and are drawn as points.
+   They sit in their own toggle group so the natural terrain view stays clean:
+   the default is still a place, and the human geography is something you ask
+   for. Each group is independent, because the interesting questions are
+   comparisons - forts against realms, shrines against roads. */
+const HUMAN_GROUPS = [
+  { id: 'towns', label: 'Settlements',
+    color: ['interpolate', ['linear'], ['get', 'pop'],
+            400, '#f6e6bd', 3500, '#ffd166', 20000, '#ff8c42', 120000, '#ff4d3d'],
+    radius: ['interpolate', ['linear'], ['sqrt', ['get', 'pop']],
+             20, 2.2, 60, 3.6, 180, 6.5, 420, 11] },
+  { id: 'works', label: 'Fortifications',
+    color: ['match', ['get', 'kind'], 'citadel', '#ff5f5f',
+            'strait fort', '#7fd4ff', 'coast watch', '#c9a0ff', '#ffb37a'],
+    radius: ['interpolate', ['linear'], ['get', 'strength'], 0, 2.4, 1, 6.5] },
+  { id: 'shrines', label: 'Sacred sites',
+    color: ['match', ['get', 'kind'], 'fire mountain', '#ff7a45',
+            'holy mountain', '#fff0c2', 'hot spring', '#8ff0d8',
+            'river source', '#9ec9ff', '#d7b6ff'],
+    radius: ['interpolate', ['linear'], ['sqrt', ['get', 'pilgrims']],
+             0, 2.4, 40, 5, 105, 9] },
+];
+
+async function buildHuman() {
+  const map = state.map;
+  let h;
+  try { h = await (await fetch(DATA + state.meta.human)).json(); }
+  catch (e) { return; }
+  state.human = h;
+
+  const wrap = document.getElementById('human');
+  if (wrap) wrap.previousElementSibling.style.display = '';
+  const host = wrap || document.getElementById('layers');
+
+  HUMAN_GROUPS.forEach((grp) => {
+    const feats = (h[grp.id] || []).map((d) => ({
+      type: 'Feature', properties: d,
+      geometry: { type: 'Point', coordinates: [d.lon, d.lat] },
+    }));
+    map.addSource('h_' + grp.id, {
+      type: 'geojson', data: { type: 'FeatureCollection', features: feats },
+    });
+    map.addLayer({
+      id: 'h_' + grp.id, type: 'circle', source: 'h_' + grp.id,
+      layout: { visibility: 'none' },
+      paint: {
+        'circle-radius': grp.radius,
+        'circle-color': grp.color,
+        'circle-stroke-width': 0.7,
+        'circle-stroke-color': 'rgba(8,12,22,0.85)',
+        'circle-pitch-alignment': 'map',
+      },
+    });
+    const btn = document.createElement('button');
+    btn.textContent = grp.label;
+    btn.onclick = () => {
+      const on = map.getLayoutProperty('h_' + grp.id, 'visibility') === 'visible';
+      map.setLayoutProperty('h_' + grp.id, 'visibility', on ? 'none' : 'visible');
+      btn.classList.toggle('on', !on);
+    };
+    host.appendChild(btn);
+
+    map.on('click', 'h_' + grp.id, (e) => humanPopup(e, grp.id));
+    map.on('mouseenter', 'h_' + grp.id,
+           () => { map.getCanvas().style.cursor = 'pointer'; });
+    map.on('mouseleave', 'h_' + grp.id,
+           () => { map.getCanvas().style.cursor = ''; });
+  });
+
+  const cap = document.getElementById('humanNote');
+  if (cap) {
+    cap.textContent = `${h.population.toLocaleString()} people in ` +
+      `${h.settlements.toLocaleString()} settlements, ${h.realms.length} realms.`;
+  }
+}
+
+function humanPopup(e, group) {
+  const p = e.features[0].properties;
+  const n = (v) => Number(v).toLocaleString();
+  let html = '';
+  if (group === 'towns') {
+    const realm = state.human.realms.find((r) => r.id === Number(p.polity));
+    html = `<b>${n(p.pop)} people</b><br>` +
+      (Number(p.port) > 0 ? `port, ${n(p.port)} loads/yr<br>` : '') +
+      `sells ${p.sells}<br>` +
+      (realm ? `realm of ${n(realm.population)}` : 'no government');
+  } else if (group === 'works') {
+    html = `<b>${p.kind}</b><br>` +
+      (p.frontier === true || p.frontier === 'true' ? 'on a frontier' : 'interior');
+  } else {
+    html = `<b>${p.kind}</b><br>${n(p.pilgrims)} pilgrims a year` +
+      (Number(p.prominence) > 0 ? `<br>${n(p.prominence)} m of prominence` : '');
+  }
+  new maplibregl.Popup({ closeButton: false, offset: 10 })
+    .setLngLat(e.lngLat).setHTML(html).addTo(state.map);
 }
 
 async function setLayer(spec) {
