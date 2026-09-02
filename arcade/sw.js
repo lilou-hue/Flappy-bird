@@ -1,4 +1,4 @@
-const CACHE_NAME = 'slayplay-arcade-v26';
+const CACHE_NAME = 'slayplay-arcade-v27';
 
 const PRECACHE_URLS = [
   '/arcade/',
@@ -78,6 +78,7 @@ const PRECACHE_URLS = [
   '/arcade/gravity-garden/',
   '/arcade/gravity-garden/game.js',
   '/arcade/gravity-garden/styles.css',
+  '/arcade/wet-lab/',
   '/arcade/the-deep/',
   '/arcade/the-deep/game.js',
   '/arcade/the-deep/styles.css',

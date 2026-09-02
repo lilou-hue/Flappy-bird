@@ -608,6 +608,7 @@
       .gravity-garden-preview { background: linear-gradient(180deg, #060818, #0c1030, #040610); }
       .lso-preview { background: linear-gradient(180deg, #0f0c29, #302b63, #24243e); }
       .the-deep-preview { background: linear-gradient(180deg, #001220, #002040, #000a14); }
+      .wet-lab-preview { background: linear-gradient(180deg, #19a7b8, #0e8aa8 55%, #054f74 100%); }
       .spend-preview { background: linear-gradient(180deg, #0a1a0a, #142814, #0a1a0a); }
       .life-weeks-preview { background: linear-gradient(180deg, #1a1a2e, #16213e, #0f3460); }
       .art-nothing-preview { background: linear-gradient(180deg, #1a1020, #241530, #1a1020); }
@@ -1037,6 +1038,17 @@
           <h2 data-i18n="gravityGardenTitle">Gravity Garden</h2>
           <p data-i18n="gravityGardenDesc">Plant planets and build a solar system. Newtonian gravity — collisions end it all!</p>
           <span class="card-tag gravity-garden-tag" data-i18n="physics">Physics</span>
+        </div>
+      </a>
+
+      <a href="/arcade/wet-lab/" class="game-card">
+        <div class="card-preview wet-lab-preview">
+          <canvas id="wetLabCanvas" width="360" height="200"></canvas>
+        </div>
+        <div class="card-body">
+          <h2>Wet Lab</h2>
+          <p>Learn real marine biology in short dives. Cross a coral reef, master skills, collect species.</p>
+          <span class="card-tag" style="background:rgba(95,232,216,0.15);color:#2fbfae">Learn</span>
         </div>
       </a>
 
@@ -3131,6 +3143,91 @@
           x.fillStyle = 'rgba(255,200,50,' + (0.6 + Math.sin(t * 3) * 0.2).toFixed(2) + ')';
           x.font = 'bold 12px Trebuchet MS'; x.textAlign = 'center';
           x.fillText('GRAVITY GARDEN', W / 2, H - 8);
+          requestAnimationFrame(draw);
+        }
+        requestAnimationFrame(draw);
+      })();
+
+      /* ─ Wet Lab Preview ─ */
+      (function() {
+        var c = document.getElementById('wetLabCanvas');
+        if (!c) return;
+        var x = c.getContext('2d');
+        var t = 0;
+        // fixed coral bases so the reef does not shimmer about between frames
+        var coral = [];
+        for (var i = 0; i < 9; i++) coral.push({ x: 16 + i * 42, h: 20 + (i * 37 % 24), w: 17 + (i * 13 % 13), fan: i % 4 === 2 });
+        var fish = [];
+        for (var i = 0; i < 9; i++) fish.push({ x: (i * 47) % W, y: 40 + (i * 29 % 80), s: 0.5 + (i % 4) * 0.28, v: 0.35 + (i % 3) * 0.18 });
+        function draw() {
+          if (c._rafPaused) { c._rafRestart = draw; return; }
+          t += 0.02;
+          var g = x.createLinearGradient(0, 0, 0, H);
+          g.addColorStop(0, '#25c9cf');
+          g.addColorStop(0.55, '#0e8aa8');
+          g.addColorStop(1, '#064a6e');
+          x.fillStyle = g; x.fillRect(0, 0, W, H);
+          // sunlight from the surface
+          x.save(); x.globalAlpha = 0.10;
+          for (var i = 0; i < 6; i++) {
+            var rx = 30 + i * 62 + Math.sin(t * 0.8 + i) * 12;
+            x.fillStyle = '#fff8dc';
+            x.beginPath();
+            x.moveTo(rx, 0); x.lineTo(rx + 16, 0);
+            x.lineTo(rx + 44 + i * 4, H * 0.78); x.lineTo(rx - 6 + i * 4, H * 0.78);
+            x.closePath(); x.fill();
+          }
+          x.restore();
+          // coral along the bottom: rounded heads, with soft fans between them
+          for (var i = 0; i < coral.length; i++) {
+            var cr = coral[i];
+            var sway = Math.sin(t * 0.9 + i) * 1.6;
+            var col = i % 3 === 0 ? 'rgba(255,140,110,0.9)'
+                    : i % 3 === 1 ? 'rgba(255,198,124,0.85)'
+                                  : 'rgba(255,126,166,0.82)';
+            if (cr.fan) {
+              // sea fan: a few branching arms that lean with the swell
+              x.strokeStyle = col; x.lineWidth = 2.4; x.lineCap = 'round';
+              for (var k = -2; k <= 2; k++) {
+                x.beginPath();
+                x.moveTo(cr.x, H - 4);
+                x.quadraticCurveTo(cr.x + k * 5 + sway, H - cr.h * 0.6,
+                                   cr.x + k * 9 + sway * 2, H - cr.h);
+                x.stroke();
+              }
+            } else {
+              // brain/boulder coral: a dome, never a spike
+              x.fillStyle = col;
+              x.beginPath();
+              x.moveTo(cr.x - cr.w, H);
+              x.bezierCurveTo(cr.x - cr.w, H - cr.h * 1.35,
+                              cr.x + cr.w, H - cr.h * 1.35,
+                              cr.x + cr.w, H);
+              x.closePath(); x.fill();
+              x.strokeStyle = 'rgba(255,255,255,0.22)'; x.lineWidth = 1;
+              x.beginPath();
+              x.moveTo(cr.x - cr.w * 0.55, H - cr.h * 0.42);
+              x.quadraticCurveTo(cr.x, H - cr.h * 0.72, cr.x + cr.w * 0.55, H - cr.h * 0.42);
+              x.stroke();
+            }
+          }
+          x.fillStyle = 'rgba(232,212,172,0.9)';   // sand, not seabed mud
+          x.fillRect(0, H - 7, W, 7);
+          // a school drifting across
+          for (var i = 0; i < fish.length; i++) {
+            var f = fish[i];
+            f.x += f.v; if (f.x > W + 12) f.x = -12;
+            var fy = f.y + Math.sin(t * 1.6 + i) * 3;
+            x.fillStyle = i % 2 ? 'rgba(255,214,110,0.9)' : 'rgba(255,255,255,0.75)';
+            x.beginPath();
+            x.ellipse(f.x, fy, 5 * f.s, 2.6 * f.s, 0, 0, Math.PI * 2);
+            x.fill();
+            x.beginPath();
+            x.moveTo(f.x - 5 * f.s, fy);
+            x.lineTo(f.x - 9 * f.s, fy - 2.4 * f.s);
+            x.lineTo(f.x - 9 * f.s, fy + 2.4 * f.s);
+            x.closePath(); x.fill();
+          }
           requestAnimationFrame(draw);
         }
         requestAnimationFrame(draw);
