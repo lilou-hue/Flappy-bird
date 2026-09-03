@@ -2,4 +2,8 @@ User-agent: *
 Allow: /
 Disallow: /node_modules/
 
+# temporary staging build of Wet Lab, kept out of the index while it is
+# reviewed; delete this line when the preview is removed
+Disallow: /arcade/wet-lab-preview/
+
 Sitemap: https://slayplay.io/sitemap.xml
