@@ -981,6 +981,11 @@ const I18N = (() => {
       achGgStargazer: 'Stargazer',
       achGgStargazerDesc: 'Play 20 games',
 
+      // Wet Lab
+      wetLabTitle: 'Wet Lab',
+      wetLabDesc: 'Learn real marine biology in short dives. Cross a coral reef, master skills, collect species.',
+      education: 'Education',
+
       // The Deep
       theDeepTitle: 'The Deep',
       theDeepSubtitle: 'A sonar expedition',
@@ -3381,6 +3386,11 @@ const I18N = (() => {
       achGgStargazer: '별지기',
       achGgStargazerDesc: '20번 플레이',
 
+      // Wet Lab
+      wetLabTitle: '웻랩',
+      wetLabDesc: '짧은 다이빙으로 진짜 해양생물학을 배워요. 산호초를 건너 기술을 익히고 생물을 모으세요.',
+      education: '교육',
+
       // The Deep
       theDeepTitle: '심해',
       theDeepSubtitle: '소나 탐험',
@@ -5648,6 +5658,11 @@ const I18N = (() => {
       achGgSurvivorDesc: '惑星を60秒間維持',
       achGgStargazer: 'スターゲイザー',
       achGgStargazerDesc: '20回プレイ',
+
+      // Wet Lab
+      wetLabTitle: 'ウェットラボ',
+      wetLabDesc: '短いダイブで本物の海洋生物学を学ぼう。サンゴ礁を渡り、スキルを身につけ、生き物を集めよう。',
+      education: '教育',
 
       // The Deep
       theDeepTitle: '深海',
@@ -8087,6 +8102,11 @@ const I18N = (() => {
       achGgStargazer: 'Yıldız Gözlemcisi',
       achGgStargazerDesc: '20 kez oyna',
 
+      // Wet Lab
+      wetLabTitle: 'Deniz Laboratuvarı',
+      wetLabDesc: 'Kısa dalışlarla gerçek deniz biyolojisi öğren. Mercan resifini geç, beceri kazan, tür topla.',
+      education: 'Eğitim',
+
       // The Deep
       theDeepTitle: 'Derinlik',
       theDeepSubtitle: 'Sonar keşfi',
@@ -10319,6 +10339,11 @@ const I18N = (() => {
       achGgSurvivorDesc: 'Gardez une planète 60 secondes',
       achGgStargazer: 'Astronome',
       achGgStargazerDesc: 'Jouez 20 parties',
+
+      // Wet Lab
+      wetLabTitle: 'Le Labo Marin',
+      wetLabDesc: 'Apprends la vraie biologie marine en courtes plongées. Traverse un récif corallien, acquiers des compétences, collectionne des espèces.',
+      education: 'Éducation',
 
       // The Deep
       theDeepTitle: 'Les Profondeurs',
@@ -12553,6 +12578,11 @@ const I18N = (() => {
       achGgStargazer: 'Stjärnskådare',
       achGgStargazerDesc: 'Spela 20 gånger',
 
+      // Wet Lab
+      wetLabTitle: 'Havslabbet',
+      wetLabDesc: 'Lär dig riktig marinbiologi i korta dyk. Ta dig över ett korallrev, bemästra färdigheter, samla arter.',
+      education: 'Utbildning',
+
       // The Deep
       theDeepTitle: 'Djupet',
       theDeepSubtitle: 'En sonarexpedition',
@@ -14705,6 +14735,11 @@ const I18N = (() => {
       achGgSurvivorDesc: '让一颗行星存活60秒',
       achGgStargazer: '观星者',
       achGgStargazerDesc: '玩20次',
+
+      // Wet Lab
+      wetLabTitle: '海洋实验室',
+      wetLabDesc: '在几次短暂的潜水中学习真正的海洋生物学。穿越珊瑚礁，掌握技能，收集物种。',
+      education: '教育',
 
       // The Deep
       theDeepTitle: '深海',
